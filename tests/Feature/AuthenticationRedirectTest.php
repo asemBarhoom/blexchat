@@ -36,6 +36,7 @@ it('serves the seeded home page without authentication', function () {
         ->assertJsonPath('data.sections.0.composer.label', 'Try it live')
         ->assertJsonPath('data.demo_replies.rules.1.reply', 'Yes! Free delivery across KSA 🚚')
         ->assertJsonPath('data.demo_replies.fallback.action', 'View product')
+        ->assertJsonPath('data.sections.0.photos.relax', url('/storage/marketing/home/hero-photo.webp'))
         ->assertJsonStructure(['data' => ['navigation', 'sections', 'demo_replies', 'footer']]);
 });
 

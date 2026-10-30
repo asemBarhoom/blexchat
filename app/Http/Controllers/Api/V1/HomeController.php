@@ -27,6 +27,23 @@ class HomeController extends Controller
             ->where('locale', 'en')
             ->firstOrFail();
 
-        return response()->json(['data' => $page->content]);
+        return response()->json(['data' => $this->absoluteStorageUrls($page->content)]);
+    }
+
+    /**
+     * Stored paths stay host-agnostic; the frontend runs on another origin, so it needs absolute URLs.
+     *
+     * @param  array<array-key, mixed>  $content
+     * @return array<array-key, mixed>
+     */
+    private function absoluteStorageUrls(array $content): array
+    {
+        array_walk_recursive($content, function (mixed &$value): void {
+            if (is_string($value) && str_starts_with($value, '/storage/')) {
+                $value = url($value);
+            }
+        });
+
+        return $content;
     }
 }
