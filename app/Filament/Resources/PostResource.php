@@ -5,10 +5,10 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PostResource\Pages;
 use App\Filament\Resources\PostResource\RelationManagers;
 use App\Models\Post;
-use Filament\Infolists\Components\Section;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Actions\ViewAction;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -46,10 +46,10 @@ class PostResource extends Resource
                     ->formatStateUsing(fn ($state) => ucfirst($state ?? ''))
                     ->color(fn ($state): string => match ($state) {
                         'instagram' => 'pink',
-                        'whatsapp'  => 'success',
-                        'tiktok'    => 'gray',
+                        'whatsapp' => 'success',
+                        'tiktok' => 'gray',
                         'messenger' => 'info',
-                        default     => 'secondary',
+                        default => 'secondary',
                     }),
 
                 TextColumn::make('media_type')
@@ -57,11 +57,11 @@ class PostResource extends Resource
                     ->badge()
                     ->color('info')
                     ->formatStateUsing(fn ($state) => match ($state) {
-                        'image'    => 'صورة',
-                        'video'    => 'فيديو',
+                        'image' => 'صورة',
+                        'video' => 'فيديو',
                         'carousel' => 'كاروسيل',
-                        'reel'     => 'ريلز',
-                        default    => $state ?? '—',
+                        'reel' => 'ريلز',
+                        default => $state ?? '—',
                     }),
 
                 TextColumn::make('comments_count')
@@ -83,10 +83,10 @@ class PostResource extends Resource
                 SelectFilter::make('media_type')
                     ->label('نوع الوسائط')
                     ->options([
-                        'image'    => 'صورة',
-                        'video'    => 'فيديو',
+                        'image' => 'صورة',
+                        'video' => 'فيديو',
                         'carousel' => 'كاروسيل',
-                        'reel'     => 'ريلز',
+                        'reel' => 'ريلز',
                     ]),
             ])
             ->actions([
@@ -122,7 +122,7 @@ class PostResource extends Resource
     {
         return [
             'index' => Pages\ListPosts::route('/'),
-            'view'  => Pages\ViewPost::route('/{record}'),
+            'view' => Pages\ViewPost::route('/{record}'),
         ];
     }
 }

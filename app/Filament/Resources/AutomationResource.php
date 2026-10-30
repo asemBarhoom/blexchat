@@ -5,8 +5,13 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\AutomationResource\Pages;
 use App\Models\Automation;
 use App\Models\Channel;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
@@ -14,16 +19,10 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Infolists\Components\Section as InfoSection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Actions\Action;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -68,8 +67,8 @@ class AutomationResource extends Resource
                     ->label('نوع المشغّل')
                     ->options([
                         'comment_keyword' => 'كلمة مفتاحية في تعليق',
-                        'dm_keyword'      => 'كلمة مفتاحية في DM',
-                        'story_mention'   => 'ذكر في ستوري',
+                        'dm_keyword' => 'كلمة مفتاحية في DM',
+                        'story_mention' => 'ذكر في ستوري',
                     ])
                     ->required(),
 
@@ -90,8 +89,8 @@ class AutomationResource extends Resource
                         Select::make('type')
                             ->label('نوع الإجراء')
                             ->options([
-                                'reply_comment'       => 'رد على التعليق',
-                                'send_dm'             => 'إرسال رسالة DM',
+                                'reply_comment' => 'رد على التعليق',
+                                'send_dm' => 'إرسال رسالة DM',
                                 'send_dm_with_button' => 'DM مع زر',
                             ])
                             ->required()
@@ -134,19 +133,19 @@ class AutomationResource extends Resource
                     ->formatStateUsing(fn ($state) => ucfirst($state ?? ''))
                     ->color(fn ($state): string => match ($state) {
                         'instagram' => 'pink',
-                        'whatsapp'  => 'success',
-                        'tiktok'    => 'gray',
+                        'whatsapp' => 'success',
+                        'tiktok' => 'gray',
                         'messenger' => 'info',
-                        default     => 'secondary',
+                        default => 'secondary',
                     }),
 
                 TextColumn::make('trigger_type')
                     ->label('المشغّل')
                     ->formatStateUsing(fn ($state) => match ($state) {
                         'comment_keyword' => 'تعليق',
-                        'dm_keyword'      => 'رسالة مباشرة',
-                        'story_mention'   => 'ذكر في ستوري',
-                        default           => $state,
+                        'dm_keyword' => 'رسالة مباشرة',
+                        'story_mention' => 'ذكر في ستوري',
+                        default => $state,
                     })
                     ->badge()
                     ->color('info'),
@@ -180,8 +179,8 @@ class AutomationResource extends Resource
                     ->label('نوع المشغّل')
                     ->options([
                         'comment_keyword' => 'تعليق',
-                        'dm_keyword'      => 'رسالة مباشرة',
-                        'story_mention'   => 'ذكر في ستوري',
+                        'dm_keyword' => 'رسالة مباشرة',
+                        'story_mention' => 'ذكر في ستوري',
                     ]),
 
                 TernaryFilter::make('active')
@@ -211,7 +210,7 @@ class AutomationResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema->components([
-            InfoSection::make('معلومات الأتمتة')->schema([
+            Section::make('معلومات الأتمتة')->schema([
                 TextEntry::make('name')->label('الاسم'),
                 TextEntry::make('channel.platform')
                     ->label('المنصة')
@@ -221,9 +220,9 @@ class AutomationResource extends Resource
                     ->label('المشغّل')
                     ->formatStateUsing(fn ($state) => match ($state) {
                         'comment_keyword' => 'كلمة في تعليق',
-                        'dm_keyword'      => 'كلمة في DM',
-                        'story_mention'   => 'ذكر في ستوري',
-                        default           => $state,
+                        'dm_keyword' => 'كلمة في DM',
+                        'story_mention' => 'ذكر في ستوري',
+                        default => $state,
                     }),
                 TextEntry::make('keywords')
                     ->label('الكلمات المفتاحية')
@@ -233,17 +232,17 @@ class AutomationResource extends Resource
                     ->boolean(),
             ])->columns(3),
 
-            InfoSection::make('الإجراءات')->schema([
+            Section::make('الإجراءات')->schema([
                 RepeatableEntry::make('actions')
                     ->label('')
                     ->schema([
                         TextEntry::make('type')
                             ->label('النوع')
                             ->formatStateUsing(fn ($state) => match ($state) {
-                                'reply_comment'       => 'رد على التعليق',
-                                'send_dm'             => 'DM',
+                                'reply_comment' => 'رد على التعليق',
+                                'send_dm' => 'DM',
                                 'send_dm_with_button' => 'DM مع زر',
-                                default               => $state,
+                                default => $state,
                             })
                             ->badge(),
                         TextEntry::make('message')->label('الرسالة'),
@@ -258,10 +257,10 @@ class AutomationResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListAutomations::route('/'),
+            'index' => Pages\ListAutomations::route('/'),
             'create' => Pages\CreateAutomation::route('/create'),
-            'view'   => Pages\ViewAutomation::route('/{record}'),
-            'edit'   => Pages\EditAutomation::route('/{record}/edit'),
+            'view' => Pages\ViewAutomation::route('/{record}'),
+            'edit' => Pages\EditAutomation::route('/{record}/edit'),
         ];
     }
 }

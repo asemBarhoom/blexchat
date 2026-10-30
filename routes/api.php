@@ -23,11 +23,11 @@ Route::prefix('v1/auth')->name('auth.')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('login');
 });
 
+// Public marketing homepage; all sections are returned in display order.
+Route::get('v1/home', HomeController::class)->name('api.v1.home');
+
 // ── Authenticated ──────────────────────────────────────────────────
 Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function () {
-
-    // Home (single call for dashboard screen)
-    Route::get('home', HomeController::class)->name('home');
 
     // Auth
     Route::post('auth/refresh', [AuthController::class, 'refresh'])->name('auth.refresh');

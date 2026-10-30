@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\SetApiLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,7 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: 'api',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->appendToGroup('api', \App\Http\Middleware\SetApiLocale::class);
+        $middleware->appendToGroup('api', SetApiLocale::class);
+        $middleware->redirectGuestsTo(
+            fn (Request $request) => $request->is('api/*')
+                ? null
+                : route('filament.admin.auth.login'),
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

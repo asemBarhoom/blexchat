@@ -5,14 +5,14 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ChannelResource\Pages;
 use App\Filament\Resources\ChannelResource\RelationManagers;
 use App\Models\Channel;
-use Filament\Infolists\Components\Section;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -42,10 +42,10 @@ class ChannelResource extends Resource
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'instagram' => 'pink',
-                        'whatsapp'  => 'success',
-                        'tiktok'    => 'gray',
+                        'whatsapp' => 'success',
+                        'tiktok' => 'gray',
                         'messenger' => 'info',
-                        default     => 'secondary',
+                        default => 'secondary',
                     })
                     ->formatStateUsing(fn (string $state) => ucfirst($state)),
 
@@ -72,16 +72,16 @@ class ChannelResource extends Resource
                     ->label('الحالة')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'active'   => 'success',
+                        'active' => 'success',
                         'inactive' => 'warning',
-                        'expired'  => 'danger',
-                        default    => 'secondary',
+                        'expired' => 'danger',
+                        default => 'secondary',
                     })
                     ->formatStateUsing(fn (string $state) => match ($state) {
-                        'active'   => 'نشط',
+                        'active' => 'نشط',
                         'inactive' => 'غير نشط',
-                        'expired'  => 'منتهي الصلاحية',
-                        default    => $state,
+                        'expired' => 'منتهي الصلاحية',
+                        default => $state,
                     }),
 
                 TextColumn::make('connected_at')
@@ -94,17 +94,17 @@ class ChannelResource extends Resource
                     ->label('المنصة')
                     ->options([
                         'instagram' => 'Instagram',
-                        'whatsapp'  => 'WhatsApp',
-                        'tiktok'    => 'TikTok',
+                        'whatsapp' => 'WhatsApp',
+                        'tiktok' => 'TikTok',
                         'messenger' => 'Messenger',
                     ]),
 
                 SelectFilter::make('status')
                     ->label('الحالة')
                     ->options([
-                        'active'   => 'نشط',
+                        'active' => 'نشط',
                         'inactive' => 'غير نشط',
-                        'expired'  => 'منتهي الصلاحية',
+                        'expired' => 'منتهي الصلاحية',
                     ]),
             ])
             ->actions([
@@ -137,10 +137,10 @@ class ChannelResource extends Resource
                     ->label('الحالة')
                     ->badge()
                     ->formatStateUsing(fn ($state) => match ($state) {
-                        'active'   => 'نشط',
+                        'active' => 'نشط',
                         'inactive' => 'غير نشط',
-                        'expired'  => 'منتهي الصلاحية',
-                        default    => $state,
+                        'expired' => 'منتهي الصلاحية',
+                        default => $state,
                     }),
 
                 TextEntry::make('connected_at')->label('تاريخ الربط')->dateTime('d/m/Y H:i'),
@@ -160,7 +160,7 @@ class ChannelResource extends Resource
     {
         return [
             'index' => Pages\ListChannels::route('/'),
-            'view'  => Pages\ViewChannel::route('/{record}'),
+            'view' => Pages\ViewChannel::route('/{record}'),
         ];
     }
 }

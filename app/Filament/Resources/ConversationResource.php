@@ -5,10 +5,10 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ConversationResource\Pages;
 use App\Filament\Resources\ConversationResource\RelationManagers;
 use App\Models\Conversation;
-use Filament\Infolists\Components\Section;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Actions\ViewAction;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -45,10 +45,10 @@ class ConversationResource extends Resource
                     ->formatStateUsing(fn ($state) => ucfirst($state ?? ''))
                     ->color(fn ($state): string => match ($state) {
                         'instagram' => 'pink',
-                        'whatsapp'  => 'success',
-                        'tiktok'    => 'gray',
+                        'whatsapp' => 'success',
+                        'tiktok' => 'gray',
                         'messenger' => 'info',
-                        default     => 'secondary',
+                        default => 'secondary',
                     }),
 
                 TextColumn::make('last_message')
@@ -65,14 +65,14 @@ class ConversationResource extends Resource
                     ->label('الحالة')
                     ->badge()
                     ->color(fn ($state) => match ($state) {
-                        'open'     => 'success',
+                        'open' => 'success',
                         'resolved' => 'info',
-                        default    => 'gray',
+                        default => 'gray',
                     })
                     ->formatStateUsing(fn ($state) => match ($state) {
-                        'open'     => 'مفتوحة',
+                        'open' => 'مفتوحة',
                         'resolved' => 'محلولة',
-                        default    => $state,
+                        default => $state,
                     }),
 
                 TextColumn::make('last_message_at')
@@ -84,7 +84,7 @@ class ConversationResource extends Resource
                 SelectFilter::make('status')
                     ->label('الحالة')
                     ->options([
-                        'open'     => 'مفتوحة',
+                        'open' => 'مفتوحة',
                         'resolved' => 'محلولة',
                     ]),
 
@@ -112,9 +112,9 @@ class ConversationResource extends Resource
                     ->label('الحالة')
                     ->badge()
                     ->formatStateUsing(fn ($state) => match ($state) {
-                        'open'     => 'مفتوحة',
+                        'open' => 'مفتوحة',
                         'resolved' => 'محلولة',
-                        default    => $state,
+                        default => $state,
                     }),
                 TextEntry::make('unread_count')->label('رسائل غير مقروءة')->numeric(),
                 TextEntry::make('last_message_at')->label('آخر نشاط')->dateTime('d/m/Y H:i'),
@@ -133,7 +133,7 @@ class ConversationResource extends Resource
     {
         return [
             'index' => Pages\ListConversations::route('/'),
-            'view'  => Pages\ViewConversation::route('/{record}'),
+            'view' => Pages\ViewConversation::route('/{record}'),
         ];
     }
 }

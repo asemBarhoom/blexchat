@@ -16,14 +16,15 @@ class DatabaseSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'admin@blexchat.test'],
             [
-                'name'              => 'مدير النظام',
-                'password'          => bcrypt('Admin@2025!'),
+                'name' => 'مدير النظام',
+                'password' => bcrypt('Admin@2025!'),
                 'email_verified_at' => now(),
             ]
         );
 
         // @nourboutique demo data (realistic Gulf Arabic abaya boutique)
         $this->call([
+            MarketingHomeSeeder::class,
             UserSeeder::class,
             ChannelSeeder::class,
             AutomationSeeder::class,

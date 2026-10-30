@@ -901,238 +901,29 @@
                 "tags": [
                     "Home"
                 ],
-                "summary": "Home screen — all dashboard data in one call",
-                "description": "Returns the authenticated user's stats, all connected channels, the 10 most recent conversations (unread-first), the 5 most active automations, and the 10 latest unanswered comments. Use the `next_cursor` in `conversations` to load more.",
+                "summary": "Get the complete public marketing homepage",
+                "description": "Returns navigation, every homepage section in display order, and footer copy. No authentication required.",
                 "operationId": "9578f64b5c6ee0a342418701420a15fc",
                 "responses": {
                     "200": {
-                        "description": "Dashboard payload",
+                        "description": "Complete homepage content",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "data": {
                                             "properties": {
-                                                "user": {
-                                                    "properties": {
-                                                        "id": {
-                                                            "type": "integer"
-                                                        },
-                                                        "name": {
-                                                            "type": "string"
-                                                        },
-                                                        "business_name": {
-                                                            "type": "string"
-                                                        }
-                                                    },
+                                                "navigation": {
                                                     "type": "object"
                                                 },
-                                                "stats": {
-                                                    "properties": {
-                                                        "channels": {
-                                                            "description": "Total connected channels",
-                                                            "type": "integer"
-                                                        },
-                                                        "active_automations": {
-                                                            "type": "integer"
-                                                        },
-                                                        "open_conversations": {
-                                                            "type": "integer"
-                                                        },
-                                                        "unread_messages": {
-                                                            "description": "Sum of unread_count across all open conversations",
-                                                            "type": "integer"
-                                                        },
-                                                        "messages_today": {
-                                                            "description": "Outbound messages sent today",
-                                                            "type": "integer"
-                                                        },
-                                                        "auto_replies_today": {
-                                                            "description": "Automated DMs + auto comment replies today",
-                                                            "type": "integer"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                },
-                                                "channels": {
-                                                    "description": "All connected channels (usually few — no pagination needed)",
+                                                "sections": {
                                                     "type": "array",
                                                     "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer"
-                                                            },
-                                                            "platform": {
-                                                                "type": "string",
-                                                                "enum": [
-                                                                    "instagram",
-                                                                    "whatsapp",
-                                                                    "tiktok",
-                                                                    "messenger"
-                                                                ]
-                                                            },
-                                                            "username": {
-                                                                "type": "string",
-                                                                "nullable": true
-                                                            },
-                                                            "account_id": {
-                                                                "type": "string"
-                                                            },
-                                                            "followers": {
-                                                                "type": "integer",
-                                                                "nullable": true
-                                                            },
-                                                            "status": {
-                                                                "type": "string",
-                                                                "enum": [
-                                                                    "active",
-                                                                    "inactive",
-                                                                    "expired"
-                                                                ]
-                                                            },
-                                                            "connected_at": {
-                                                                "type": "string",
-                                                                "format": "date-time"
-                                                            }
-                                                        },
                                                         "type": "object"
                                                     }
                                                 },
-                                                "conversations": {
-                                                    "properties": {
-                                                        "items": {
-                                                            "description": "Top 10 conversations, unread first",
-                                                            "type": "array",
-                                                            "items": {
-                                                                "properties": {
-                                                                    "id": {
-                                                                        "type": "integer"
-                                                                    },
-                                                                    "contact_name": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "contact_avatar": {
-                                                                        "type": "string",
-                                                                        "nullable": true
-                                                                    },
-                                                                    "contact_platform_id": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "platform": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "channel_id": {
-                                                                        "type": "integer"
-                                                                    },
-                                                                    "last_message": {
-                                                                        "type": "string",
-                                                                        "nullable": true
-                                                                    },
-                                                                    "unread_count": {
-                                                                        "type": "integer"
-                                                                    },
-                                                                    "status": {
-                                                                        "type": "string",
-                                                                        "enum": [
-                                                                            "open",
-                                                                            "resolved"
-                                                                        ]
-                                                                    },
-                                                                    "last_message_at": {
-                                                                        "type": "string",
-                                                                        "format": "date-time",
-                                                                        "nullable": true
-                                                                    }
-                                                                },
-                                                                "type": "object"
-                                                            }
-                                                        },
-                                                        "has_more": {
-                                                            "type": "boolean"
-                                                        },
-                                                        "next_cursor": {
-                                                            "description": "Pass to GET /api/v1/conversations?cursor= to load more",
-                                                            "type": "string",
-                                                            "nullable": true
-                                                        }
-                                                    },
+                                                "footer": {
                                                     "type": "object"
-                                                },
-                                                "automations": {
-                                                    "description": "Top 5 active automations",
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer"
-                                                            },
-                                                            "name": {
-                                                                "type": "string"
-                                                            },
-                                                            "trigger_type": {
-                                                                "type": "string"
-                                                            },
-                                                            "active": {
-                                                                "type": "boolean"
-                                                            },
-                                                            "channel": {
-                                                                "properties": {
-                                                                    "id": {
-                                                                        "type": "integer"
-                                                                    },
-                                                                    "platform": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "username": {
-                                                                        "type": "string",
-                                                                        "nullable": true
-                                                                    }
-                                                                },
-                                                                "type": "object"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
-                                                },
-                                                "recent_comments": {
-                                                    "description": "10 latest comments that have not been auto-replied yet",
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer"
-                                                            },
-                                                            "author_name": {
-                                                                "type": "string"
-                                                            },
-                                                            "text": {
-                                                                "type": "string"
-                                                            },
-                                                            "automated_reply": {
-                                                                "type": "boolean"
-                                                            },
-                                                            "post": {
-                                                                "properties": {
-                                                                    "id": {
-                                                                        "type": "integer"
-                                                                    },
-                                                                    "caption": {
-                                                                        "type": "string",
-                                                                        "nullable": true
-                                                                    },
-                                                                    "platform": {
-                                                                        "type": "string"
-                                                                    }
-                                                                },
-                                                                "type": "object"
-                                                            },
-                                                            "posted_at": {
-                                                                "type": "string",
-                                                                "format": "date-time"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
                                                 }
                                             },
                                             "type": "object"
@@ -1142,13 +933,11 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "Homepage content has not been seeded"
                     }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
+                }
             }
         },
         "/api/v1/webhooks/meta": {
@@ -1307,7 +1096,7 @@
         },
         {
             "name": "Home",
-            "description": "Single call to load everything the home/dashboard screen needs"
+            "description": "Public marketing homepage content"
         },
         {
             "name": "Webhooks",
