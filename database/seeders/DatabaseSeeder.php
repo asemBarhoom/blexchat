@@ -10,21 +10,26 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // System admin for the Filament panel
         User::firstOrCreate(
             ['email' => 'admin@blexchat.test'],
             [
-                'name' => 'مدير النظام',
-                'email' => 'admin@blexchat.test',
-                'password' => bcrypt('Admin@2025!'),
+                'name'              => 'مدير النظام',
+                'password'          => bcrypt('Admin@2025!'),
                 'email_verified_at' => now(),
             ]
         );
+
+        // @nourboutique demo data (realistic Gulf Arabic abaya boutique)
+        $this->call([
+            UserSeeder::class,
+            ChannelSeeder::class,
+            AutomationSeeder::class,
+            PostSeeder::class,
+            CommentSeeder::class,
+            ConversationSeeder::class,
+        ]);
     }
 }
