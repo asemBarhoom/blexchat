@@ -1,7 +1,9 @@
 <?php
 
+use App\Providers\Filament\AdminPanelProvider;
+use L5Swagger\L5SwaggerServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\Filament\AdminPanelProvider::class,
-    L5Swagger\L5SwaggerServiceProvider::class,
+    AdminPanelProvider::class,
+    L5SwaggerServiceProvider::class,
 ];

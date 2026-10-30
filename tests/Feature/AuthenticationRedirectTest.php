@@ -15,7 +15,7 @@ beforeEach(function () {
 });
 
 it('returns JSON 401 for unauthenticated API requests without an Accept header', function () {
-    $this->get('/api/v1/channels')
+    $this->get('/api/v1/dashboard')
         ->assertStatus(401)
         ->assertHeader('Content-Type', 'application/json')
         ->assertJsonPath('message', 'Unauthenticated.');

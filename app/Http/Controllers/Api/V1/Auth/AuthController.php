@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use OpenApi\Attributes as OA;
 
-#[OA\Tag(name: 'Authentication', description: 'Register, login, and token management')]
+#[OA\Tag(name: 'Authentication', description: 'Sign up, sign in and sign out')]
 class AuthController extends Controller
 {
     #[OA\Post(
@@ -40,9 +40,9 @@ class AuthController extends Controller
     public function register(RegisterRequest $request): JsonResponse
     {
         $user = User::create([
-            'name'          => $request->name,
-            'email'         => $request->email,
-            'password'      => Hash::make($request->password),
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
             'business_name' => $request->business_name,
         ]);
 
@@ -50,9 +50,9 @@ class AuthController extends Controller
 
         return response()->json([
             'data' => [
-                'user'         => new UserResource($user),
+                'user' => new UserResource($user),
                 'access_token' => $token,
-                'token_type'   => 'Bearer',
+                'token_type' => 'Bearer',
             ],
         ], 201);
     }
@@ -91,28 +91,7 @@ class AuthController extends Controller
         return response()->json([
             'data' => [
                 'access_token' => $token,
-                'token_type'   => 'Bearer',
-            ],
-        ]);
-    }
-
-    #[OA\Post(
-        path: '/api/v1/auth/refresh',
-        summary: 'Issue a new token and revoke the current one',
-        security: [['sanctum' => []]],
-        tags: ['Authentication'],
-        responses: [new OA\Response(response: 200, description: 'New token issued')]
-    )]
-    public function refresh(Request $request): JsonResponse
-    {
-        $request->user()->currentAccessToken()->delete();
-
-        $token = $request->user()->createToken('api')->plainTextToken;
-
-        return response()->json([
-            'data' => [
-                'access_token' => $token,
-                'token_type'   => 'Bearer',
+                'token_type' => 'Bearer',
             ],
         ]);
     }
@@ -129,35 +108,5 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Successfully logged out.']);
-    }
-
-    #[OA\Put(
-        path: '/api/v1/auth/locale',
-        summary: 'Update the authenticated user\'s preferred language',
-        security: [['sanctum' => []]],
-        tags: ['Authentication'],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ['locale'],
-                properties: [
-                    new OA\Property(property: 'locale', type: 'string', enum: ['ar', 'en'], example: 'ar'),
-                ]
-            )
-        ),
-        responses: [
-            new OA\Response(response: 200, description: 'Locale updated'),
-            new OA\Response(response: 422, description: 'Validation error'),
-        ]
-    )]
-    public function setLocale(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'locale' => ['required', 'string', 'in:ar,en'],
-        ]);
-
-        $request->user()->update(['locale' => $validated['locale']]);
-
-        return response()->json(['locale' => $validated['locale']]);
     }
 }

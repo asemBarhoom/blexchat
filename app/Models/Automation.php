@@ -28,8 +28,8 @@ class Automation extends Model
     {
         return [
             'keywords' => 'array',
-            'actions'  => 'array',
-            'active'   => 'boolean',
+            'actions' => 'array',
+            'active' => 'boolean',
         ];
     }
 
@@ -41,14 +41,5 @@ class Automation extends Model
     public function channel(): BelongsTo
     {
         return $this->belongsTo(Channel::class);
-    }
-
-    public function getStatsAttribute(): array
-    {
-        return [
-            'triggered'        => $this->triggered_count ?? 0,
-            'responded'        => $this->responded_count ?? 0,
-            'avg_response_ms'  => $this->avg_response_ms ?? 0,
-        ];
     }
 }

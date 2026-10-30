@@ -10,19 +10,15 @@ class AutomationResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'           => $this->id,
-            'name'         => $this->name,
-            'channel_id'   => $this->channel_id,
+            'id' => $this->id,
+            'name' => $this->name,
+            'channel_id' => $this->channel_id,
             'trigger_type' => $this->trigger_type,
-            'keywords'     => $this->keywords ?? [],
-            'actions'      => $this->actions ?? [],
-            'active'       => $this->active,
-            'stats'        => $this->when(
-                $request->routeIs('automations.show'),
-                fn () => $this->stats
-            ),
-            'created_at'   => $this->created_at?->toIso8601String(),
-            'updated_at'   => $this->updated_at?->toIso8601String(),
+            'keywords' => $this->keywords ?? [],
+            'actions' => $this->actions ?? [],
+            'active' => $this->active,
+            'created_at' => $this->created_at?->toIso8601String(),
+            'updated_at' => $this->updated_at?->toIso8601String(),
         ];
     }
 }

@@ -13,10 +13,9 @@ class UserSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'nour@nourboutique.com'],
             [
-                'name'          => 'Nour',
+                'name' => 'Nour',
                 'business_name' => 'Nour Boutique',
-                'password'      => Hash::make('password'),
-                'locale'        => 'ar',
+                'password' => Hash::make('password'),
             ]
         );
     }

@@ -21,11 +21,6 @@ class SetApiLocale
             $locale = $primary ?: null;
         }
 
-        // 3. Authenticated user's saved preference
-        if (! $locale && $request->user()) {
-            $locale = $request->user()->locale;
-        }
-
         // Validate and fall back to app default
         if (! in_array($locale, ['ar', 'en'], true)) {
             $locale = config('app.locale', 'ar');

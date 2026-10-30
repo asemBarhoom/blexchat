@@ -8,9 +8,9 @@ uses(RefreshDatabase::class);
 describe('POST /api/v1/auth/register', function () {
     it('registers a new user and returns access token', function () {
         $response = $this->postJson('/api/v1/auth/register', [
-            'name'          => 'Test User',
-            'email'         => 'test@example.com',
-            'password'      => 'Password1!',
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'Password1!',
             'business_name' => 'Test Store',
         ]);
 
@@ -25,9 +25,9 @@ describe('POST /api/v1/auth/register', function () {
         User::factory()->create(['email' => 'taken@example.com']);
 
         $this->postJson('/api/v1/auth/register', [
-            'name'          => 'Test',
-            'email'         => 'taken@example.com',
-            'password'      => 'Password1!',
+            'name' => 'Test',
+            'email' => 'taken@example.com',
+            'password' => 'Password1!',
             'business_name' => 'Store',
         ])->assertStatus(422)->assertJsonValidationErrors(['email']);
     });
@@ -44,7 +44,7 @@ describe('POST /api/v1/auth/login', function () {
         $user = User::factory()->create(['password' => bcrypt('Password1!')]);
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'Password1!',
         ])->assertStatus(200)
             ->assertJsonStructure(['data' => ['access_token', 'token_type']]);
@@ -54,7 +54,7 @@ describe('POST /api/v1/auth/login', function () {
         User::factory()->create(['email' => 'user@example.com']);
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => 'user@example.com',
+            'email' => 'user@example.com',
             'password' => 'WrongPassword',
         ])->assertStatus(422);
     });
@@ -62,7 +62,7 @@ describe('POST /api/v1/auth/login', function () {
 
 describe('POST /api/v1/auth/logout', function () {
     it('revokes token and returns 200', function () {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $token = $user->createToken('api')->plainTextToken;
 
         $this->withToken($token)
@@ -73,22 +73,7 @@ describe('POST /api/v1/auth/logout', function () {
         // Token should no longer work — reset guard cache between requests
         $this->app['auth']->forgetGuards();
         $this->withToken($token)
-            ->getJson('/api/v1/channels')
+            ->getJson('/api/v1/dashboard')
             ->assertStatus(401);
-    });
-});
-
-describe('POST /api/v1/auth/refresh', function () {
-    it('issues a new token', function () {
-        $user  = User::factory()->create();
-        $token = $user->createToken('api')->plainTextToken;
-
-        $response = $this->withToken($token)
-            ->postJson('/api/v1/auth/refresh')
-            ->assertStatus(200)
-            ->assertJsonStructure(['data' => ['access_token', 'token_type']]);
-
-        $newToken = $response->json('data.access_token');
-        expect($newToken)->not->toEqual($token);
     });
 });

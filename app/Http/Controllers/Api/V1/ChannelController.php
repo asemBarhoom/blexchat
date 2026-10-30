@@ -4,30 +4,15 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Channel\ConnectChannelRequest;
-use App\Http\Resources\Api\V1\ChannelCollection;
 use App\Http\Resources\Api\V1\ChannelResource;
 use App\Models\Channel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
-#[OA\Tag(name: 'Channels', description: 'Connect and manage social media channels')]
+#[OA\Tag(name: 'Channels', description: 'Connect and disconnect social channels (the connected list comes with GET /api/v1/dashboard)')]
 class ChannelController extends Controller
 {
-    #[OA\Get(
-        path: '/api/v1/channels',
-        summary: 'List all connected channels',
-        security: [['sanctum' => []]],
-        tags: ['Channels'],
-        responses: [new OA\Response(response: 200, description: 'Channel list')]
-    )]
-    public function index(Request $request): ChannelCollection
-    {
-        $channels = $request->user()->channels()->get();
-
-        return new ChannelCollection($channels);
-    }
-
     #[OA\Post(
         path: '/api/v1/channels/connect',
         summary: 'Connect a new social channel',
@@ -62,10 +47,10 @@ class ChannelController extends Controller
         }
 
         $channel = $request->user()->channels()->create([
-            'platform'     => $request->platform,
+            'platform' => $request->platform,
             'access_token' => $request->access_token,
-            'account_id'   => $request->account_id,
-            'status'       => 'active',
+            'account_id' => $request->account_id,
+            'status' => 'active',
             'connected_at' => now(),
         ]);
 

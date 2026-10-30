@@ -26,17 +26,12 @@ class Message extends Model
     {
         return [
             'automated' => 'boolean',
-            'sent_at'   => 'datetime',
+            'sent_at' => 'datetime',
         ];
     }
 
     public function conversation(): BelongsTo
     {
         return $this->belongsTo(Conversation::class);
-    }
-
-    public function automation(): BelongsTo
-    {
-        return $this->belongsTo(Automation::class);
     }
 }
