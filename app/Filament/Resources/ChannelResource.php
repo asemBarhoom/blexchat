@@ -9,7 +9,10 @@ use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Tables;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -105,12 +108,12 @@ class ChannelResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()->label('عرض'),
-                Tables\Actions\DeleteAction::make()->label('حذف'),
+                ViewAction::make()->label('عرض'),
+                DeleteAction::make()->label('حذف'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()->label('حذف المحدد'),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()->label('حذف المحدد'),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');

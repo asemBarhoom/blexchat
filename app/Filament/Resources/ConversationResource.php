@@ -7,9 +7,9 @@ use App\Filament\Resources\ConversationResource\RelationManagers;
 use App\Models\Conversation;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -93,7 +93,7 @@ class ConversationResource extends Resource
                     ->relationship('channel', 'account_id'),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()->label('عرض'),
+                ViewAction::make()->label('عرض'),
             ])
             ->defaultSort('last_message_at', 'desc');
     }

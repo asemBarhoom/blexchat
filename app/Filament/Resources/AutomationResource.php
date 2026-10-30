@@ -18,7 +18,12 @@ use Filament\Infolists\Components\Section as InfoSection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Tables;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -186,18 +191,18 @@ class AutomationResource extends Resource
                     ->native(false),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()->label('عرض'),
-                Tables\Actions\EditAction::make()->label('تعديل'),
-                Tables\Actions\Action::make('toggle')
+                ViewAction::make()->label('عرض'),
+                EditAction::make()->label('تعديل'),
+                Action::make('toggle')
                     ->label(fn (Automation $record) => $record->active ? 'تعطيل' : 'تفعيل')
                     ->icon(fn (Automation $record) => $record->active ? 'heroicon-o-pause' : 'heroicon-o-play')
                     ->color(fn (Automation $record) => $record->active ? 'warning' : 'success')
                     ->action(fn (Automation $record) => $record->update(['active' => ! $record->active])),
-                Tables\Actions\DeleteAction::make()->label('حذف'),
+                DeleteAction::make()->label('حذف'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()->label('حذف المحدد'),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()->label('حذف المحدد'),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');

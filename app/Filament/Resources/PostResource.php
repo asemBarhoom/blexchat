@@ -7,9 +7,9 @@ use App\Filament\Resources\PostResource\RelationManagers;
 use App\Models\Post;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -90,7 +90,7 @@ class PostResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()->label('عرض'),
+                ViewAction::make()->label('عرض'),
             ])
             ->defaultSort('posted_at', 'desc');
     }
