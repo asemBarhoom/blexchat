@@ -16,11 +16,12 @@ class ChannelSeeder extends Seeder
         Channel::updateOrCreate(
             ['user_id' => $user->id, 'platform' => 'instagram', 'account_id' => '17841400000000001'],
             [
-                'username'     => 'nourboutique',
-                'access_token' => 'EAAnourboutiqueInstagramToken',
-                'followers'    => 14800,
-                'status'       => 'active',
-                'connected_at' => now()->subMonths(3),
+                'username'        => 'nourboutique',
+                'profile_picture' => 'avatars/sara.webp',
+                'access_token'    => 'EAAnourboutiqueInstagramToken',
+                'followers'       => 14800,
+                'status'          => 'active',
+                'connected_at'    => now()->subMonths(3),
             ]
         );
 
@@ -28,11 +29,12 @@ class ChannelSeeder extends Seeder
         Channel::updateOrCreate(
             ['user_id' => $user->id, 'platform' => 'whatsapp', 'account_id' => '966501234567'],
             [
-                'username'     => '+966 50 123 4567',
-                'access_token' => 'EAAnourboutiqueWhatsAppToken',
-                'followers'    => 0,
-                'status'       => 'active',
-                'connected_at' => now()->subMonths(2),
+                'username'        => '+966 50 123 4567',
+                'profile_picture' => null,
+                'access_token'    => 'EAAnourboutiqueWhatsAppToken',
+                'followers'       => 0,
+                'status'          => 'active',
+                'connected_at'    => now()->subMonths(2),
             ]
         );
     }

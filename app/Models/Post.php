@@ -15,6 +15,7 @@ class Post extends Model
         'channel_id',
         'platform_post_id',
         'caption',
+        'thumbnail_url',
         'media_type',
         'posted_at',
     ];
