@@ -1,0 +1,1058 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Blexchat API",
+        "description": "REST API for Blexchat — social commerce DM and comment automation platform supporting Instagram, WhatsApp, TikTok, and Messenger.",
+        "contact": {
+            "email": "api@blexchat.com"
+        },
+        "license": {
+            "name": "Proprietary"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "https://api.blexchat.com",
+            "description": "Production"
+        },
+        {
+            "url": "http://blexchat.test",
+            "description": "Local development"
+        }
+    ],
+    "paths": {
+        "/api/v1/analytics/overview": {
+            "get": {
+                "tags": [
+                    "Analytics"
+                ],
+                "summary": "Dashboard overview metrics",
+                "operationId": "e124baa55b741a8a7987ad23213a0a0a",
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "channel_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Overview metrics"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/analytics/automations": {
+            "get": {
+                "tags": [
+                    "Analytics"
+                ],
+                "summary": "Per-automation performance stats",
+                "operationId": "8cad3369507c84701fefb7e96f7dad01",
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Per-automation stats"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/auth/register": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Register a new business account",
+                "operationId": "7ca6fc7989202054d29707fef91a2d4a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "business_name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Omar Al-Rashid"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "omar@store.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "S3cur3P@ss!",
+                                        "minLength": 8
+                                    },
+                                    "business_name": {
+                                        "type": "string",
+                                        "example": "Omar's Store"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Account created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Login and receive access token",
+                "operationId": "9d0bb5c770cbec19b0b9566606ef4adb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successful"
+                    },
+                    "422": {
+                        "description": "Invalid credentials"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/refresh": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Issue a new token and revoke the current one",
+                "operationId": "437b695fba1c5eecef1841f958322adc",
+                "responses": {
+                    "200": {
+                        "description": "New token issued"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/auth/logout": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Revoke the current access token",
+                "operationId": "3a27a9e02ceb521eb3f98c8d2394aef9",
+                "responses": {
+                    "200": {
+                        "description": "Logged out"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/auth/locale": {
+            "put": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Update the authenticated user's preferred language",
+                "operationId": "2931c788268d8936590f413fb90834ea",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "locale"
+                                ],
+                                "properties": {
+                                    "locale": {
+                                        "type": "string",
+                                        "example": "ar",
+                                        "enum": [
+                                            "ar",
+                                            "en"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Locale updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/automations": {
+            "get": {
+                "tags": [
+                    "Automations"
+                ],
+                "summary": "List automations",
+                "operationId": "c72fb0b8dc11d136aa13f458b1e172ab",
+                "parameters": [
+                    {
+                        "name": "channel_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "inactive"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Automation list"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Automations"
+                ],
+                "summary": "Create a new automation",
+                "operationId": "8623e55f7259cfb86c29dd53c6115175",
+                "responses": {
+                    "201": {
+                        "description": "Automation created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/automations/{id}": {
+            "get": {
+                "tags": [
+                    "Automations"
+                ],
+                "summary": "Get automation detail",
+                "operationId": "4e8332fd591748f100c51fae58ab7db7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Automation detail"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Automations"
+                ],
+                "summary": "Delete an automation",
+                "operationId": "ef4f3a223c8233e24cdbaeea21997cad",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Automations"
+                ],
+                "summary": "Update an automation",
+                "operationId": "267cf386e7507f3f3560848aa9a77955",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/automations/{id}/toggle": {
+            "patch": {
+                "tags": [
+                    "Automations"
+                ],
+                "summary": "Enable or disable an automation",
+                "operationId": "7054424e1d8df1a1f248808a21db339b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "active"
+                                ],
+                                "properties": {
+                                    "active": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Status updated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/channels": {
+            "get": {
+                "tags": [
+                    "Channels"
+                ],
+                "summary": "List all connected channels",
+                "operationId": "9bdb1228fc1d55f033e87acc04516814",
+                "responses": {
+                    "200": {
+                        "description": "Channel list"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/channels/connect": {
+            "post": {
+                "tags": [
+                    "Channels"
+                ],
+                "summary": "Connect a new social channel",
+                "operationId": "96ddfe7d8006f03ce5382f9c6ace62c6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "platform",
+                                    "access_token",
+                                    "account_id"
+                                ],
+                                "properties": {
+                                    "platform": {
+                                        "type": "string",
+                                        "enum": [
+                                            "instagram",
+                                            "whatsapp",
+                                            "tiktok",
+                                            "messenger"
+                                        ]
+                                    },
+                                    "access_token": {
+                                        "type": "string",
+                                        "example": "EAATjTKF4xxx"
+                                    },
+                                    "account_id": {
+                                        "type": "string",
+                                        "example": "17841400000"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Channel connected"
+                    },
+                    "409": {
+                        "description": "Already connected"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/channels/{channelId}": {
+            "delete": {
+                "tags": [
+                    "Channels"
+                ],
+                "summary": "Disconnect a channel",
+                "operationId": "b88aa233ecb20af237c52926a6ee3bd3",
+                "parameters": [
+                    {
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Disconnected"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/posts/{postId}/comments": {
+            "get": {
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "List comments on a post",
+                "operationId": "42f275c600b681945fc51f1bbfa20ce0",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "automated_only",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Comment list"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/comments/{commentId}/reply": {
+            "post": {
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Reply to a comment publicly",
+                "operationId": "b53ac04f927a8c06dd690a54ec7699a8",
+                "parameters": [
+                    {
+                        "name": "commentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "message"
+                                ],
+                                "properties": {
+                                    "message": {
+                                        "type": "string",
+                                        "maxLength": 2200
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Reply posted"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/comments/{commentId}/send-dm": {
+            "post": {
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Reply to a commenter via DM",
+                "operationId": "d26e5199ade59b2b7e5f7a9ed95e1b0a",
+                "parameters": [
+                    {
+                        "name": "commentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "message"
+                                ],
+                                "properties": {
+                                    "message": {
+                                        "type": "string",
+                                        "maxLength": 2200
+                                    },
+                                    "include_public_reply": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "DM sent"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/conversations": {
+            "get": {
+                "tags": [
+                    "Conversations"
+                ],
+                "summary": "List DM conversations",
+                "operationId": "df6321e79444300a74bb84507cf09c39",
+                "parameters": [
+                    {
+                        "name": "channel_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "open",
+                                "resolved",
+                                "all"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Conversation list"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/conversations/{id}/messages": {
+            "get": {
+                "tags": [
+                    "Conversations"
+                ],
+                "summary": "Get messages in a conversation",
+                "operationId": "06df41448323875e458585b036f3531c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Message thread"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Conversations"
+                ],
+                "summary": "Send a message in a conversation",
+                "operationId": "6ab186930ca2df0785ef39d959acb26e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "type",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "text",
+                                            "text_with_button"
+                                        ]
+                                    },
+                                    "content": {
+                                        "type": "string"
+                                    },
+                                    "button_label": {
+                                        "type": "string"
+                                    },
+                                    "button_url": {
+                                        "type": "string",
+                                        "format": "url"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Message sent"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/webhooks/meta": {
+            "get": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Meta webhook verification challenge",
+                "operationId": "952cb0e3adcb7ae87e9393e4aecb1cd4",
+                "parameters": [
+                    {
+                        "name": "hub.mode",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "hub.verify_token",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "hub.challenge",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns hub.challenge as plain text"
+                    },
+                    "403": {
+                        "description": "Invalid verify token"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Receive Meta platform events (comments, DMs, reactions)",
+                "operationId": "4b4f6628edf1633e54daf6bb59b1c1de",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "object",
+                                    "entry"
+                                ],
+                                "properties": {
+                                    "object": {
+                                        "type": "string",
+                                        "example": "instagram"
+                                    },
+                                    "entry": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Event acknowledged"
+                    }
+                }
+            }
+        },
+        "/api/v1/webhooks/tiktok": {
+            "post": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Receive TikTok platform events",
+                "operationId": "76b29409d311d2173127f945f128a953",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "event",
+                                    "data"
+                                ],
+                                "properties": {
+                                    "event": {
+                                        "type": "string",
+                                        "example": "comment"
+                                    },
+                                    "data": {
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Event acknowledged"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "sanctum": {
+                "type": "http",
+                "description": "Obtain a token from POST /api/v1/auth/login and send it in the Authorization header.",
+                "bearerFormat": "Sanctum personal access token",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Analytics",
+            "description": "Performance metrics for automations and channels"
+        },
+        {
+            "name": "Authentication",
+            "description": "Register, login, and token management"
+        },
+        {
+            "name": "Automations",
+            "description": "Create and manage keyword-triggered automation rules"
+        },
+        {
+            "name": "Channels",
+            "description": "Connect and manage social media channels"
+        },
+        {
+            "name": "Comments",
+            "description": "Monitor and reply to post comments"
+        },
+        {
+            "name": "Conversations",
+            "description": "DM conversations across connected channels"
+        },
+        {
+            "name": "Webhooks",
+            "description": "Receive real-time events from Meta and TikTok"
+        }
+    ]
+}
