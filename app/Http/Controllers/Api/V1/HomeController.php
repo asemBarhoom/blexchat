@@ -148,6 +148,8 @@ use OpenApi\Attributes as OA;
     new OA\Property(property: 'type', type: 'string', enum: ['use_cases']),
     new OA\Property(property: 'heading', type: 'string'),
     new OA\Property(property: 'cta', type: 'string'),
+    new OA\Property(property: 'prev_label', type: 'string', description: 'Accessible name of the previous arrow'),
+    new OA\Property(property: 'next_label', type: 'string', description: 'Accessible name of the next arrow'),
     new OA\Property(property: 'items', type: 'array', items: new OA\Items(properties: [
         new OA\Property(property: 'id', type: 'string'),
         new OA\Property(property: 'slug', type: 'string'),
@@ -177,6 +179,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'title', type: 'string'),
         new OA\Property(property: 'description', type: 'string'),
         new OA\Property(property: 'surface', type: 'string'),
+        new OA\Property(property: 'sr', type: 'string', description: 'Screen-reader description of the scene'),
         new OA\Property(property: 'scene', type: 'object', description: 'ChatLine fields, plus per tab: follow → event · welcome → lead{tag,name,detail} · faq → event · comment → transition · giveaway → counter{channel,value,label}. May carry illustrative.'),
     ])),
 ])]
@@ -232,6 +235,15 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(schema: 'MarketingHome', properties: [
     new OA\Property(property: 'navigation', type: 'object', properties: [
         new OA\Property(property: 'brand', type: 'string'),
+        new OA\Property(property: 'labels', type: 'object', description: 'Accessible names for the navbar controls', properties: [
+            new OA\Property(property: 'home', type: 'string'),
+            new OA\Property(property: 'main', type: 'string'),
+            new OA\Property(property: 'mobile', type: 'string'),
+            new OA\Property(property: 'open_menu', type: 'string'),
+            new OA\Property(property: 'close_menu', type: 'string'),
+            new OA\Property(property: 'language', type: 'string'),
+            new OA\Property(property: 'language_button', type: 'string'),
+        ]),
         new OA\Property(property: 'items', type: 'array', items: new OA\Items(properties: [
             new OA\Property(property: 'label', type: 'string'),
             new OA\Property(property: 'menu', type: 'string', nullable: true, description: 'Key into menus'),
@@ -259,6 +271,10 @@ use OpenApi\Attributes as OA;
         new OA\Schema(ref: '#/components/schemas/FaqSection'),
     ])),
     new OA\Property(property: 'demo_replies', type: 'object', description: 'Shared by the hero composer and the live demo. Match keywords case-insensitively as substrings; first rule wins, else fallback.', properties: [
+        new OA\Property(property: 'card', type: 'object', description: 'Header of every auto-reply card on the page', properties: [
+            new OA\Property(property: 'label', type: 'string', example: 'Auto-reply'),
+            new OA\Property(property: 'timer', type: 'string', example: '0.4s'),
+        ]),
         new OA\Property(property: 'note', type: 'string'),
         new OA\Property(property: 'rules', type: 'array', items: new OA\Items(ref: '#/components/schemas/DemoReply')),
         new OA\Property(property: 'fallback', ref: '#/components/schemas/DemoReply'),

@@ -42,6 +42,9 @@ it('serves the seeded home page without authentication', function () {
         ->assertJsonPath('data.sections.7.tabs.1.scene.lead.name', 'Omar K.')
         ->assertJsonPath('data.sections.8.replies_from', 'demo_replies')
         ->assertJsonPath('data.footer.giant_label', 'Made for creators, brands, sellers and agencies')
+        ->assertJsonPath('data.navigation.labels.open_menu', 'Open menu')
+        ->assertJsonPath('data.sections.7.tabs.4.sr', 'On TikTok, every giveaway comment is confirmed as an entry and counted.')
+        ->assertJsonPath('data.demo_replies.card.label', 'Auto-reply')
         ->assertJsonStructure(['data' => ['navigation', 'sections', 'demo_replies', 'footer'], 'meta']);
 });
 

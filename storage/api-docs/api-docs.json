@@ -1427,6 +1427,14 @@
                     "cta": {
                         "type": "string"
                     },
+                    "prev_label": {
+                        "description": "Accessible name of the previous arrow",
+                        "type": "string"
+                    },
+                    "next_label": {
+                        "description": "Accessible name of the next arrow",
+                        "type": "string"
+                    },
                     "items": {
                         "type": "array",
                         "items": {
@@ -1553,6 +1561,10 @@
                                     "type": "string"
                                 },
                                 "surface": {
+                                    "type": "string"
+                                },
+                                "sr": {
+                                    "description": "Screen-reader description of the scene",
                                     "type": "string"
                                 },
                                 "scene": {
@@ -1754,6 +1766,33 @@
                             "brand": {
                                 "type": "string"
                             },
+                            "labels": {
+                                "description": "Accessible names for the navbar controls",
+                                "properties": {
+                                    "home": {
+                                        "type": "string"
+                                    },
+                                    "main": {
+                                        "type": "string"
+                                    },
+                                    "mobile": {
+                                        "type": "string"
+                                    },
+                                    "open_menu": {
+                                        "type": "string"
+                                    },
+                                    "close_menu": {
+                                        "type": "string"
+                                    },
+                                    "language": {
+                                        "type": "string"
+                                    },
+                                    "language_button": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            },
                             "items": {
                                 "type": "array",
                                 "items": {
@@ -1848,6 +1887,20 @@
                     "demo_replies": {
                         "description": "Shared by the hero composer and the live demo. Match keywords case-insensitively as substrings; first rule wins, else fallback.",
                         "properties": {
+                            "card": {
+                                "description": "Header of every auto-reply card on the page",
+                                "properties": {
+                                    "label": {
+                                        "type": "string",
+                                        "example": "Auto-reply"
+                                    },
+                                    "timer": {
+                                        "type": "string",
+                                        "example": "0.4s"
+                                    }
+                                },
+                                "type": "object"
+                            },
                             "note": {
                                 "type": "string"
                             },
