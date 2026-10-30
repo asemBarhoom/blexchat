@@ -69,7 +69,7 @@ it('redirects unauthenticated admin visitors to the Filament login', function ()
 });
 
 it('renders the Filament post details page', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->admin()->create();
     $channel = $user->channels()->create([
         'platform' => 'instagram',
         'account_id' => 'test-account',
