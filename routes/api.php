@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\AutomationController;
 use App\Http\Controllers\Api\V1\ChannelController;
 use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\ConversationController;
+use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\WebhookController;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,8 @@ Route::get('v1/home', HomeController::class)->name('api.v1.home');
 
 // ── Authenticated ──────────────────────────────────────────────────
 Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function () {
+
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     // Auth
     Route::post('auth/refresh', [AuthController::class, 'refresh'])->name('auth.refresh');

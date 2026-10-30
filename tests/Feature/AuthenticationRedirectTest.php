@@ -34,10 +34,27 @@ it('serves the seeded home page without authentication', function () {
         ->assertJsonCount(12, 'data.sections')
         ->assertJsonPath('data.sections.0.story.pressure.count', 47)
         ->assertJsonPath('data.sections.0.composer.label', 'Try it live')
+        ->assertJsonPath('data.sections.0.composer.examples.1', 'Do you ship to Riyadh?')
         ->assertJsonPath('data.demo_replies.rules.1.reply', 'Yes! Free delivery across KSA 🚚')
         ->assertJsonPath('data.demo_replies.fallback.action', 'View product')
         ->assertJsonPath('data.sections.0.photos.relax', url('/storage/marketing/home/hero-photo.webp'))
-        ->assertJsonStructure(['data' => ['navigation', 'sections', 'demo_replies', 'footer']]);
+        ->assertJsonPath('data.sections.7.tabs.4.scene.counter.value', '1,284')
+        ->assertJsonPath('data.sections.7.tabs.1.scene.lead.name', 'Omar K.')
+        ->assertJsonPath('data.sections.8.replies_from', 'demo_replies')
+        ->assertJsonPath('data.footer.giant_label', 'Made for creators, brands, sellers and agencies')
+        ->assertJsonStructure(['data' => ['navigation', 'sections', 'demo_replies', 'footer'], 'meta']);
+});
+
+it('falls back to English and says so when the requested language has no content', function () {
+    $this->seed(MarketingHomeSeeder::class);
+
+    $this->get('/api/v1/home?lang=ar')
+        ->assertOk()
+        ->assertHeader('Content-Language', 'en')
+        ->assertJsonPath('meta.locale', 'en')
+        ->assertJsonPath('meta.requested_locale', 'ar')
+        ->assertJsonPath('meta.fallback', true)
+        ->assertJsonPath('meta.available_locales', ['en']);
 });
 
 it('returns a 404 when the marketing home has not been seeded', function () {

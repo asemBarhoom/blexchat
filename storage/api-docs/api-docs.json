@@ -896,34 +896,314 @@
                 ]
             }
         },
-        "/api/v1/home": {
+        "/api/v1/dashboard": {
             "get": {
                 "tags": [
-                    "Home"
+                    "Dashboard"
                 ],
-                "summary": "Get the complete public marketing homepage",
-                "description": "Returns navigation, every homepage section in display order, and footer copy. No authentication required.",
-                "operationId": "9578f64b5c6ee0a342418701420a15fc",
+                "summary": "App home screen — one request, all data",
+                "description": "Everything the signed-in home screen shows: the user, connected channels, automations, first-steps checklist, automation templates and last-7-day metrics.",
+                "operationId": "586c555829058ad3fb649163f82834d4",
                 "responses": {
                     "200": {
-                        "description": "Complete homepage content",
+                        "description": "Dashboard payload",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "data": {
                                             "properties": {
-                                                "navigation": {
+                                                "user": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Nour"
+                                                        },
+                                                        "business_name": {
+                                                            "type": "string",
+                                                            "example": "Nour Boutique"
+                                                        },
+                                                        "plan": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "free",
+                                                                "essential",
+                                                                "pro"
+                                                            ]
+                                                        }
+                                                    },
                                                     "type": "object"
                                                 },
-                                                "sections": {
+                                                "channels": {
                                                     "type": "array",
                                                     "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "platform": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "instagram",
+                                                                    "whatsapp",
+                                                                    "tiktok",
+                                                                    "messenger"
+                                                                ]
+                                                            },
+                                                            "username": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "profile_picture": {
+                                                                "type": "string",
+                                                                "format": "uri",
+                                                                "nullable": true
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "active",
+                                                                    "inactive",
+                                                                    "expired"
+                                                                ]
+                                                            },
+                                                            "followers": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
                                                         "type": "object"
                                                     }
                                                 },
-                                                "footer": {
+                                                "automations": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "live",
+                                                                    "stopped"
+                                                                ]
+                                                            },
+                                                            "trigger_type": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "comment_keyword",
+                                                                    "dm_keyword",
+                                                                    "story_mention"
+                                                                ]
+                                                            },
+                                                            "runs": {
+                                                                "description": "Automated messages this automation has sent",
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "checklist": {
+                                                    "properties": {
+                                                        "title": {
+                                                            "type": "string"
+                                                        },
+                                                        "steps": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "connect",
+                                                                            "automation",
+                                                                            "test"
+                                                                        ]
+                                                                    },
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "done": {
+                                                                        "type": "boolean"
+                                                                    },
+                                                                    "to": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
                                                     "type": "object"
+                                                },
+                                                "start_here": {
+                                                    "properties": {
+                                                        "title": {
+                                                            "type": "string"
+                                                        },
+                                                        "lead": {
+                                                            "type": "string"
+                                                        },
+                                                        "templates": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "title": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "line": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "trigger": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "popular": {
+                                                                        "type": "boolean"
+                                                                    },
+                                                                    "to": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "last_seven": {
+                                                    "properties": {
+                                                        "title": {
+                                                            "type": "string"
+                                                        },
+                                                        "has_data": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "metrics": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "engagement",
+                                                                            "time",
+                                                                            "leads"
+                                                                        ]
+                                                                    },
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "hint": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "value": {
+                                                                        "type": "string",
+                                                                        "nullable": true
+                                                                    },
+                                                                    "note": {
+                                                                        "type": "string",
+                                                                        "nullable": true
+                                                                    },
+                                                                    "locked": {
+                                                                        "type": "boolean"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/home": {
+            "get": {
+                "tags": [
+                    "Home"
+                ],
+                "summary": "Get the complete public marketing homepage",
+                "description": "Navigation, every homepage section in display order, the live-demo reply rules and the footer. No authentication. Language comes from ?lang= or Accept-Language; when that language has no content yet, English is returned and meta.fallback is true.",
+                "operationId": "9578f64b5c6ee0a342418701420a15fc",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Complete homepage content",
+                        "headers": {
+                            "Content-Language": {
+                                "description": "Language of the returned content",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MarketingHome"
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "locale": {
+                                                    "description": "Language of the returned content",
+                                                    "type": "string",
+                                                    "example": "en"
+                                                },
+                                                "requested_locale": {
+                                                    "type": "string",
+                                                    "example": "ar"
+                                                },
+                                                "fallback": {
+                                                    "description": "True when the requested language is not available yet",
+                                                    "type": "boolean"
+                                                },
+                                                "available_locales": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
                                                 }
                                             },
                                             "type": "object"
@@ -1060,6 +1340,1024 @@
         }
     },
     "components": {
+        "schemas": {
+            "Cta": {
+                "properties": {
+                    "label": {
+                        "type": "string",
+                        "example": "Get started free"
+                    },
+                    "url": {
+                        "type": "string",
+                        "example": "/signup"
+                    }
+                },
+                "type": "object"
+            },
+            "ChatLine": {
+                "description": "One comment or DM and the automated answer",
+                "properties": {
+                    "handle": {
+                        "type": "string",
+                        "example": "omar.fit"
+                    },
+                    "avatar": {
+                        "type": "string",
+                        "format": "uri",
+                        "nullable": true
+                    },
+                    "question": {
+                        "type": "string"
+                    },
+                    "reply": {
+                        "type": "string"
+                    },
+                    "action": {
+                        "description": "Button label inside the reply card",
+                        "type": "string"
+                    },
+                    "result": {
+                        "description": "Win pill shown after the reply",
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "DemoReply": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "shipping"
+                    },
+                    "keywords": {
+                        "description": "Absent on the fallback",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "reply": {
+                        "type": "string"
+                    },
+                    "action": {
+                        "type": "string"
+                    },
+                    "result": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "HeroSection": {
+                "description": "type = hero",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "hero"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "hero"
+                        ]
+                    },
+                    "headline_rotations": {
+                        "description": "Pairs of [lead, highlighted] words, rotated",
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "handwriting": {
+                        "type": "string"
+                    },
+                    "subtitle": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "cta": {
+                        "$ref": "#/components/schemas/Cta"
+                    },
+                    "microcopy": {
+                        "type": "string"
+                    },
+                    "photo": {
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "cutout": {
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "photos": {
+                        "properties": {
+                            "relax": {
+                                "type": "string",
+                                "format": "uri"
+                            },
+                            "celebrate": {
+                                "type": "string",
+                                "format": "uri"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "story": {
+                        "description": "The pressure → working → relief loop",
+                        "properties": {
+                            "scenes": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "enum": [
+                                                "pressure",
+                                                "working",
+                                                "relief"
+                                            ]
+                                        },
+                                        "pose": {
+                                            "type": "string",
+                                            "enum": [
+                                                "pressure",
+                                                "relax",
+                                                "celebrate"
+                                            ]
+                                        },
+                                        "seconds": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "pressure": {
+                                "properties": {
+                                    "counter": {
+                                        "type": "string"
+                                    },
+                                    "count": {
+                                        "type": "integer"
+                                    },
+                                    "more": {
+                                        "type": "string"
+                                    },
+                                    "chips": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "handle": {
+                                                    "type": "string"
+                                                },
+                                                "text": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "working_badge": {
+                                "type": "string"
+                            },
+                            "relief": {
+                                "properties": {
+                                    "stats": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "to": {
+                                                    "type": "integer"
+                                                },
+                                                "suffix": {
+                                                    "type": "string"
+                                                },
+                                                "label": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "illustrative": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "visitor_result": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "composer": {
+                        "properties": {
+                            "label": {
+                                "type": "string"
+                            },
+                            "placeholder_prefix": {
+                                "description": "Typewriter prefix; examples are typed after it",
+                                "type": "string"
+                            },
+                            "placeholder": {
+                                "description": "Static placeholder when motion is reduced or the field is focused",
+                                "type": "string"
+                            },
+                            "sr_label": {
+                                "type": "string"
+                            },
+                            "send_label": {
+                                "type": "string"
+                            },
+                            "examples": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "social_proof": {
+                        "properties": {
+                            "rating": {
+                                "type": "string"
+                            },
+                            "count": {
+                                "type": "string"
+                            },
+                            "illustrative": {
+                                "type": "boolean"
+                            },
+                            "avatars": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "format": "uri"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "channels_label": {
+                        "type": "string"
+                    },
+                    "channels": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "partners": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "partner_claims_unverified": {
+                        "type": "boolean"
+                    },
+                    "conversations": {
+                        "type": "array",
+                        "items": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/ChatLine"
+                                },
+                                {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "channel": {
+                                            "type": "string"
+                                        },
+                                        "initial": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "CreatorStripSection": {
+                "description": "type = creator_strip",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "creators"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "creator_strip"
+                        ]
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "illustrative": {
+                        "type": "boolean"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "handle": {
+                                    "type": "string"
+                                },
+                                "followers": {
+                                    "type": "string"
+                                },
+                                "quote": {
+                                    "type": "string"
+                                },
+                                "photo": {
+                                    "type": "string",
+                                    "format": "uri"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "IntroSection": {
+                "description": "type = intro",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "intro"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "intro"
+                        ]
+                    },
+                    "headline": {
+                        "description": "Two lines",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "lead": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "VerticalSliderSection": {
+                "description": "type = vertical_slider. Each slide has its own scene shape keyed by slide id (comments, dms, stories, channels).",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "features"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "vertical_slider"
+                        ]
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "slides_label": {
+                        "description": "Accessible name for the slider",
+                        "type": "string"
+                    },
+                    "slides": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "string",
+                                    "enum": [
+                                        "comments",
+                                        "dms",
+                                        "stories",
+                                        "channels"
+                                    ]
+                                },
+                                "index": {
+                                    "type": "string",
+                                    "example": "01"
+                                },
+                                "headline": {
+                                    "type": "string"
+                                },
+                                "body": {
+                                    "type": "string"
+                                },
+                                "cta": {
+                                    "type": "string"
+                                },
+                                "target": {
+                                    "description": "In-page anchor or route",
+                                    "type": "string"
+                                },
+                                "phone_label": {
+                                    "type": "string"
+                                },
+                                "channel": {
+                                    "type": "string"
+                                },
+                                "scene": {
+                                    "description": "comments: post, post_photo, comments[], reply, action, order · dms: ChatLine fields + seen, lead{name,detail,tag} · stories: story, photo, handle, reaction, reply, action · channels: inbox, total, total_label, tiles[{id,count}], footer. All may carry illustrative.",
+                                    "type": "object"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "GiantWordSection": {
+                "description": "type = giant_word",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "autopilot"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "giant_word"
+                        ]
+                    },
+                    "kicker": {
+                        "type": "string"
+                    },
+                    "word": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "mark": {
+                        "type": "string"
+                    },
+                    "photo": {
+                        "type": "string",
+                        "format": "uri"
+                    }
+                },
+                "type": "object"
+            },
+            "UseCasesSection": {
+                "description": "type = use_cases",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "use-cases"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "use_cases"
+                        ]
+                    },
+                    "heading": {
+                        "type": "string"
+                    },
+                    "cta": {
+                        "type": "string"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "slug": {
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "line": {
+                                    "type": "string"
+                                },
+                                "shape": {
+                                    "type": "string"
+                                },
+                                "tone": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "ComparisonSection": {
+                "description": "type = comparison",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "before-after"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "comparison"
+                        ]
+                    },
+                    "heading": {
+                        "type": "string"
+                    },
+                    "before": {
+                        "properties": {
+                            "title": {
+                                "type": "string"
+                            },
+                            "rows": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "after": {
+                        "properties": {
+                            "title": {
+                                "type": "string"
+                            },
+                            "rows": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "cta": {
+                        "$ref": "#/components/schemas/Cta"
+                    }
+                },
+                "type": "object"
+            },
+            "FlowTabsSection": {
+                "description": "type = flow_tabs",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "see-it-in-action"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "flow_tabs"
+                        ]
+                    },
+                    "heading": {
+                        "type": "string"
+                    },
+                    "lead": {
+                        "type": "string"
+                    },
+                    "composer_placeholder": {
+                        "type": "string"
+                    },
+                    "tabs_label": {
+                        "description": "Accessible name for the tab list",
+                        "type": "string"
+                    },
+                    "tabs": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "string",
+                                    "enum": [
+                                        "follow",
+                                        "welcome",
+                                        "faq",
+                                        "comment",
+                                        "giveaway"
+                                    ]
+                                },
+                                "title": {
+                                    "type": "string"
+                                },
+                                "description": {
+                                    "type": "string"
+                                },
+                                "surface": {
+                                    "type": "string"
+                                },
+                                "scene": {
+                                    "description": "ChatLine fields, plus per tab: follow → event · welcome → lead{tag,name,detail} · faq → event · comment → transition · giveaway → counter{channel,value,label}. May carry illustrative.",
+                                    "type": "object"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "LiveDemoSection": {
+                "description": "type = live_demo",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "try-it"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "live_demo"
+                        ]
+                    },
+                    "kicker": {
+                        "type": "string"
+                    },
+                    "heading_lead": {
+                        "type": "string"
+                    },
+                    "heading_mark": {
+                        "type": "string"
+                    },
+                    "lead": {
+                        "type": "string"
+                    },
+                    "placeholder": {
+                        "type": "string"
+                    },
+                    "bridge": {
+                        "type": "string"
+                    },
+                    "cta": {
+                        "$ref": "#/components/schemas/Cta"
+                    },
+                    "handle": {
+                        "type": "string"
+                    },
+                    "initial": {
+                        "type": "string"
+                    },
+                    "suggestions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "replies_from": {
+                        "description": "Answers come from the top-level demo_replies",
+                        "type": "string",
+                        "enum": [
+                            "demo_replies"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "StepsSection": {
+                "description": "type = steps",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "get-started"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "steps"
+                        ]
+                    },
+                    "heading": {
+                        "type": "string"
+                    },
+                    "steps": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "number": {
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "line": {
+                                    "type": "string"
+                                },
+                                "loop": {
+                                    "type": "string",
+                                    "enum": [
+                                        "tick",
+                                        "channels",
+                                        "switch"
+                                    ]
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "cta": {
+                        "$ref": "#/components/schemas/Cta"
+                    },
+                    "secondary_cta": {
+                        "$ref": "#/components/schemas/Cta"
+                    }
+                },
+                "type": "object"
+            },
+            "NumbersSection": {
+                "description": "type = numbers",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "numbers"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "numbers"
+                        ]
+                    },
+                    "heading": {
+                        "type": "string"
+                    },
+                    "illustrative": {
+                        "type": "boolean"
+                    },
+                    "stats": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "value": {
+                                    "type": "string"
+                                },
+                                "label": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "FaqSection": {
+                "description": "type = faq",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "faq"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "faq"
+                        ]
+                    },
+                    "heading": {
+                        "type": "string"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "question": {
+                                    "type": "string"
+                                },
+                                "answer": {
+                                    "type": "string"
+                                },
+                                "link": {
+                                    "$ref": "#/components/schemas/Cta"
+                                },
+                                "claim_unverified": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "MarketingHome": {
+                "properties": {
+                    "navigation": {
+                        "properties": {
+                            "brand": {
+                                "type": "string"
+                            },
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "label": {
+                                            "type": "string"
+                                        },
+                                        "menu": {
+                                            "description": "Key into menus",
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "url": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "account": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Cta"
+                                }
+                            },
+                            "languages": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "label": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "menus": {
+                                "description": "Keyed by menu id: { heading, items[{title, description, cta?, target?}] }",
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "sections": {
+                        "description": "In display order. Switch on `type`.",
+                        "type": "array",
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "$ref": "#/components/schemas/HeroSection"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/CreatorStripSection"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/IntroSection"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/VerticalSliderSection"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/GiantWordSection"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/UseCasesSection"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/ComparisonSection"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/FlowTabsSection"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/LiveDemoSection"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/StepsSection"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/NumbersSection"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/FaqSection"
+                                }
+                            ]
+                        }
+                    },
+                    "demo_replies": {
+                        "description": "Shared by the hero composer and the live demo. Match keywords case-insensitively as substrings; first rule wins, else fallback.",
+                        "properties": {
+                            "note": {
+                                "type": "string"
+                            },
+                            "rules": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/DemoReply"
+                                }
+                            },
+                            "fallback": {
+                                "$ref": "#/components/schemas/DemoReply"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "footer": {
+                        "properties": {
+                            "brand": {
+                                "type": "string"
+                            },
+                            "home_label": {
+                                "type": "string"
+                            },
+                            "nav_label": {
+                                "type": "string"
+                            },
+                            "giant_label": {
+                                "description": "Accessible text for the giant word rotation",
+                                "type": "string"
+                            },
+                            "tagline": {
+                                "type": "string"
+                            },
+                            "columns": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "links": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Cta"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "giant_lead": {
+                                "type": "string"
+                            },
+                            "giant_words": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "cta": {
+                                "$ref": "#/components/schemas/Cta"
+                            },
+                            "copyright": {
+                                "type": "string"
+                            },
+                            "legal": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Cta"
+                                }
+                            },
+                            "languages": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            }
+        },
         "securitySchemes": {
             "sanctum": {
                 "type": "http",
@@ -1093,6 +2391,10 @@
         {
             "name": "Conversations",
             "description": "DM conversations across connected channels"
+        },
+        {
+            "name": "Dashboard",
+            "description": "Signed-in app home screen"
         },
         {
             "name": "Home",
