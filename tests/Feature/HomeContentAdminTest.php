@@ -45,6 +45,7 @@ it('stores English and Arabic texts separately and serves each language', functi
         ->fillForm([
             'hero.texts.en.subtitle' => 'Turn every DM into a sale.',
             'hero.texts.ar.subtitle' => 'حوّل كل رسالة إلى عملية بيع.',
+            'hero.texts.ar.description' => '',
             'use-cases.texts.ar.heading' => 'مصمّم لطريقتك في البيع',
         ])
         ->call('save')

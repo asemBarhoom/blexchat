@@ -14,7 +14,7 @@ use App\Models\UseCase;
 use Illuminate\Database\Seeder;
 
 /**
- * Resets the marketing homepage to its default English content. Running it replaces
+ * Resets the marketing homepage to its default English and Arabic content. Running it replaces
  * whatever was edited in the admin panel, so it is meant for fresh installs and tests.
  */
 class HomeContentSeeder extends Seeder
@@ -122,22 +122,142 @@ class HomeContentSeeder extends Seeder
 
         $sections = ['hero', 'creators', 'intro', 'features', 'autopilot', 'use-cases', 'before-after', 'see-it-in-action', 'try-it', 'get-started', 'numbers', 'faq'];
 
+        $arabic = $this->arabicBlockTexts();
+
         foreach ($blocks as $key => $content) {
             [$texts, $settings] = $this->split($content);
             $sort = array_search($key, $sections, true);
 
             HomeBlock::updateOrCreate(['key' => $key], [
                 'sort' => $sort === false ? null : $sort + 1,
-                'texts' => ['en' => $texts],
+                'texts' => ['en' => $texts, 'ar' => $arabic[$key]],
                 'settings' => $settings,
             ]);
         }
     }
 
+    /**
+     * Arabic copy of every block, in the same shape as the English texts.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function arabicBlockTexts(): array
+    {
+        $comments = ['price' => 'بكم هذي؟ 😍', 'shipping' => 'توصلون للرياض؟', 'link' => 'الرابط لو سمحت 🙏'];
+
+        return [
+            'navigation' => [
+                'brand' => 'بلكس تشات',
+                'labels' => ['home' => 'الصفحة الرئيسية لبلكس تشات', 'main' => 'القائمة الرئيسية', 'mobile' => 'قائمة الجوال', 'open_menu' => 'فتح القائمة', 'close_menu' => 'إغلاق القائمة', 'language' => 'اللغة', 'language_button' => 'تغيير اللغة، اللغة الحالية العربية'],
+                'items' => [['label' => 'المنتج'], ['label' => 'الحلول'], ['label' => 'الوكالات'], ['label' => 'الأسعار']],
+                'account' => [['label' => 'تسجيل الدخول'], ['label' => 'ابدأ الآن']],
+                'languages' => [['label' => 'EN'], ['label' => 'العربية']],
+                'menus' => ['product' => ['heading' => 'أتمت كل محادثة'], 'solutions' => ['heading' => 'مصمّم لطريقتك في البيع']],
+            ],
+            'hero' => [
+                'headline_rotations' => [['وصّل لـ', 'الملايين'], ['بِع في', 'كل رسالة'], ['رُد على', 'الجميع']],
+                'handwriting' => 'تلقائياً.',
+                'story' => [
+                    'pressure' => ['counter' => 'رسالة جديدة', 'more' => '+44 أخرى', 'chips' => [
+                        ['handle' => 'sara.styles', 'text' => $comments['price']],
+                        ['handle' => 'omar.fit', 'text' => $comments['shipping']],
+                        ['handle' => 'lina.m', 'text' => $comments['link']],
+                    ]],
+                    'working_badge' => 'بلكس تشات يرد الآن',
+                    'relief' => ['stats' => [['suffix' => '', 'label' => 'رد'], ['suffix' => '', 'label' => 'طلب'], ['suffix' => 'س', 'label' => 'وفّرتها']]],
+                    'visitor_result' => 'تم الرد خلال 0.4 ثانية',
+                ],
+                'composer' => ['label' => 'جرّبه الآن', 'placeholder_prefix' => 'اكتب تعليقاً…', 'placeholder' => 'اكتب تعليقاً… مثلاً: بكم؟', 'sr_label' => 'جرّب تعليقاً وشاهد الرد التلقائي', 'send_label' => 'إرسال التعليق', 'examples' => ['بكم؟', 'توصلون للرياض؟', 'الرابط لو سمحت 🙏']],
+                'subtitle' => 'بلكس تشات يحوّل التعليقات والرسائل إلى عملاء.',
+                'description' => 'أتمتة ذكية تبيع وترد عنك على مدار الساعة.',
+                'cta' => ['label' => 'ابدأ مجاناً'],
+                'microcopy' => 'خطة مجانية · بدون بطاقة ائتمان',
+                'social_proof' => ['rating' => '4.8/5', 'count' => '+2,000 نشاط تجاري'],
+                'channels_label' => 'يعمل مع',
+                'channels' => ['إنستغرام', 'واتساب', 'تيك توك', 'ماسنجر'],
+                'partners' => ['شريك أعمال معتمد من Meta', 'شريك تسويق معتمد من TikTok'],
+                'conversations' => [
+                    ['handle' => 'sara.styles', 'initial' => 'س', 'question' => $comments['price'], 'reply' => 'هلا سارة! أرسلنا لك السعر بالخاص 💌', 'action' => 'شوفي المنتج'],
+                    ['handle' => 'omar.fit', 'initial' => 'ع', 'question' => $comments['shipping'], 'reply' => 'أكيد! التوصيل مجاني لكل مناطق المملكة 🚚', 'action' => 'تتبّع الطلب'],
+                    ['handle' => 'lina.m', 'initial' => 'ل', 'question' => 'الرابط لو سمحتي 🙏', 'reply' => 'أرسلناه! شيكي رسائلك ✨', 'action' => 'افتحي الرابط', 'result' => '✓ طلب جديد · 49$'],
+                ],
+            ],
+            'creators' => ['label' => 'يحبه أكثر من مليون صانع محتوى ومسوّق وعلامة تجارية'],
+            'intro' => ['headline' => ['ضاعف أفضل', 'محادثاتك'], 'lead' => 'أتمتة قوية لكل طريقة تبيع بها وترد وتنمو.'],
+            'features' => ['slides_label' => 'شرائح الميزات', 'slides' => [
+                ['index' => '01', 'headline' => 'حوّل التعليقات إلى عملاء', 'body' => '"بكم هذي؟" ← رد فوري، والبيع يتم وأنت نايم.', 'cta' => 'شاهد كيف', 'phone_label' => 'blexchat.store', 'scene' => [
+                    'post' => 'تشكيلة جديدة · قبل ساعتين',
+                    'comments' => [['handle' => 'sara.styles', 'text' => $comments['price']], ['handle' => 'noura.k', 'text' => 'لسا متوفرة؟'], ['handle' => 'omar.fit', 'text' => $comments['link']]],
+                    'reply' => 'أرسلنا لك السعر والرابط بالخاص 💌', 'action' => 'شوف المنتج', 'order' => 'طلب جديد · 49$',
+                ]],
+                ['index' => '02', 'headline' => 'لا تترك رسالة بدون رد', 'body' => 'ردود ذكية تجاوب على الأسئلة المتكررة، تجمع الجوال والإيميل، وتحوّل المحادثة لك فقط عند الحاجة.', 'cta' => 'شاهد كيف', 'phone_label' => 'الرسائل', 'scene' => [
+                    'handle' => 'omar.fit', 'question' => $comments['shipping'], 'reply' => 'أكيد! التوصيل مجاني لكل مناطق المملكة 🚚', 'action' => 'تتبّع الطلب', 'seen' => 'شوهدت',
+                    'lead' => ['name' => 'عمر أ.', 'detail' => '+966 5• ••• 4412 · omar@mail.com', 'tag' => 'تم حفظ عميل محتمل'],
+                ]],
+                ['index' => '03', 'headline' => 'رد على كل إشارة في الستوري', 'body' => 'حوّل التفاعلات إلى محادثات تلقائياً، على مدار الساعة.', 'cta' => 'شاهد كيف', 'phone_label' => 'الستوري', 'scene' => [
+                    'story' => 'تفاعل مع الستوري', 'handle' => 'lina.m', 'reaction' => '❤️', 'reply' => 'شكراً لينا! هذا الرابط ✨', 'action' => 'افتحي الرابط',
+                ]],
+                ['index' => '04', 'headline' => 'انمُ عبر كل القنوات', 'body' => 'إنستغرام وواتساب وتيك توك وماسنجر — صندوق واحد، ومجموعة أتمتة واحدة.', 'cta' => 'شاهد كيف', 'phone_label' => 'كل الصناديق', 'scene' => [
+                    'inbox' => 'صندوق واحد', 'total' => '128', 'total_label' => 'محادثة اليوم',
+                    'tiles' => [['count' => '64'], ['count' => '38'], ['count' => '19'], ['count' => '7']],
+                    'footer' => 'تم الرد على الجميع تلقائياً',
+                ]],
+            ]],
+            'autopilot' => ['kicker' => 'هذا ما نسمّيه', 'word' => ['الطيار', 'الآلي'], 'mark' => '24/7'],
+            'use-cases' => ['heading' => 'مصمّم لطريقتك في البيع', 'cta' => 'شاهد كيف', 'prev_label' => 'حالات الاستخدام السابقة', 'next_label' => 'حالات الاستخدام التالية'],
+            'before-after' => ['heading' => 'صندوق رسائلك: قبل وبعد', 'before' => ['title' => 'قبل بلكس تشات — شغل بلا راحة'], 'after' => ['title' => 'بعد بلكس تشات — جهد أقل ودخل أكثر'], 'cta' => ['label' => 'ابدأ مجاناً']],
+            'see-it-in-action' => ['heading' => 'شاهده يعمل', 'lead' => 'اختر مساراً — وشاهد بلكس تشات ينفّذه.', 'composer_placeholder' => 'رسالة…', 'tabs_label' => 'المسارات', 'tabs' => [
+                ['title' => 'رحّب بالمتابعين الجدد', 'description' => 'رسالة دافئة لحظة المتابعة.', 'surface' => 'إنستغرام · الرسائل', 'sr' => 'على إنستغرام، يتلقى المتابع الجديد رسالة ترحيب فوراً وينضم لقائمة الإطلاقات.', 'scene' => [
+                    'event' => 'sara.styles بدأت متابعتك', 'reply' => 'هلا سارة 👋 شكراً على المتابعة! تبين تكونين أول من يشوف تشكيلة الخميس؟', 'action' => 'إيه، ضيفيني', 'result' => '✓ مشتركة جديدة',
+                ]],
+                ['title' => 'رسائل الترحيب', 'description' => 'رحّب بكل أول رسالة فوراً.', 'surface' => 'واتساب · بزنس', 'sr' => 'على واتساب، يُرحَّب بأول رسالة فوراً ويُحفظ صاحبها كعميل محتمل.', 'scene' => [
+                    'handle' => 'عمر', 'question' => 'السلام عليكم! فاتحين اليوم؟', 'reply' => 'وعليكم السلام يا عمر! فاتحين من 10 الصبح لين 11 الليل. وش نجهّز لك؟', 'action' => 'شوف المنيو',
+                    'lead' => ['tag' => 'تم حفظ عميل جديد', 'name' => 'عمر ك.', 'detail' => '+971 5X XXX XXXX · واتساب'],
+                ]],
+                ['title' => 'أتمتة الأسئلة الشائعة', 'description' => 'السعر والتوصيل والمقاسات — يُجاب عنها في ثوانٍ.', 'surface' => 'إنستغرام · ردود الستوري', 'sr' => 'رد على ستوري يسأل عن السعر يُجاب عنه في ثوانٍ ويتحوّل إلى طلب.', 'scene' => [
+                    'event' => 'ردّت على الستوري', 'handle' => 'lina.k', 'question' => $comments['price'], 'reply' => 'سعرها 180 درهم — المقاسات من S إلى XL، والتوصيل خلال يومين.', 'action' => 'اطلبي الآن', 'result' => '✓ تم الطلب رقم 1042',
+                ]],
+                ['title' => 'رسالة تلقائية من التعليقات', 'description' => 'علّق بكلمة "رابط" ← يوصلك الرابط بالخاص.', 'surface' => 'إنستغرام · من التعليقات إلى الخاص', 'sr' => 'يعلّق أحدهم بكلمة "رابط" تحت منشور فيصله الرابط في رسائله.', 'scene' => [
+                    'handle' => 'khalid.r', 'question' => 'رابط', 'transition' => '↓ أُرسل إلى الخاص', 'reply' => 'تفضّل يا خالد 🔗 الدليل كامل بضغطة وحدة.', 'action' => 'افتح الرابط', 'result' => '✓ وصل الرابط خلال 0.4 ثانية',
+                ]],
+                ['title' => 'أطلق المسابقات', 'description' => 'اجمع المشاركات واختر الفائزين تلقائياً.', 'surface' => 'تيك توك · مسابقة', 'sr' => 'على تيك توك، يُؤكَّد كل تعليق في المسابقة كمشاركة ويُحتسب.', 'scene' => [
+                    'handle' => 'nora.m', 'question' => 'أنا مشاركة! 🎉', 'reply' => 'تم تسجيلك يا نورة! نعلن الفائزين يوم الجمعة الساعة 8 مساءً.', 'action' => 'شاركي لمضاعفة فرصك',
+                    'counter' => ['value' => '1,284', 'label' => 'مشاركة'],
+                ]],
+            ]],
+            'try-it' => [
+                'kicker' => 'بدون تسجيل', 'heading_lead' => 'لا تكتفِ بكلامنا.', 'heading_mark' => 'جرّبه.', 'lead' => 'اكتب تعليقاً مثل عملائك — وشاهد بلكس تشات يرد عليه.',
+                'placeholder' => 'اكتب تعليقاً…', 'bridge' => 'هذا المسار أخذ 0 دقيقة لبنائه. مسارك يحتاج دقيقتين.', 'cta' => ['label' => 'ابنِ أول مسار لك'], 'handle' => 'أنت', 'initial' => 'أ',
+                'suggestions' => array_values($comments),
+            ],
+            'get-started' => [
+                'heading' => 'جاهز خلال دقائق، لا أسابيع.',
+                'steps' => [
+                    ['number' => '01', 'name' => 'سجّل مجاناً', 'line' => 'بدون بطاقة ائتمان، وبدون مكالمات.'],
+                    ['number' => '02', 'name' => 'اربط قنواتك', 'line' => 'إنستغرام وواتساب وتيك توك وماسنجر — بضغطة لكل قناة.'],
+                    ['number' => '03', 'name' => 'انطلق', 'line' => 'اختر مساراً، فعّله، وشاهد الردود تنطلق.'],
+                ],
+                'cta' => ['label' => 'ابدأ مجاناً'], 'secondary_cta' => ['label' => 'شاهد الخطط'],
+            ],
+            'numbers' => ['heading' => 'بلكس تشات بالأرقام'],
+            'faq' => ['heading' => 'أسئلة وأجوبة.'],
+            'demo_replies' => [
+                'card' => ['label' => 'رد تلقائي', 'timer' => '0.4 ث'],
+                'note' => 'يستخدمه مربع التجربة في الواجهة وقسم "جرّبه". طابق الكلمات المفتاحية كنص جزئي بدون حساسية لحالة الأحرف؛ أول قاعدة مطابقة هي التي ترد.',
+                'fallback' => ['reply' => 'وصلنا — نرسل لك التفاصيل الحين 💌', 'action' => 'شوف المنتج', 'result' => '✓ تم الرد خلال 0.4 ثانية'],
+            ],
+            'footer' => [
+                'brand' => 'بلكس تشات', 'home_label' => 'الصفحة الرئيسية لبلكس تشات', 'nav_label' => 'التذييل', 'giant_label' => 'مصمّم لصنّاع المحتوى والعلامات التجارية والبائعين والوكالات', 'tagline' => 'حوّل التعليقات والرسائل إلى عملاء.',
+                'columns' => [['title' => 'المنتج'], ['title' => 'الحلول'], ['title' => 'الحساب']],
+                'giant_lead' => 'مصمّم لـ', 'giant_words' => ['صنّاع المحتوى', 'العلامات التجارية', 'البائعين', 'الوكالات'], 'cta' => ['label' => 'ابدأ مجاناً'], 'copyright' => '© 2026 بلكس تشات', 'languages' => ['EN', 'العربية'],
+            ],
+        ];
+    }
+
     private function seedLists(): void
     {
         $image = fn (string $path): string => 'marketing/home/'.$path;
-        $en = fn (?string $text): ?array => $text === null ? null : ['en' => $text];
+        $t = fn (?array $pair): ?array => $pair === null ? null : ['en' => $pair[0], 'ar' => $pair[1]];
 
         foreach ([NavMenuItem::class, FooterLink::class, ComparisonPoint::class, HomeStat::class, FaqItem::class] as $model) {
             $model::query()->delete();
@@ -145,107 +265,122 @@ class HomeContentSeeder extends Seeder
 
         $menus = [
             'product' => [
-                ['Instagram', 'Turn comments and DMs into customers'],
-                ['WhatsApp', 'Answer every chat, day and night'],
-                ['Messenger', 'Automate your Facebook Page inbox'],
-                ['TikTok', 'Turn comments on your videos into orders'],
-                ['Blexchat AI', 'Replies that know your catalogue', 'Try it live', '#try-it'],
+                [['Instagram', 'إنستغرام'], ['Turn comments and DMs into customers', 'حوّل التعليقات والرسائل إلى عملاء']],
+                [['WhatsApp', 'واتساب'], ['Answer every chat, day and night', 'رد على كل محادثة، ليلاً ونهاراً']],
+                [['Messenger', 'ماسنجر'], ['Automate your Facebook Page inbox', 'أتمت صندوق رسائل صفحتك على فيسبوك']],
+                [['TikTok', 'تيك توك'], ['Turn comments on your videos into orders', 'حوّل التعليقات على فيديوهاتك إلى طلبات']],
+                [['Blexchat AI', 'بلكس تشات AI'], ['Replies that know your catalogue', 'ردود تعرف كتالوجك'], ['Try it live', 'جرّبه الآن'], '#try-it'],
             ],
             'solutions' => [
-                ['Creators', 'Turn followers into a subscriber list.'],
-                ['E-commerce', 'Recover carts and confirm orders in DM.'],
-                ['Restaurants', 'Bookings and orders from DMs.'],
-                ['Clinics', 'Appointments booked while you work.'],
-                ['Agencies', 'Run many client accounts from one seat.'],
-                ['Real estate', 'Qualify buyers before the first call.'],
-                ['Education', 'Enrol students without a landing page.'],
-                ['Support', 'Deflect repeat questions around the clock.'],
+                [['Creators', 'صنّاع المحتوى'], ['Turn followers into a subscriber list.', 'حوّل المتابعين إلى قائمة مشتركين.']],
+                [['E-commerce', 'التجارة الإلكترونية'], ['Recover carts and confirm orders in DM.', 'استرجع السلال المتروكة وأكّد الطلبات في الخاص.']],
+                [['Restaurants', 'المطاعم'], ['Bookings and orders from DMs.', 'حجوزات وطلبات من الرسائل.']],
+                [['Clinics', 'العيادات'], ['Appointments booked while you work.', 'مواعيد تُحجز وأنت تعمل.']],
+                [['Agencies', 'الوكالات'], ['Run many client accounts from one seat.', 'أدِر حسابات عملاء كثيرين من مكان واحد.']],
+                [['Real estate', 'العقارات'], ['Qualify buyers before the first call.', 'أهّل المشترين قبل أول مكالمة.']],
+                [['Education', 'التعليم'], ['Enrol students without a landing page.', 'سجّل الطلاب بدون صفحة هبوط.']],
+                [['Support', 'الدعم'], ['Deflect repeat questions around the clock.', 'خفّف الأسئلة المتكررة على مدار الساعة.']],
             ],
         ];
 
         foreach ($menus as $menu => $items) {
             foreach ($items as $sort => $item) {
-                NavMenuItem::create(array_filter(['menu' => $menu, 'title' => $en($item[0]), 'description' => $en($item[1]), 'cta' => $en($item[2] ?? null), 'target' => $item[3] ?? null, 'sort' => $sort + 1]));
+                NavMenuItem::create(array_filter(['menu' => $menu, 'title' => $t($item[0]), 'description' => $t($item[1]), 'cta' => $t($item[2] ?? null), 'target' => $item[3] ?? null, 'sort' => $sort + 1]));
             }
         }
 
         $creators = [
-            ['nora', 'Nora Al-Qahtani', '@noraqtn', '184K followers', 'I stopped losing sales in my DMs.'],
-            ['omar', 'Omar Bin Saleh', '@omar.fit', '92K followers', 'Every comment gets an answer now.'],
-            ['lina', 'Lina Mansour', '@lina.m', '310K followers', 'It replies while I sleep.'],
-            ['faisal', 'Faisal Otaibi', '@faisalotb', '47K followers', 'Set up in a morning, paid for itself by Friday.'],
-            ['huda', 'Huda Kamal', '@hudamakes', '128K followers', 'My inbox went from scary to sorted.'],
+            ['nora', ['Nora Al-Qahtani', 'نورة القحطاني'], '@noraqtn', ['184K followers', '184 ألف متابع'], ['I stopped losing sales in my DMs.', 'ما عدت أخسر مبيعات في الخاص.']],
+            ['omar', ['Omar Bin Saleh', 'عمر بن صالح'], '@omar.fit', ['92K followers', '92 ألف متابع'], ['Every comment gets an answer now.', 'كل تعليق صار له رد.']],
+            ['lina', ['Lina Mansour', 'لينا منصور'], '@lina.m', ['310K followers', '310 آلاف متابع'], ['It replies while I sleep.', 'يرد عني وأنا نايمة.']],
+            ['faisal', ['Faisal Otaibi', 'فيصل العتيبي'], '@faisalotb', ['47K followers', '47 ألف متابع'], ['Set up in a morning, paid for itself by Friday.', 'جهّزته في صباح واحد، وغطّى تكلفته قبل الجمعة.']],
+            ['huda', ['Huda Kamal', 'هدى كمال'], '@hudamakes', ['128K followers', '128 ألف متابع'], ['My inbox went from scary to sorted.', 'صندوق رسائلي صار مرتّباً بعد ما كان مخيفاً.']],
         ];
 
         foreach ($creators as $sort => [$key, $name, $handle, $followers, $quote]) {
-            Creator::updateOrCreate(['key' => $key], ['name' => $en($name), 'handle' => $handle, 'followers' => $en($followers), 'quote' => $en($quote), 'photo' => $image("creators/{$key}.webp"), 'sort' => $sort + 1, 'active' => true]);
+            Creator::updateOrCreate(['key' => $key], ['name' => $t($name), 'handle' => $handle, 'followers' => $t($followers), 'quote' => $t($quote), 'photo' => $image("creators/{$key}.webp"), 'sort' => $sort + 1, 'active' => true]);
         }
 
         $useCases = [
-            ['creators', 'creators', 'Creators', 'Turn engagement into income.', 'rounded', 'brand'],
-            ['ecommerce', 'e-commerce', 'E-commerce', 'Every comment is a checkout.', 'blob', 'tint'],
-            ['restaurants', 'restaurants', 'Restaurants', 'Bookings and orders from DMs.', 'arch', 'ink'],
-            ['clinics', 'clinics', 'Clinics', 'Appointments booked while you work.', 'circle', 'tint'],
-            ['agencies', 'agencies', 'Agencies', 'Run automations for every client.', 'pill', 'brand'],
-            ['realestate', 'real-estate', 'Real estate', 'Qualify leads before you call.', 'house', 'ink'],
+            ['creators', 'creators', ['Creators', 'صنّاع المحتوى'], ['Turn engagement into income.', 'حوّل التفاعل إلى دخل.'], 'rounded', 'brand'],
+            ['ecommerce', 'e-commerce', ['E-commerce', 'التجارة الإلكترونية'], ['Every comment is a checkout.', 'كل تعليق فرصة شراء.'], 'blob', 'tint'],
+            ['restaurants', 'restaurants', ['Restaurants', 'المطاعم'], ['Bookings and orders from DMs.', 'حجوزات وطلبات من الرسائل.'], 'arch', 'ink'],
+            ['clinics', 'clinics', ['Clinics', 'العيادات'], ['Appointments booked while you work.', 'مواعيد تُحجز وأنت تعمل.'], 'circle', 'tint'],
+            ['agencies', 'agencies', ['Agencies', 'الوكالات'], ['Run automations for every client.', 'شغّل الأتمتة لكل عملائك.'], 'pill', 'brand'],
+            ['realestate', 'real-estate', ['Real estate', 'العقارات'], ['Qualify leads before you call.', 'أهّل العملاء المحتملين قبل أن تتصل.'], 'house', 'ink'],
         ];
 
         foreach ($useCases as $sort => [$key, $slug, $name, $line, $shape, $tone]) {
-            UseCase::updateOrCreate(['key' => $key], ['slug' => $slug, 'name' => $en($name), 'line' => $en($line), 'shape' => $shape, 'tone' => $tone, 'sort' => $sort + 1, 'active' => true]);
+            UseCase::updateOrCreate(['key' => $key], ['slug' => $slug, 'name' => $t($name), 'line' => $t($line), 'shape' => $shape, 'tone' => $tone, 'sort' => $sort + 1, 'active' => true]);
         }
 
         $comparison = [
-            'before' => ['Comments pile up unanswered', 'DMs missed = sales missed', 'Copy-pasting the same replies', 'Online 14 hours a day'],
-            'after' => ['Every comment answered in seconds', 'DMs become orders while you sleep', 'One flow replies on every channel', 'You check results, not messages'],
+            'before' => [
+                ['Comments pile up unanswered', 'التعليقات تتراكم بدون رد'],
+                ['DMs missed = sales missed', 'رسالة فائتة = بيعة فائتة'],
+                ['Copy-pasting the same replies', 'نسخ ولصق نفس الردود'],
+                ['Online 14 hours a day', 'متصل 14 ساعة في اليوم'],
+            ],
+            'after' => [
+                ['Every comment answered in seconds', 'كل تعليق يُرد عليه في ثوانٍ'],
+                ['DMs become orders while you sleep', 'الرسائل تتحول إلى طلبات وأنت نايم'],
+                ['One flow replies on every channel', 'مسار واحد يرد على كل القنوات'],
+                ['You check results, not messages', 'تتابع النتائج، لا الرسائل'],
+            ],
         ];
 
         foreach ($comparison as $side => $points) {
             foreach ($points as $sort => $text) {
-                ComparisonPoint::create(['side' => $side, 'text' => $en($text), 'sort' => $sort + 1]);
+                ComparisonPoint::create(['side' => $side, 'text' => $t($text), 'sort' => $sort + 1]);
             }
         }
 
-        $stats = [['1.2M+', 'Messages automated'], ['0.4s', 'Average reply time'], ['$2M+', 'Revenue recovered'], ['2,000+', 'Businesses']];
+        $stats = [
+            [['1.2M+', '+1.2 مليون'], ['Messages automated', 'رسالة مؤتمتة']],
+            [['0.4s', '0.4 ث'], ['Average reply time', 'متوسط زمن الرد']],
+            [['$2M+', '+2 مليون $'], ['Revenue recovered', 'إيرادات مستردّة']],
+            [['2,000+', '+2,000'], ['Businesses', 'نشاط تجاري']],
+        ];
 
         foreach ($stats as $sort => [$value, $label]) {
-            HomeStat::create(['value' => $en($value), 'label' => $en($label), 'sort' => $sort + 1]);
+            HomeStat::create(['value' => $t($value), 'label' => $t($label), 'sort' => $sort + 1]);
         }
 
         $faq = [
-            ['How much does it cost?', 'There’s a free plan to start. Paid plans scale with your audience — see Pricing.', 'Pricing', '/pricing', false],
-            ['Which channels are supported?', 'Instagram, WhatsApp, TikTok and Messenger — one inbox, one set of automations.', null, null, false],
-            ['Does it work in Arabic?', 'Fully. Flows, replies and the dashboard all support Arabic and English.', null, null, false],
-            ['Is it approved by Meta?', 'BLEXCHAT uses the official APIs.', null, null, true],
-            ['How long does setup take?', 'Most businesses go live in under 10 minutes.', null, null, true],
-            ['Is my data safe?', 'Your conversations stay yours. We never sell data.', null, null, true],
+            [['How much does it cost?', 'كم التكلفة؟'], ['There’s a free plan to start. Paid plans scale with your audience — see Pricing.', 'فيه خطة مجانية للبداية، والخطط المدفوعة تكبر مع جمهورك — اطّلع على صفحة الأسعار.'], ['Pricing', 'الأسعار'], '/pricing', false],
+            [['Which channels are supported?', 'ما القنوات المدعومة؟'], ['Instagram, WhatsApp, TikTok and Messenger — one inbox, one set of automations.', 'إنستغرام وواتساب وتيك توك وماسنجر — صندوق واحد، ومجموعة أتمتة واحدة.'], null, null, false],
+            [['Does it work in Arabic?', 'هل يدعم العربية؟'], ['Fully. Flows, replies and the dashboard all support Arabic and English.', 'بالكامل. المسارات والردود ولوحة التحكم كلها تدعم العربية والإنجليزية.'], null, null, false],
+            [['Is it approved by Meta?', 'هل هو معتمد من Meta؟'], ['BLEXCHAT uses the official APIs.', 'بلكس تشات يستخدم الواجهات البرمجية الرسمية.'], null, null, true],
+            [['How long does setup take?', 'كم يستغرق الإعداد؟'], ['Most businesses go live in under 10 minutes.', 'أغلب الأنشطة تنطلق في أقل من 10 دقائق.'], null, null, true],
+            [['Is my data safe?', 'هل بياناتي آمنة؟'], ['Your conversations stay yours. We never sell data.', 'محادثاتك ملكك، ولا نبيع البيانات أبداً.'], null, null, true],
         ];
 
         foreach ($faq as $sort => [$question, $answer, $linkLabel, $linkUrl, $unverified]) {
-            FaqItem::create(array_filter(['question' => $en($question), 'answer' => $en($answer), 'link_label' => $en($linkLabel), 'link_url' => $linkUrl, 'sort' => $sort + 1]) + ['claim_unverified' => $unverified]);
+            FaqItem::create(array_filter(['question' => $t($question), 'answer' => $t($answer), 'link_label' => $t($linkLabel), 'link_url' => $linkUrl, 'sort' => $sort + 1]) + ['claim_unverified' => $unverified]);
         }
 
         $rules = [
-            ['price', ['how much', 'price', 'cost', 'بكم', 'كم سعر', 'السعر'], 'Hey! Just sent the price to your DMs 💌', 'View product'],
-            ['shipping', ['ship', 'deliver', 'delivery', 'riyadh', 'jeddah', 'ksa', 'توصيل', 'شحن', 'الرياض', 'جدة'], 'Yes! Free delivery across KSA 🚚', 'Track order'],
-            ['link', ['link', 'url', 'website', 'رابط', 'لينك', 'الموقع'], 'Sent! Check your DMs ✨', 'Open link'],
-            ['stock', ['available', 'in stock', 'sold out', 'size', 'متوفر', 'موجود', 'مقاس'], 'Still in stock — I saved one for you 🙌', 'View product'],
-            ['booking', ['book', 'booking', 'appointment', 'reserve', 'table', 'حجز', 'موعد', 'احجز'], 'Done — pick a time and I will confirm it 📅', 'Pick a time'],
+            ['price', ['how much', 'price', 'cost', 'بكم', 'كم سعر', 'السعر'], ['Hey! Just sent the price to your DMs 💌', 'هلا! أرسلنا لك السعر بالخاص 💌'], ['View product', 'شوف المنتج']],
+            ['shipping', ['ship', 'deliver', 'delivery', 'riyadh', 'jeddah', 'ksa', 'توصيل', 'شحن', 'الرياض', 'جدة'], ['Yes! Free delivery across KSA 🚚', 'أكيد! التوصيل مجاني لكل مناطق المملكة 🚚'], ['Track order', 'تتبّع الطلب']],
+            ['link', ['link', 'url', 'website', 'رابط', 'لينك', 'الموقع'], ['Sent! Check your DMs ✨', 'أرسلناه! شيك رسائلك ✨'], ['Open link', 'افتح الرابط']],
+            ['stock', ['available', 'in stock', 'sold out', 'size', 'متوفر', 'موجود', 'مقاس'], ['Still in stock — I saved one for you 🙌', 'لسا متوفر — حجزت لك واحد 🙌'], ['View product', 'شوف المنتج']],
+            ['booking', ['book', 'booking', 'appointment', 'reserve', 'table', 'حجز', 'موعد', 'احجز'], ['Done — pick a time and I will confirm it 📅', 'تم — اختر الوقت ونأكّد لك 📅'], ['Pick a time', 'اختر الوقت']],
         ];
 
         foreach ($rules as $sort => [$key, $keywords, $reply, $action]) {
-            DemoReplyRule::updateOrCreate(['key' => $key], ['keywords' => $keywords, 'reply' => $en($reply), 'action' => $en($action), 'result' => $en('✓ Replied in 0.4s'), 'sort' => $sort + 1, 'active' => true]);
+            DemoReplyRule::updateOrCreate(['key' => $key], ['keywords' => $keywords, 'reply' => $t($reply), 'action' => $t($action), 'result' => $t(['✓ Replied in 0.4s', '✓ تم الرد خلال 0.4 ثانية']), 'sort' => $sort + 1, 'active' => true]);
         }
 
         $footer = [
-            'product' => [['Features', '#features'], ['Pricing', '/pricing'], ['Blexchat AI', '#try-it']],
-            'solutions' => [['Creators', '/solutions/creators'], ['E-commerce', '/solutions/e-commerce'], ['Restaurants', '/solutions/restaurants'], ['Agencies', '/solutions/agencies']],
-            'account' => [['Sign up', '/signup'], ['Sign in', '/signin']],
-            'legal' => [['Privacy', '/privacy'], ['Terms', '/terms']],
+            'product' => [[['Features', 'الميزات'], '#features'], [['Pricing', 'الأسعار'], '/pricing'], [['Blexchat AI', 'بلكس تشات AI'], '#try-it']],
+            'solutions' => [[['Creators', 'صنّاع المحتوى'], '/solutions/creators'], [['E-commerce', 'التجارة الإلكترونية'], '/solutions/e-commerce'], [['Restaurants', 'المطاعم'], '/solutions/restaurants'], [['Agencies', 'الوكالات'], '/solutions/agencies']],
+            'account' => [[['Sign up', 'إنشاء حساب'], '/signup'], [['Sign in', 'تسجيل الدخول'], '/signin']],
+            'legal' => [[['Privacy', 'الخصوصية'], '/privacy'], [['Terms', 'الشروط'], '/terms']],
         ];
 
         foreach ($footer as $group => $links) {
             foreach ($links as $sort => [$label, $url]) {
-                FooterLink::create(['group' => $group, 'label' => $en($label), 'url' => $url, 'sort' => $sort + 1]);
+                FooterLink::create(['group' => $group, 'label' => $t($label), 'url' => $url, 'sort' => $sort + 1]);
             }
         }
     }

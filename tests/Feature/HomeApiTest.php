@@ -1,9 +1,18 @@
 <?php
 
+use App\Models\ComparisonPoint;
+use App\Models\Creator;
+use App\Models\DemoReplyRule;
 use App\Models\FaqItem;
+use App\Models\FooterLink;
 use App\Models\HomeBlock;
+use App\Models\HomeStat;
+use App\Models\NavMenuItem;
+use App\Models\UseCase;
 use Database\Seeders\HomeContentSeeder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Arr;
 
 uses(RefreshDatabase::class);
 
@@ -39,12 +48,37 @@ it('serves exactly the homepage the frontend was built against', function () {
     expect(withRelativeUrls($response->json('data')))->toEqual($expected);
 });
 
+it('has every homepage text in Arabic', function () {
+    $this->seed(HomeContentSeeder::class);
+
+    foreach (HomeBlock::all() as $block) {
+        $texts = $block->getTranslations('texts');
+        expect(array_keys(Arr::dot($texts['ar'])))->toBe(array_keys(Arr::dot($texts['en'])), "Arabic texts of {$block->key}");
+    }
+
+    foreach ([Creator::class, UseCase::class, HomeStat::class, FaqItem::class, DemoReplyRule::class, NavMenuItem::class, FooterLink::class, ComparisonPoint::class] as $model) {
+        $model::all()->each(function (Model $item): void {
+            foreach ($item->getTranslatableAttributes() as $attribute) {
+                expect($item->hasTranslation($attribute, 'ar'))->toBe($item->hasTranslation($attribute, 'en'), $item::class." #{$item->id} {$attribute}");
+            }
+        });
+    }
+
+    $this->getJson('/api/v1/home?lang=ar')
+        ->assertHeader('Content-Language', 'ar')
+        ->assertJsonPath('meta.fallback', false)
+        ->assertJsonPath('data.sections.0.subtitle', 'بلكس تشات يحوّل التعليقات والرسائل إلى عملاء.')
+        ->assertJsonPath('data.sections.0.story.relief.stats.2.to', 3)
+        ->assertJsonPath('data.navigation.menus.product.items.4.target', '#try-it')
+        ->assertJsonPath('data.footer.columns.0.links.0.label', 'الميزات');
+});
+
 it('serves translated text and falls back to English for the rest', function () {
     $this->seed(HomeContentSeeder::class);
 
     $hero = HomeBlock::where('key', 'hero')->firstOrFail();
     $hero->setTranslation('texts', 'ar', ['subtitle' => 'بلكس تشات يحوّل التعليقات والرسائل إلى عملاء.', 'story' => ['pressure' => ['chips' => [1 => ['text' => 'توصلون للرياض؟']]]]])->save();
-    FaqItem::orderBy('sort')->firstOrFail()->setTranslation('question', 'ar', 'كم التكلفة؟')->save();
+    FaqItem::orderBy('sort')->firstOrFail()->setTranslation('question', 'ar', 'كم التكلفة؟')->forgetTranslation('answer', 'ar')->save();
 
     $this->getJson('/api/v1/home?lang=ar')
         ->assertOk()

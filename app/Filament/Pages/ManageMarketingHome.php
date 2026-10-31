@@ -88,11 +88,9 @@ class ManageMarketingHome extends Page
             $edited = $state[$block->key] ?? [];
             $texts = $block->getTranslations('texts');
 
+            // A cleared text is dropped from its language, so that language falls back for it.
             foreach (config('app.supported_locales') as $locale) {
-                $editedTexts = $edited['texts'][$locale] ?? [];
-                $texts[$locale] = Translations::isFallback($locale)
-                    ? $this->merge($texts[$locale] ?? [], $editedTexts)
-                    : $this->onlyFilled($editedTexts);
+                $texts[$locale] = $this->merge($texts[$locale] ?? [], $edited['texts'][$locale] ?? []);
 
                 if ($texts[$locale] === []) {
                     unset($texts[$locale]);
@@ -338,25 +336,24 @@ class ManageMarketingHome extends Page
             return $edited;
         }
 
-        if (! is_array($original)) {
-            return $edited;
-        }
+        // A translation may not have this branch yet.
+        $original = is_array($original) ? $original : [];
 
         // A block whose shared values have no fields in the form sends nothing for them.
         if ($edited === []) {
             return $original;
         }
 
-        // A list of plain values (e.g. several uploaded images) is replaced; anything structured
-        // is merged by position, because the form shows only some fields of some items.
+        // A list of plain values (e.g. several uploaded images) is replaced, minus blank entries;
+        // anything structured is merged by position, as the form shows only some fields of some items.
         if (array_is_list($edited) && array_filter($edited, 'is_array') === []) {
-            return $edited;
+            return array_filter($edited, fn (mixed $value): bool => $value !== null);
         }
 
         foreach ($edited as $key => $value) {
             $merged = $this->merge($original[$key] ?? null, $value);
 
-            if ($merged === null) {
+            if ($merged === null || $merged === []) {
                 unset($original[$key]);
             } else {
                 $original[$key] = $merged;
@@ -364,27 +361,5 @@ class ManageMarketingHome extends Page
         }
 
         return $original;
-    }
-
-    /**
-     * A translation keeps only the texts that were filled in, at their positions, so every
-     * other text falls back to the fallback language.
-     *
-     * @param  array<array-key, mixed>  $texts
-     * @return array<array-key, mixed>
-     */
-    private function onlyFilled(array $texts): array
-    {
-        foreach ($texts as $key => $value) {
-            $value = is_array($value) ? $this->onlyFilled($value) : $value;
-
-            if ($value === null || $value === '' || $value === []) {
-                unset($texts[$key]);
-            } else {
-                $texts[$key] = $value;
-            }
-        }
-
-        return $texts;
     }
 }
