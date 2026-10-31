@@ -4,19 +4,11 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\AutomationResource\Pages;
 use App\Models\Automation;
-use App\Models\Channel;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TagsInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -44,79 +36,6 @@ class AutomationResource extends Resource
     protected static string|\UnitEnum|null $navigationGroup = 'إدارة المحتوى';
 
     protected static ?int $navigationSort = 2;
-
-    public static function form(Schema $schema): Schema
-    {
-        return $schema->components([
-            Section::make('معلومات الأتمتة')->schema([
-                TextInput::make('name')
-                    ->label('الاسم')
-                    ->required()
-                    ->maxLength(255)
-                    ->columnSpan(2),
-
-                Select::make('channel_id')
-                    ->label('القناة')
-                    ->relationship('channel', 'account_id')
-                    ->getOptionLabelFromRecordUsing(fn (Channel $record) => ucfirst($record->platform).' — '.($record->username ?? $record->account_id))
-                    ->searchable()
-                    ->preload()
-                    ->required(),
-
-                Select::make('trigger_type')
-                    ->label('نوع المشغّل')
-                    ->options([
-                        'comment_keyword' => 'كلمة مفتاحية في تعليق',
-                        'dm_keyword' => 'كلمة مفتاحية في DM',
-                        'story_mention' => 'ذكر في ستوري',
-                    ])
-                    ->required(),
-
-                TagsInput::make('keywords')
-                    ->label('الكلمات المفتاحية')
-                    ->placeholder('أضف كلمة واضغط Enter')
-                    ->columnSpan(2),
-
-                Toggle::make('active')
-                    ->label('مفعّلة')
-                    ->default(true),
-            ])->columns(2),
-
-            Section::make('الإجراءات')->schema([
-                Repeater::make('actions')
-                    ->label('')
-                    ->schema([
-                        Select::make('type')
-                            ->label('نوع الإجراء')
-                            ->options([
-                                'reply_comment' => 'رد على التعليق',
-                                'send_dm' => 'إرسال رسالة DM',
-                                'send_dm_with_button' => 'DM مع زر',
-                            ])
-                            ->required()
-                            ->live(),
-
-                        Textarea::make('message')
-                            ->label('نص الرسالة')
-                            ->required()
-                            ->rows(3),
-
-                        TextInput::make('button_label')
-                            ->label('نص الزر')
-                            ->visible(fn ($get) => $get('type') === 'send_dm_with_button'),
-
-                        TextInput::make('button_url')
-                            ->label('رابط الزر')
-                            ->url()
-                            ->visible(fn ($get) => $get('type') === 'send_dm_with_button'),
-                    ])
-                    ->columns(2)
-                    ->required()
-                    ->minItems(1)
-                    ->addActionLabel('إضافة إجراء'),
-            ]),
-        ]);
-    }
 
     public static function table(Table $table): Table
     {
@@ -191,7 +110,6 @@ class AutomationResource extends Resource
             ])
             ->actions([
                 ViewAction::make()->label('عرض'),
-                EditAction::make()->label('تعديل'),
                 Action::make('toggle')
                     ->label(fn (Automation $record) => $record->active ? 'تعطيل' : 'تفعيل')
                     ->icon(fn (Automation $record) => $record->active ? 'heroicon-o-pause' : 'heroicon-o-play')
@@ -258,9 +176,7 @@ class AutomationResource extends Resource
     {
         return [
             'index' => Pages\ListAutomations::route('/'),
-            'create' => Pages\CreateAutomation::route('/create'),
             'view' => Pages\ViewAutomation::route('/{record}'),
-            'edit' => Pages\EditAutomation::route('/{record}/edit'),
         ];
     }
 }

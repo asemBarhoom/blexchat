@@ -143,12 +143,12 @@ class DashboardController extends Controller
     private function checklist(bool $hasChannel, bool $hasAutomation): array
     {
         return [
-            'title' => 'Your first steps',
+            'title' => __('dashboard.checklist.title'),
             'steps' => [
-                ['id' => 'connect', 'label' => 'Connect a channel', 'done' => $hasChannel, 'to' => '/onboarding/channel'],
-                ['id' => 'automation', 'label' => 'Build your first automation', 'done' => $hasAutomation, 'to' => '/onboarding/automation/new?trigger=comment'],
+                ['id' => 'connect', 'label' => __('dashboard.checklist.connect'), 'done' => $hasChannel, 'to' => '/onboarding/channel'],
+                ['id' => 'automation', 'label' => __('dashboard.checklist.automation'), 'done' => $hasAutomation, 'to' => '/onboarding/automation/new?trigger=comment'],
                 // Opening the preview is tracked client-side, so the server never marks it done.
-                ['id' => 'test', 'label' => 'Send yourself a test comment', 'done' => false, 'to' => '/app/automation'],
+                ['id' => 'test', 'label' => __('dashboard.checklist.test'), 'done' => false, 'to' => '/app/automation'],
             ],
         ];
     }
@@ -158,14 +158,21 @@ class DashboardController extends Controller
      */
     private function startHere(): array
     {
+        $templates = [
+            'comment-to-dm' => ['comment_to_dm', true, 'comment'],
+            'story-reply' => ['story_reply', false, 'story'],
+            'welcome-dm' => ['welcome_dm', false, 'dm'],
+        ];
+
         return [
-            'title' => 'Start here',
-            'lead' => 'Three moves that pay for themselves in a week.',
-            'templates' => [
-                ['id' => 'comment-to-dm', 'title' => 'Comment to DM', 'line' => 'Someone comments a keyword, they get the link in their DMs.', 'trigger' => 'Post or reel comment', 'popular' => true, 'to' => '/onboarding/automation/new?trigger=comment'],
-                ['id' => 'story-reply', 'title' => 'Story reply', 'line' => 'Every reply to a story gets an answer, even at 2am.', 'trigger' => 'Story reply', 'popular' => false, 'to' => '/onboarding/automation/new?trigger=story'],
-                ['id' => 'welcome-dm', 'title' => 'Welcome DM', 'line' => 'First-time messages get a greeting and your catalogue.', 'trigger' => 'Direct message', 'popular' => false, 'to' => '/onboarding/automation/new?trigger=dm'],
-            ],
+            'title' => __('dashboard.start_here.title'),
+            'lead' => __('dashboard.start_here.lead'),
+            'templates' => array_map(fn (string $id, array $template): array => [
+                'id' => $id,
+                ...__("dashboard.start_here.{$template[0]}"),
+                'popular' => $template[1],
+                'to' => "/onboarding/automation/new?trigger={$template[2]}",
+            ], array_keys($templates), $templates),
         ];
     }
 
@@ -200,35 +207,36 @@ class DashboardController extends Controller
 
         $hasData = $autoReplies > 0 || $engagedPosts > 0;
         $minutesSaved = (int) round($autoReplies * 2.5);
-        $timeSaved = intdiv($minutesSaved, 60) > 0
-            ? intdiv($minutesSaved, 60).'h'.($minutesSaved % 60 > 0 ? ' '.($minutesSaved % 60).'m' : '')
-            : $minutesSaved.'m';
+        $hours = intdiv($minutesSaved, 60);
+        $minutes = $minutesSaved % 60;
+        $timeSaved = match (true) {
+            $hours > 0 && $minutes > 0 => __('dashboard.last_seven.hours_minutes', ['hours' => $hours, 'minutes' => $minutes]),
+            $hours > 0 => __('dashboard.last_seven.hours', ['hours' => $hours]),
+            default => __('dashboard.last_seven.minutes', ['minutes' => $minutes]),
+        };
         $topCaption = $topPost?->post?->caption ? mb_strimwidth($topPost->post->caption, 0, 40, '…') : null;
 
         return [
-            'title' => 'Your last 7 days',
+            'title' => __('dashboard.last_seven.title'),
             'has_data' => $hasData,
             'metrics' => [
                 [
                     'id' => 'engagement',
-                    'label' => 'Engagement winners',
-                    'hint' => 'Which posts pulled the most comments',
-                    'value' => $hasData ? $engagedPosts.' '.($engagedPosts === 1 ? 'post' : 'posts') : null,
-                    'note' => $hasData && $topCaption ? "«{$topCaption}» pulled {$topPost->comments} of them." : null,
+                    ...__('dashboard.last_seven.engagement'),
+                    'value' => $hasData ? trans_choice('dashboard.last_seven.posts', $engagedPosts) : null,
+                    'note' => $hasData && $topCaption ? __('dashboard.last_seven.top_post', ['caption' => $topCaption, 'count' => $topPost->comments]) : null,
                     'locked' => false,
                 ],
                 [
                     'id' => 'time',
-                    'label' => 'Time saved',
-                    'hint' => 'Hours you did not spend answering',
+                    ...__('dashboard.last_seven.time'),
                     'value' => $hasData ? $timeSaved : null,
-                    'note' => $hasData ? "{$autoReplies} replies went out without you." : null,
+                    'note' => $hasData ? __('dashboard.last_seven.replies', ['count' => $autoReplies]) : null,
                     'locked' => false,
                 ],
                 [
                     'id' => 'leads',
-                    'label' => 'Leads collected',
-                    'hint' => 'Emails and numbers captured',
+                    ...__('dashboard.last_seven.leads'),
                     'value' => null,
                     'note' => null,
                     'locked' => true,

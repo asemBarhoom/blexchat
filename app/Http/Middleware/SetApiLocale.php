@@ -21,9 +21,8 @@ class SetApiLocale
             $locale = $primary ?: null;
         }
 
-        // Validate and fall back to app default
-        if (! in_array($locale, ['ar', 'en'], true)) {
-            $locale = config('app.locale', 'ar');
+        if (! in_array($locale, config('app.supported_locales'), true)) {
+            $locale = config('app.locale');
         }
 
         App::setLocale($locale);

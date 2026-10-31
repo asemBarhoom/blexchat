@@ -19,13 +19,22 @@ beforeEach(function () {
 
 it('renders every admin list page', function (string $path) {
     $this->get($path)->assertOk();
-})->with(['/admin', '/admin/channels', '/admin/automations', '/admin/automations/create', '/admin/conversations', '/admin/posts']);
+})->with([
+    '/admin', '/admin/marketing-home', '/admin/faq-items', '/admin/creators', '/admin/use-cases', '/admin/home-stats',
+    '/admin/demo-reply-rules', '/admin/nav-menu-items', '/admin/footer-links', '/admin/comparison-points',
+    '/admin/channels', '/admin/automations', '/admin/conversations', '/admin/posts',
+]);
 
 it('keeps shop owners out of the admin panel', function (string $path) {
     $this->actingAs(User::where('email', 'nour@nourboutique.com')->firstOrFail())
         ->get($path)
         ->assertForbidden();
-})->with(['/admin', '/admin/channels', '/admin/posts']);
+})->with(['/admin', '/admin/marketing-home', '/admin/channels', '/admin/posts']);
+
+it('no longer offers creating or editing automations from the panel', function () {
+    $this->get('/admin/automations/create')->assertNotFound();
+    $this->get('/admin/automations/'.Automation::firstOrFail()->id.'/edit')->assertNotFound();
+});
 
 it('refuses admin sign-in for a shop owner', function () {
     $owner = User::where('email', 'nour@nourboutique.com')->firstOrFail();
@@ -56,7 +65,6 @@ it('never grants admin access through API sign-up', function () {
 it('renders every admin detail page with seeded data', function () {
     $this->get('/admin/channels/'.Channel::firstOrFail()->id)->assertOk();
     $this->get('/admin/automations/'.Automation::firstOrFail()->id)->assertOk();
-    $this->get('/admin/automations/'.Automation::firstOrFail()->id.'/edit')->assertOk();
     $this->get('/admin/conversations/'.Conversation::firstOrFail()->id)->assertOk();
     $this->get('/admin/posts/'.Post::firstOrFail()->id)->assertOk()->assertSee('عباية الشتاء وصلت');
 });

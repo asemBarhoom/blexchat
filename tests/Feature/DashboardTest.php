@@ -41,6 +41,22 @@ it('returns the signed-in home screen with real counts', function () {
         ->assertJsonCount(3, 'data.start_here.templates');
 });
 
+it('serves the home screen texts in the requested language', function () {
+    $user = User::factory()->create();
+    $channel = Channel::factory()->for($user)->create();
+    $conversation = Conversation::factory()->for($channel)->create();
+    Message::factory()->count(3)->for($conversation)->create(['automated' => true, 'sent_at' => now()->subDay()]);
+
+    Sanctum::actingAs($user);
+
+    $this->getJson('/api/v1/dashboard?lang=ar')
+        ->assertJsonPath('data.checklist.title', 'خطواتك الأولى')
+        ->assertJsonPath('data.start_here.templates.0.title', 'من التعليق إلى الخاص')
+        ->assertJsonPath('data.start_here.templates.0.to', '/onboarding/automation/new?trigger=comment')
+        ->assertJsonPath('data.last_seven.metrics.1.label', 'الوقت الموفَّر')
+        ->assertJsonPath('data.last_seven.metrics.1.value', '8 د');
+});
+
 it('keeps platform avatar URLs as they are', function () {
     $user = User::factory()->create();
     Channel::factory()->for($user)->create(['profile_picture' => 'https://cdn.example.com/a.jpg']);

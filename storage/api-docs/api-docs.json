@@ -842,7 +842,7 @@
                     "Home"
                 ],
                 "summary": "Get the complete public marketing homepage",
-                "description": "Navigation, every homepage section in display order, the live-demo reply rules and the footer. No authentication. Language comes from ?lang= or Accept-Language; when that language has no content yet, English is returned and meta.fallback is true.",
+                "description": "Navigation, every homepage section in display order, the live-demo reply rules and the footer. No authentication. Language comes from ?lang= or Accept-Language. Any text not yet translated into that language is served in English, field by field, and meta.fallback is then true.",
                 "operationId": "9578f64b5c6ee0a342418701420a15fc",
                 "parameters": [
                     {
@@ -881,21 +881,21 @@
                                                 "locale": {
                                                     "description": "Language of the returned content",
                                                     "type": "string",
-                                                    "example": "en"
-                                                },
-                                                "requested_locale": {
-                                                    "type": "string",
                                                     "example": "ar"
                                                 },
                                                 "fallback": {
-                                                    "description": "True when the requested language is not available yet",
+                                                    "description": "True when at least one text is not translated yet and is served in English",
                                                     "type": "boolean"
                                                 },
                                                 "available_locales": {
                                                     "type": "array",
                                                     "items": {
                                                         "type": "string"
-                                                    }
+                                                    },
+                                                    "example": [
+                                                        "en",
+                                                        "ar"
+                                                    ]
                                                 }
                                             },
                                             "type": "object"

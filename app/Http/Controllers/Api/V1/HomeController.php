@@ -3,7 +3,16 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\MarketingPage;
+use App\Models\ComparisonPoint;
+use App\Models\Creator;
+use App\Models\DemoReplyRule;
+use App\Models\FaqItem;
+use App\Models\FooterLink;
+use App\Models\HomeBlock;
+use App\Models\HomeStat;
+use App\Models\NavMenuItem;
+use App\Models\UseCase;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\App;
 use OpenApi\Attributes as OA;
@@ -299,12 +308,16 @@ use OpenApi\Attributes as OA;
 ])]
 class HomeController extends Controller
 {
-    private const FALLBACK_LOCALE = 'en';
+    private string $locale;
+
+    private string $fallbackLocale;
+
+    private bool $usedFallback = false;
 
     #[OA\Get(
         path: '/api/v1/home',
         summary: 'Get the complete public marketing homepage',
-        description: 'Navigation, every homepage section in display order, the live-demo reply rules and the footer. No authentication. Language comes from ?lang= or Accept-Language; when that language has no content yet, English is returned and meta.fallback is true.',
+        description: 'Navigation, every homepage section in display order, the live-demo reply rules and the footer. No authentication. Language comes from ?lang= or Accept-Language. Any text not yet translated into that language is served in English, field by field, and meta.fallback is then true.',
         tags: ['Home'],
         parameters: [
             new OA\Parameter(name: 'lang', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['en', 'ar'])),
@@ -317,10 +330,9 @@ class HomeController extends Controller
                 content: new OA\JsonContent(properties: [
                     new OA\Property(property: 'data', ref: '#/components/schemas/MarketingHome'),
                     new OA\Property(property: 'meta', type: 'object', properties: [
-                        new OA\Property(property: 'locale', type: 'string', description: 'Language of the returned content', example: 'en'),
-                        new OA\Property(property: 'requested_locale', type: 'string', example: 'ar'),
-                        new OA\Property(property: 'fallback', type: 'boolean', description: 'True when the requested language is not available yet'),
-                        new OA\Property(property: 'available_locales', type: 'array', items: new OA\Items(type: 'string')),
+                        new OA\Property(property: 'locale', type: 'string', description: 'Language of the returned content', example: 'ar'),
+                        new OA\Property(property: 'fallback', type: 'boolean', description: 'True when at least one text is not translated yet and is served in English'),
+                        new OA\Property(property: 'available_locales', type: 'array', items: new OA\Items(type: 'string'), example: ['en', 'ar']),
                     ]),
                 ]),
             ),
@@ -329,27 +341,207 @@ class HomeController extends Controller
     )]
     public function __invoke(): JsonResponse
     {
-        $requestedLocale = App::getLocale();
-        $pages = MarketingPage::query()->where('slug', 'home')->get()->keyBy('locale');
-        $page = $pages->get($requestedLocale) ?? $pages->get(self::FALLBACK_LOCALE);
+        $blocks = HomeBlock::all()->keyBy('key');
 
-        abort_if($page === null, 404);
+        abort_if($blocks->isEmpty(), 404);
+
+        $this->locale = App::getLocale();
+        $this->fallbackLocale = config('app.fallback_locale');
+
+        $data = [
+            'navigation' => $this->navigation($blocks['navigation']),
+            'sections' => $blocks->whereNotNull('sort')->sortBy('sort')->map(fn (HomeBlock $block): array => $this->section($block))->values()->all(),
+            'demo_replies' => [...$this->block($blocks['demo_replies']), 'rules' => DemoReplyRule::visible()->get()->map(fn (DemoReplyRule $rule): array => [
+                'id' => $rule->key,
+                'keywords' => $rule->keywords,
+                'reply' => $this->translate($rule, 'reply'),
+                'action' => $this->translate($rule, 'action'),
+                'result' => $this->translate($rule, 'result'),
+            ])->all()],
+            'footer' => $this->footer($blocks['footer']),
+        ];
 
         return response()
             ->json([
-                'data' => $this->absoluteStorageUrls($page->content),
+                'data' => $this->absoluteStorageUrls($data),
                 'meta' => [
-                    'locale' => $page->locale,
-                    'requested_locale' => $requestedLocale,
-                    'fallback' => $page->locale !== $requestedLocale,
-                    'available_locales' => $pages->keys()->values()->all(),
+                    'locale' => $this->locale,
+                    'fallback' => $this->usedFallback,
+                    'available_locales' => config('app.supported_locales'),
                 ],
             ])
-            ->header('Content-Language', $page->locale);
+            ->header('Content-Language', $this->locale);
     }
 
     /**
-     * Stored paths stay host-agnostic; the frontend runs on another origin, so it needs absolute URLs.
+     * @return array<string, mixed>
+     */
+    private function section(HomeBlock $block): array
+    {
+        $section = $this->block($block);
+
+        return match ($block->key) {
+            'creators' => [...$section, 'items' => Creator::visible()->get()->map(fn (Creator $creator): array => [
+                'id' => $creator->key,
+                'name' => $this->translate($creator, 'name'),
+                'handle' => $creator->handle,
+                'followers' => $this->translate($creator, 'followers'),
+                'quote' => $this->translate($creator, 'quote'),
+                'photo' => $creator->photo,
+            ])->all()],
+            'use-cases' => [...$section, 'items' => UseCase::visible()->get()->map(fn (UseCase $useCase): array => [
+                'id' => $useCase->key,
+                'slug' => $useCase->slug,
+                'name' => $this->translate($useCase, 'name'),
+                'line' => $this->translate($useCase, 'line'),
+                'shape' => $useCase->shape,
+                'tone' => $useCase->tone,
+            ])->all()],
+            'before-after' => $this->withComparisonPoints($section),
+            'numbers' => [...$section, 'stats' => HomeStat::visible()->get()->map(fn (HomeStat $stat): array => [
+                'value' => $this->translate($stat, 'value'),
+                'label' => $this->translate($stat, 'label'),
+            ])->all()],
+            'faq' => [...$section, 'items' => FaqItem::visible()->get()->map(fn (FaqItem $item): array => array_filter([
+                'question' => $this->translate($item, 'question'),
+                'answer' => $this->translate($item, 'answer'),
+                'link' => $item->link_url ? ['label' => $this->translate($item, 'link_label'), 'url' => $item->link_url] : null,
+                'claim_unverified' => $item->claim_unverified ?: null,
+            ], fn (mixed $value): bool => $value !== null))->all()],
+            default => $section,
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $section
+     * @return array<string, mixed>
+     */
+    private function withComparisonPoints(array $section): array
+    {
+        $points = ComparisonPoint::visible()->get()->groupBy('side');
+
+        foreach (ComparisonPoint::SIDES as $side) {
+            $section[$side]['rows'] = $points->get($side, collect())->map(fn (ComparisonPoint $point): ?string => $this->translate($point, 'text'))->all();
+        }
+
+        return $section;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function navigation(HomeBlock $block): array
+    {
+        $navigation = $this->block($block);
+        $items = NavMenuItem::visible()->get()->groupBy('menu');
+
+        foreach (NavMenuItem::MENUS as $menu) {
+            $navigation['menus'][$menu]['items'] = $items->get($menu, collect())->map(fn (NavMenuItem $item): array => array_filter([
+                'title' => $this->translate($item, 'title'),
+                'description' => $this->translate($item, 'description'),
+                'cta' => $this->translate($item, 'cta'),
+                'target' => $item->target,
+            ], fn (mixed $value): bool => $value !== null))->values()->all();
+        }
+
+        return $navigation;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function footer(HomeBlock $block): array
+    {
+        $footer = $this->block($block);
+        $links = FooterLink::visible()->get()->groupBy('group');
+        $linksOf = fn (string $group): array => $links->get($group, collect())->map(fn (FooterLink $link): array => [
+            'label' => $this->translate($link, 'label'),
+            'url' => $link->url,
+        ])->values()->all();
+
+        $footer['columns'] = array_map(fn (array $column): array => [
+            'title' => $column['title'],
+            'links' => $linksOf($column['group']),
+        ], $footer['columns']);
+        $footer['legal'] = $linksOf('legal');
+
+        return $footer;
+    }
+
+    /**
+     * A block's shared settings with its copy laid over them: the requested language
+     * where translated, the fallback language for every text that is not.
+     *
+     * @return array<string, mixed>
+     */
+    private function block(HomeBlock $block): array
+    {
+        $texts = $block->getTranslations('texts');
+        $fallback = $texts[$this->fallbackLocale] ?? [];
+        $translated = $this->locale === $this->fallbackLocale ? [] : ($texts[$this->locale] ?? []);
+
+        if ($this->locale !== $this->fallbackLocale && $this->countTexts($translated) < $this->countTexts($fallback)) {
+            $this->usedFallback = true;
+        }
+
+        return $this->asLists(array_replace_recursive($block->settings ?? [], $fallback, $translated));
+    }
+
+    private function translate(Model $model, string $attribute): ?string
+    {
+        $missing = $this->locale !== $this->fallbackLocale
+            && ! $model->hasTranslation($attribute, $this->locale)
+            && $model->hasTranslation($attribute, $this->fallbackLocale);
+
+        if ($missing) {
+            $this->usedFallback = true;
+        }
+
+        $value = $model->getTranslation($attribute, $this->locale);
+
+        return $value === '' ? null : $value;
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $texts
+     */
+    private function countTexts(array $texts): int
+    {
+        $count = 0;
+
+        array_walk_recursive($texts, function (mixed $value) use (&$count): void {
+            $count += is_string($value) && $value !== '' ? 1 : 0;
+        });
+
+        return $count;
+    }
+
+    /**
+     * Settings and copy each hold part of a list; merged by index, keys must be restored to a JSON list.
+     *
+     * @param  array<array-key, mixed>  $node
+     * @return array<array-key, mixed>
+     */
+    private function asLists(array $node): array
+    {
+        foreach ($node as $key => $value) {
+            if (is_array($value)) {
+                $node[$key] = $this->asLists($value);
+            }
+        }
+
+        if ($node !== [] && array_filter(array_keys($node), 'is_string') === []) {
+            ksort($node);
+
+            return array_values($node);
+        }
+
+        return $node;
+    }
+
+    /**
+     * Images are stored as public-disk paths (so the admin can upload them); the frontend
+     * runs on another origin, so it gets absolute URLs built from the request host.
      *
      * @param  array<array-key, mixed>  $content
      * @return array<array-key, mixed>
@@ -357,8 +549,8 @@ class HomeController extends Controller
     private function absoluteStorageUrls(array $content): array
     {
         array_walk_recursive($content, function (mixed &$value): void {
-            if (is_string($value) && str_starts_with($value, '/storage/')) {
-                $value = url($value);
+            if (is_string($value) && preg_match('#^marketing/[^\s]+\.(webp|png|jpe?g|gif|avif|svg)$#i', $value)) {
+                $value = url('storage/'.$value);
             }
         });
 

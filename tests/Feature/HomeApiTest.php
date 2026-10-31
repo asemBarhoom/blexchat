@@ -1,0 +1,78 @@
+<?php
+
+use App\Models\FaqItem;
+use App\Models\HomeBlock;
+use Database\Seeders\HomeContentSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
+
+/**
+ * Image URLs are absolute and host-dependent; the fixture stores them relative.
+ *
+ * @param  array<array-key, mixed>  $data
+ * @return array<array-key, mixed>
+ */
+function withRelativeUrls(array $data): array
+{
+    array_walk_recursive($data, function (mixed &$value): void {
+        if (is_string($value)) {
+            $value = str_replace(url('/').'/', '', $value);
+        }
+    });
+
+    return $data;
+}
+
+it('serves exactly the homepage the frontend was built against', function () {
+    $this->seed(HomeContentSeeder::class);
+
+    $expected = json_decode(file_get_contents(base_path('tests/Fixtures/home_en.json')), true);
+
+    $response = $this->getJson('/api/v1/home')
+        ->assertOk()
+        ->assertHeader('Content-Language', 'en')
+        ->assertJsonPath('meta.locale', 'en')
+        ->assertJsonPath('meta.fallback', false)
+        ->assertJsonPath('meta.available_locales', ['en', 'ar']);
+
+    expect(withRelativeUrls($response->json('data')))->toEqual($expected);
+});
+
+it('serves translated text and falls back to English for the rest', function () {
+    $this->seed(HomeContentSeeder::class);
+
+    $hero = HomeBlock::where('key', 'hero')->firstOrFail();
+    $hero->setTranslation('texts', 'ar', ['subtitle' => 'بلكس تشات يحوّل التعليقات والرسائل إلى عملاء.', 'story' => ['pressure' => ['chips' => [1 => ['text' => 'توصلون للرياض؟']]]]])->save();
+    FaqItem::orderBy('sort')->firstOrFail()->setTranslation('question', 'ar', 'كم التكلفة؟')->save();
+
+    $this->getJson('/api/v1/home?lang=ar')
+        ->assertOk()
+        ->assertHeader('Content-Language', 'ar')
+        ->assertJsonPath('meta.locale', 'ar')
+        ->assertJsonPath('meta.fallback', true)
+        ->assertJsonPath('data.sections.0.subtitle', 'بلكس تشات يحوّل التعليقات والرسائل إلى عملاء.')
+        ->assertJsonPath('data.sections.0.description', 'Smart automations that sell and reply for you, 24/7.')
+        ->assertJsonPath('data.sections.0.story.pressure.chips.0.text', 'How much is this? 😍')
+        ->assertJsonPath('data.sections.0.story.pressure.chips.1.text', 'توصلون للرياض؟')
+        ->assertJsonPath('data.sections.0.story.pressure.chips.1.id', 'c2')
+        ->assertJsonPath('data.sections.11.items.0.question', 'كم التكلفة؟')
+        ->assertJsonPath('data.sections.11.items.0.answer', 'There’s a free plan to start. Paid plans scale with your audience — see Pricing.');
+});
+
+it('follows the admin order and hides inactive list items', function () {
+    $this->seed(HomeContentSeeder::class);
+
+    $first = FaqItem::orderBy('sort')->firstOrFail();
+    $first->update(['sort' => 99]);
+    FaqItem::orderBy('sort')->firstOrFail()->update(['active' => false]);
+
+    $this->getJson('/api/v1/home')
+        ->assertJsonCount(5, 'data.sections.11.items')
+        ->assertJsonPath('data.sections.11.items.0.question', 'Does it work in Arabic?')
+        ->assertJsonPath('data.sections.11.items.4.question', $first->getTranslation('question', 'en'));
+});
+
+it('returns a 404 before the homepage content is seeded', function () {
+    $this->getJson('/api/v1/home')->assertNotFound();
+});

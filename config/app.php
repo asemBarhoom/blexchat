@@ -82,6 +82,13 @@ return [
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
+    /*
+    | Languages the site and its content are offered in. Content left untranslated
+    | in one of them falls back to fallback_locale, field by field.
+    */
+
+    'supported_locales' => ['en', 'ar'],
+
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
     /*
