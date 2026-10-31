@@ -133,11 +133,18 @@ it('reports when Instagram refuses the connection', function () {
     Sanctum::actingAs($user = User::factory()->create());
     $state = Crypt::encryptString(json_encode(['user' => $user->id, 'expires' => now()->addMinutes(10)->timestamp]));
 
-    Http::fake(['api.instagram.com/*' => Http::response(['error' => ['message' => 'Invalid authorization code']], 400)]);
+    // Instagram's OAuth endpoint answers some failures with JSON and others with a plain-text body.
+    Http::fake(['api.instagram.com/*' => Http::sequence()
+        ->push(['error' => ['message' => 'Invalid authorization code']], 400)
+        ->push('bad request', 400)]);
 
     $this->postJson('/api/v1/channels/instagram', ['code' => 'used-code', 'state' => $state])
         ->assertStatus(502)
         ->assertJsonPath('error', 'Invalid authorization code');
+
+    $this->postJson('/api/v1/channels/instagram', ['code' => 'used-code', 'state' => $state])
+        ->assertStatus(502)
+        ->assertJsonPath('error', 'bad request');
 
     expect(Channel::count())->toBe(0);
 });

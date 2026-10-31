@@ -28,7 +28,7 @@ class RefreshInstagramTokens extends Command
                 $this->info("Renewed @{$channel->username}");
             } catch (RequestException $exception) {
                 $channel->update(['status' => 'expired']);
-                $this->warn("@{$channel->username} must reconnect: ".$exception->response->json('error.message'));
+                $this->warn("@{$channel->username} must reconnect: ".InstagramClient::errorMessage($exception));
             }
         }
 

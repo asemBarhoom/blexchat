@@ -62,7 +62,7 @@ class InstagramConnectionController extends Controller
         } catch (RequestException $exception) {
             return response()->json([
                 'message' => 'Instagram refused the connection.',
-                'error' => $exception->response->json('error.message'),
+                'error' => InstagramClient::errorMessage($exception),
             ], 502);
         }
 

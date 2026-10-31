@@ -130,6 +130,19 @@ class InstagramClient
     }
 
     /**
+     * Instagram's reason for a refusal. The Graph API answers with `error.message`; the OAuth
+     * endpoint uses `error_message` or, for some failures, a plain-text body.
+     */
+    public static function errorMessage(RequestException $exception): ?string
+    {
+        $response = $exception->response;
+
+        return $response->json('error.message')
+            ?? $response->json('error_message')
+            ?? (str($response->body())->trim()->limit(200)->toString() ?: null);
+    }
+
+    /**
      * A text DM, or a text with one link button when both label and URL are given.
      *
      * @return array<string, mixed>

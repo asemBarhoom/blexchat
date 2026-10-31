@@ -120,7 +120,7 @@ class AutomationRunner
             Log::warning('Instagram automation reply failed', [
                 'automation_id' => $automation->id,
                 'action' => $action['type'],
-                'error' => $exception instanceof RequestException ? $exception->response->json('error.message') : $exception->getMessage(),
+                'error' => $exception instanceof RequestException ? InstagramClient::errorMessage($exception) : $exception->getMessage(),
             ]);
 
             return false;

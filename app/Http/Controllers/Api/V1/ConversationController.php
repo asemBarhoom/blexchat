@@ -123,7 +123,7 @@ class ConversationController extends Controller
             } catch (RequestException|ConnectionException $exception) {
                 return response()->json([
                     'message' => 'Instagram did not deliver the message.',
-                    'error' => $exception instanceof RequestException ? $exception->response->json('error.message') : null,
+                    'error' => $exception instanceof RequestException ? InstagramClient::errorMessage($exception) : null,
                 ], 502);
             }
         }
