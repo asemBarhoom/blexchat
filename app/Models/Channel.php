@@ -18,6 +18,7 @@ class Channel extends Model
         'username',
         'profile_picture',
         'access_token',
+        'token_expires_at',
         'followers',
         'status',
         'connected_at',
@@ -28,7 +29,9 @@ class Channel extends Model
     protected function casts(): array
     {
         return [
-            'followers'    => 'integer',
+            'access_token' => 'encrypted',
+            'token_expires_at' => 'datetime',
+            'followers' => 'integer',
             'connected_at' => 'datetime',
         ];
     }

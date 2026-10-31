@@ -15,9 +15,10 @@ class ConnectChannelRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'platform'     => ['required', 'string', Rule::in(['instagram', 'whatsapp', 'tiktok', 'messenger'])],
+            // Instagram connects through OAuth (InstagramConnectionController) so its webhooks get subscribed.
+            'platform' => ['required', 'string', Rule::in(['whatsapp', 'tiktok', 'messenger'])],
             'access_token' => ['required', 'string'],
-            'account_id'   => ['required', 'string'],
+            'account_id' => ['required', 'string'],
         ];
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\SetApiLocale;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,6 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 ? null
                 : route('filament.admin.auth.login'),
         );
+    })
+    ->withSchedule(function (Schedule $schedule): void {
+        $schedule->command('instagram:refresh-tokens')->daily()->onOneServer();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

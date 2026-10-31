@@ -8,6 +8,9 @@ use App\Http\Resources\Api\V1\ConversationCollection;
 use App\Http\Resources\Api\V1\MessageCollection;
 use App\Http\Resources\Api\V1\MessageResource;
 use App\Models\Conversation;
+use App\Services\Instagram\InstagramClient;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
@@ -98,27 +101,46 @@ class ConversationController extends Controller
         responses: [
             new OA\Response(response: 201, description: 'Message sent'),
             new OA\Response(response: 422, description: 'Validation error'),
+            new OA\Response(response: 502, description: 'Instagram refused the message (e.g. the 24-hour messaging window has closed)'),
         ]
     )]
-    public function sendMessage(SendMessageRequest $request, Conversation $conversation): JsonResponse
+    public function sendMessage(SendMessageRequest $request, Conversation $conversation, InstagramClient $instagram): JsonResponse
     {
         abort_unless(
             $request->user()->channels()->where('id', $conversation->channel_id)->exists(),
             403
         );
 
+        $platformMessageId = null;
+
+        if ($conversation->channel->platform === 'instagram') {
+            try {
+                $platformMessageId = $instagram->sendMessage(
+                    $conversation->channel,
+                    $conversation->contact_platform_id,
+                    InstagramClient::message($request->content, $request->button_label, $request->button_url),
+                );
+            } catch (RequestException|ConnectionException $exception) {
+                return response()->json([
+                    'message' => 'Instagram did not deliver the message.',
+                    'error' => $exception instanceof RequestException ? $exception->response->json('error.message') : null,
+                ], 502);
+            }
+        }
+
         $message = $conversation->messages()->create([
-            'direction'    => 'outbound',
-            'type'         => $request->type,
-            'content'      => $request->content,
+            'platform_message_id' => $platformMessageId,
+            'direction' => 'outbound',
+            'type' => $request->type,
+            'content' => $request->content,
             'button_label' => $request->button_label,
-            'button_url'   => $request->button_url,
-            'automated'    => false,
-            'sent_at'      => now(),
+            'button_url' => $request->button_url,
+            'automated' => false,
+            'sent_at' => now(),
         ]);
 
         $conversation->update([
-            'last_message'    => $request->content,
+            'last_message' => $request->content,
             'last_message_at' => now(),
         ]);
 

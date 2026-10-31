@@ -6,10 +6,16 @@ use App\Http\Controllers\Api\V1\ChannelController;
 use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\HomeController;
+use App\Http\Controllers\Api\V1\InstagramConnectionController;
+use App\Http\Controllers\Api\V1\InstagramWebhookController;
 use Illuminate\Support\Facades\Route;
 
 // Marketing site: HomePage
 Route::get('v1/home', HomeController::class)->name('api.v1.home');
+
+// Meta calls these; requests are authenticated by their signature, not a user
+Route::get('v1/webhooks/instagram', [InstagramWebhookController::class, 'verify'])->name('webhooks.instagram.verify');
+Route::post('v1/webhooks/instagram', [InstagramWebhookController::class, 'receive'])->name('webhooks.instagram');
 
 // Sign up / sign in screens
 Route::prefix('v1/auth')->name('auth.')->group(function () {
@@ -25,6 +31,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
     // Connect / disconnect channel screens
+    Route::get('channels/instagram/authorize', [InstagramConnectionController::class, 'authorize'])->name('channels.instagram.authorize');
+    Route::post('channels/instagram', [InstagramConnectionController::class, 'store'])->name('channels.instagram.store');
     Route::post('channels/connect', [ChannelController::class, 'connect'])->name('channels.connect');
     Route::delete('channels/{channel}', [ChannelController::class, 'destroy'])->name('channels.destroy');
 

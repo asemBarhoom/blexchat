@@ -16,25 +16,32 @@ describe('POST /api/v1/channels/connect', function () {
 
         $this->actingAs($user, 'sanctum')
             ->postJson('/api/v1/channels/connect', [
-                'platform' => 'instagram',
+                'platform' => 'whatsapp',
                 'access_token' => 'EAATjTKF4xxx',
                 'account_id' => '17841400000',
             ])
             ->assertStatus(201)
-            ->assertJsonPath('data.platform', 'instagram');
+            ->assertJsonPath('data.platform', 'whatsapp');
+    });
+
+    it('sends Instagram through its OAuth connection instead', function () {
+        $this->actingAs(User::factory()->create(), 'sanctum')
+            ->postJson('/api/v1/channels/connect', ['platform' => 'instagram', 'access_token' => 'token', 'account_id' => '1'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['platform']);
     });
 
     it('returns 409 when channel already connected', function () {
         $user = User::factory()->create();
         Channel::factory()->create([
             'user_id' => $user->id,
-            'platform' => 'instagram',
+            'platform' => 'whatsapp',
             'account_id' => '17841400000',
         ]);
 
         $this->actingAs($user, 'sanctum')
             ->postJson('/api/v1/channels/connect', [
-                'platform' => 'instagram',
+                'platform' => 'whatsapp',
                 'access_token' => 'token',
                 'account_id' => '17841400000',
             ])

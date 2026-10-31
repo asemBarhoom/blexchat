@@ -579,6 +579,9 @@
                     },
                     "422": {
                         "description": "Validation error"
+                    },
+                    "502": {
+                        "description": "Instagram refused the message (e.g. the 24-hour messaging window has closed)"
                     }
                 },
                 "security": [
@@ -908,6 +911,151 @@
                     },
                     "404": {
                         "description": "Homepage content has not been seeded"
+                    }
+                }
+            }
+        },
+        "/api/v1/channels/instagram/authorize": {
+            "get": {
+                "tags": [
+                    "Channels"
+                ],
+                "summary": "Start connecting an Instagram professional account",
+                "description": "Send the owner to `url`. Instagram returns them to INSTAGRAM_REDIRECT_URI with `code` and `state`; post both to POST /api/v1/channels/instagram within 15 minutes.",
+                "operationId": "562e5b762f304eb561b0e9e523780b9c",
+                "responses": {
+                    "200": {
+                        "description": "Consent URL",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "url": {
+                                                    "type": "string",
+                                                    "format": "uri"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/channels/instagram": {
+            "post": {
+                "tags": [
+                    "Channels"
+                ],
+                "summary": "Finish connecting an Instagram professional account",
+                "description": "Exchanges the code for a long-lived token, saves the account and subscribes it to comments and messages. Reconnecting an account refreshes its token.",
+                "operationId": "4a69d43d7963cc4f9189745b726df6b9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "code",
+                                    "state"
+                                ],
+                                "properties": {
+                                    "code": {
+                                        "type": "string"
+                                    },
+                                    "state": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Channel connected"
+                    },
+                    "422": {
+                        "description": "Invalid or expired state"
+                    },
+                    "502": {
+                        "description": "Instagram refused the connection"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/webhooks/instagram": {
+            "get": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Meta webhook verification",
+                "operationId": "88f3159caff2795e2dcba067f048931d",
+                "parameters": [
+                    {
+                        "name": "hub.mode",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "hub.verify_token",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "hub.challenge",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Echoes hub.challenge"
+                    },
+                    "403": {
+                        "description": "Wrong verify token"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Receive Instagram comments, messages and story replies",
+                "description": "Requires a valid X-Hub-Signature-256 header. Events are processed in the background; replies from matching automations are sent from there.",
+                "operationId": "9762cf47afd801f9522a1714b4de68fd",
+                "responses": {
+                    "200": {
+                        "description": "Accepted"
+                    },
+                    "403": {
+                        "description": "Missing or invalid signature"
                     }
                 }
             }
@@ -2018,6 +2166,10 @@
         {
             "name": "Home",
             "description": "Public marketing homepage content"
+        },
+        {
+            "name": "Webhooks",
+            "description": "Events Meta sends about connected Instagram accounts"
         }
     ]
 }
