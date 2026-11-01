@@ -44,7 +44,10 @@ return [
                  * Absolute paths to directory containing the swagger annotations are stored.
                  */
                 'annotations' => [
-                    base_path('app'),
+                    // Only the endpoints shared with the frontend so far. The other controllers keep their
+                    // OpenAPI attributes; add a controller here once its documentation is complete.
+                    base_path('app/Http/Controllers/Controller.php'),
+                    base_path('app/Http/Controllers/Api/V1/HomeController.php'),
                 ],
             ],
         ],
