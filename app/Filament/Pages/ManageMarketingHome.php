@@ -107,7 +107,6 @@ class ManageMarketingHome extends Page
 
     /** @var array<string, string> */
     private const BLOCK_LABELS = [
-        'navigation' => 'النافبار',
         'hero' => 'الواجهة (Hero)',
         'creators' => 'صُنّاع المحتوى',
         'intro' => 'المقدمة',
@@ -121,7 +120,6 @@ class ManageMarketingHome extends Page
         'numbers' => 'الأرقام',
         'faq' => 'الأسئلة الشائعة',
         'demo_replies' => 'ردود التجربة',
-        'footer' => 'التذييل',
     ];
 
     /**
@@ -177,15 +175,6 @@ class ManageMarketingHome extends Page
         $each = fn (int $count, \Closure $fields): array => array_merge(...array_map($fields, range(0, $count - 1)));
 
         return match ($key) {
-            'navigation' => [[
-                'العلامة والقوائم' => [['brand', 'اسم العلامة'], ['menus.product.heading', 'عنوان قائمة المنتج'], ['menus.solutions.heading', 'عنوان قائمة الحلول']],
-                'روابط القائمة' => $each(4, fn (int $i): array => [["items.{$i}.label", 'الرابط '.($i + 1)]]),
-                'أزرار الحساب واللغات' => [['account.0.label', 'زر الدخول'], ['account.1.label', 'زر البدء'], ['languages.0.label', 'اسم الإنجليزية'], ['languages.1.label', 'اسم العربية']],
-                'تسميات قارئ الشاشة' => [['labels.home', 'رابط الرئيسية'], ['labels.main', 'القائمة الرئيسية'], ['labels.mobile', 'قائمة الجوال'], ['labels.open_menu', 'فتح القائمة'], ['labels.close_menu', 'إغلاق القائمة'], ['labels.language', 'اللغة'], ['labels.language_button', 'زر اللغة']],
-            ], [
-                $url('items.2.url', 'رابط القائمة 3'), $url('items.3.url', 'رابط القائمة 4'),
-                $url('account.0.url', 'رابط زر الدخول'), $url('account.1.url', 'رابط زر البدء'),
-            ]],
             'hero' => [[
                 'العنوان الدوّار' => $each(3, fn (int $i): array => [["headline_rotations.{$i}.0", 'الجزء الأول '.($i + 1)], ["headline_rotations.{$i}.1", 'الكلمة المميّزة '.($i + 1)]]),
                 'النصوص الرئيسية' => [['handwriting', 'الكلمة بخط اليد'], ['subtitle', 'العنوان الفرعي'], ['description', 'الوصف', 'long'], ['microcopy', 'نص تحت الزر'], ['cta.label', 'نص الزر']],
@@ -283,17 +272,6 @@ class ManageMarketingHome extends Page
             'demo_replies' => [[
                 'بطاقة الرد' => [['card.label', 'عنوان البطاقة'], ['card.timer', 'زمن الرد']],
                 'الرد الافتراضي (عندما لا تطابق أي قاعدة)' => [['fallback.reply', 'الرد'], ['fallback.action', 'زر الرد'], ['fallback.result', 'النتيجة']],
-            ]],
-            'footer' => [[
-                'التذييل' => [['brand', 'اسم العلامة'], ['tagline', 'الشعار'], ['giant_lead', 'بداية النص الكبير'], ['copyright', 'حقوق النشر'], ['cta.label', 'نص الزر']],
-                'عناوين الأعمدة' => $each(3, fn (int $i): array => [["columns.{$i}.title", 'العمود '.($i + 1)]]),
-                'الكلمات الكبيرة واللغات' => [
-                    ...$each(4, fn (int $i): array => [["giant_words.{$i}", 'الكلمة '.($i + 1)]]),
-                    ...$each(2, fn (int $i): array => [["languages.{$i}.label", 'اللغة '.($i + 1)]]),
-                ],
-                'تسميات قارئ الشاشة' => [['home_label', 'رابط الرئيسية'], ['nav_label', 'قائمة التذييل'], ['giant_label', 'وصف النص الكبير']],
-            ], [
-                $url('cta.url', 'رابط الزر'),
             ]],
         };
     }

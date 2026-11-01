@@ -7,10 +7,8 @@ use App\Models\ComparisonPoint;
 use App\Models\Creator;
 use App\Models\DemoReplyRule;
 use App\Models\FaqItem;
-use App\Models\FooterLink;
 use App\Models\HomeBlock;
 use App\Models\HomeStat;
-use App\Models\NavMenuItem;
 use App\Models\UseCase;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -238,41 +236,6 @@ use OpenApi\Attributes as OA;
     ])),
 ])]
 #[OA\Schema(schema: 'MarketingHome', properties: [
-    new OA\Property(property: 'navigation', type: 'object', properties: [
-        new OA\Property(property: 'brand', type: 'string'),
-        new OA\Property(property: 'labels', type: 'object', description: 'Accessible names for the navbar controls', properties: [
-            new OA\Property(property: 'home', type: 'string'),
-            new OA\Property(property: 'main', type: 'string'),
-            new OA\Property(property: 'mobile', type: 'string'),
-            new OA\Property(property: 'open_menu', type: 'string'),
-            new OA\Property(property: 'close_menu', type: 'string'),
-            new OA\Property(property: 'language', type: 'string'),
-            new OA\Property(property: 'language_button', type: 'string'),
-        ]),
-        new OA\Property(property: 'items', type: 'array', description: 'Each item has `menu` (opens that menu) or `to`', items: new OA\Items(properties: [
-            new OA\Property(property: 'label', type: 'string'),
-            new OA\Property(property: 'menu', type: 'string', enum: ['product', 'solutions']),
-            new OA\Property(property: 'to', type: 'string'),
-        ])),
-        new OA\Property(property: 'account', type: 'array', items: new OA\Items(ref: '#/components/schemas/Cta')),
-        new OA\Property(property: 'languages', type: 'array', items: new OA\Items(properties: [
-            new OA\Property(property: 'code', type: 'string', example: 'ar'),
-            new OA\Property(property: 'label', type: 'string', example: 'العربية'),
-        ])),
-        new OA\Property(property: 'menus', type: 'object', description: 'Keyed by menu id (product, solutions)', additionalProperties: new OA\AdditionalProperties(properties: [
-            new OA\Property(property: 'heading', type: 'string'),
-            new OA\Property(property: 'items', type: 'array', items: new OA\Items(allOf: [
-                new OA\Schema(properties: [
-                    new OA\Property(property: 'title', type: 'string'),
-                    new OA\Property(property: 'description', type: 'string'),
-                    new OA\Property(property: 'icon', type: 'string', enum: ['spark', 'camera', 'bag', 'cup', 'tooth', 'briefcase', 'cap', 'house', 'headset'], description: 'Our line icon; absent when `channel` is set'),
-                    new OA\Property(property: 'channel', type: 'string', enum: ['instagram', 'whatsapp', 'tiktok', 'messenger'], description: 'Brand mark instead of an icon'),
-                    new OA\Property(property: 'cta_label', type: 'string', description: 'Present on an item set apart with its own call to action'),
-                ]),
-                new OA\Schema(ref: '#/components/schemas/Link'),
-            ])),
-        ])),
-    ]),
     new OA\Property(property: 'sections', type: 'array', description: 'In display order. Switch on `type`.', items: new OA\Items(oneOf: [
         new OA\Schema(ref: '#/components/schemas/HeroSection'),
         new OA\Schema(ref: '#/components/schemas/CreatorStripSection'),
@@ -295,26 +258,6 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'rules', type: 'array', items: new OA\Items(ref: '#/components/schemas/DemoReply')),
         new OA\Property(property: 'fallback', ref: '#/components/schemas/DemoReply'),
     ]),
-    new OA\Property(property: 'footer', type: 'object', properties: [
-        new OA\Property(property: 'brand', type: 'string'),
-        new OA\Property(property: 'home_label', type: 'string'),
-        new OA\Property(property: 'nav_label', type: 'string'),
-        new OA\Property(property: 'giant_label', type: 'string', description: 'Accessible text for the giant word rotation'),
-        new OA\Property(property: 'tagline', type: 'string'),
-        new OA\Property(property: 'columns', type: 'array', items: new OA\Items(properties: [
-            new OA\Property(property: 'title', type: 'string'),
-            new OA\Property(property: 'links', type: 'array', items: new OA\Items(ref: '#/components/schemas/Cta')),
-        ])),
-        new OA\Property(property: 'giant_lead', type: 'string'),
-        new OA\Property(property: 'giant_words', type: 'array', items: new OA\Items(type: 'string')),
-        new OA\Property(property: 'cta', ref: '#/components/schemas/Cta'),
-        new OA\Property(property: 'copyright', type: 'string'),
-        new OA\Property(property: 'legal', type: 'array', items: new OA\Items(ref: '#/components/schemas/Cta')),
-        new OA\Property(property: 'languages', type: 'array', items: new OA\Items(properties: [
-            new OA\Property(property: 'code', type: 'string'),
-            new OA\Property(property: 'label', type: 'string'),
-        ])),
-    ]),
 ])]
 class HomeController extends Controller
 {
@@ -327,10 +270,20 @@ class HomeController extends Controller
     #[OA\Get(
         path: '/api/v1/home',
         summary: 'Get the complete public marketing homepage',
-        description: 'Navigation, every homepage section in display order, the live-demo reply rules and the footer. No authentication. Language comes from ?lang= or Accept-Language. Any text not yet translated into that language is served in English, field by field, and meta.fallback is then true.',
+        description: <<<'MD'
+            Every homepage section in display order and the live-demo reply rules. No authentication.
+
+            **Language**
+            - Send `?lang=ar` for Arabic or `?lang=en` for English.
+            - Without `lang`, the `Accept-Language` header is used (`ar`, `ar-SA`, `en-US`…).
+            - A missing or unsupported language returns English.
+            - The response states the language it was served in: `meta.locale` and the `Content-Language` header.
+            - Any text not yet translated is served in English, field by field, and `meta.fallback` is then `true`.
+            MD,
         tags: ['Home'],
         parameters: [
-            new OA\Parameter(name: 'lang', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['en', 'ar'])),
+            new OA\Parameter(name: 'lang', in: 'query', required: false, description: 'Language of the content. Takes precedence over Accept-Language. Defaults to en.', schema: new OA\Schema(type: 'string', default: 'en', enum: ['en', 'ar']), example: 'ar'),
+            new OA\Parameter(name: 'Accept-Language', in: 'header', required: false, description: 'Used only when `lang` is absent; the first two letters are read (ar-SA → ar).', schema: new OA\Schema(type: 'string'), example: 'ar'),
         ],
         responses: [
             new OA\Response(
@@ -340,9 +293,9 @@ class HomeController extends Controller
                 content: new OA\JsonContent(properties: [
                     new OA\Property(property: 'data', ref: '#/components/schemas/MarketingHome'),
                     new OA\Property(property: 'meta', type: 'object', properties: [
-                        new OA\Property(property: 'locale', type: 'string', description: 'Language of the returned content', example: 'ar'),
+                        new OA\Property(property: 'locale', type: 'string', enum: ['en', 'ar'], description: 'Language the content was served in', example: 'ar'),
                         new OA\Property(property: 'fallback', type: 'boolean', description: 'True when at least one text is not translated yet and is served in English'),
-                        new OA\Property(property: 'available_locales', type: 'array', items: new OA\Items(type: 'string'), example: ['en', 'ar']),
+                        new OA\Property(property: 'available_locales', type: 'array', description: 'Every value `lang` accepts', items: new OA\Items(type: 'string'), example: ['en', 'ar']),
                     ]),
                 ]),
             ),
@@ -359,7 +312,6 @@ class HomeController extends Controller
         $this->fallbackLocale = config('app.fallback_locale');
 
         $data = [
-            'navigation' => $this->navigation($blocks['navigation']),
             'sections' => $blocks->whereNotNull('sort')->sortBy('sort')->map(fn (HomeBlock $block): array => $this->section($block))->values()->all(),
             'demo_replies' => [...$this->block($blocks['demo_replies']), 'rules' => DemoReplyRule::visible()->get()->map(fn (DemoReplyRule $rule): array => [
                 'id' => $rule->key,
@@ -368,7 +320,6 @@ class HomeController extends Controller
                 'action' => $this->translate($rule, 'action'),
                 'result' => $this->translate($rule, 'result'),
             ])->all()],
-            'footer' => $this->footer($blocks['footer']),
         ];
 
         return response()
@@ -468,49 +419,6 @@ class HomeController extends Controller
         }
 
         return $section;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function navigation(HomeBlock $block): array
-    {
-        $navigation = $this->block($block);
-        $items = NavMenuItem::visible()->get()->groupBy('menu');
-
-        foreach (NavMenuItem::MENUS as $menu) {
-            $navigation['menus'][$menu]['items'] = $items->get($menu, collect())->map(fn (NavMenuItem $item): array => array_filter([
-                'title' => $this->translate($item, 'title'),
-                'description' => $this->translate($item, 'description'),
-                'icon' => $item->icon,
-                'channel' => $item->channel,
-                'cta_label' => $this->translate($item, 'cta'),
-                'url' => $item->target,
-            ], fn (mixed $value): bool => $value !== null))->values()->all();
-        }
-
-        return $navigation;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function footer(HomeBlock $block): array
-    {
-        $footer = $this->block($block);
-        $links = FooterLink::visible()->get()->groupBy('group');
-        $linksOf = fn (string $group): array => $links->get($group, collect())->map(fn (FooterLink $link): array => [
-            'label' => $this->translate($link, 'label'),
-            'url' => $link->url,
-        ])->values()->all();
-
-        $footer['columns'] = array_map(fn (array $column): array => [
-            'title' => $column['title'],
-            'links' => $linksOf($column['group']),
-        ], $footer['columns']);
-        $footer['legal'] = $linksOf('legal');
-
-        return $footer;
     }
 
     /**

@@ -21,7 +21,7 @@ it('renders every admin list page', function (string $path) {
     $this->get($path)->assertOk();
 })->with([
     '/admin', '/admin/marketing-home', '/admin/faq-items', '/admin/creators', '/admin/use-cases', '/admin/home-stats',
-    '/admin/demo-reply-rules', '/admin/nav-menu-items', '/admin/footer-links', '/admin/comparison-points',
+    '/admin/demo-reply-rules', '/admin/comparison-points',
     '/admin/channels', '/admin/automations', '/admin/conversations', '/admin/posts',
 ]);
 

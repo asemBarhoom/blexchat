@@ -6,10 +6,8 @@ use App\Models\ComparisonPoint;
 use App\Models\Creator;
 use App\Models\DemoReplyRule;
 use App\Models\FaqItem;
-use App\Models\FooterLink;
 use App\Models\HomeBlock;
 use App\Models\HomeStat;
-use App\Models\NavMenuItem;
 use App\Models\UseCase;
 use Illuminate\Database\Seeder;
 
@@ -20,7 +18,7 @@ use Illuminate\Database\Seeder;
 class HomeContentSeeder extends Seeder
 {
     /** Keys whose string values are the same in every language (ids, routes, frontend switches). */
-    private const SHARED_KEYS = ['id', 'type', 'channel', 'shape', 'tone', 'loop', 'slug', 'url', 'menu', 'code', 'group'];
+    private const SHARED_KEYS = ['id', 'type', 'channel', 'shape', 'tone', 'loop', 'slug', 'url'];
 
     public function run(): void
     {
@@ -33,25 +31,6 @@ class HomeContentSeeder extends Seeder
         $image = fn (string $path): string => 'marketing/home/'.$path;
 
         $blocks = [
-            'navigation' => [
-                'brand' => 'Blexchat',
-                'labels' => ['home' => 'Blexchat home', 'main' => 'Main', 'mobile' => 'Mobile', 'open_menu' => 'Open menu', 'close_menu' => 'Close menu', 'language' => 'Language', 'language_button' => 'Change language, current language English'],
-                'items' => [
-                    ['label' => 'Product', 'menu' => 'product'],
-                    ['label' => 'Solutions', 'menu' => 'solutions'],
-                    ['label' => 'Agencies', 'url' => '/solutions/agencies'],
-                    ['label' => 'Pricing', 'url' => '/pricing'],
-                ],
-                'account' => [
-                    ['label' => 'Sign in', 'url' => '/signin'],
-                    ['label' => 'Get started', 'url' => '/signup'],
-                ],
-                'languages' => [['code' => 'en', 'label' => 'EN'], ['code' => 'ar', 'label' => 'العربية']],
-                'menus' => [
-                    'product' => ['heading' => 'Automate every conversation'],
-                    'solutions' => ['heading' => 'Built for how you sell'],
-                ],
-            ],
             'hero' => [
                 'id' => 'hero', 'type' => 'hero',
                 'headline_rotations' => [['Reach', 'Millions'], ['Sell in', 'every DM'], ['Reply to', 'everyone']],
@@ -109,11 +88,6 @@ class HomeContentSeeder extends Seeder
                 'card' => ['label' => 'Auto-reply', 'timer' => '0.4s'],
                 'fallback' => ['id' => 'fallback', 'reply' => 'Got it — sending you the details right now 💌', 'action' => 'View product', 'result' => '✓ Replied in 0.4s'],
             ],
-            'footer' => [
-                'brand' => 'Blexchat', 'home_label' => 'Blexchat home', 'nav_label' => 'Footer', 'giant_label' => 'Made for creators, brands, sellers and agencies', 'tagline' => 'Turn comments and DMs into customers.',
-                'columns' => [['group' => 'product', 'title' => 'Product'], ['group' => 'solutions', 'title' => 'Solutions'], ['group' => 'account', 'title' => 'Account']],
-                'giant_lead' => 'Made for', 'giant_words' => ['Creators', 'Brands', 'Sellers', 'Agencies'], 'cta' => ['label' => 'Get started free', 'url' => '/signup'], 'copyright' => '© 2026 BLEXCHAT', 'languages' => [['code' => 'en', 'label' => 'EN'], ['code' => 'ar', 'label' => 'العربية']],
-            ],
         ];
 
         $sections = ['hero', 'creators', 'intro', 'features', 'autopilot', 'use-cases', 'before-after', 'see-it-in-action', 'try-it', 'get-started', 'numbers', 'faq'];
@@ -142,14 +116,6 @@ class HomeContentSeeder extends Seeder
         $comments = ['price' => 'بكم هذي؟ 😍', 'shipping' => 'توصلون للرياض؟', 'link' => 'الرابط لو سمحت 🙏'];
 
         return [
-            'navigation' => [
-                'brand' => 'بلكس تشات',
-                'labels' => ['home' => 'الصفحة الرئيسية لبلكس تشات', 'main' => 'القائمة الرئيسية', 'mobile' => 'قائمة الجوال', 'open_menu' => 'فتح القائمة', 'close_menu' => 'إغلاق القائمة', 'language' => 'اللغة', 'language_button' => 'تغيير اللغة، اللغة الحالية العربية'],
-                'items' => [['label' => 'المنتج'], ['label' => 'الحلول'], ['label' => 'الوكالات'], ['label' => 'الأسعار']],
-                'account' => [['label' => 'تسجيل الدخول'], ['label' => 'ابدأ الآن']],
-                'languages' => [['label' => 'EN'], ['label' => 'العربية']],
-                'menus' => ['product' => ['heading' => 'أتمت كل محادثة'], 'solutions' => ['heading' => 'مصمّم لطريقتك في البيع']],
-            ],
             'hero' => [
                 'headline_rotations' => [['اوصل', 'للملايين'], ['بِع في', 'كل رسالة'], ['رُد على', 'الجميع']],
                 'handwriting' => 'تلقائياً.',
@@ -241,11 +207,6 @@ class HomeContentSeeder extends Seeder
                 'card' => ['label' => 'رد تلقائي', 'timer' => '0.4 ث'],
                 'fallback' => ['reply' => 'وصلنا — نرسل لك التفاصيل الحين 💌', 'action' => 'شوف المنتج', 'result' => '✓ تم الرد خلال 0.4 ثانية'],
             ],
-            'footer' => [
-                'brand' => 'بلكس تشات', 'home_label' => 'الصفحة الرئيسية لبلكس تشات', 'nav_label' => 'التذييل', 'giant_label' => 'مصمّم لصنّاع المحتوى والعلامات التجارية والبائعين والوكالات', 'tagline' => 'حوّل التعليقات والرسائل إلى عملاء.',
-                'columns' => [['title' => 'المنتج'], ['title' => 'الحلول'], ['title' => 'الحساب']],
-                'giant_lead' => 'مصمّم من أجل', 'giant_words' => ['صنّاع المحتوى', 'العلامات التجارية', 'البائعين', 'الوكالات'], 'cta' => ['label' => 'ابدأ مجاناً'], 'copyright' => '© 2026 بلكس تشات', 'languages' => [['label' => 'EN'], ['label' => 'العربية']],
-            ],
         ];
     }
 
@@ -254,44 +215,8 @@ class HomeContentSeeder extends Seeder
         $image = fn (string $path): string => 'marketing/home/'.$path;
         $t = fn (?array $pair): ?array => $pair === null ? null : ['en' => $pair[0], 'ar' => $pair[1]];
 
-        foreach ([NavMenuItem::class, FooterLink::class, ComparisonPoint::class, HomeStat::class, FaqItem::class] as $model) {
+        foreach ([ComparisonPoint::class, HomeStat::class, FaqItem::class] as $model) {
             $model::query()->delete();
-        }
-
-        // Channel items start a sign-up until the channel pages exist; Blexchat AI opens the live demo.
-        $menus = [
-            'product' => [
-                ['channel' => 'instagram', 'title' => ['Instagram', 'إنستغرام'], 'description' => ['Turn comments and DMs into customers', 'حوّل التعليقات والرسائل إلى عملاء'], 'target' => '/signup'],
-                ['channel' => 'whatsapp', 'title' => ['WhatsApp', 'واتساب'], 'description' => ['Answer every chat, day and night', 'رد على كل محادثة، ليلاً ونهاراً'], 'target' => '/signup'],
-                ['channel' => 'messenger', 'title' => ['Messenger', 'ماسنجر'], 'description' => ['Automate your Facebook Page inbox', 'أتمت صندوق رسائل صفحتك على فيسبوك'], 'target' => '/signup'],
-                ['channel' => 'tiktok', 'title' => ['TikTok', 'تيك توك'], 'description' => ['Turn comments on your videos into orders', 'حوّل التعليقات على فيديوهاتك إلى طلبات'], 'target' => '/signup'],
-                ['icon' => 'spark', 'title' => ['Blexchat AI', 'بلكس تشات AI'], 'description' => ['Replies that know your catalogue', 'ردود تعرف كتالوجك'], 'cta' => ['Try it live', 'جرّبه الآن'], 'target' => '#try-it'],
-            ],
-            'solutions' => [
-                ['icon' => 'camera', 'title' => ['Creators', 'صنّاع المحتوى'], 'description' => ['Turn followers into a subscriber list.', 'حوّل المتابعين إلى قائمة مشتركين.'], 'target' => '/solutions/creators'],
-                ['icon' => 'bag', 'title' => ['E-commerce', 'التجارة الإلكترونية'], 'description' => ['Recover carts and confirm orders in DM.', 'استرجع السلال المتروكة وأكّد الطلبات في الخاص.'], 'target' => '/solutions/e-commerce'],
-                ['icon' => 'cup', 'title' => ['Restaurants', 'المطاعم'], 'description' => ['Bookings and orders from DMs.', 'حجوزات وطلبات من الرسائل.'], 'target' => '/solutions/restaurants'],
-                ['icon' => 'tooth', 'title' => ['Clinics', 'العيادات'], 'description' => ['Appointments booked while you work.', 'مواعيد تُحجز وأنت تعمل.'], 'target' => '/solutions/clinics'],
-                ['icon' => 'briefcase', 'title' => ['Agencies', 'الوكالات'], 'description' => ['Run many client accounts from one seat.', 'أدِر حسابات عملاء كثيرين من مكان واحد.'], 'target' => '/solutions/agencies'],
-                ['icon' => 'house', 'title' => ['Real estate', 'العقارات'], 'description' => ['Qualify buyers before the first call.', 'أهّل المشترين قبل أول مكالمة.'], 'target' => '/solutions/real-estate'],
-                ['icon' => 'cap', 'title' => ['Education', 'التعليم'], 'description' => ['Enrol students without a landing page.', 'سجّل الطلاب بدون صفحة هبوط.'], 'target' => '/solutions/education'],
-                ['icon' => 'headset', 'title' => ['Support', 'الدعم'], 'description' => ['Deflect repeat questions around the clock.', 'خفّف الأسئلة المتكررة على مدار الساعة.'], 'target' => '/solutions/support'],
-            ],
-        ];
-
-        foreach ($menus as $menu => $items) {
-            foreach ($items as $sort => $item) {
-                NavMenuItem::create(array_filter([
-                    'menu' => $menu,
-                    'icon' => $item['icon'] ?? null,
-                    'channel' => $item['channel'] ?? null,
-                    'title' => $t($item['title']),
-                    'description' => $t($item['description']),
-                    'cta' => $t($item['cta'] ?? null),
-                    'target' => $item['target'],
-                    'sort' => $sort + 1,
-                ]));
-            }
         }
 
         $creators = [
@@ -374,19 +299,6 @@ class HomeContentSeeder extends Seeder
 
         foreach ($rules as $sort => [$key, $keywords, $reply, $action]) {
             DemoReplyRule::updateOrCreate(['key' => $key], ['keywords' => $keywords, 'reply' => $t($reply), 'action' => $t($action), 'result' => $t(['✓ Replied in 0.4s', '✓ تم الرد خلال 0.4 ثانية']), 'sort' => $sort + 1, 'active' => true]);
-        }
-
-        $footer = [
-            'product' => [[['Features', 'الميزات'], '#features'], [['Pricing', 'الأسعار'], '/pricing'], [['Blexchat AI', 'بلكس تشات AI'], '#try-it']],
-            'solutions' => [[['Creators', 'صنّاع المحتوى'], '/solutions/creators'], [['E-commerce', 'التجارة الإلكترونية'], '/solutions/e-commerce'], [['Restaurants', 'المطاعم'], '/solutions/restaurants'], [['Agencies', 'الوكالات'], '/solutions/agencies']],
-            'account' => [[['Sign up', 'إنشاء حساب'], '/signup'], [['Sign in', 'تسجيل الدخول'], '/signin']],
-            'legal' => [[['Privacy', 'الخصوصية'], '/privacy'], [['Terms', 'الشروط'], '/terms']],
-        ];
-
-        foreach ($footer as $group => $links) {
-            foreach ($links as $sort => [$label, $url]) {
-                FooterLink::create(['group' => $group, 'label' => $t($label), 'url' => $url, 'sort' => $sort + 1]);
-            }
         }
     }
 

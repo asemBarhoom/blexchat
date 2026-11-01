@@ -4,10 +4,8 @@ use App\Models\ComparisonPoint;
 use App\Models\Creator;
 use App\Models\DemoReplyRule;
 use App\Models\FaqItem;
-use App\Models\FooterLink;
 use App\Models\HomeBlock;
 use App\Models\HomeStat;
-use App\Models\NavMenuItem;
 use App\Models\UseCase;
 use Database\Seeders\HomeContentSeeder;
 use Illuminate\Database\Eloquent\Model;
@@ -56,7 +54,7 @@ it('has every homepage text in Arabic', function () {
         expect(array_keys(Arr::dot($texts['ar'])))->toBe(array_keys(Arr::dot($texts['en'])), "Arabic texts of {$block->key}");
     }
 
-    foreach ([Creator::class, UseCase::class, HomeStat::class, FaqItem::class, DemoReplyRule::class, NavMenuItem::class, FooterLink::class, ComparisonPoint::class] as $model) {
+    foreach ([Creator::class, UseCase::class, HomeStat::class, FaqItem::class, DemoReplyRule::class, ComparisonPoint::class] as $model) {
         $model::all()->each(function (Model $item): void {
             foreach ($item->getTranslatableAttributes() as $attribute) {
                 expect($item->hasTranslation($attribute, 'ar'))->toBe($item->hasTranslation($attribute, 'en'), $item::class." #{$item->id} {$attribute}");
@@ -69,8 +67,7 @@ it('has every homepage text in Arabic', function () {
         ->assertJsonPath('meta.fallback', false)
         ->assertJsonPath('data.sections.0.subtitle', 'بلكس تشات يحوّل التعليقات والرسائل إلى عملاء.')
         ->assertJsonPath('data.sections.0.story.relief.stats.2.to', 3)
-        ->assertJsonPath('data.navigation.menus.product.items.4.section', 'try-it')
-        ->assertJsonPath('data.footer.columns.0.links.0.label', 'الميزات');
+        ->assertJsonPath('data.sections.3.slides.0.cta.label', 'شاهد كيف');
 });
 
 it('serves translated text and falls back to English for the rest', function () {
@@ -126,28 +123,25 @@ it('gives every link the frontend format and never a raw url', function () {
     expect($response->getContent())->not->toContain('"url":')->not->toContain('"target":');
 
     $response
-        ->assertJsonPath('data.navigation.items.0.label', 'Product')
-        ->assertJsonPath('data.navigation.items.0.menu', 'product')
-        ->assertJsonPath('data.navigation.items.3', ['label' => 'Pricing', 'to' => '/pricing'])
         ->assertJsonPath('data.sections.3.slides.1.cta', ['label' => 'See how', 'section' => 'see-it-in-action', 'tab' => 'faq'])
         ->assertJsonPath('data.sections.3.slides.2.cta', ['label' => 'See how', 'section' => 'try-it'])
         ->assertJsonPath('data.sections.3.slides.3.cta', ['label' => 'See how', 'to' => '/signup'])
-        ->assertJsonPath('data.footer.columns.0.links.0', ['label' => 'Features', 'section' => 'features'])
         ->assertJsonPath('data.sections.11.items.0.answer', 'There’s a free plan to start. Paid plans scale with your audience — see {link}.')
         ->assertJsonPath('data.sections.11.items.0.link', ['label' => 'Pricing', 'to' => '/pricing']);
 });
 
-it('gives menu items their icon or brand mark and destination', function () {
+it('serves no navbar or footer, which the frontend owns', function () {
+    $this->seed(HomeContentSeeder::class);
+
+    expect($this->getJson('/api/v1/home')->json('data'))->toHaveKeys(['sections', 'demo_replies'])->not->toHaveKeys(['navigation', 'footer']);
+});
+
+it('gives hero channels and partners their brand mark', function () {
     $this->seed(HomeContentSeeder::class);
 
     $this->getJson('/api/v1/home')
-        ->assertJsonPath('data.navigation.menus.product.items.0', ['title' => 'Instagram', 'description' => 'Turn comments and DMs into customers', 'channel' => 'instagram', 'to' => '/signup'])
-        ->assertJsonPath('data.navigation.menus.product.items.4', ['title' => 'Blexchat AI', 'description' => 'Replies that know your catalogue', 'icon' => 'spark', 'cta_label' => 'Try it live', 'section' => 'try-it'])
-        ->assertJsonPath('data.navigation.menus.solutions.items.5.icon', 'house')
-        ->assertJsonPath('data.navigation.menus.solutions.items.5.to', '/solutions/real-estate')
         ->assertJsonPath('data.sections.0.channels.0', ['id' => 'instagram', 'label' => 'Instagram'])
-        ->assertJsonPath('data.sections.0.partners.0', ['id' => 'meta', 'label' => 'Meta Business Partner'])
-        ->assertJsonPath('data.footer.languages.1', ['code' => 'ar', 'label' => 'العربية']);
+        ->assertJsonPath('data.sections.0.partners.0', ['id' => 'meta', 'label' => 'Meta Business Partner']);
 });
 
 it('returns a 404 before the homepage content is seeded', function () {

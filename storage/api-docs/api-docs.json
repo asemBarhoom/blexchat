@@ -24,20 +24,33 @@
                     "Home"
                 ],
                 "summary": "Get the complete public marketing homepage",
-                "description": "Navigation, every homepage section in display order, the live-demo reply rules and the footer. No authentication. Language comes from ?lang= or Accept-Language. Any text not yet translated into that language is served in English, field by field, and meta.fallback is then true.",
+                "description": "Every homepage section in display order and the live-demo reply rules. No authentication.\n\n**Language**\n- Send `?lang=ar` for Arabic or `?lang=en` for English.\n- Without `lang`, the `Accept-Language` header is used (`ar`, `ar-SA`, `en-US`…).\n- A missing or unsupported language returns English.\n- The response states the language it was served in: `meta.locale` and the `Content-Language` header.\n- Any text not yet translated is served in English, field by field, and `meta.fallback` is then `true`.",
                 "operationId": "9578f64b5c6ee0a342418701420a15fc",
                 "parameters": [
                     {
                         "name": "lang",
                         "in": "query",
+                        "description": "Language of the content. Takes precedence over Accept-Language. Defaults to en.",
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "default": "en",
                             "enum": [
                                 "en",
                                 "ar"
                             ]
-                        }
+                        },
+                        "example": "ar"
+                    },
+                    {
+                        "name": "Accept-Language",
+                        "in": "header",
+                        "description": "Used only when `lang` is absent; the first two letters are read (ar-SA → ar).",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "ar"
                     }
                 ],
                 "responses": {
@@ -61,15 +74,20 @@
                                         "meta": {
                                             "properties": {
                                                 "locale": {
-                                                    "description": "Language of the returned content",
+                                                    "description": "Language the content was served in",
                                                     "type": "string",
-                                                    "example": "ar"
+                                                    "example": "ar",
+                                                    "enum": [
+                                                        "en",
+                                                        "ar"
+                                                    ]
                                                 },
                                                 "fallback": {
                                                     "description": "True when at least one text is not translated yet and is served in English",
                                                     "type": "boolean"
                                                 },
                                                 "available_locales": {
+                                                    "description": "Every value `lang` accepts",
                                                     "type": "array",
                                                     "items": {
                                                         "type": "string"
@@ -972,147 +990,6 @@
             },
             "MarketingHome": {
                 "properties": {
-                    "navigation": {
-                        "properties": {
-                            "brand": {
-                                "type": "string"
-                            },
-                            "labels": {
-                                "description": "Accessible names for the navbar controls",
-                                "properties": {
-                                    "home": {
-                                        "type": "string"
-                                    },
-                                    "main": {
-                                        "type": "string"
-                                    },
-                                    "mobile": {
-                                        "type": "string"
-                                    },
-                                    "open_menu": {
-                                        "type": "string"
-                                    },
-                                    "close_menu": {
-                                        "type": "string"
-                                    },
-                                    "language": {
-                                        "type": "string"
-                                    },
-                                    "language_button": {
-                                        "type": "string"
-                                    }
-                                },
-                                "type": "object"
-                            },
-                            "items": {
-                                "description": "Each item has `menu` (opens that menu) or `to`",
-                                "type": "array",
-                                "items": {
-                                    "properties": {
-                                        "label": {
-                                            "type": "string"
-                                        },
-                                        "menu": {
-                                            "type": "string",
-                                            "enum": [
-                                                "product",
-                                                "solutions"
-                                            ]
-                                        },
-                                        "to": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            },
-                            "account": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/components/schemas/Cta"
-                                }
-                            },
-                            "languages": {
-                                "type": "array",
-                                "items": {
-                                    "properties": {
-                                        "code": {
-                                            "type": "string",
-                                            "example": "ar"
-                                        },
-                                        "label": {
-                                            "type": "string",
-                                            "example": "العربية"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            },
-                            "menus": {
-                                "description": "Keyed by menu id (product, solutions)",
-                                "type": "object",
-                                "additionalProperties": {
-                                    "properties": {
-                                        "heading": {
-                                            "type": "string"
-                                        },
-                                        "items": {
-                                            "type": "array",
-                                            "items": {
-                                                "allOf": [
-                                                    {
-                                                        "properties": {
-                                                            "title": {
-                                                                "type": "string"
-                                                            },
-                                                            "description": {
-                                                                "type": "string"
-                                                            },
-                                                            "icon": {
-                                                                "description": "Our line icon; absent when `channel` is set",
-                                                                "type": "string",
-                                                                "enum": [
-                                                                    "spark",
-                                                                    "camera",
-                                                                    "bag",
-                                                                    "cup",
-                                                                    "tooth",
-                                                                    "briefcase",
-                                                                    "cap",
-                                                                    "house",
-                                                                    "headset"
-                                                                ]
-                                                            },
-                                                            "channel": {
-                                                                "description": "Brand mark instead of an icon",
-                                                                "type": "string",
-                                                                "enum": [
-                                                                    "instagram",
-                                                                    "whatsapp",
-                                                                    "tiktok",
-                                                                    "messenger"
-                                                                ]
-                                                            },
-                                                            "cta_label": {
-                                                                "description": "Present on an item set apart with its own call to action",
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    },
-                                                    {
-                                                        "$ref": "#/components/schemas/Link"
-                                                    }
-                                                ]
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        },
-                        "type": "object"
-                    },
                     "sections": {
                         "description": "In display order. Switch on `type`.",
                         "type": "array",
@@ -1182,79 +1059,6 @@
                             },
                             "fallback": {
                                 "$ref": "#/components/schemas/DemoReply"
-                            }
-                        },
-                        "type": "object"
-                    },
-                    "footer": {
-                        "properties": {
-                            "brand": {
-                                "type": "string"
-                            },
-                            "home_label": {
-                                "type": "string"
-                            },
-                            "nav_label": {
-                                "type": "string"
-                            },
-                            "giant_label": {
-                                "description": "Accessible text for the giant word rotation",
-                                "type": "string"
-                            },
-                            "tagline": {
-                                "type": "string"
-                            },
-                            "columns": {
-                                "type": "array",
-                                "items": {
-                                    "properties": {
-                                        "title": {
-                                            "type": "string"
-                                        },
-                                        "links": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Cta"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            },
-                            "giant_lead": {
-                                "type": "string"
-                            },
-                            "giant_words": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                }
-                            },
-                            "cta": {
-                                "$ref": "#/components/schemas/Cta"
-                            },
-                            "copyright": {
-                                "type": "string"
-                            },
-                            "legal": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/components/schemas/Cta"
-                                }
-                            },
-                            "languages": {
-                                "type": "array",
-                                "items": {
-                                    "properties": {
-                                        "code": {
-                                            "type": "string"
-                                        },
-                                        "label": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
                             }
                         },
                         "type": "object"
