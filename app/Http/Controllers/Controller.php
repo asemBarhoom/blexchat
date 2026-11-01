@@ -11,8 +11,8 @@ use OpenApi\Attributes as OA;
     contact: new OA\Contact(email: 'api@blexchat.com'),
     license: new OA\License(name: 'Proprietary'),
 )]
-#[OA\Server(url: 'https://api.blexchat.com', description: 'Production')]
-#[OA\Server(url: 'http://blexchat.test', description: 'Local development')]
+// Relative, so "Try it out" calls whichever server is serving these docs (production, staging or local).
+#[OA\Server(url: '/', description: 'This server')]
 #[OA\SecurityScheme(
     securityScheme: 'sanctum',
     type: 'http',

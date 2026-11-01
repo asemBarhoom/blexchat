@@ -13,12 +13,8 @@
     },
     "servers": [
         {
-            "url": "https://api.blexchat.com",
-            "description": "Production"
-        },
-        {
-            "url": "http://blexchat.test",
-            "description": "Local development"
+            "url": "/",
+            "description": "This server"
         }
     ],
     "paths": {
