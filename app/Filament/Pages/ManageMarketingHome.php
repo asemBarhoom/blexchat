@@ -171,7 +171,8 @@ class ManageMarketingHome extends Page
     {
         $at = fn (string $path): string => "{$key}.settings.{$path}";
         $image = fn (string $path, string $label): FileUpload => HomeContentFields::image($at($path), $label);
-        $url = fn (string $path, string $label): TextInput => TextInput::make($at($path))->label($label)->required();
+        $url = fn (string $path, string $label): TextInput => TextInput::make($at($path))->label($label)->required()
+            ->helperText('صفحة مثل /pricing أو قسم في الرئيسية مثل #try-it');
         $number = fn (string $path, string $label): TextInput => TextInput::make($at($path))->label($label)->numeric()->integer()->required();
         $each = fn (int $count, \Closure $fields): array => array_merge(...array_map($fields, range(0, $count - 1)));
 
@@ -199,8 +200,8 @@ class ManageMarketingHome extends Page
                 ],
                 'الدليل الاجتماعي والقنوات' => [
                     ['social_proof.rating', 'التقييم'], ['social_proof.count', 'عدد العملاء'], ['channels_label', 'عنوان القنوات'],
-                    ...$each(4, fn (int $i): array => [["channels.{$i}", 'القناة '.($i + 1)]]),
-                    ...$each(2, fn (int $i): array => [["partners.{$i}", 'الشريك '.($i + 1)]]),
+                    ...$each(4, fn (int $i): array => [["channels.{$i}.label", 'القناة '.($i + 1)]]),
+                    ...$each(2, fn (int $i): array => [["partners.{$i}.label", 'الشريك '.($i + 1)]]),
                 ],
                 'المحادثات المتحركة' => $each(3, fn (int $i): array => [
                     ["conversations.{$i}.handle", 'الحساب '.($i + 1)], ["conversations.{$i}.initial", 'الحرف الأول '.($i + 1)],
@@ -208,8 +209,8 @@ class ManageMarketingHome extends Page
                     ["conversations.{$i}.action", 'زر الرد '.($i + 1)], ["conversations.{$i}.result", 'النتيجة '.($i + 1), 'optional'],
                 ]),
             ], [
-                $image('photos.relax', 'صورة الهدوء'), $image('photos.celebrate', 'صورة الاحتفال'),
-                $image('photo', 'الصورة الأساسية'), $image('cutout', 'صورة الشخص المقصوصة'),
+                $image('photos.relax', 'الصورة الأساسية (الهدوء)'), $image('photos.celebrate', 'صورة الاحتفال'),
+                $image('cutout', 'صورة الشخص المقصوصة'),
                 $url('cta.url', 'رابط الزر'), $number('story.pressure.count', 'رقم العدّاد'),
                 ...array_map(fn (int $i): TextInput => $number("story.relief.stats.{$i}.to", 'الرقم '.($i + 1)), range(0, 2)),
                 FileUpload::make($at('social_proof.avatars'))->label('صور العملاء')->image()->multiple()->reorderable()
@@ -240,6 +241,7 @@ class ManageMarketingHome extends Page
                     ...$each(4, fn (int $i): array => [["slides.3.scene.tiles.{$i}.count", 'عدد القناة '.($i + 1)]]),
                 ],
             ], [
+                ...array_map(fn (int $i): TextInput => $url("slides.{$i}.cta.url", 'رابط زر الشريحة 0'.($i + 1)), range(0, 3)),
                 $image('slides.0.scene.post_photo', 'صورة منشور الشريحة 01'),
                 $image('slides.1.scene.avatar', 'صورة الشريحة 02'),
                 $image('slides.2.scene.photo', 'صورة ستوري الشريحة 03'),
@@ -247,7 +249,7 @@ class ManageMarketingHome extends Page
             'autopilot' => [['الكلمة الكبيرة' => [['kicker', 'النص الصغير'], ['mark', 'العلامة'], ['word.0', 'الجزء الأول'], ['word.1', 'الجزء الثاني']]], [
                 $image('photo', 'الصورة'),
             ]],
-            'use-cases' => [['حالات الاستخدام' => [['heading', 'العنوان'], ['cta', 'نص الزر'], ['prev_label', 'تسمية سهم السابق'], ['next_label', 'تسمية سهم التالي']]]],
+            'use-cases' => [['حالات الاستخدام' => [['heading', 'العنوان'], ['cta_label', 'نص زر البطاقات'], ['prev_label', 'تسمية سهم السابق'], ['next_label', 'تسمية سهم التالي']]]],
             'before-after' => [['قبل وبعد' => [['heading', 'العنوان'], ['before.title', 'عنوان "قبل"'], ['after.title', 'عنوان "بعد"'], ['cta.label', 'نص الزر']]], [
                 $url('cta.url', 'رابط الزر'),
             ]],
@@ -287,7 +289,7 @@ class ManageMarketingHome extends Page
                 'عناوين الأعمدة' => $each(3, fn (int $i): array => [["columns.{$i}.title", 'العمود '.($i + 1)]]),
                 'الكلمات الكبيرة واللغات' => [
                     ...$each(4, fn (int $i): array => [["giant_words.{$i}", 'الكلمة '.($i + 1)]]),
-                    ...$each(2, fn (int $i): array => [["languages.{$i}", 'اللغة '.($i + 1)]]),
+                    ...$each(2, fn (int $i): array => [["languages.{$i}.label", 'اللغة '.($i + 1)]]),
                 ],
                 'تسميات قارئ الشاشة' => [['home_label', 'رابط الرئيسية'], ['nav_label', 'قائمة التذييل'], ['giant_label', 'وصف النص الكبير']],
             ], [
@@ -303,7 +305,7 @@ class ManageMarketingHome extends Page
     {
         return [
             ["slides.{$slide}.index", 'الرقم'], ["slides.{$slide}.headline", 'العنوان'], ["slides.{$slide}.body", 'النص', 'long'],
-            ["slides.{$slide}.cta", 'نص الزر'], ["slides.{$slide}.phone_label", 'عنوان شاشة الجوال'],
+            ["slides.{$slide}.cta.label", 'نص الزر'], ["slides.{$slide}.phone_label", 'عنوان شاشة الجوال'],
         ];
     }
 

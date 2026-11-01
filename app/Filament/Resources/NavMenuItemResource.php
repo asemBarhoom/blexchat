@@ -37,10 +37,13 @@ class NavMenuItemResource extends Resource
     {
         return $schema->components([
             Select::make('menu')->label('القائمة')->options(self::MENU_NAMES)->required(),
+            Select::make('channel')->label('شعار المنصة')->options(array_combine(NavMenuItem::CHANNELS, NavMenuItem::CHANNELS))
+                ->helperText('لعناصر المنصات؛ يظهر شعارها بدل الأيقونة.')->requiredWithout('icon'),
+            Select::make('icon')->label('الأيقونة')->options(array_combine(NavMenuItem::ICONS, NavMenuItem::ICONS))->requiredWithout('channel'),
             Translations::input('title', 'العنوان'),
             Translations::input('description', 'الوصف'),
-            Translations::input('cta', 'نص الزر', required: false),
-            TextInput::make('target')->label('وجهة الزر (رابط أو #قسم)')->requiredWith('cta.en'),
+            TextInput::make('target')->label('الرابط')->required()->helperText('صفحة مثل /signup أو قسم في الرئيسية مثل #try-it'),
+            Translations::input('cta', 'نص زر بارز (اختياري)', required: false),
             HomeContentFields::active(),
         ])->columns(1);
     }

@@ -69,7 +69,7 @@ it('has every homepage text in Arabic', function () {
         ->assertJsonPath('meta.fallback', false)
         ->assertJsonPath('data.sections.0.subtitle', 'بلكس تشات يحوّل التعليقات والرسائل إلى عملاء.')
         ->assertJsonPath('data.sections.0.story.relief.stats.2.to', 3)
-        ->assertJsonPath('data.navigation.menus.product.items.4.target', '#try-it')
+        ->assertJsonPath('data.navigation.menus.product.items.4.section', 'try-it')
         ->assertJsonPath('data.footer.columns.0.links.0.label', 'الميزات');
 });
 
@@ -91,7 +91,7 @@ it('serves translated text and falls back to English for the rest', function () 
         ->assertJsonPath('data.sections.0.story.pressure.chips.1.text', 'توصلون للرياض؟')
         ->assertJsonPath('data.sections.0.story.pressure.chips.1.id', 'c2')
         ->assertJsonPath('data.sections.11.items.0.question', 'كم التكلفة؟')
-        ->assertJsonPath('data.sections.11.items.0.answer', 'There’s a free plan to start. Paid plans scale with your audience — see Pricing.');
+        ->assertJsonPath('data.sections.11.items.0.answer', 'There’s a free plan to start. Paid plans scale with your audience — see {link}.');
 });
 
 it('follows the admin order and hides inactive list items', function () {
@@ -105,6 +105,49 @@ it('follows the admin order and hides inactive list items', function () {
         ->assertJsonCount(5, 'data.sections.11.items')
         ->assertJsonPath('data.sections.11.items.0.question', 'Does it work in Arabic?')
         ->assertJsonPath('data.sections.11.items.4.question', $first->getTranslation('question', 'en'));
+});
+
+it('sends Arabic and slashes unescaped', function () {
+    $this->seed(HomeContentSeeder::class);
+
+    $response = $this->get('/api/v1/home?lang=ar')->assertHeader('Content-Type', 'application/json; charset=utf-8');
+    $raw = $response->getContent();
+
+    expect($raw)->toContain('بلكس تشات')
+        ->not->toContain('\u0')
+        ->not->toContain('\/');
+});
+
+it('gives every link the frontend format and never a raw url', function () {
+    $this->seed(HomeContentSeeder::class);
+
+    $response = $this->getJson('/api/v1/home');
+
+    expect($response->getContent())->not->toContain('"url":')->not->toContain('"target":');
+
+    $response
+        ->assertJsonPath('data.navigation.items.0.label', 'Product')
+        ->assertJsonPath('data.navigation.items.0.menu', 'product')
+        ->assertJsonPath('data.navigation.items.3', ['label' => 'Pricing', 'to' => '/pricing'])
+        ->assertJsonPath('data.sections.3.slides.1.cta', ['label' => 'See how', 'section' => 'see-it-in-action', 'tab' => 'faq'])
+        ->assertJsonPath('data.sections.3.slides.2.cta', ['label' => 'See how', 'section' => 'try-it'])
+        ->assertJsonPath('data.sections.3.slides.3.cta', ['label' => 'See how', 'to' => '/signup'])
+        ->assertJsonPath('data.footer.columns.0.links.0', ['label' => 'Features', 'section' => 'features'])
+        ->assertJsonPath('data.sections.11.items.0.answer', 'There’s a free plan to start. Paid plans scale with your audience — see {link}.')
+        ->assertJsonPath('data.sections.11.items.0.link', ['label' => 'Pricing', 'to' => '/pricing']);
+});
+
+it('gives menu items their icon or brand mark and destination', function () {
+    $this->seed(HomeContentSeeder::class);
+
+    $this->getJson('/api/v1/home')
+        ->assertJsonPath('data.navigation.menus.product.items.0', ['title' => 'Instagram', 'description' => 'Turn comments and DMs into customers', 'channel' => 'instagram', 'to' => '/signup'])
+        ->assertJsonPath('data.navigation.menus.product.items.4', ['title' => 'Blexchat AI', 'description' => 'Replies that know your catalogue', 'icon' => 'spark', 'cta_label' => 'Try it live', 'section' => 'try-it'])
+        ->assertJsonPath('data.navigation.menus.solutions.items.5.icon', 'house')
+        ->assertJsonPath('data.navigation.menus.solutions.items.5.to', '/solutions/real-estate')
+        ->assertJsonPath('data.sections.0.channels.0', ['id' => 'instagram', 'label' => 'Instagram'])
+        ->assertJsonPath('data.sections.0.partners.0', ['id' => 'meta', 'label' => 'Meta Business Partner'])
+        ->assertJsonPath('data.footer.languages.1', ['code' => 'ar', 'label' => 'العربية']);
 });
 
 it('returns a 404 before the homepage content is seeded', function () {

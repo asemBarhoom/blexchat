@@ -54,7 +54,7 @@ it('stores English and Arabic texts separately and serves each language', functi
     $this->getJson('/api/v1/home')
         ->assertJsonPath('data.sections.0.subtitle', 'Turn every DM into a sale.')
         ->assertJsonPath('data.sections.5.heading', 'Built for the way YOU sell')
-        ->assertJsonPath('data.sections.0.story.scenes.1.seconds', 4.6);
+        ->assertJsonPath('data.sections.3.slides.0.cta', ['label' => 'See how', 'section' => 'see-it-in-action', 'tab' => 'comment']);
 
     $this->getJson('/api/v1/home?lang=ar')
         ->assertJsonPath('data.sections.0.subtitle', 'حوّل كل رسالة إلى عملية بيع.')

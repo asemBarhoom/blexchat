@@ -12,8 +12,15 @@ class NavMenuItem extends Model
 
     public const MENUS = ['product', 'solutions'];
 
+    /** The frontend's own line icons (navData.ts IconName). */
+    public const ICONS = ['spark', 'camera', 'bag', 'cup', 'tooth', 'briefcase', 'cap', 'house', 'headset'];
+
+    /** Channels whose brand mark replaces the icon. */
+    public const CHANNELS = ['instagram', 'whatsapp', 'tiktok', 'messenger'];
+
     /** @var list<string> */
     public array $translatable = ['title', 'description', 'cta'];
 
-    protected $fillable = ['menu', 'title', 'description', 'cta', 'target', 'sort', 'active'];
+    /** `target` is a route (/signup) or a homepage section (#try-it). */
+    protected $fillable = ['menu', 'icon', 'channel', 'title', 'description', 'cta', 'target', 'sort', 'active'];
 }

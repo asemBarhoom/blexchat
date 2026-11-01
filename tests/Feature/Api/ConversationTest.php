@@ -10,7 +10,7 @@ uses(RefreshDatabase::class);
 
 describe('GET /api/v1/conversations', function () {
     it('returns conversations for authenticated user channels', function () {
-        $user    = User::factory()->create();
+        $user = User::factory()->create();
         $channel = Channel::factory()->create(['user_id' => $user->id]);
         Conversation::factory()->count(3)->create(['channel_id' => $channel->id]);
         Conversation::factory()->create(); // different channel
@@ -24,8 +24,8 @@ describe('GET /api/v1/conversations', function () {
 
 describe('GET /api/v1/conversations/{id}/messages', function () {
     it('returns messages for a conversation', function () {
-        $user         = User::factory()->create();
-        $channel      = Channel::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create();
+        $channel = Channel::factory()->create(['user_id' => $user->id]);
         $conversation = Conversation::factory()->create(['channel_id' => $channel->id]);
         Message::factory()->count(5)->create(['conversation_id' => $conversation->id]);
 
@@ -36,7 +36,7 @@ describe('GET /api/v1/conversations/{id}/messages', function () {
     });
 
     it('returns 403 for conversation from another user channel', function () {
-        $user         = User::factory()->create();
+        $user = User::factory()->create();
         $conversation = Conversation::factory()->create(); // different channel
 
         $this->actingAs($user, 'sanctum')
@@ -47,13 +47,14 @@ describe('GET /api/v1/conversations/{id}/messages', function () {
 
 describe('POST /api/v1/conversations/{id}/messages', function () {
     it('sends a text message', function () {
-        $user         = User::factory()->create();
-        $channel      = Channel::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create();
+        // Instagram sends through its API; that path is covered in InstagramIntegrationTest.
+        $channel = Channel::factory()->create(['user_id' => $user->id, 'platform' => 'whatsapp']);
         $conversation = Conversation::factory()->create(['channel_id' => $channel->id]);
 
         $this->actingAs($user, 'sanctum')
             ->postJson("/api/v1/conversations/{$conversation->id}/messages", [
-                'type'    => 'text',
+                'type' => 'text',
                 'content' => 'Hello, your order is on the way!',
             ])
             ->assertStatus(201)
@@ -61,13 +62,13 @@ describe('POST /api/v1/conversations/{id}/messages', function () {
     });
 
     it('validates button fields for text_with_button type', function () {
-        $user         = User::factory()->create();
-        $channel      = Channel::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create();
+        $channel = Channel::factory()->create(['user_id' => $user->id]);
         $conversation = Conversation::factory()->create(['channel_id' => $channel->id]);
 
         $this->actingAs($user, 'sanctum')
             ->postJson("/api/v1/conversations/{$conversation->id}/messages", [
-                'type'    => 'text_with_button',
+                'type' => 'text_with_button',
                 'content' => 'Track here:',
                 // missing button_label and button_url
             ])

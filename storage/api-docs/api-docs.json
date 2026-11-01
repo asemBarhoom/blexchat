@@ -101,18 +101,40 @@
     },
     "components": {
         "schemas": {
-            "Cta": {
+            "Link": {
+                "description": "Where something leads: exactly one of `to` (an app route, e.g. /signup) or `section` (a homepage section id, scrolled to). `tab` opens a tab of that section.",
                 "properties": {
-                    "label": {
-                        "type": "string",
-                        "example": "Get started free"
-                    },
-                    "url": {
+                    "to": {
                         "type": "string",
                         "example": "/signup"
+                    },
+                    "section": {
+                        "type": "string",
+                        "example": "see-it-in-action"
+                    },
+                    "tab": {
+                        "type": "string",
+                        "example": "comment"
                     }
                 },
                 "type": "object"
+            },
+            "Cta": {
+                "description": "A labelled link (button or text link).",
+                "allOf": [
+                    {
+                        "properties": {
+                            "label": {
+                                "type": "string",
+                                "example": "Get started free"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    {
+                        "$ref": "#/components/schemas/Link"
+                    }
+                ]
             },
             "ChatLine": {
                 "description": "One comment or DM and the automated answer",
@@ -123,8 +145,7 @@
                     },
                     "avatar": {
                         "type": "string",
-                        "format": "uri",
-                        "nullable": true
+                        "format": "uri"
                     },
                     "question": {
                         "type": "string"
@@ -137,9 +158,8 @@
                         "type": "string"
                     },
                     "result": {
-                        "description": "Win pill shown after the reply",
-                        "type": "string",
-                        "nullable": true
+                        "description": "Win pill shown after the reply; absent when there is none",
+                        "type": "string"
                     }
                 },
                 "type": "object"
@@ -183,7 +203,7 @@
                         ]
                     },
                     "headline_rotations": {
-                        "description": "Pairs of [lead, highlighted] words, rotated",
+                        "description": "Rotating headline: pairs of [first line, highlighted line]",
                         "type": "array",
                         "items": {
                             "type": "array",
@@ -207,15 +227,8 @@
                     "microcopy": {
                         "type": "string"
                     },
-                    "photo": {
-                        "type": "string",
-                        "format": "uri"
-                    },
-                    "cutout": {
-                        "type": "string",
-                        "format": "uri"
-                    },
                     "photos": {
+                        "description": "`relax` is the main photo; `celebrate` is shown in the relief scene",
                         "properties": {
                             "relax": {
                                 "type": "string",
@@ -228,46 +241,28 @@
                         },
                         "type": "object"
                     },
+                    "cutout": {
+                        "description": "The person cut out of the main photo",
+                        "type": "string",
+                        "format": "uri"
+                    },
                     "story": {
-                        "description": "The pressure → working → relief loop",
+                        "description": "Copy of the pressure → working → relief loop",
                         "properties": {
-                            "scenes": {
-                                "type": "array",
-                                "items": {
-                                    "properties": {
-                                        "id": {
-                                            "type": "string",
-                                            "enum": [
-                                                "pressure",
-                                                "working",
-                                                "relief"
-                                            ]
-                                        },
-                                        "pose": {
-                                            "type": "string",
-                                            "enum": [
-                                                "pressure",
-                                                "relax",
-                                                "celebrate"
-                                            ]
-                                        },
-                                        "seconds": {
-                                            "type": "number"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            },
                             "pressure": {
                                 "properties": {
                                     "counter": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "new messages"
                                     },
                                     "count": {
-                                        "type": "integer"
+                                        "description": "Counted up to; the relief scene clears this many",
+                                        "type": "integer",
+                                        "example": 47
                                     },
                                     "more": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "+44 more"
                                     },
                                     "chips": {
                                         "type": "array",
@@ -302,9 +297,11 @@
                                                     "type": "string"
                                                 },
                                                 "to": {
+                                                    "description": "Counted up to",
                                                     "type": "integer"
                                                 },
                                                 "suffix": {
+                                                    "description": "Shown after the number; may be empty",
                                                     "type": "string"
                                                 },
                                                 "label": {
@@ -313,9 +310,6 @@
                                             },
                                             "type": "object"
                                         }
-                                    },
-                                    "illustrative": {
-                                        "type": "boolean"
                                     }
                                 },
                                 "type": "object"
@@ -332,7 +326,7 @@
                                 "type": "string"
                             },
                             "placeholder_prefix": {
-                                "description": "Typewriter prefix; examples are typed after it",
+                                "description": "Typewriter prefix; each example is typed after it",
                                 "type": "string"
                             },
                             "placeholder": {
@@ -362,9 +356,6 @@
                             "count": {
                                 "type": "string"
                             },
-                            "illustrative": {
-                                "type": "boolean"
-                            },
                             "avatars": {
                                 "type": "array",
                                 "items": {
@@ -381,17 +372,42 @@
                     "channels": {
                         "type": "array",
                         "items": {
-                            "type": "string"
+                            "properties": {
+                                "id": {
+                                    "description": "Picks the brand mark",
+                                    "type": "string",
+                                    "enum": [
+                                        "instagram",
+                                        "whatsapp",
+                                        "tiktok",
+                                        "messenger"
+                                    ]
+                                },
+                                "label": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
                         }
                     },
                     "partners": {
                         "type": "array",
                         "items": {
-                            "type": "string"
+                            "properties": {
+                                "id": {
+                                    "description": "Picks the partner mark",
+                                    "type": "string",
+                                    "enum": [
+                                        "meta",
+                                        "tiktok"
+                                    ]
+                                },
+                                "label": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
                         }
-                    },
-                    "partner_claims_unverified": {
-                        "type": "boolean"
                     },
                     "conversations": {
                         "type": "array",
@@ -406,9 +422,16 @@
                                             "type": "string"
                                         },
                                         "channel": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                                "instagram",
+                                                "whatsapp",
+                                                "tiktok",
+                                                "messenger"
+                                            ]
                                         },
                                         "initial": {
+                                            "description": "Shown when there is no avatar",
                                             "type": "string"
                                         }
                                     },
@@ -436,9 +459,6 @@
                     "label": {
                         "type": "string"
                     },
-                    "illustrative": {
-                        "type": "boolean"
-                    },
                     "items": {
                         "type": "array",
                         "items": {
@@ -450,7 +470,8 @@
                                     "type": "string"
                                 },
                                 "handle": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "example": "@noraqtn"
                                 },
                                 "followers": {
                                     "type": "string"
@@ -496,7 +517,7 @@
                 "type": "object"
             },
             "VerticalSliderSection": {
-                "description": "type = vertical_slider. Each slide has its own scene shape keyed by slide id (comments, dms, stories, channels).",
+                "description": "type = vertical_slider. Each slide has its own scene, keyed by slide id.",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -507,9 +528,6 @@
                         "enum": [
                             "vertical_slider"
                         ]
-                    },
-                    "total": {
-                        "type": "integer"
                     },
                     "slides_label": {
                         "description": "Accessible name for the slider",
@@ -539,20 +557,22 @@
                                     "type": "string"
                                 },
                                 "cta": {
-                                    "type": "string"
-                                },
-                                "target": {
-                                    "description": "In-page anchor or route",
-                                    "type": "string"
+                                    "$ref": "#/components/schemas/Cta"
                                 },
                                 "phone_label": {
                                     "type": "string"
                                 },
                                 "channel": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "enum": [
+                                        "instagram",
+                                        "whatsapp",
+                                        "tiktok",
+                                        "messenger"
+                                    ]
                                 },
                                 "scene": {
-                                    "description": "comments: post, post_photo, comments[], reply, action, order · dms: ChatLine fields + seen, lead{name,detail,tag} · stories: story, photo, handle, reaction, reply, action · channels: inbox, total, total_label, tiles[{id,count}], footer. All may carry illustrative.",
+                                    "description": "comments: post, post_photo, comments[{handle,text}], reply, action, order · dms: ChatLine fields + seen, lead{name,detail,tag} · stories: story, photo, handle, reaction, reply, action · channels: inbox, total, total_label, tiles[{id,count}], footer",
                                     "type": "object"
                                 }
                             },
@@ -579,6 +599,7 @@
                         "type": "string"
                     },
                     "word": {
+                        "description": "Two lines",
                         "type": "array",
                         "items": {
                             "type": "string"
@@ -595,7 +616,7 @@
                 "type": "object"
             },
             "UseCasesSection": {
-                "description": "type = use_cases",
+                "description": "type = use_cases. Each card links to /solutions/{slug}.",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -610,7 +631,8 @@
                     "heading": {
                         "type": "string"
                     },
-                    "cta": {
+                    "cta_label": {
+                        "description": "Button text on every card",
                         "type": "string"
                     },
                     "prev_label": {
@@ -629,7 +651,8 @@
                                     "type": "string"
                                 },
                                 "slug": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "example": "e-commerce"
                                 },
                                 "name": {
                                     "type": "string"
@@ -638,10 +661,23 @@
                                     "type": "string"
                                 },
                                 "shape": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "enum": [
+                                        "rounded",
+                                        "blob",
+                                        "arch",
+                                        "circle",
+                                        "pill",
+                                        "house"
+                                    ]
                                 },
                                 "tone": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "enum": [
+                                        "brand",
+                                        "tint",
+                                        "ink"
+                                    ]
                                 }
                             },
                             "type": "object"
@@ -731,6 +767,7 @@
                         "items": {
                             "properties": {
                                 "id": {
+                                    "description": "Matches `tab` in links",
                                     "type": "string",
                                     "enum": [
                                         "follow",
@@ -754,7 +791,7 @@
                                     "type": "string"
                                 },
                                 "scene": {
-                                    "description": "ChatLine fields, plus per tab: follow → event · welcome → lead{tag,name,detail} · faq → event · comment → transition · giveaway → counter{channel,value,label}. May carry illustrative.",
+                                    "description": "ChatLine fields, plus per tab: follow → event · welcome → lead{tag,name,detail} · faq → event · comment → transition · giveaway → counter{channel,value,label}",
                                     "type": "object"
                                 }
                             },
@@ -765,7 +802,7 @@
                 "type": "object"
             },
             "LiveDemoSection": {
-                "description": "type = live_demo",
+                "description": "type = live_demo. Answers come from the top-level `demo_replies`.",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -799,6 +836,7 @@
                         "$ref": "#/components/schemas/Cta"
                     },
                     "handle": {
+                        "description": "Name shown on the visitor’s own comment",
                         "type": "string"
                     },
                     "initial": {
@@ -809,13 +847,6 @@
                         "items": {
                             "type": "string"
                         }
-                    },
-                    "replies_from": {
-                        "description": "Answers come from the top-level demo_replies",
-                        "type": "string",
-                        "enum": [
-                            "demo_replies"
-                        ]
                     }
                 },
                 "type": "object"
@@ -841,7 +872,8 @@
                         "items": {
                             "properties": {
                                 "number": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "example": "01"
                                 },
                                 "name": {
                                     "type": "string"
@@ -850,6 +882,7 @@
                                     "type": "string"
                                 },
                                 "loop": {
+                                    "description": "Which small animation the step shows",
                                     "type": "string",
                                     "enum": [
                                         "tick",
@@ -886,15 +919,13 @@
                     "heading": {
                         "type": "string"
                     },
-                    "illustrative": {
-                        "type": "boolean"
-                    },
                     "stats": {
                         "type": "array",
                         "items": {
                             "properties": {
                                 "value": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "example": "1.2M+"
                                 },
                                 "label": {
                                     "type": "string"
@@ -930,13 +961,11 @@
                                     "type": "string"
                                 },
                                 "answer": {
+                                    "description": "When the item has a link, `{link}` marks where it goes in the text",
                                     "type": "string"
                                 },
                                 "link": {
                                     "$ref": "#/components/schemas/Cta"
-                                },
-                                "claim_unverified": {
-                                    "type": "boolean"
                                 }
                             },
                             "type": "object"
@@ -980,6 +1009,7 @@
                                 "type": "object"
                             },
                             "items": {
+                                "description": "Each item has `menu` (opens that menu) or `to`",
                                 "type": "array",
                                 "items": {
                                     "properties": {
@@ -987,13 +1017,14 @@
                                             "type": "string"
                                         },
                                         "menu": {
-                                            "description": "Key into menus",
                                             "type": "string",
-                                            "nullable": true
+                                            "enum": [
+                                                "product",
+                                                "solutions"
+                                            ]
                                         },
-                                        "url": {
-                                            "type": "string",
-                                            "nullable": true
+                                        "to": {
+                                            "type": "string"
                                         }
                                     },
                                     "type": "object"
@@ -1010,18 +1041,78 @@
                                 "items": {
                                     "properties": {
                                         "code": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "ar"
                                         },
                                         "label": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "العربية"
                                         }
                                     },
                                     "type": "object"
                                 }
                             },
                             "menus": {
-                                "description": "Keyed by menu id: { heading, items[{title, description, cta?, target?}] }",
-                                "type": "object"
+                                "description": "Keyed by menu id (product, solutions)",
+                                "type": "object",
+                                "additionalProperties": {
+                                    "properties": {
+                                        "heading": {
+                                            "type": "string"
+                                        },
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "allOf": [
+                                                    {
+                                                        "properties": {
+                                                            "title": {
+                                                                "type": "string"
+                                                            },
+                                                            "description": {
+                                                                "type": "string"
+                                                            },
+                                                            "icon": {
+                                                                "description": "Our line icon; absent when `channel` is set",
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "spark",
+                                                                    "camera",
+                                                                    "bag",
+                                                                    "cup",
+                                                                    "tooth",
+                                                                    "briefcase",
+                                                                    "cap",
+                                                                    "house",
+                                                                    "headset"
+                                                                ]
+                                                            },
+                                                            "channel": {
+                                                                "description": "Brand mark instead of an icon",
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "instagram",
+                                                                    "whatsapp",
+                                                                    "tiktok",
+                                                                    "messenger"
+                                                                ]
+                                                            },
+                                                            "cta_label": {
+                                                                "description": "Present on an item set apart with its own call to action",
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    {
+                                                        "$ref": "#/components/schemas/Link"
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
                             }
                         },
                         "type": "object"
@@ -1071,7 +1162,7 @@
                         }
                     },
                     "demo_replies": {
-                        "description": "Shared by the hero composer and the live demo. Match keywords case-insensitively as substrings; first rule wins, else fallback.",
+                        "description": "Answers for the hero composer and the live demo. Match keywords case-insensitively as substrings, rules in order; the first match answers, otherwise the fallback.",
                         "properties": {
                             "card": {
                                 "description": "Header of every auto-reply card on the page",
@@ -1086,9 +1177,6 @@
                                     }
                                 },
                                 "type": "object"
-                            },
-                            "note": {
-                                "type": "string"
                             },
                             "rules": {
                                 "type": "array",
@@ -1161,7 +1249,15 @@
                             "languages": {
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "properties": {
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "label": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         },

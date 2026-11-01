@@ -1,41 +1,31 @@
 {
     "navigation": {
-        "brand": "Blexchat",
-        "labels": {
-            "home": "Blexchat home",
-            "main": "Main",
-            "mobile": "Mobile",
-            "open_menu": "Open menu",
-            "close_menu": "Close menu",
-            "language": "Language",
-            "language_button": "Change language, current language English"
-        },
         "items": [
             {
-                "label": "Product",
-                "menu": "product"
+                "menu": "product",
+                "label": "Product"
             },
             {
-                "label": "Solutions",
-                "menu": "solutions"
+                "menu": "solutions",
+                "label": "Solutions"
             },
             {
                 "label": "Agencies",
-                "url": "/solutions/agencies"
+                "to": "/solutions/agencies"
             },
             {
                 "label": "Pricing",
-                "url": "/pricing"
+                "to": "/pricing"
             }
         ],
         "account": [
             {
                 "label": "Sign in",
-                "url": "/signin"
+                "to": "/signin"
             },
             {
                 "label": "Get started",
-                "url": "/signup"
+                "to": "/signup"
             }
         ],
         "languages": [
@@ -48,31 +38,50 @@
                 "label": "العربية"
             }
         ],
+        "brand": "Blexchat",
+        "labels": {
+            "home": "Blexchat home",
+            "main": "Main",
+            "mobile": "Mobile",
+            "open_menu": "Open menu",
+            "close_menu": "Close menu",
+            "language": "Language",
+            "language_button": "Change language, current language English"
+        },
         "menus": {
             "product": {
                 "heading": "Automate every conversation",
                 "items": [
                     {
                         "title": "Instagram",
-                        "description": "Turn comments and DMs into customers"
+                        "description": "Turn comments and DMs into customers",
+                        "channel": "instagram",
+                        "to": "/signup"
                     },
                     {
                         "title": "WhatsApp",
-                        "description": "Answer every chat, day and night"
+                        "description": "Answer every chat, day and night",
+                        "channel": "whatsapp",
+                        "to": "/signup"
                     },
                     {
                         "title": "Messenger",
-                        "description": "Automate your Facebook Page inbox"
+                        "description": "Automate your Facebook Page inbox",
+                        "channel": "messenger",
+                        "to": "/signup"
                     },
                     {
                         "title": "TikTok",
-                        "description": "Turn comments on your videos into orders"
+                        "description": "Turn comments on your videos into orders",
+                        "channel": "tiktok",
+                        "to": "/signup"
                     },
                     {
                         "title": "Blexchat AI",
                         "description": "Replies that know your catalogue",
-                        "cta": "Try it live",
-                        "target": "#try-it"
+                        "icon": "spark",
+                        "cta_label": "Try it live",
+                        "section": "try-it"
                     }
                 ]
             },
@@ -81,35 +90,51 @@
                 "items": [
                     {
                         "title": "Creators",
-                        "description": "Turn followers into a subscriber list."
+                        "description": "Turn followers into a subscriber list.",
+                        "icon": "camera",
+                        "to": "/solutions/creators"
                     },
                     {
                         "title": "E-commerce",
-                        "description": "Recover carts and confirm orders in DM."
+                        "description": "Recover carts and confirm orders in DM.",
+                        "icon": "bag",
+                        "to": "/solutions/e-commerce"
                     },
                     {
                         "title": "Restaurants",
-                        "description": "Bookings and orders from DMs."
+                        "description": "Bookings and orders from DMs.",
+                        "icon": "cup",
+                        "to": "/solutions/restaurants"
                     },
                     {
                         "title": "Clinics",
-                        "description": "Appointments booked while you work."
+                        "description": "Appointments booked while you work.",
+                        "icon": "tooth",
+                        "to": "/solutions/clinics"
                     },
                     {
                         "title": "Agencies",
-                        "description": "Run many client accounts from one seat."
+                        "description": "Run many client accounts from one seat.",
+                        "icon": "briefcase",
+                        "to": "/solutions/agencies"
                     },
                     {
                         "title": "Real estate",
-                        "description": "Qualify buyers before the first call."
+                        "description": "Qualify buyers before the first call.",
+                        "icon": "house",
+                        "to": "/solutions/real-estate"
                     },
                     {
                         "title": "Education",
-                        "description": "Enrol students without a landing page."
+                        "description": "Enrol students without a landing page.",
+                        "icon": "cap",
+                        "to": "/solutions/education"
                     },
                     {
                         "title": "Support",
-                        "description": "Deflect repeat questions around the clock."
+                        "description": "Deflect repeat questions around the clock.",
+                        "icon": "headset",
+                        "to": "/solutions/support"
                     }
                 ]
             }
@@ -119,47 +144,13 @@
         {
             "id": "hero",
             "type": "hero",
-            "headline_rotations": [
-                [
-                    "Reach",
-                    "Millions"
-                ],
-                [
-                    "Sell in",
-                    "every DM"
-                ],
-                [
-                    "Reply to",
-                    "everyone"
-                ]
-            ],
-            "handwriting": "automatically.",
             "photos": {
                 "relax": "storage/marketing/home/hero-photo.webp",
                 "celebrate": "storage/marketing/home/hero-photo-celebrate.webp"
             },
             "story": {
-                "scenes": [
-                    {
-                        "id": "pressure",
-                        "pose": "pressure",
-                        "seconds": 2.2
-                    },
-                    {
-                        "id": "working",
-                        "pose": "relax",
-                        "seconds": 4.6
-                    },
-                    {
-                        "id": "relief",
-                        "pose": "celebrate",
-                        "seconds": 2.4
-                    }
-                ],
                 "pressure": {
-                    "counter": "new messages",
                     "count": 47,
-                    "more": "+44 more",
                     "chips": [
                         {
                             "id": "c1",
@@ -176,9 +167,10 @@
                             "handle": "lina.m",
                             "text": "LINK PLEASE 🙏"
                         }
-                    ]
+                    ],
+                    "counter": "new messages",
+                    "more": "+44 more"
                 },
-                "working_badge": "BLEXCHAT is replying",
                 "relief": {
                     "stats": [
                         {
@@ -199,11 +191,102 @@
                             "suffix": "h",
                             "label": "saved"
                         }
-                    ],
-                    "illustrative": true
+                    ]
                 },
+                "working_badge": "BLEXCHAT is replying",
                 "visitor_result": "Replied in 0.4s"
             },
+            "cta": {
+                "label": "Get started free",
+                "to": "/signup"
+            },
+            "cutout": "storage/marketing/home/hero-person-upper.webp",
+            "social_proof": {
+                "avatars": [
+                    "storage/marketing/home/avatars/sara.webp",
+                    "storage/marketing/home/avatars/omar.webp",
+                    "storage/marketing/home/avatars/lina.webp",
+                    "storage/marketing/home/avatars/khalid.webp"
+                ],
+                "rating": "4.8/5",
+                "count": "2,000+ businesses"
+            },
+            "channels": [
+                {
+                    "id": "instagram",
+                    "label": "Instagram"
+                },
+                {
+                    "id": "whatsapp",
+                    "label": "WhatsApp"
+                },
+                {
+                    "id": "tiktok",
+                    "label": "TikTok"
+                },
+                {
+                    "id": "messenger",
+                    "label": "Messenger"
+                }
+            ],
+            "partners": [
+                {
+                    "id": "meta",
+                    "label": "Meta Business Partner"
+                },
+                {
+                    "id": "tiktok",
+                    "label": "TikTok Marketing Partner"
+                }
+            ],
+            "conversations": [
+                {
+                    "id": "sara",
+                    "channel": "instagram",
+                    "avatar": "storage/marketing/home/avatars/sara.webp",
+                    "handle": "sara.styles",
+                    "initial": "S",
+                    "question": "How much is this? 😍",
+                    "reply": "Hey Sara! Just sent the price to your DMs 💌",
+                    "action": "View product"
+                },
+                {
+                    "id": "omar",
+                    "channel": "whatsapp",
+                    "avatar": "storage/marketing/home/avatars/omar.webp",
+                    "handle": "omar.fit",
+                    "initial": "O",
+                    "question": "Do you ship to Riyadh?",
+                    "reply": "Yes! Free delivery across KSA 🚚",
+                    "action": "Track order"
+                },
+                {
+                    "id": "lina",
+                    "channel": "tiktok",
+                    "avatar": "storage/marketing/home/avatars/lina.webp",
+                    "handle": "lina.m",
+                    "initial": "L",
+                    "question": "LINK PLEASE 🙏",
+                    "reply": "Sent! Check your DMs ✨",
+                    "action": "Open link",
+                    "result": "✓ New order · $49"
+                }
+            ],
+            "headline_rotations": [
+                [
+                    "Reach",
+                    "Millions"
+                ],
+                [
+                    "Sell in",
+                    "every DM"
+                ],
+                [
+                    "Reply to",
+                    "everyone"
+                ]
+            ],
+            "handwriting": "automatically.",
             "composer": {
                 "label": "Try it live",
                 "placeholder_prefix": "Write a comment…",
@@ -218,75 +301,13 @@
             },
             "subtitle": "BLEXCHAT turns comments and DMs into customers.",
             "description": "Smart automations that sell and reply for you, 24/7.",
-            "cta": {
-                "label": "Get started free",
-                "url": "/signup"
-            },
             "microcopy": "Free plan · No credit card required",
-            "photo": "storage/marketing/home/hero-photo.webp",
-            "cutout": "storage/marketing/home/hero-person-upper.webp",
-            "social_proof": {
-                "rating": "4.8/5",
-                "count": "2,000+ businesses",
-                "illustrative": true,
-                "avatars": [
-                    "storage/marketing/home/avatars/sara.webp",
-                    "storage/marketing/home/avatars/omar.webp",
-                    "storage/marketing/home/avatars/lina.webp",
-                    "storage/marketing/home/avatars/khalid.webp"
-                ]
-            },
-            "channels_label": "Works with",
-            "channels": [
-                "Instagram",
-                "WhatsApp",
-                "TikTok",
-                "Messenger"
-            ],
-            "partners": [
-                "Meta Business Partner",
-                "TikTok Marketing Partner"
-            ],
-            "partner_claims_unverified": true,
-            "conversations": [
-                {
-                    "id": "sara",
-                    "channel": "instagram",
-                    "handle": "sara.styles",
-                    "initial": "S",
-                    "avatar": "storage/marketing/home/avatars/sara.webp",
-                    "question": "How much is this? 😍",
-                    "reply": "Hey Sara! Just sent the price to your DMs 💌",
-                    "action": "View product"
-                },
-                {
-                    "id": "omar",
-                    "channel": "whatsapp",
-                    "handle": "omar.fit",
-                    "initial": "O",
-                    "avatar": "storage/marketing/home/avatars/omar.webp",
-                    "question": "Do you ship to Riyadh?",
-                    "reply": "Yes! Free delivery across KSA 🚚",
-                    "action": "Track order"
-                },
-                {
-                    "id": "lina",
-                    "channel": "tiktok",
-                    "handle": "lina.m",
-                    "initial": "L",
-                    "avatar": "storage/marketing/home/avatars/lina.webp",
-                    "question": "LINK PLEASE 🙏",
-                    "reply": "Sent! Check your DMs ✨",
-                    "action": "Open link",
-                    "result": "✓ New order · $49"
-                }
-            ]
+            "channels_label": "Works with"
         },
         {
             "id": "creators",
             "type": "creator_strip",
             "label": "Loved by 1M+ creators, marketers & brands",
-            "illustrative": true,
             "items": [
                 {
                     "id": "nora",
@@ -342,20 +363,18 @@
         {
             "id": "features",
             "type": "vertical_slider",
-            "total": 4,
             "slides": [
                 {
                     "id": "comments",
-                    "index": "01",
-                    "headline": "Turn comments into customers",
-                    "body": "\"How much is this?\" → instant reply, and the sale happens while you sleep.",
-                    "cta": "See how",
-                    "target": "#see-it-in-action?tab=comment",
-                    "phone_label": "blexchat.store",
+                    "cta": {
+                        "label": "See how",
+                        "section": "see-it-in-action",
+                        "tab": "comment"
+                    },
                     "channel": "instagram",
                     "scene": {
-                        "post": "New drop · 2h",
                         "post_photo": "storage/marketing/home/scenes/nora.webp",
+                        "post": "New drop · 2h",
                         "comments": [
                             {
                                 "handle": "sara.styles",
@@ -372,22 +391,24 @@
                         ],
                         "reply": "Sent you the price and the link in DMs 💌",
                         "action": "View product",
-                        "order": "New order · $49",
-                        "illustrative": true
-                    }
+                        "order": "New order · $49"
+                    },
+                    "index": "01",
+                    "headline": "Turn comments into customers",
+                    "body": "\"How much is this?\" → instant reply, and the sale happens while you sleep.",
+                    "phone_label": "blexchat.store"
                 },
                 {
                     "id": "dms",
-                    "index": "02",
-                    "headline": "Never leave a DM unanswered",
-                    "body": "Smart replies handle FAQs, capture phone and email, and hand over to you only when it matters.",
-                    "cta": "See how",
-                    "target": "#see-it-in-action?tab=faq",
-                    "phone_label": "Direct",
+                    "cta": {
+                        "label": "See how",
+                        "section": "see-it-in-action",
+                        "tab": "faq"
+                    },
                     "channel": "whatsapp",
                     "scene": {
-                        "handle": "omar.fit",
                         "avatar": "storage/marketing/home/avatars/omar.webp",
+                        "handle": "omar.fit",
                         "question": "Do you ship to Riyadh?",
                         "reply": "Yes! Free delivery across KSA 🚚",
                         "action": "Track order",
@@ -396,41 +417,41 @@
                             "name": "Omar A.",
                             "detail": "+966 5• ••• 4412 · omar@mail.com",
                             "tag": "Lead captured"
-                        },
-                        "illustrative": true
-                    }
+                        }
+                    },
+                    "index": "02",
+                    "headline": "Never leave a DM unanswered",
+                    "body": "Smart replies handle FAQs, capture phone and email, and hand over to you only when it matters.",
+                    "phone_label": "Direct"
                 },
                 {
                     "id": "stories",
-                    "index": "03",
-                    "headline": "Reply to every story mention",
-                    "body": "Turn reactions into conversations automatically, 24/7.",
-                    "cta": "See how",
-                    "target": "#try-it",
-                    "phone_label": "Your story",
+                    "cta": {
+                        "label": "See how",
+                        "section": "try-it"
+                    },
                     "channel": "instagram",
                     "scene": {
-                        "story": "Reacted to your story",
                         "photo": "storage/marketing/home/scenes/lina.webp",
+                        "story": "Reacted to your story",
                         "handle": "lina.m",
                         "reaction": "❤️",
                         "reply": "Thank you Lina! Here is the link ✨",
                         "action": "Open link"
-                    }
+                    },
+                    "index": "03",
+                    "headline": "Reply to every story mention",
+                    "body": "Turn reactions into conversations automatically, 24/7.",
+                    "phone_label": "Your story"
                 },
                 {
                     "id": "channels",
-                    "index": "04",
-                    "headline": "Grow across every channel",
-                    "body": "Instagram, WhatsApp, TikTok, Messenger — one inbox, one set of automations.",
-                    "cta": "See how",
-                    "target": "/signup",
-                    "phone_label": "All inboxes",
+                    "cta": {
+                        "label": "See how",
+                        "to": "/signup"
+                    },
                     "channel": "messenger",
                     "scene": {
-                        "inbox": "One inbox",
-                        "total": "128",
-                        "total_label": "conversations today",
                         "tiles": [
                             {
                                 "id": "instagram",
@@ -449,9 +470,15 @@
                                 "count": "7"
                             }
                         ],
-                        "footer": "All answered automatically",
-                        "illustrative": true
-                    }
+                        "inbox": "One inbox",
+                        "total": "128",
+                        "total_label": "conversations today",
+                        "footer": "All answered automatically"
+                    },
+                    "index": "04",
+                    "headline": "Grow across every channel",
+                    "body": "Instagram, WhatsApp, TikTok, Messenger — one inbox, one set of automations.",
+                    "phone_label": "All inboxes"
                 }
             ],
             "slides_label": "Feature slides"
@@ -459,19 +486,19 @@
         {
             "id": "autopilot",
             "type": "giant_word",
+            "photo": "storage/marketing/home/hero-photo-celebrate.webp",
             "kicker": "This is what we call",
             "word": [
                 "Auto",
                 "pilot"
             ],
-            "mark": "24/7",
-            "photo": "storage/marketing/home/hero-photo-celebrate.webp"
+            "mark": "24/7"
         },
         {
             "id": "use-cases",
             "type": "use_cases",
             "heading": "Built for the way YOU sell",
-            "cta": "See how",
+            "cta_label": "See how",
             "prev_label": "Previous use cases",
             "next_label": "Next use cases",
             "items": [
@@ -528,6 +555,10 @@
         {
             "id": "before-after",
             "type": "comparison",
+            "cta": {
+                "label": "Get started free",
+                "to": "/signup"
+            },
             "heading": "Your inbox: a before & after",
             "before": {
                 "title": "Before BLEXCHAT — all work, no play",
@@ -546,168 +577,159 @@
                     "One flow replies on every channel",
                     "You check results, not messages"
                 ]
-            },
-            "cta": {
-                "label": "Get started free",
-                "url": "/signup"
             }
         },
         {
             "id": "see-it-in-action",
             "type": "flow_tabs",
-            "heading": "See it in action",
-            "lead": "Pick a flow — watch BLEXCHAT run it.",
-            "composer_placeholder": "Message…",
             "tabs": [
                 {
                     "id": "follow",
-                    "title": "Say hi to new followers",
-                    "description": "A warm DM the moment they follow.",
-                    "surface": "Instagram · Direct",
-                    "sr": "On Instagram, a new follower gets a welcome DM straight away and joins the drop list.",
                     "scene": {
-                        "event": "sara.styles started following you",
                         "avatar": "storage/marketing/home/avatars/sara.webp",
+                        "event": "sara.styles started following you",
                         "reply": "Hey Sara 👋 thanks for the follow! Want first dibs on Thursday's drop?",
                         "action": "Yes, add me",
                         "result": "✓ New subscriber"
-                    }
+                    },
+                    "title": "Say hi to new followers",
+                    "description": "A warm DM the moment they follow.",
+                    "surface": "Instagram · Direct",
+                    "sr": "On Instagram, a new follower gets a welcome DM straight away and joins the drop list."
                 },
                 {
                     "id": "welcome",
-                    "title": "Welcome messages",
-                    "description": "Greet every first message instantly.",
-                    "surface": "WhatsApp · Business",
-                    "sr": "On WhatsApp, a first message is greeted instantly and the contact is saved as a lead.",
                     "scene": {
+                        "avatar": "storage/marketing/home/avatars/omar.webp",
                         "handle": "Omar",
                         "question": "Salam! Are you open today?",
-                        "avatar": "storage/marketing/home/avatars/omar.webp",
                         "reply": "Wa alaikum salam Omar! Open 10am–11pm. What can we get you?",
                         "action": "See the menu",
                         "lead": {
                             "tag": "New lead saved",
                             "name": "Omar K.",
                             "detail": "+971 5X XXX XXXX · WhatsApp"
-                        },
-                        "illustrative": true
-                    }
+                        }
+                    },
+                    "title": "Welcome messages",
+                    "description": "Greet every first message instantly.",
+                    "surface": "WhatsApp · Business",
+                    "sr": "On WhatsApp, a first message is greeted instantly and the contact is saved as a lead."
                 },
                 {
                     "id": "faq",
-                    "title": "Automate FAQs",
-                    "description": "Price, delivery, sizes — answered in seconds.",
-                    "surface": "Instagram · Story replies",
-                    "sr": "A story reply asking the price is answered in seconds and turns into an order.",
                     "scene": {
+                        "avatar": "storage/marketing/home/avatars/lina.webp",
                         "event": "Replied to your story",
                         "handle": "lina.k",
                         "question": "How much is this? 😍",
-                        "avatar": "storage/marketing/home/avatars/lina.webp",
                         "reply": "It's 180 AED — sizes S to XL, delivered in 2 days.",
                         "action": "Order now",
-                        "result": "✓ Order #1042 placed",
-                        "illustrative": true
-                    }
+                        "result": "✓ Order #1042 placed"
+                    },
+                    "title": "Automate FAQs",
+                    "description": "Price, delivery, sizes — answered in seconds.",
+                    "surface": "Instagram · Story replies",
+                    "sr": "A story reply asking the price is answered in seconds and turns into an order."
                 },
                 {
                     "id": "comment",
-                    "title": "Auto-DM from comments",
-                    "description": "Comment ‘LINK’ → the link lands in DMs.",
-                    "surface": "Instagram · Comments → DM",
-                    "sr": "Someone comments LINK under a post and the link lands in their DMs.",
                     "scene": {
+                        "avatar": "storage/marketing/home/avatars/khalid.webp",
                         "handle": "khalid.r",
                         "question": "LINK",
-                        "avatar": "storage/marketing/home/avatars/khalid.webp",
                         "transition": "↓ sent to DMs",
                         "reply": "Here you go, Khalid 🔗 the full guide is one tap away.",
                         "action": "Open the link",
                         "result": "✓ Link delivered in 0.4s"
-                    }
+                    },
+                    "title": "Auto-DM from comments",
+                    "description": "Comment ‘LINK’ → the link lands in DMs.",
+                    "surface": "Instagram · Comments → DM",
+                    "sr": "Someone comments LINK under a post and the link lands in their DMs."
                 },
                 {
                     "id": "giveaway",
-                    "title": "Run giveaways",
-                    "description": "Collect entries and pick winners automatically.",
-                    "surface": "TikTok · Giveaway",
-                    "sr": "On TikTok, every giveaway comment is confirmed as an entry and counted.",
                     "scene": {
-                        "handle": "nora.m",
-                        "question": "Count me in! 🎉",
-                        "reply": "You're in, Nora! Winners are picked Friday at 8pm.",
-                        "action": "Share for 2× entries",
                         "counter": {
                             "channel": "tiktok",
                             "value": "1,284",
                             "label": "Entries collected"
                         },
-                        "illustrative": true
-                    }
+                        "handle": "nora.m",
+                        "question": "Count me in! 🎉",
+                        "reply": "You're in, Nora! Winners are picked Friday at 8pm.",
+                        "action": "Share for 2× entries"
+                    },
+                    "title": "Run giveaways",
+                    "description": "Collect entries and pick winners automatically.",
+                    "surface": "TikTok · Giveaway",
+                    "sr": "On TikTok, every giveaway comment is confirmed as an entry and counted."
                 }
             ],
+            "heading": "See it in action",
+            "lead": "Pick a flow — watch BLEXCHAT run it.",
+            "composer_placeholder": "Message…",
             "tabs_label": "Flows"
         },
         {
             "id": "try-it",
             "type": "live_demo",
+            "cta": {
+                "label": "Build your first flow",
+                "to": "/signup"
+            },
             "kicker": "No signup needed",
             "heading_lead": "Don't take our word for it.",
             "heading_mark": "Try it.",
             "lead": "Write a comment like your customers do — watch BLEXCHAT answer it.",
             "placeholder": "Write a comment…",
             "bridge": "That flow took 0 minutes to build. Yours takes 2.",
-            "cta": {
-                "label": "Build your first flow",
-                "url": "/signup"
-            },
             "handle": "you",
             "initial": "Y",
             "suggestions": [
                 "How much is this? 😍",
                 "Do you ship to Riyadh?",
                 "Link please 🙏"
-            ],
-            "replies_from": "demo_replies"
+            ]
         },
         {
             "id": "get-started",
             "type": "steps",
-            "heading": "Live in minutes, not weeks.",
             "steps": [
                 {
+                    "loop": "tick",
                     "number": "01",
                     "name": "Sign up free",
-                    "line": "No credit card, no calls.",
-                    "loop": "tick"
+                    "line": "No credit card, no calls."
                 },
                 {
+                    "loop": "channels",
                     "number": "02",
                     "name": "Connect your channels",
-                    "line": "Instagram, WhatsApp, TikTok, Messenger — one tap each.",
-                    "loop": "channels"
+                    "line": "Instagram, WhatsApp, TikTok, Messenger — one tap each."
                 },
                 {
+                    "loop": "switch",
                     "number": "03",
                     "name": "Go live",
-                    "line": "Pick a flow, switch it on, watch replies happen.",
-                    "loop": "switch"
+                    "line": "Pick a flow, switch it on, watch replies happen."
                 }
             ],
             "cta": {
                 "label": "Get started free",
-                "url": "/signup"
+                "to": "/signup"
             },
             "secondary_cta": {
                 "label": "See plans",
-                "url": "/pricing"
-            }
+                "to": "/pricing"
+            },
+            "heading": "Live in minutes, not weeks."
         },
         {
             "id": "numbers",
             "type": "numbers",
             "heading": "BLEXCHAT in numbers",
-            "illustrative": true,
             "stats": [
                 {
                     "value": "1.2M+",
@@ -734,10 +756,10 @@
             "items": [
                 {
                     "question": "How much does it cost?",
-                    "answer": "There’s a free plan to start. Paid plans scale with your audience — see Pricing.",
+                    "answer": "There’s a free plan to start. Paid plans scale with your audience — see {link}.",
                     "link": {
                         "label": "Pricing",
-                        "url": "/pricing"
+                        "to": "/pricing"
                     }
                 },
                 {
@@ -750,28 +772,30 @@
                 },
                 {
                     "question": "Is it approved by Meta?",
-                    "answer": "BLEXCHAT uses the official APIs.",
-                    "claim_unverified": true
+                    "answer": "BLEXCHAT uses the official APIs."
                 },
                 {
                     "question": "How long does setup take?",
-                    "answer": "Most businesses go live in under 10 minutes.",
-                    "claim_unverified": true
+                    "answer": "Most businesses go live in under 10 minutes."
                 },
                 {
                     "question": "Is my data safe?",
-                    "answer": "Your conversations stay yours. We never sell data.",
-                    "claim_unverified": true
+                    "answer": "Your conversations stay yours. We never sell data."
                 }
             ]
         }
     ],
     "demo_replies": {
+        "fallback": {
+            "id": "fallback",
+            "reply": "Got it — sending you the details right now 💌",
+            "action": "View product",
+            "result": "✓ Replied in 0.4s"
+        },
         "card": {
             "label": "Auto-reply",
             "timer": "0.4s"
         },
-        "note": "Shared by the hero composer and the try-it section. Match keywords case-insensitively as substrings; first matching rule wins.",
         "rules": [
             {
                 "id": "price",
@@ -850,35 +874,24 @@
                 "action": "Pick a time",
                 "result": "✓ Replied in 0.4s"
             }
-        ],
-        "fallback": {
-            "id": "fallback",
-            "reply": "Got it — sending you the details right now 💌",
-            "action": "View product",
-            "result": "✓ Replied in 0.4s"
-        }
+        ]
     },
     "footer": {
-        "brand": "Blexchat",
-        "home_label": "Blexchat home",
-        "nav_label": "Footer",
-        "giant_label": "Made for creators, brands, sellers and agencies",
-        "tagline": "Turn comments and DMs into customers.",
         "columns": [
             {
                 "title": "Product",
                 "links": [
                     {
                         "label": "Features",
-                        "url": "#features"
+                        "section": "features"
                     },
                     {
                         "label": "Pricing",
-                        "url": "/pricing"
+                        "to": "/pricing"
                     },
                     {
                         "label": "Blexchat AI",
-                        "url": "#try-it"
+                        "section": "try-it"
                     }
                 ]
             },
@@ -887,19 +900,19 @@
                 "links": [
                     {
                         "label": "Creators",
-                        "url": "/solutions/creators"
+                        "to": "/solutions/creators"
                     },
                     {
                         "label": "E-commerce",
-                        "url": "/solutions/e-commerce"
+                        "to": "/solutions/e-commerce"
                     },
                     {
                         "label": "Restaurants",
-                        "url": "/solutions/restaurants"
+                        "to": "/solutions/restaurants"
                     },
                     {
                         "label": "Agencies",
-                        "url": "/solutions/agencies"
+                        "to": "/solutions/agencies"
                     }
                 ]
             },
@@ -908,15 +921,34 @@
                 "links": [
                     {
                         "label": "Sign up",
-                        "url": "/signup"
+                        "to": "/signup"
                     },
                     {
                         "label": "Sign in",
-                        "url": "/signin"
+                        "to": "/signin"
                     }
                 ]
             }
         ],
+        "cta": {
+            "label": "Get started free",
+            "to": "/signup"
+        },
+        "languages": [
+            {
+                "code": "en",
+                "label": "EN"
+            },
+            {
+                "code": "ar",
+                "label": "العربية"
+            }
+        ],
+        "brand": "Blexchat",
+        "home_label": "Blexchat home",
+        "nav_label": "Footer",
+        "giant_label": "Made for creators, brands, sellers and agencies",
+        "tagline": "Turn comments and DMs into customers.",
         "giant_lead": "Made for",
         "giant_words": [
             "Creators",
@@ -924,24 +956,16 @@
             "Sellers",
             "Agencies"
         ],
-        "cta": {
-            "label": "Get started free",
-            "url": "/signup"
-        },
         "copyright": "© 2026 BLEXCHAT",
         "legal": [
             {
                 "label": "Privacy",
-                "url": "/privacy"
+                "to": "/privacy"
             },
             {
                 "label": "Terms",
-                "url": "/terms"
+                "to": "/terms"
             }
-        ],
-        "languages": [
-            "EN",
-            "العربية"
         ]
     }
 }

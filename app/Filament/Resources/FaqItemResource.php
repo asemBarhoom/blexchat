@@ -7,10 +7,8 @@ use App\Filament\Support\HomeContentFields;
 use App\Filament\Support\Translations;
 use App\Models\FaqItem;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -36,8 +34,8 @@ class FaqItemResource extends Resource
             Translations::input('question', 'السؤال'),
             Translations::input('answer', 'الإجابة', long: true),
             Translations::input('link_label', 'نص الرابط', required: false),
-            TextInput::make('link_url')->label('الرابط')->requiredWith('link_label.en'),
-            Toggle::make('claim_unverified')->label('ادعاء يحتاج توثيقاً قبل الإطلاق'),
+            TextInput::make('link_url')->label('الرابط')->requiredWith('link_label.en')
+                ->helperText('اكتب {link} داخل الإجابة في المكان الذي يظهر فيه الرابط. صفحة مثل /pricing أو قسم مثل #try-it.'),
             HomeContentFields::active(),
         ])->columns(1);
     }
@@ -46,7 +44,6 @@ class FaqItemResource extends Resource
     {
         return HomeContentFields::table($table, [
             TextColumn::make('question')->label('السؤال')->searchable()->wrap(),
-            IconColumn::make('claim_unverified')->label('يحتاج توثيقاً')->boolean(),
         ]);
     }
 
