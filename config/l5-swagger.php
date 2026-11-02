@@ -48,6 +48,7 @@ return [
                     // OpenAPI attributes; add a controller here once its documentation is complete.
                     base_path('app/Http/Controllers/Controller.php'),
                     base_path('app/Http/Controllers/Api/V1/HomeController.php'),
+                    base_path('app/Http/Controllers/Api/V1/Auth'),
                 ],
             ],
         ],

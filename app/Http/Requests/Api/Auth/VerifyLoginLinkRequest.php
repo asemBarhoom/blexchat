@@ -4,18 +4,20 @@ namespace App\Http\Requests\Api\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class LoginRequest extends FormRequest
+class VerifyLoginLinkRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return true;
     }
 
+    /**
+     * @return array<string, array<int, string>>
+     */
     public function rules(): array
     {
         return [
-            'email'    => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
+            'token' => ['required', 'string', 'max:255'],
         ];
     }
 }

@@ -1,13 +1,18 @@
 <?php
 
+use App\Filament\Resources\UserResource\Pages\CreateUser;
+use App\Filament\Resources\UserResource\Pages\EditUser;
+use App\Filament\Resources\UserResource\Pages\ListUsers;
 use App\Models\Automation;
 use App\Models\Channel;
 use App\Models\Conversation;
 use App\Models\Post;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
+use Filament\Actions\Testing\TestAction;
 use Filament\Auth\Pages\Login;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
@@ -20,7 +25,7 @@ beforeEach(function () {
 it('renders every admin list page', function (string $path) {
     $this->get($path)->assertOk();
 })->with([
-    '/admin', '/admin/marketing-home', '/admin/faq-items', '/admin/creators', '/admin/use-cases', '/admin/home-stats',
+    '/admin', '/admin/users', '/admin/users/create', '/admin/marketing-home', '/admin/faq-items', '/admin/creators', '/admin/use-cases', '/admin/home-stats',
     '/admin/demo-reply-rules', '/admin/comparison-points',
     '/admin/channels', '/admin/automations', '/admin/conversations', '/admin/posts',
 ]);
@@ -29,7 +34,7 @@ it('keeps shop owners out of the admin panel', function (string $path) {
     $this->actingAs(User::where('email', 'nour@nourboutique.com')->firstOrFail())
         ->get($path)
         ->assertForbidden();
-})->with(['/admin', '/admin/marketing-home', '/admin/channels', '/admin/posts']);
+})->with(['/admin', '/admin/users', '/admin/marketing-home', '/admin/channels', '/admin/posts']);
 
 it('no longer offers creating or editing automations from the panel', function () {
     $this->get('/admin/automations/create')->assertNotFound();
@@ -48,18 +53,59 @@ it('refuses admin sign-in for a shop owner', function () {
     $this->assertGuest();
 });
 
-it('never grants admin access through API sign-up', function () {
-    auth()->logout();
+it('creates a shop owner without a password, and an admin only with one', function () {
+    Livewire::test(CreateUser::class)
+        ->fillForm(['email' => 'owner@example.com', 'name' => 'Owner', 'business_name' => 'Shop'])
+        ->call('create')
+        ->assertHasNoFormErrors();
 
-    $this->postJson('/api/v1/auth/register', [
-        'name' => 'Sneaky',
-        'email' => 'sneaky@example.com',
-        'password' => 'Password1!',
-        'business_name' => 'Shop',
-        'is_admin' => true,
-    ])->assertCreated();
+    expect(User::where('email', 'owner@example.com')->firstOrFail())
+        ->is_admin->toBeFalse()
+        ->password->toBeNull();
 
-    expect(User::where('email', 'sneaky@example.com')->firstOrFail()->is_admin)->toBeFalse();
+    Livewire::test(CreateUser::class)
+        ->fillForm(['email' => 'staff@example.com', 'is_admin' => true])
+        ->call('create')
+        ->assertHasFormErrors(['password' => 'required']);
+
+    Livewire::test(CreateUser::class)
+        ->fillForm(['email' => 'staff@example.com', 'is_admin' => true, 'password' => 'Str0ngPass!'])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    expect(Hash::check('Str0ngPass!', User::where('email', 'staff@example.com')->firstOrFail()->password))->toBeTrue();
+});
+
+it('edits a user and keeps the password when left empty', function () {
+    $admin = User::where('email', 'admin@blexchat.test')->firstOrFail();
+    $passwordHash = $admin->password;
+
+    Livewire::test(EditUser::class, ['record' => $admin->getRouteKey()])
+        ->fillForm(['business_name' => 'Blexchat HQ', 'password' => ''])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($admin->refresh())->business_name->toBe('Blexchat HQ')->password->toBe($passwordHash);
+});
+
+it('refuses a duplicate email', function () {
+    Livewire::test(CreateUser::class)
+        ->fillForm(['email' => 'nour@nourboutique.com'])
+        ->call('create')
+        ->assertHasFormErrors(['email' => 'unique']);
+});
+
+it('deletes a user but never the signed-in admin', function () {
+    $owner = User::where('email', 'nour@nourboutique.com')->firstOrFail();
+    $admin = User::where('email', 'admin@blexchat.test')->firstOrFail();
+
+    $this->get('/admin/users/'.$owner->id)->assertOk()->assertSee('nour@nourboutique.com');
+
+    Livewire::test(ListUsers::class)
+        ->assertActionHidden(TestAction::make('delete')->table($admin))
+        ->callAction(TestAction::make('delete')->table($owner));
+
+    $this->assertModelMissing($owner);
 });
 
 it('renders every admin detail page with seeded data', function () {

@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Auth\GoogleController;
+use App\Http\Controllers\Api\V1\Auth\LoginLinkController;
 use App\Http\Controllers\Api\V1\AutomationController;
 use App\Http\Controllers\Api\V1\ChannelController;
 use App\Http\Controllers\Api\V1\ConversationController;
@@ -17,17 +19,20 @@ Route::get('v1/home', HomeController::class)->name('api.v1.home');
 Route::get('v1/webhooks/instagram', [InstagramWebhookController::class, 'verify'])->name('webhooks.instagram.verify');
 Route::post('v1/webhooks/instagram', [InstagramWebhookController::class, 'receive'])->name('webhooks.instagram');
 
-// Sign up / sign in screens
-Route::prefix('v1/auth')->name('auth.')->group(function () {
-    Route::post('register', [AuthController::class, 'register'])->name('register');
-    Route::post('login', [AuthController::class, 'login'])->name('login');
+// Sign up / sign in (W01, W04), check email (W02), one more step (W03): passwordless, by emailed link or Google
+Route::prefix('v1/auth')->name('auth.')->middleware('throttle:30,1')->group(function () {
+    Route::post('email-link', [LoginLinkController::class, 'send'])->name('email-link.send');
+    Route::post('email-link/verify', [LoginLinkController::class, 'verify'])->name('email-link.verify');
+    Route::get('google', [GoogleController::class, 'redirect'])->name('google.redirect');
+    Route::post('google', [GoogleController::class, 'signIn'])->name('google.sign-in');
 });
 
 Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function () {
     // App home screen
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
-    // Sign out
+    // The signed-in account, and sign out
+    Route::get('auth/me', [AuthController::class, 'me'])->name('auth.me');
     Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
     // Connect / disconnect channel screens

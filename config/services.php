@@ -29,6 +29,15 @@ return [
     ],
 
     /*
+    | Google sign-in. In Google Cloud, create an OAuth client (Web application) and add
+    | FRONTEND_URL/verify/confirm as an authorised redirect URI.
+    */
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+    ],
+
+    /*
     | Instagram API with Instagram Login. Create the app at developers.facebook.com, add the
     | Instagram product, and point its webhook at /api/v1/webhooks/instagram.
     */

@@ -10,10 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'business_name'])]
-#[Hidden(['password', 'remember_token'])]
+#[Fillable(['name', 'email', 'google_id', 'password', 'business_name', 'is_admin'])]
+#[Hidden(['password', 'remember_token', 'google_id'])]
 class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -24,6 +25,24 @@ class User extends Authenticatable implements FilamentUser
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->is_admin;
+    }
+
+    /**
+     * The account for an address proven by an emailed link or Google, created on first sign-in.
+     * Either proof verifies the email.
+     *
+     * @return array{0: self, 1: bool} The user, and whether the account was just created.
+     */
+    public static function signInWithEmail(string $email, ?string $name = null): array
+    {
+        $user = self::firstOrNew(['email' => Str::lower($email)]);
+        $isNew = ! $user->exists;
+
+        $user->name ??= $name;
+        $user->email_verified_at ??= now();
+        $user->save();
+
+        return [$user, $isNew];
     }
 
     protected function casts(): array

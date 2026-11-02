@@ -18,6 +18,417 @@
         }
     ],
     "paths": {
+        "/api/v1/auth/me": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "The signed-in account",
+                "description": "For the app greeting (\"Welcome back, Nour\") and to check a stored token is still valid: 401 means sign in again.",
+                "operationId": "7edb820901b8b3a880fc4d7a0a7290fb",
+                "responses": {
+                    "200": {
+                        "description": "The account",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/auth/logout": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Sign out",
+                "description": "Revokes the token this request was made with; other devices stay signed in.",
+                "operationId": "3a27a9e02ceb521eb3f98c8d2394aef9",
+                "responses": {
+                    "200": {
+                        "description": "Signed out",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You are signed out."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/auth/google": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Start signing up or in with Google",
+                "description": "Send the visitor to `url`. Google returns them to `FRONTEND_URL/verify/confirm` with `code` and `state`; post both to **POST /api/v1/auth/google** within 15 minutes. If Google returns `error` instead, show \"Google sign-in didn’t finish\".",
+                "operationId": "f80be1c9e9f27352d3c428b51eee11b5",
+                "responses": {
+                    "200": {
+                        "description": "Google consent URL",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "url": {
+                                                    "type": "string",
+                                                    "format": "uri"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Finish signing up or in with Google",
+                "description": "Creates the account on first use with the Google email and name. Same answer as the email link: `is_new_user` decides onboarding or the app.",
+                "operationId": "1c725c88c81edaebf21d8c2dd97dcacd",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts in the response, and of the email where one is sent. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "code",
+                                    "state"
+                                ],
+                                "properties": {
+                                    "code": {
+                                        "description": "The `code` query value Google sent back",
+                                        "type": "string"
+                                    },
+                                    "state": {
+                                        "description": "The `state` query value Google sent back",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Signed in",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AuthSession"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Missing fields, a stale `state` (validation error), or `google_failed`: Google refused the code or the email is not verified",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/email-link": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Email a sign-in link (sign up and sign in)",
+                "description": "Sign-up and sign-in are passwordless: this emails a link to the address, whether or not it has an account yet.\nThe link opens `FRONTEND_URL/verify/confirm?token=…` (with `&mode=signin` when signing in); that page posts the token to **POST /api/v1/auth/email-link/verify**.\n\n- A link works **once, for 15 minutes**.\n- Another link to the same address can be sent after **59 seconds** (`resend_after`); earlier, the answer is 429 `resend_too_soon` with `retry_after`.\n- After 5 links in 15 minutes the answer is 429 `too_many_attempts` (\"Too many attempts. Try again in a few minutes.\").\n- `mode` only changes the email's wording: `signup` (default) \"Confirm your email\", `signin` \"Your sign-in link\".",
+                "operationId": "5525adb786a4a45061a773c1abc48804",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts in the response, and of the email where one is sent. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "sara@nourboutique.com",
+                                        "maxLength": 255
+                                    },
+                                    "mode": {
+                                        "type": "string",
+                                        "default": "signup",
+                                        "enum": [
+                                            "signup",
+                                            "signin"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "Link sent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Check your email."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "sara@nourboutique.com"
+                                                },
+                                                "mode": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "signup",
+                                                        "signin"
+                                                    ]
+                                                },
+                                                "expires_in": {
+                                                    "description": "Seconds the link works for",
+                                                    "type": "integer",
+                                                    "example": 900
+                                                },
+                                                "resend_after": {
+                                                    "description": "Seconds before another link can be sent",
+                                                    "type": "integer",
+                                                    "example": 59
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid email or mode",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "`resend_too_soon` or `too_many_attempts`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/email-link/verify": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Sign in with the token from the emailed link",
+                "description": "Called by the frontend's verify page (\"One more step\") with the `token` from its URL.\nCreates the account on first use, and returns the bearer token for every later request (`Authorization: Bearer …`).\n\n- `is_new_user: true` → a new account: go to onboarding (\"Account created\").\n- `is_new_user: false` → a returning user: go to the app (\"Welcome back\").\n- 410 `link_expired` → the link was used already, is past its 15 minutes, or is unknown. `data.email` (when known) is the address to offer \"Send a new link\" to.",
+                "operationId": "554ed343c44131f8799ac4050fad1d1b",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts in the response, and of the email where one is sent. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "token"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "description": "The `token` query value of the emailed link",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Signed in",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AuthSession"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "410": {
+                        "description": "`link_expired`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/AuthError"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "email": {
+                                                            "type": "string",
+                                                            "format": "email",
+                                                            "nullable": true
+                                                        },
+                                                        "mode": {
+                                                            "type": "string",
+                                                            "nullable": true,
+                                                            "enum": [
+                                                                "signup",
+                                                                "signin"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Token missing",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/home": {
             "get": {
                 "tags": [
@@ -30,7 +441,7 @@
                     {
                         "name": "lang",
                         "in": "query",
-                        "description": "Language of the content. Takes precedence over Accept-Language. Defaults to en.",
+                        "description": "Language of the texts in the response, and of the email where one is sent. Takes precedence over Accept-Language. Defaults to en.",
                         "required": false,
                         "schema": {
                             "type": "string",
@@ -115,6 +526,110 @@
     },
     "components": {
         "schemas": {
+            "AuthSession": {
+                "properties": {
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "access_token": {
+                        "type": "string",
+                        "example": "1|Xb2…"
+                    },
+                    "token_type": {
+                        "type": "string",
+                        "enum": [
+                            "Bearer"
+                        ]
+                    },
+                    "is_new_user": {
+                        "description": "true: the account was just created, go to onboarding. false: go to the app.",
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "User": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "description": "From Google; null for an email-link account until it is set",
+                        "type": "string",
+                        "example": "Nour",
+                        "nullable": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "sara@nourboutique.com"
+                    },
+                    "business_name": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "email_verified_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "AuthError": {
+                "required": [
+                    "message",
+                    "code"
+                ],
+                "properties": {
+                    "message": {
+                        "description": "Ready to show, in the requested language",
+                        "type": "string"
+                    },
+                    "code": {
+                        "description": "Stable value to branch on",
+                        "type": "string",
+                        "enum": [
+                            "resend_too_soon",
+                            "too_many_attempts",
+                            "link_expired",
+                            "google_failed"
+                        ]
+                    },
+                    "retry_after": {
+                        "description": "Seconds to wait; on 429 only",
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "ValidationError": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "The email field must be a valid email address."
+                    },
+                    "errors": {
+                        "type": "object",
+                        "example": {
+                            "email": [
+                                "The email field must be a valid email address."
+                            ]
+                        },
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "type": "object"
+            },
             "Link": {
                 "description": "Where something leads: exactly one of `to` (an app route, e.g. /signup) or `section` (a homepage section id, scrolled to). `tab` opens a tab of that section.",
                 "properties": {
@@ -1070,13 +1585,17 @@
         "securitySchemes": {
             "sanctum": {
                 "type": "http",
-                "description": "Obtain a token from POST /api/v1/auth/login and send it in the Authorization header.",
+                "description": "Get a token from POST /api/v1/auth/email-link/verify or POST /api/v1/auth/google, and send it as `Authorization: Bearer <token>`.",
                 "bearerFormat": "Sanctum personal access token",
                 "scheme": "bearer"
             }
         }
     },
     "tags": [
+        {
+            "name": "Authentication",
+            "description": "Passwordless sign-up and sign-in: an emailed link or Google. Both return a bearer token; send it as `Authorization: Bearer <token>`."
+        },
         {
             "name": "Home",
             "description": "Public marketing homepage content"

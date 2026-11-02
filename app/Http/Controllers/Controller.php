@@ -18,8 +18,6 @@ use OpenApi\Attributes as OA;
     type: 'http',
     scheme: 'bearer',
     bearerFormat: 'Sanctum personal access token',
-    description: 'Obtain a token from POST /api/v1/auth/login and send it in the Authorization header.',
+    description: 'Get a token from POST /api/v1/auth/email-link/verify or POST /api/v1/auth/google, and send it as `Authorization: Bearer <token>`.',
 )]
-abstract class Controller
-{
-}
+abstract class Controller {}

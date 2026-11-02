@@ -282,7 +282,7 @@ class HomeController extends Controller
             MD,
         tags: ['Home'],
         parameters: [
-            new OA\Parameter(name: 'lang', in: 'query', required: false, description: 'Language of the content. Takes precedence over Accept-Language. Defaults to en.', schema: new OA\Schema(type: 'string', default: 'en', enum: ['en', 'ar']), example: 'ar'),
+            new OA\Parameter(name: 'lang', in: 'query', required: false, description: 'Language of the texts in the response, and of the email where one is sent. Takes precedence over Accept-Language. Defaults to en.', schema: new OA\Schema(type: 'string', default: 'en', enum: ['en', 'ar']), example: 'ar'),
             new OA\Parameter(name: 'Accept-Language', in: 'header', required: false, description: 'Used only when `lang` is absent; the first two letters are read (ar-SA → ar).', schema: new OA\Schema(type: 'string'), example: 'ar'),
         ],
         responses: [
