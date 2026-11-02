@@ -10,10 +10,17 @@ use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\InstagramConnectionController;
 use App\Http\Controllers\Api\V1\InstagramWebhookController;
+use App\Http\Controllers\Api\V1\OnboardingController;
+use App\Http\Controllers\Api\V1\PlanController;
+use App\Http\Controllers\Api\V1\SubscriptionController;
+use App\Http\Controllers\Api\V1\SurveyController;
 use Illuminate\Support\Facades\Route;
 
 // Marketing site: HomePage
 Route::get('v1/home', HomeController::class)->name('api.v1.home');
+
+// Plan ladder: pricing page and the onboarding plan screen (W09)
+Route::get('v1/plans', PlanController::class)->name('api.v1.plans');
 
 // Meta calls these; requests are authenticated by their signature, not a user
 Route::get('v1/webhooks/instagram', [InstagramWebhookController::class, 'verify'])->name('webhooks.instagram.verify');
@@ -35,6 +42,12 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     // The signed-in account, and sign out
     Route::get('auth/me', [AuthController::class, 'me'])->name('auth.me');
     Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
+
+    // Onboarding after sign-up: progress, the survey (W08) and the plan (W09); channels connect below
+    Route::get('onboarding', OnboardingController::class)->name('onboarding');
+    Route::get('onboarding/survey', [SurveyController::class, 'show'])->name('onboarding.survey');
+    Route::post('onboarding/survey', [SurveyController::class, 'store'])->name('onboarding.survey.store');
+    Route::post('onboarding/plan', [SubscriptionController::class, 'store'])->name('onboarding.plan');
 
     // Connect / disconnect channel screens
     Route::get('channels/instagram/authorize', [InstagramConnectionController::class, 'authorize'])->name('channels.instagram.authorize');
