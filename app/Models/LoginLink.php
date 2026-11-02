@@ -82,6 +82,17 @@ class LoginLink extends Model
         return $this->used_at === null && $this->expires_at->isFuture();
     }
 
+    /**
+     * The frontend's verify page for this link; a sign-in carries `mode=signin` so the page speaks in that voice.
+     */
+    public function url(string $token): string
+    {
+        return rtrim(config('app.frontend_url'), '/').'/verify/confirm?'.http_build_query(array_filter([
+            'token' => $token,
+            'mode' => $this->mode === 'signin' ? 'signin' : null,
+        ]));
+    }
+
     private static function hash(string $token): string
     {
         return hash('sha256', $token);

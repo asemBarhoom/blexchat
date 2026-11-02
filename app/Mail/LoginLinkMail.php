@@ -28,10 +28,7 @@ class LoginLinkMail extends Mailable
         return new Content(markdown: 'mail.login-link', with: [
             'line' => __("auth.link.{$this->link->mode}.line"),
             'button' => __("auth.link.{$this->link->mode}.button"),
-            'url' => rtrim(config('app.frontend_url'), '/').'/verify/confirm?'.http_build_query(array_filter([
-                'token' => $this->token,
-                'mode' => $this->link->mode === 'signin' ? 'signin' : null,
-            ])),
+            'url' => $this->link->url($this->token),
         ]);
     }
 }

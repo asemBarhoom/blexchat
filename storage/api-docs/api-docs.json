@@ -204,7 +204,7 @@
                     "Authentication"
                 ],
                 "summary": "Email a sign-in link (sign up and sign in)",
-                "description": "Sign-up and sign-in are passwordless: this emails a link to the address, whether or not it has an account yet.\nThe link opens `FRONTEND_URL/verify/confirm?token=…` (with `&mode=signin` when signing in); that page posts the token to **POST /api/v1/auth/email-link/verify**.\n\n- A link works **once, for 15 minutes**.\n- Another link to the same address can be sent after **59 seconds** (`resend_after`); earlier, the answer is 429 `resend_too_soon` with `retry_after`.\n- After 5 links in 15 minutes the answer is 429 `too_many_attempts` (\"Too many attempts. Try again in a few minutes.\").\n- `mode` only changes the email's wording: `signup` (default) \"Confirm your email\", `signin` \"Your sign-in link\".",
+                "description": "Sign-up and sign-in are passwordless: this emails a link to the address, whether or not it has an account yet.\nThe link opens `FRONTEND_URL/verify/confirm?token=…` (with `&mode=signin` when signing in); that page posts the token to **POST /api/v1/auth/email-link/verify**.\n\n- A link works **once, for 15 minutes**.\n- Another link to the same address can be sent after **59 seconds** (`resend_after`); earlier, the answer is 429 `resend_too_soon` with `retry_after`.\n- After 5 links in 15 minutes the answer is 429 `too_many_attempts` (\"Too many attempts. Try again in a few minutes.\").\n- `mode` only changes the email's wording: `signup` (default) \"Confirm your email\", `signin` \"Your sign-in link\".\n\n**Development servers only:** with `AUTH_EXPOSE_LOGIN_LINKS=true` the response also carries `dev_link` and `dev_token`, so the flow can be tested without an inbox. Never present in production.",
                 "operationId": "5525adb786a4a45061a773c1abc48804",
                 "parameters": [
                     {
@@ -286,6 +286,15 @@
                                                     "description": "Seconds before another link can be sent",
                                                     "type": "integer",
                                                     "example": 59
+                                                },
+                                                "dev_link": {
+                                                    "description": "Development servers only: the emailed link",
+                                                    "type": "string",
+                                                    "format": "uri"
+                                                },
+                                                "dev_token": {
+                                                    "description": "Development servers only: the token to post to /email-link/verify",
+                                                    "type": "string"
                                                 }
                                             },
                                             "type": "object"

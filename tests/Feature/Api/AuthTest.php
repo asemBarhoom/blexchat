@@ -67,6 +67,18 @@ describe('POST /api/v1/auth/email-link', function () {
         expect($mail->envelope()->subject)->toBe('رابط تسجيل الدخول');
     });
 
+    it('returns the link itself only when a development server allows it', function () {
+        config(['auth.expose_login_links' => true]);
+
+        $response = $this->postJson('/api/v1/auth/email-link', ['email' => 'sara@nourboutique.com', 'mode' => 'signin'])->assertAccepted();
+        $token = Mail::sent(LoginLinkMail::class)->first()->token;
+
+        expect($response->json('data.dev_token'))->toBe($token)
+            ->and($response->json('data.dev_link'))->toBe(config('app.frontend_url').'/verify/confirm?token='.$token.'&mode=signin');
+
+        $this->postJson('/api/v1/auth/email-link/verify', ['token' => $response->json('data.dev_token')])->assertOk();
+    });
+
     it('refuses an invalid email or mode', function () {
         $this->postJson('/api/v1/auth/email-link', ['email' => 'sara@nourboutique', 'mode' => 'admin'])
             ->assertUnprocessable()

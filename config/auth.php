@@ -114,4 +114,18 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Sign-in Links In The Response (development only)
+    |--------------------------------------------------------------------------
+    |
+    | When true, POST /api/v1/auth/email-link also returns the emailed link and
+    | its token, so the frontend can be built without a real inbox. Anyone who
+    | knows an address could then sign in as it: never enable it on a server
+    | real users sign up on.
+    |
+    */
+
+    'expose_login_links' => (bool) env('AUTH_EXPOSE_LOGIN_LINKS', false),
+
 ];

@@ -36,6 +36,8 @@ class LoginLinkController extends Controller
             - Another link to the same address can be sent after **59 seconds** (`resend_after`); earlier, the answer is 429 `resend_too_soon` with `retry_after`.
             - After 5 links in 15 minutes the answer is 429 `too_many_attempts` ("Too many attempts. Try again in a few minutes.").
             - `mode` only changes the email's wording: `signup` (default) "Confirm your email", `signin` "Your sign-in link".
+
+            **Development servers only:** with `AUTH_EXPOSE_LOGIN_LINKS=true` the response also carries `dev_link` and `dev_token`, so the flow can be tested without an inbox. Never present in production.
             MD,
         tags: ['Authentication'],
         parameters: [new OA\Parameter(name: 'lang', in: 'query', required: false, description: 'Language of the texts in the response, and of the email where one is sent. Takes precedence over Accept-Language. Defaults to en.', schema: new OA\Schema(type: 'string', default: 'en', enum: ['en', 'ar']), example: 'ar')],
@@ -51,6 +53,8 @@ class LoginLinkController extends Controller
                     new OA\Property(property: 'mode', type: 'string', enum: ['signup', 'signin']),
                     new OA\Property(property: 'expires_in', type: 'integer', description: 'Seconds the link works for', example: 900),
                     new OA\Property(property: 'resend_after', type: 'integer', description: 'Seconds before another link can be sent', example: 59),
+                    new OA\Property(property: 'dev_link', type: 'string', format: 'uri', description: 'Development servers only: the emailed link'),
+                    new OA\Property(property: 'dev_token', type: 'string', description: 'Development servers only: the token to post to /email-link/verify'),
                 ]),
             ])),
             new OA\Response(response: 422, description: 'Invalid email or mode', content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')),
@@ -84,6 +88,7 @@ class LoginLinkController extends Controller
                 'mode' => $link->mode,
                 'expires_in' => LoginLink::LIFETIME_MINUTES * 60,
                 'resend_after' => LoginLink::RESEND_AFTER_SECONDS,
+                ...config('auth.expose_login_links') ? ['dev_link' => $link->url($token), 'dev_token' => $token] : [],
             ],
         ], 202);
     }
