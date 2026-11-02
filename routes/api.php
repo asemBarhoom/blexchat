@@ -5,7 +5,9 @@ use App\Http\Controllers\Api\V1\Auth\GoogleController;
 use App\Http\Controllers\Api\V1\Auth\LoginLinkController;
 use App\Http\Controllers\Api\V1\AutomationController;
 use App\Http\Controllers\Api\V1\ChannelController;
+use App\Http\Controllers\Api\V1\CheckoutController;
 use App\Http\Controllers\Api\V1\ConversationController;
+use App\Http\Controllers\Api\V1\CouponController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\InstagramConnectionController;
@@ -21,6 +23,9 @@ Route::get('v1/home', HomeController::class)->name('api.v1.home');
 
 // Plan ladder: pricing page and the onboarding plan screen (W09)
 Route::get('v1/plans', PlanController::class)->name('api.v1.plans');
+
+// Checkout modal: the tiers it offers and the trial reminder day
+Route::get('v1/checkout', CheckoutController::class)->name('api.v1.checkout');
 
 // Meta calls these; requests are authenticated by their signature, not a user
 Route::get('v1/webhooks/instagram', [InstagramWebhookController::class, 'verify'])->name('webhooks.instagram.verify');
@@ -48,6 +53,9 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::get('onboarding/survey', [SurveyController::class, 'show'])->name('onboarding.survey');
     Route::post('onboarding/survey', [SurveyController::class, 'store'])->name('onboarding.survey.store');
     Route::post('onboarding/plan', [SubscriptionController::class, 'store'])->name('onboarding.plan');
+
+    // Checkout: "Apply coupon" (checks and prices only; nothing is redeemed yet)
+    Route::post('coupons/check', [CouponController::class, 'check'])->middleware('throttle:30,1')->name('coupons.check');
 
     // Connect / disconnect channel screens
     Route::get('channels/instagram/authorize', [InstagramConnectionController::class, 'authorize'])->name('channels.instagram.authorize');

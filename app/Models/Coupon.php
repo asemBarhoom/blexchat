@@ -108,7 +108,7 @@ class Coupon extends Model
      * What the plan costs with this coupon. Prices are per month, as the checkout shows them;
      * `billed_total` is what one billing period charges (twelve months when billed yearly).
      *
-     * @return array{list_price: float, discount: float, price: float, billed_total: float}
+     * @return array{list_price: int|float, discount: int|float, price: int|float, billed_total: int|float}
      */
     public function quote(Plan $plan, string $billing): array
     {

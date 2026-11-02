@@ -2,28 +2,36 @@
 
 namespace App\Http\Requests\Api\Checkout;
 
-use Illuminate\Contracts\Validation\ValidationRule;
+use App\Models\Plan;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CheckCouponRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
+     * @return array<string, array<int, mixed>>
      */
     public function rules(): array
     {
         return [
-            //
+            'code' => ['required', 'string', 'max:50'],
+            'plan' => ['required', 'string', Rule::exists(Plan::class, 'slug')->where('active', true)],
+            'billing' => ['sometimes', 'string', Rule::in(Plan::BILLING_PERIODS)],
         ];
+    }
+
+    public function plan(): Plan
+    {
+        return Plan::where('slug', $this->string('plan'))->firstOrFail();
+    }
+
+    public function billing(): string
+    {
+        return $this->input('billing', 'monthly');
     }
 }

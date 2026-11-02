@@ -493,6 +493,148 @@
                 }
             }
         },
+        "/api/v1/checkout": {
+            "get": {
+                "tags": [
+                    "Checkout"
+                ],
+                "summary": "Checkout settings",
+                "description": "What the checkout modal needs besides the plan ladder: the tiers it offers and the trial reminder day. Public.",
+                "operationId": "4526fa53a1994d981a2bf9af1856a117",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts in the response. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CheckoutSettings"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/coupons/check": {
+            "post": {
+                "tags": [
+                    "Checkout"
+                ],
+                "summary": "Check a coupon code for a plan",
+                "description": "The \"Apply coupon\" button in the checkout. Codes match ignoring case. Nothing is redeemed:\ncard payments are not built yet, so this only checks the code and prices the plan with it.\n\nThere is no coupon on Free or on a plan sold with a free trial (`coupon_not_for_plan`).",
+                "operationId": "35ca11b1140f5b60b50921c03b7ef368",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the error messages. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "code",
+                                    "plan"
+                                ],
+                                "properties": {
+                                    "code": {
+                                        "type": "string",
+                                        "example": "blex20"
+                                    },
+                                    "plan": {
+                                        "description": "A plan `id` from GET /api/v1/plans",
+                                        "type": "string",
+                                        "example": "pro"
+                                    },
+                                    "billing": {
+                                        "type": "string",
+                                        "default": "monthly",
+                                        "enum": [
+                                            "monthly",
+                                            "annual"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The code applies",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CouponQuote"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    },
+                    "422": {
+                        "description": "`coupon_invalid`, `coupon_expired` or `coupon_not_for_plan` (CouponError); or an unknown plan or billing period (ValidationError)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CouponError"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many checks; try again in a minute"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/home": {
             "get": {
                 "tags": [
@@ -1178,6 +1320,101 @@
                                 "type": "string"
                             }
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "CheckoutSettings": {
+                "properties": {
+                    "plans": {
+                        "description": "The tiers the checkout switcher offers, in the admin order",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Plan"
+                        }
+                    },
+                    "trial_reminder_days": {
+                        "description": "The day of a free trial on which the reminder email goes out: the middle step of the trial timeline",
+                        "type": "integer",
+                        "example": 7
+                    },
+                    "annual_saving_up_to": {
+                        "description": "Whole percent: \"Save up to 30%\". Computed from the plans on sale",
+                        "type": "integer",
+                        "example": 30
+                    },
+                    "coupons_on_trial": {
+                        "description": "Always false: hide \"Apply coupon\" on a trial",
+                        "type": "boolean",
+                        "example": false
+                    }
+                },
+                "type": "object"
+            },
+            "CouponQuote": {
+                "properties": {
+                    "code": {
+                        "description": "The code as stored: upper-case",
+                        "type": "string",
+                        "example": "BLEX20"
+                    },
+                    "percent_off": {
+                        "description": "\"BLEX20 — 20% off\"",
+                        "type": "integer",
+                        "example": 20
+                    },
+                    "plan": {
+                        "type": "string",
+                        "example": "pro"
+                    },
+                    "billing": {
+                        "type": "string",
+                        "enum": [
+                            "monthly",
+                            "annual"
+                        ]
+                    },
+                    "list_price": {
+                        "description": "US dollars a month before the coupon",
+                        "type": "number",
+                        "example": 39
+                    },
+                    "discount": {
+                        "description": "US dollars a month taken off, rounded to the cent",
+                        "type": "number",
+                        "example": 7.8
+                    },
+                    "price": {
+                        "description": "US dollars a month after the coupon",
+                        "type": "number",
+                        "example": 31.2
+                    },
+                    "billed_total": {
+                        "description": "What one billing period charges: twelve months when billed yearly",
+                        "type": "number",
+                        "example": 31.2
+                    }
+                },
+                "type": "object"
+            },
+            "CouponError": {
+                "required": [
+                    "message",
+                    "code"
+                ],
+                "properties": {
+                    "message": {
+                        "description": "Ready to show under the coupon field, in the requested language",
+                        "type": "string"
+                    },
+                    "code": {
+                        "description": "Stable value to branch on",
+                        "type": "string",
+                        "enum": [
+                            "coupon_invalid",
+                            "coupon_expired",
+                            "coupon_not_for_plan"
+                        ]
                     }
                 },
                 "type": "object"
@@ -2397,6 +2634,10 @@
         {
             "name": "Authentication",
             "description": "Passwordless sign-up and sign-in: an emailed link or Google. Both return a bearer token; send it as `Authorization: Bearer <token>`."
+        },
+        {
+            "name": "Checkout",
+            "description": "The checkout modal: tiers, trial reminder and coupons"
         },
         {
             "name": "Home",
