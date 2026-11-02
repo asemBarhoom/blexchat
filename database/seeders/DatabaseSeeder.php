@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             HomeContentSeeder::class,
             OnboardingSeeder::class,
             ChannelConnectedScreenSeeder::class,
+            FirstMoveSeeder::class,
             UserSeeder::class,
             ChannelSeeder::class,
             AutomationSeeder::class,
