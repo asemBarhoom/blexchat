@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Auth\GoogleController;
 use App\Http\Controllers\Api\V1\Auth\LoginLinkController;
 use App\Http\Controllers\Api\V1\AutomationController;
 use App\Http\Controllers\Api\V1\ChannelController;
+use App\Http\Controllers\Api\V1\ChannelOptionController;
 use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\HomeController;
@@ -45,6 +46,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
 
     // Onboarding after sign-up: progress, the survey (W08) and the plan (W09); channels connect below
     Route::get('onboarding', OnboardingController::class)->name('onboarding');
+    Route::get('onboarding/channels', ChannelOptionController::class)->name('onboarding.channels'); // W05 channel picker
     Route::get('onboarding/survey', [SurveyController::class, 'show'])->name('onboarding.survey');
     Route::post('onboarding/survey', [SurveyController::class, 'store'])->name('onboarding.survey.store');
     Route::post('onboarding/plan', [SubscriptionController::class, 'store'])->name('onboarding.plan');
