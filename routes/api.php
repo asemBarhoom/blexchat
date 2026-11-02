@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Auth\GoogleController;
 use App\Http\Controllers\Api\V1\Auth\LoginLinkController;
 use App\Http\Controllers\Api\V1\AutomationController;
 use App\Http\Controllers\Api\V1\ChannelController;
+use App\Http\Controllers\Api\V1\ConnectedChannelController;
 use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\HomeController;
@@ -54,6 +55,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::post('channels/instagram', [InstagramConnectionController::class, 'store'])->name('channels.instagram.store');
     Route::post('channels/connect', [ChannelController::class, 'connect'])->name('channels.connect');
     Route::delete('channels/{channel}', [ChannelController::class, 'destroy'])->name('channels.destroy');
+    // Channel connected (W07)
+    Route::get('channels/{channel}', ConnectedChannelController::class)->whereNumber('channel')->name('channels.show');
 
     // Automations list, detail, wizard, start/stop, move to Trash
     Route::get('automations', [AutomationController::class, 'index'])->name('automations.index');
