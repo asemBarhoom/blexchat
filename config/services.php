@@ -35,6 +35,8 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        // Empty: FRONTEND_URL/verify/confirm. For testing without the frontend: APP_URL/api/v1/auth/google/callback.
+        'redirect_uri' => env('GOOGLE_REDIRECT_URI'),
     ],
 
     /*

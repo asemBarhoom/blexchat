@@ -95,7 +95,7 @@
                     "Authentication"
                 ],
                 "summary": "Start signing up or in with Google",
-                "description": "Send the visitor to `url`. Google returns them to `FRONTEND_URL/verify/confirm` with `code` and `state`; post both to **POST /api/v1/auth/google** within 15 minutes. If Google returns `error` instead, show \"Google sign-in didn’t finish\".",
+                "description": "Send the visitor to `url`. Google returns them, with `code` and `state` in the query, to the redirect URI this server is set to:\n\n- **Frontend** (default, `FRONTEND_URL/verify/confirm`): that page posts both to **POST /api/v1/auth/google** within 15 minutes. If Google returns `error` instead, show \"Google sign-in didn’t finish\".\n- **This API** (`GOOGLE_REDIRECT_URI=…/api/v1/auth/google/callback`, for testing without the frontend): Google lands on **GET /api/v1/auth/google/callback**, which signs in and shows the token as JSON.",
                 "operationId": "f80be1c9e9f27352d3c428b51eee11b5",
                 "responses": {
                     "200": {
@@ -187,6 +187,61 @@
                     },
                     "422": {
                         "description": "Missing fields, a stale `state` (validation error), or `google_failed`: Google refused the code or the email is not verified",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/google/callback": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Google’s return to this API (testing without the frontend)",
+                "description": "Used only when GOOGLE_REDIRECT_URI points here. Google opens this URL in the browser with `code` and `state`; the answer is the same as POST /api/v1/auth/google, shown as JSON. Copy `access_token` into Authorize to try the signed-in endpoints.",
+                "operationId": "3b8ca29282f3c1a97df4e6ee9458d262",
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "state",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Signed in",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AuthSession"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Missing `code` (Google returned `error`), a stale `state`, or `google_failed`",
                         "content": {
                             "application/json": {
                                 "schema": {

@@ -44,8 +44,12 @@ class GoogleClient
             ->json();
     }
 
+    /**
+     * The frontend's verify page, unless GOOGLE_REDIRECT_URI sends Google back to this API instead (testing without the frontend).
+     * It must be listed exactly in the Google OAuth client's authorised redirect URIs.
+     */
     private function redirectUri(): string
     {
-        return rtrim(config('app.frontend_url'), '/').'/verify/confirm';
+        return config('services.google.redirect_uri') ?: rtrim(config('app.frontend_url'), '/').'/verify/confirm';
     }
 }

@@ -199,6 +199,37 @@ describe('Google sign-in', function () {
             ->and(json_decode(Crypt::decryptString($query['state']), true)['purpose'])->toBe('google');
     });
 
+    it('signs in on the API callback when Google is set to return there', function () {
+        $callback = url('/api/v1/auth/google/callback');
+        config(['services.google.redirect_uri' => $callback]);
+        Http::fake([
+            'oauth2.googleapis.com/token' => Http::response(['access_token' => 'google-token']),
+            'openidconnect.googleapis.com/*' => Http::response(['sub' => 'g-7', 'email' => 'sara@gmail.com', 'email_verified' => true, 'name' => 'Sara']),
+        ]);
+
+        $url = $this->getJson('/api/v1/auth/google')->json('data.url');
+        parse_str(parse_url($url, PHP_URL_QUERY), $query);
+        expect($query['redirect_uri'])->toBe($callback);
+
+        $this->getJson('/api/v1/auth/google/callback?'.http_build_query(['code' => 'auth-code', 'state' => $query['state'], 'scope' => 'email']))
+            ->assertOk()
+            ->assertJsonPath('data.user.email', 'sara@gmail.com')
+            ->assertJsonPath('data.is_new_user', true);
+
+        // The code must be traded with the same redirect URI Google sent it to.
+        Http::assertSent(fn ($request): bool => $request->url() === 'https://oauth2.googleapis.com/token' && $request['redirect_uri'] === $callback);
+    });
+
+    it('refuses the callback when Google returns an error instead of a code', function () {
+        Http::fake();
+
+        $this->getJson('/api/v1/auth/google/callback?'.http_build_query(['error' => 'access_denied', 'state' => googleState()]))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('code');
+
+        Http::assertNothingSent();
+    });
+
     it('creates the account with the Google name and links it', function () {
         Http::fake([
             'oauth2.googleapis.com/token' => Http::response(['access_token' => 'google-token']),

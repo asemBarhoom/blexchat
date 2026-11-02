@@ -25,6 +25,7 @@ Route::prefix('v1/auth')->name('auth.')->middleware('throttle:30,1')->group(func
     Route::post('email-link/verify', [LoginLinkController::class, 'verify'])->name('email-link.verify');
     Route::get('google', [GoogleController::class, 'redirect'])->name('google.redirect');
     Route::post('google', [GoogleController::class, 'signIn'])->name('google.sign-in');
+    Route::get('google/callback', [GoogleController::class, 'callback'])->name('google.callback');
 });
 
 Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function () {

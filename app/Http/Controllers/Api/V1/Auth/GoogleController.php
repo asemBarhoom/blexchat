@@ -23,7 +23,12 @@ class GoogleController extends Controller
     #[OA\Get(
         path: '/api/v1/auth/google',
         summary: 'Start signing up or in with Google',
-        description: 'Send the visitor to `url`. Google returns them to `FRONTEND_URL/verify/confirm` with `code` and `state`; post both to **POST /api/v1/auth/google** within 15 minutes. If Google returns `error` instead, show "Google sign-in didn’t finish".',
+        description: <<<'MD'
+            Send the visitor to `url`. Google returns them, with `code` and `state` in the query, to the redirect URI this server is set to:
+
+            - **Frontend** (default, `FRONTEND_URL/verify/confirm`): that page posts both to **POST /api/v1/auth/google** within 15 minutes. If Google returns `error` instead, show "Google sign-in didn’t finish".
+            - **This API** (`GOOGLE_REDIRECT_URI=…/api/v1/auth/google/callback`, for testing without the frontend): Google lands on **GET /api/v1/auth/google/callback**, which signs in and shows the token as JSON.
+            MD,
         tags: ['Authentication'],
         responses: [new OA\Response(response: 200, description: 'Google consent URL', content: new OA\JsonContent(properties: [
             new OA\Property(property: 'data', type: 'object', properties: [new OA\Property(property: 'url', type: 'string', format: 'uri')]),
@@ -57,6 +62,32 @@ class GoogleController extends Controller
         ],
     )]
     public function signIn(GoogleSignInRequest $request): JsonResponse
+    {
+        return $this->signInWithGoogle($request);
+    }
+
+    #[OA\Get(
+        path: '/api/v1/auth/google/callback',
+        summary: 'Google’s return to this API (testing without the frontend)',
+        description: 'Used only when GOOGLE_REDIRECT_URI points here. Google opens this URL in the browser with `code` and `state`; the answer is the same as POST /api/v1/auth/google, shown as JSON. Copy `access_token` into Authorize to try the signed-in endpoints.',
+        tags: ['Authentication'],
+        parameters: [
+            new OA\Parameter(name: 'code', in: 'query', required: true, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'state', in: 'query', required: true, schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Signed in', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'data', ref: '#/components/schemas/AuthSession'),
+            ])),
+            new OA\Response(response: 422, description: 'Missing `code` (Google returned `error`), a stale `state`, or `google_failed`', content: new OA\JsonContent(ref: '#/components/schemas/AuthError')),
+        ],
+    )]
+    public function callback(GoogleSignInRequest $request): JsonResponse
+    {
+        return $this->signInWithGoogle($request);
+    }
+
+    private function signInWithGoogle(GoogleSignInRequest $request): JsonResponse
     {
         try {
             $profile = $this->google->profile($request->string('code'));
