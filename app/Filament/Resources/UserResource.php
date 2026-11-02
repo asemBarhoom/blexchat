@@ -26,6 +26,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 class UserResource extends Resource
 {
+    /** @var array<string, string> */
+    public const ONBOARDING_STEPS = ['channel' => 'ربط قناة', 'survey' => 'الاستبيان', 'plan' => 'اختيار خطة', 'done' => 'أنهى التسجيل'];
+
     protected static ?string $model = User::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-users';
@@ -109,6 +112,13 @@ class UserResource extends Resource
                     ->state(fn (User $record): bool => filled($record->google_id)),
                 IconEntry::make('is_admin')->label('مشرف')->boolean(),
                 TextEntry::make('created_at')->label('تاريخ التسجيل')->dateTime('Y-m-d H:i'),
+            ])->columns(2),
+            Section::make('التسجيل')->schema([
+                TextEntry::make('onboarding_step')->label('الخطوة التالية')->badge()
+                    ->state(fn (User $record): string => self::ONBOARDING_STEPS[$record->onboardingStep()]),
+                TextEntry::make('survey_completed_at')->label('أنهى الاستبيان')->dateTime('Y-m-d H:i')->placeholder('لم ينهِه بعد'),
+                TextEntry::make('subscription.plan.name')->label('الخطة')->placeholder('لم يختر خطة'),
+                TextEntry::make('subscription.trial_ends_at')->label('نهاية التجربة')->dateTime('Y-m-d')->placeholder('—'),
             ])->columns(2),
             Section::make('النشاط')->schema([
                 TextEntry::make('channels_count')->label('القنوات')->state(fn (User $record): int => $record->channels()->count()),

@@ -586,6 +586,494 @@
                     }
                 }
             }
+        },
+        "/api/v1/channels/instagram/authorize": {
+            "get": {
+                "tags": [
+                    "Channels"
+                ],
+                "summary": "Start connecting an Instagram professional account",
+                "description": "Send the owner to `url`. Instagram returns them to INSTAGRAM_REDIRECT_URI with `code` and `state`; post both to POST /api/v1/channels/instagram within 15 minutes.",
+                "operationId": "562e5b762f304eb561b0e9e523780b9c",
+                "responses": {
+                    "200": {
+                        "description": "Consent URL",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "url": {
+                                                    "type": "string",
+                                                    "format": "uri"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/channels/instagram": {
+            "post": {
+                "tags": [
+                    "Channels"
+                ],
+                "summary": "Finish connecting an Instagram professional account",
+                "description": "Exchanges the code for a long-lived token, saves the account and subscribes it to comments and messages. Reconnecting an account refreshes its token.",
+                "operationId": "4a69d43d7963cc4f9189745b726df6b9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "code",
+                                    "state"
+                                ],
+                                "properties": {
+                                    "code": {
+                                        "type": "string"
+                                    },
+                                    "state": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Channel connected"
+                    },
+                    "422": {
+                        "description": "Invalid or expired state"
+                    },
+                    "502": {
+                        "description": "Instagram refused the connection"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/onboarding": {
+            "get": {
+                "tags": [
+                    "Onboarding"
+                ],
+                "summary": "Where the owner is in onboarding",
+                "description": "Call it after sign-in when `is_new_user` is true, or on a reload mid-onboarding, to resume at `next_step`. A step skipped on the frontend stays not done here.",
+                "operationId": "11f7acd3d75381f7bdf8d5d81d08690a",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts in the response. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Onboarding progress",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Onboarding"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/plans": {
+            "get": {
+                "tags": [
+                    "Plans"
+                ],
+                "summary": "The plan ladder",
+                "description": "Every plan on sale, in the admin order. Public: the pricing page can use it too.",
+                "operationId": "aa1126ba88699cce733519fcacd227ee",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts in the response. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The plans",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Plan"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/onboarding/plan": {
+            "post": {
+                "tags": [
+                    "Onboarding"
+                ],
+                "summary": "Choose a plan (W09)",
+                "description": "- **Free** (\"Continue with Free\"): active at once.\n- **A plan with `trial_days`** (\"Start free trial\" in the checkout): a trial starts and no card is taken. It does not convert: when it ends the account is on Free again. One trial per account.\n- **Any other paid plan** answers 402 `payment_required`: card payments are not built yet.\n\nChoosing again replaces the current plan.",
+                "operationId": "32f504decf2b46e4b88ffa543d282681",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts and error messages in the response. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "plan"
+                                ],
+                                "properties": {
+                                    "plan": {
+                                        "description": "A plan `id` from GET /api/v1/plans",
+                                        "type": "string",
+                                        "example": "essential"
+                                    },
+                                    "billing": {
+                                        "description": "The Monthly / Annually switch",
+                                        "type": "string",
+                                        "default": "monthly",
+                                        "enum": [
+                                            "monthly",
+                                            "annual"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The plan is in place",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Subscription"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    },
+                    "402": {
+                        "description": "`payment_required`: a paid plan without a trial",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlanError"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "`trial_used`: this account already had its free trial",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlanError"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unknown plan or billing period",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/onboarding/survey": {
+            "get": {
+                "tags": [
+                    "Onboarding"
+                ],
+                "summary": "The onboarding survey (W08)",
+                "description": "The steps in order, each with this owner’s saved answer.",
+                "operationId": "46ff909c054108ab547b8f79f1287dd9",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts in the response. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The survey",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/SurveyQuestion"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Onboarding"
+                ],
+                "summary": "Save the survey answers (Finish on the last step)",
+                "description": "Send every answered step at once and leave a skipped step out, so Skip on every step sends `\"answers\": []`. Replaces what was saved before and marks the survey done.",
+                "operationId": "48f8bc16ed035ffc527108579bcfe40b",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts and error messages in the response. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "answers"
+                                ],
+                                "properties": {
+                                    "answers": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "question",
+                                                "options"
+                                            ],
+                                            "properties": {
+                                                "question": {
+                                                    "type": "string",
+                                                    "example": "heard"
+                                                },
+                                                "options": {
+                                                    "description": "Option ids; exactly one for a radio question",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "instagram",
+                                                        "other"
+                                                    ]
+                                                },
+                                                "other": {
+                                                    "description": "Only with the question’s `other_option` picked",
+                                                    "type": "string",
+                                                    "example": "A podcast about Gulf e-commerce",
+                                                    "nullable": true,
+                                                    "maxLength": 255
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "example": {
+                                "answers": [
+                                    {
+                                        "question": "for",
+                                        "options": [
+                                            "myself"
+                                        ]
+                                    },
+                                    {
+                                        "question": "money",
+                                        "options": [
+                                            "products",
+                                            "deals"
+                                        ]
+                                    },
+                                    {
+                                        "question": "heard",
+                                        "options": [
+                                            "instagram",
+                                            "other"
+                                        ],
+                                        "other": "A podcast about Gulf e-commerce"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Saved; the survey with the answers",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/SurveyQuestion"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    },
+                    "422": {
+                        "description": "An unknown question or option, two answers to a radio question, or free text without its option",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -1644,6 +2132,256 @@
                     }
                 },
                 "type": "object"
+            },
+            "Onboarding": {
+                "properties": {
+                    "next_step": {
+                        "description": "The first step not done yet. channel: /onboarding/channel, survey: /onboarding/about, plan: /onboarding/plans, done: /onboarding/first-move or the app",
+                        "type": "string",
+                        "enum": [
+                            "channel",
+                            "survey",
+                            "plan",
+                            "done"
+                        ]
+                    },
+                    "channels": {
+                        "description": "Connected channels, as in GET /api/v1/dashboard",
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        }
+                    },
+                    "survey_completed_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "subscription": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/Subscription"
+                            },
+                            {
+                                "type": "object",
+                                "nullable": true,
+                                "enum": [
+                                    null
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "Plan": {
+                "properties": {
+                    "id": {
+                        "description": "Stable id; send it as `plan` to POST /api/v1/onboarding/plan",
+                        "type": "string",
+                        "example": "essential"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Essential"
+                    },
+                    "tagline": {
+                        "type": "string",
+                        "example": "For a growing shop or creator.",
+                        "nullable": true
+                    },
+                    "monthly_price": {
+                        "description": "Whole US dollars a month, billed monthly",
+                        "type": "integer",
+                        "example": 17
+                    },
+                    "annual_price": {
+                        "description": "Whole US dollars a month, billed yearly",
+                        "type": "integer",
+                        "example": 14
+                    },
+                    "annual_total": {
+                        "description": "What one year costs: \"Billed $168 yearly\"",
+                        "type": "integer",
+                        "example": 168
+                    },
+                    "currency": {
+                        "type": "string",
+                        "enum": [
+                            "USD"
+                        ]
+                    },
+                    "contacts_limit": {
+                        "description": "Never unlimited",
+                        "type": "integer",
+                        "example": 250
+                    },
+                    "has_ai": {
+                        "description": "Shows the \"+ Blexchat AI\" row",
+                        "type": "boolean"
+                    },
+                    "features": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "All four channels",
+                            "Unlimited automations"
+                        ]
+                    },
+                    "trial_days": {
+                        "description": "0: no trial, the plan is charged on the day",
+                        "type": "integer",
+                        "example": 14
+                    },
+                    "is_free": {
+                        "type": "boolean"
+                    },
+                    "is_recommended": {
+                        "description": "\"Our pick for you\"",
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "Subscription": {
+                "properties": {
+                    "plan": {
+                        "$ref": "#/components/schemas/Plan"
+                    },
+                    "chosen_plan": {
+                        "description": "The plan picked, even after its trial ended",
+                        "type": "string",
+                        "example": "essential"
+                    },
+                    "billing_period": {
+                        "type": "string",
+                        "enum": [
+                            "monthly",
+                            "annual"
+                        ]
+                    },
+                    "status": {
+                        "description": "trial_ended: the trial ran out and was not bought (S6.4), so `plan` is Free",
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "trialing",
+                            "trial_ended"
+                        ]
+                    },
+                    "trial_ends_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "trial_days_left": {
+                        "description": "While on a trial only",
+                        "type": "integer",
+                        "example": 14,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PlanError": {
+                "required": [
+                    "message",
+                    "code"
+                ],
+                "properties": {
+                    "message": {
+                        "description": "Ready to show, in the requested language",
+                        "type": "string"
+                    },
+                    "code": {
+                        "description": "Stable value to branch on",
+                        "type": "string",
+                        "enum": [
+                            "payment_required",
+                            "trial_used"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "SurveyQuestion": {
+                "properties": {
+                    "id": {
+                        "description": "Send it back as `question`",
+                        "type": "string",
+                        "example": "heard"
+                    },
+                    "question": {
+                        "type": "string",
+                        "example": "How did you hear about us?"
+                    },
+                    "hint": {
+                        "type": "string",
+                        "example": "Pick all that apply.",
+                        "nullable": true
+                    },
+                    "kind": {
+                        "description": "radio: one answer. multi and grid: any number (grid is the tool-logo layout)",
+                        "type": "string",
+                        "enum": [
+                            "radio",
+                            "multi",
+                            "grid"
+                        ]
+                    },
+                    "other_option": {
+                        "description": "The option that reveals a free-text field",
+                        "type": "string",
+                        "example": "other",
+                        "nullable": true
+                    },
+                    "options": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "description": "Stable; pick the icon by it",
+                                    "type": "string",
+                                    "example": "instagram"
+                                },
+                                "label": {
+                                    "type": "string",
+                                    "example": "Instagram"
+                                },
+                                "note": {
+                                    "type": "string",
+                                    "nullable": true
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "answer": {
+                        "description": "What this owner picked; null when skipped or not answered yet",
+                        "properties": {
+                            "options": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": [
+                                    "instagram",
+                                    "other"
+                                ]
+                            },
+                            "other": {
+                                "type": "string",
+                                "example": "A podcast about Gulf e-commerce",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
             }
         },
         "securitySchemes": {
@@ -1663,6 +2401,18 @@
         {
             "name": "Home",
             "description": "Public marketing homepage content"
+        },
+        {
+            "name": "Channels",
+            "description": "Connect and disconnect social channels (the connected list comes with GET /api/v1/dashboard)"
+        },
+        {
+            "name": "Onboarding",
+            "description": "After a new account signs in: connect a channel (W05–W07, see Channels), the survey (W08), then a plan (W09)"
+        },
+        {
+            "name": "Plans",
+            "description": "The plan ladder, for the pricing page and the onboarding plan screen (W09)"
         }
     ]
 }
