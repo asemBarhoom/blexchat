@@ -548,6 +548,61 @@
                 ]
             }
         },
+        "/api/v1/onboarding/first-moves": {
+            "get": {
+                "tags": [
+                    "Onboarding"
+                ],
+                "summary": "The \"popular first move\" cards (W10)",
+                "description": "Quick automations to start the wizard with, in the admin order.",
+                "operationId": "0d4965c4079440f158db0f83081a4981",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts in the response. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The cards",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/FirstMove"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/home": {
             "get": {
                 "tags": [
@@ -1261,6 +1316,68 @@
                     "connected": {
                         "description": "This owner already has an account on this platform",
                         "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "FirstMove": {
+                "properties": {
+                    "id": {
+                        "description": "Stable id of the card",
+                        "type": "string",
+                        "example": "comment-dm"
+                    },
+                    "trigger": {
+                        "description": "Wizard trigger: AUTH_LINKS.wizardNew(trigger, template)",
+                        "type": "string",
+                        "example": "comment",
+                        "enum": [
+                            "comment",
+                            "story",
+                            "dm"
+                        ]
+                    },
+                    "template": {
+                        "description": "Wizard template key, if the move starts from one",
+                        "type": "string",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "wizard_path": {
+                        "description": "The frontend path the card links to",
+                        "type": "string",
+                        "example": "/onboarding/automation/new?trigger=comment"
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Auto-DM links from comments"
+                    },
+                    "line": {
+                        "type": "string",
+                        "example": "Someone comments a keyword on your post — they get your link in a DM, instantly."
+                    },
+                    "incoming": {
+                        "description": "The sample message the automation answers",
+                        "properties": {
+                            "who": {
+                                "type": "string",
+                                "example": "reem.k"
+                            },
+                            "text": {
+                                "type": "string",
+                                "example": "LINK 😍 how much?"
+                            },
+                            "kind": {
+                                "type": "string",
+                                "example": "Comment"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "reply": {
+                        "description": "The automated reply",
+                        "type": "string",
+                        "example": "Here’s the link 👉 nourboutique.com/abaya"
                     }
                 },
                 "type": "object"
