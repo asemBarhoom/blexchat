@@ -1,0 +1,5 @@
+# Git-ignored files Claude Code copies into each new worktree, so a parallel session can
+# run artisan and Pest at once. vendor/ is copied, never linked: a link makes the
+# worktree autoload the main checkout's app/ and test that code instead of its own.
+.env
+/vendor/
