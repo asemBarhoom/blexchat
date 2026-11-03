@@ -5,7 +5,7 @@
 {{ $button }}
 </x-mail::button>
 
-{{ __('auth.link.expiry', ['minutes' => \App\Models\LoginLink::LIFETIME_MINUTES]) }}
+{{ $expiry }}
 
-{{ __('auth.link.ignore') }}
+{{ $ignore }}
 </x-mail::message>
