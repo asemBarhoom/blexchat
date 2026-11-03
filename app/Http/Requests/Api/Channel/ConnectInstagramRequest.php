@@ -14,11 +14,18 @@ class ConnectInstagramRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Instagram returns either `code`, or `error` (with `error_reason`) when the owner cancelled or refused.
+     *
+     * @return array<string, array<int, string>>
+     */
     public function rules(): array
     {
         return [
-            'code' => ['required', 'string'],
+            'code' => ['required_without:error', 'nullable', 'string'],
             'state' => ['required', 'string'],
+            'error' => ['nullable', 'string', 'max:255'],
+            'error_reason' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -40,9 +47,14 @@ class ConnectInstagramRequest extends FormRequest
                 }
 
                 if ((int) ($state['user'] ?? 0) !== (int) $this->user()->id || (int) ($state['expires'] ?? 0) < now()->timestamp) {
-                    $validator->errors()->add('state', 'The Instagram sign-in expired or was started by another account. Please try again.');
+                    $validator->errors()->add('state', __('channels.connect.state_invalid', ['channel' => 'Instagram']));
                 }
             },
         ];
+    }
+
+    public function wasDenied(): bool
+    {
+        return $this->filled('error');
     }
 }
