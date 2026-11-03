@@ -65,14 +65,15 @@ class InstagramClient
     }
 
     /**
-     * `user_id` is the professional account id that webhooks report as the entry id.
+     * `user_id` is the professional account id that webhooks report as the entry id. `account_type`
+     * is BUSINESS or MEDIA_CREATOR for the professional accounts that can connect.
      *
-     * @return array{user_id: string, username: string, profile_picture_url?: string, followers_count?: int}
+     * @return array{user_id: string, username: string, account_type?: string, profile_picture_url?: string, followers_count?: int}
      */
     public function profile(string $token): array
     {
         return $this->read($token)->get('/me', [
-            'fields' => 'user_id,username,profile_picture_url,followers_count',
+            'fields' => 'user_id,username,account_type,profile_picture_url,followers_count',
         ])->throw()->json();
     }
 
