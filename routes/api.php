@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Auth\AuthScreenController;
 use App\Http\Controllers\Api\V1\Auth\GoogleController;
 use App\Http\Controllers\Api\V1\Auth\LoginLinkController;
 use App\Http\Controllers\Api\V1\AutomationController;
 use App\Http\Controllers\Api\V1\ChannelAccessRequestController;
 use App\Http\Controllers\Api\V1\ChannelConnectScreenController;
 use App\Http\Controllers\Api\V1\ChannelController;
+use App\Http\Controllers\Api\V1\ChannelOptionController;
 use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\FirstMoveController;
@@ -15,6 +17,7 @@ use App\Http\Controllers\Api\V1\InstagramConnectionController;
 use App\Http\Controllers\Api\V1\InstagramWebhookController;
 use App\Http\Controllers\Api\V1\OnboardingController;
 use App\Http\Controllers\Api\V1\PlanController;
+use App\Http\Controllers\Api\V1\PricingController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\SurveyController;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +27,9 @@ Route::get('v1/home', HomeController::class)->name('api.v1.home');
 
 // Plan ladder: pricing page and the onboarding plan screen (W09)
 Route::get('v1/plans', PlanController::class)->name('api.v1.plans');
+
+// Marketing site: PricingPage (copy, plan comparison, FAQ)
+Route::get('v1/pricing', PricingController::class)->name('api.v1.pricing');
 
 // Meta calls these; requests are authenticated by their signature, not a user
 Route::get('v1/webhooks/instagram', [InstagramWebhookController::class, 'verify'])->name('webhooks.instagram.verify');
@@ -38,6 +44,9 @@ Route::prefix('v1/auth')->name('auth.')->middleware('throttle:30,1')->group(func
     Route::get('google/callback', [GoogleController::class, 'callback'])->name('google.callback');
 });
 
+// The texts of the sign-up and sign-in screens (W01–W04), edited in the admin panel
+Route::get('v1/auth/screens', AuthScreenController::class)->name('api.v1.auth.screens');
+
 Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function () {
     // App home screen
     Route::get('dashboard', DashboardController::class)->name('dashboard');
@@ -49,6 +58,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
 
     // Onboarding after sign-up: progress, the survey (W08) and the plan (W09); channels connect below
     Route::get('onboarding', OnboardingController::class)->name('onboarding');
+    Route::get('onboarding/channels', ChannelOptionController::class)->name('onboarding.channels'); // W05 channel picker
     Route::get('onboarding/survey', [SurveyController::class, 'show'])->name('onboarding.survey');
     Route::post('onboarding/survey', [SurveyController::class, 'store'])->name('onboarding.survey.store');
     Route::post('onboarding/plan', [SubscriptionController::class, 'store'])->name('onboarding.plan');
