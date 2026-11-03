@@ -47,6 +47,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
 
     // The signed-in account, and sign out
     Route::get('auth/me', [AuthController::class, 'me'])->name('auth.me');
+    Route::patch('auth/me', [AuthController::class, 'update'])->name('auth.me.update');
     Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
     // Onboarding after sign-up: progress, the survey (W08) and the plan (W09); channels connect below
