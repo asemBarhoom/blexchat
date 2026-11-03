@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\InstagramConnectionController;
 use App\Http\Controllers\Api\V1\InstagramWebhookController;
 use App\Http\Controllers\Api\V1\OnboardingController;
 use App\Http\Controllers\Api\V1\PlanController;
+use App\Http\Controllers\Api\V1\SolutionController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\SurveyController;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,10 @@ Route::get('v1/home', HomeController::class)->name('api.v1.home');
 
 // Plan ladder: pricing page and the onboarding plan screen (W09)
 Route::get('v1/plans', PlanController::class)->name('api.v1.plans');
+
+// Marketing site: the /solutions/{slug} pages
+Route::get('v1/solutions', [SolutionController::class, 'index'])->name('api.v1.solutions.index');
+Route::get('v1/solutions/{slug}', [SolutionController::class, 'show'])->name('api.v1.solutions.show');
 
 // Meta calls these; requests are authenticated by their signature, not a user
 Route::get('v1/webhooks/instagram', [InstagramWebhookController::class, 'verify'])->name('webhooks.instagram.verify');

@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
         // @nourboutique demo data (realistic Gulf Arabic abaya boutique)
         $this->call([
             HomeContentSeeder::class,
+            SolutionSeeder::class,
             OnboardingSeeder::class,
             UserSeeder::class,
             ChannelSeeder::class,
