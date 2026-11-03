@@ -64,6 +64,7 @@ return [
                     base_path('app/Http/Controllers/Api/V1/CouponController.php'),
                     base_path('app/Http/Controllers/Api/V1/FirstMoveController.php'),
                     base_path('app/Http/Controllers/Api/V1/InstagramConnectionController.php'),
+                    base_path('app/Http/Controllers/Api/V1/ConnectedChannelController.php'),
                     base_path('app/Http/Controllers/Api/V1/AutomationController.php'),
                     base_path('app/Http/Controllers/Api/V1/AutomationTemplateController.php'),
                     base_path('app/Http/Controllers/Api/V1/ChannelPostController.php'),

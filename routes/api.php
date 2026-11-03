@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\ChannelController;
 use App\Http\Controllers\Api\V1\CheckoutController;
 use App\Http\Controllers\Api\V1\ChannelOptionController;
 use App\Http\Controllers\Api\V1\ChannelPostController;
+use App\Http\Controllers\Api\V1\ConnectedChannelController;
 use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\CouponController;
 use App\Http\Controllers\Api\V1\DashboardController;
@@ -84,6 +85,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::get('channels/access-requests', [ChannelAccessRequestController::class, 'index'])->name('channels.access-requests.index');
     Route::post('channels/access-requests', [ChannelAccessRequestController::class, 'store'])->name('channels.access-requests.store');
     Route::delete('channels/{channel}', [ChannelController::class, 'destroy'])->name('channels.destroy');
+    // Channel connected (W07)
+    Route::get('channels/{channel}', ConnectedChannelController::class)->whereNumber('channel')->name('channels.show');
 
     // Automations list, detail, wizard, start/stop, move to Trash
     Route::get('automations', [AutomationController::class, 'index'])->name('automations.index');
