@@ -493,61 +493,6 @@
                 }
             }
         },
-        "/api/v1/onboarding/channels": {
-            "get": {
-                "tags": [
-                    "Onboarding"
-                ],
-                "summary": "The channel picker (W05)",
-                "description": "\"Where would you like to start?\": the channels on offer, in the admin order, each marked when this owner has already connected it.",
-                "operationId": "48dc22159a8ead70a01764324f6ce70e",
-                "parameters": [
-                    {
-                        "name": "lang",
-                        "in": "query",
-                        "description": "Language of the texts in the response. Takes precedence over Accept-Language. Defaults to en.",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "default": "en",
-                            "enum": [
-                                "en",
-                                "ar"
-                            ]
-                        },
-                        "example": "ar"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The channels",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/ChannelOption"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Missing, revoked or unknown token"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
         "/api/v1/onboarding/first-moves": {
             "get": {
                 "tags": [
@@ -1288,34 +1233,6 @@
                                 "type": "string"
                             }
                         }
-                    }
-                },
-                "type": "object"
-            },
-            "ChannelOption": {
-                "properties": {
-                    "id": {
-                        "description": "Stable; pick the icon and the /onboarding/connect/:channel link by it",
-                        "type": "string",
-                        "example": "instagram",
-                        "enum": [
-                            "instagram",
-                            "whatsapp",
-                            "tiktok",
-                            "messenger"
-                        ]
-                    },
-                    "name": {
-                        "type": "string",
-                        "example": "Instagram"
-                    },
-                    "line": {
-                        "type": "string",
-                        "example": "Comments, DMs and story replies"
-                    },
-                    "connected": {
-                        "description": "This owner already has an account on this platform",
-                        "type": "boolean"
                     }
                 },
                 "type": "object"
