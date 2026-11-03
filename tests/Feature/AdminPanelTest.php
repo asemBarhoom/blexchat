@@ -29,12 +29,15 @@ it('renders every admin list page', function (string $path) {
     '/admin/demo-reply-rules', '/admin/comparison-points',
     '/admin/channels', '/admin/automations', '/admin/conversations', '/admin/posts',
     '/admin/solutions', '/admin/solutions/create',
+    '/admin/channel-connected-screens',
     '/admin/channel-connect-screens', '/admin/channel-connect-screens/create', '/admin/channel-access-requests',
     '/admin/plans', '/admin/survey-questions', '/admin/survey-questions/create', '/admin/survey-answers', '/admin/subscriptions', '/admin/first-moves',
+    '/admin/coupons', '/admin/checkout-settings',
     '/admin/email-templates', '/admin/email-templates/1/edit',
     '/admin/channel-options',
     '/admin/auth-screens',
     '/admin/pricing-page', '/admin/pricing-compare-groups', '/admin/pricing-compare-rows', '/admin/pricing-compare-rows/create', '/admin/pricing-faq-items',
+    '/admin/automation-templates',
 ]);
 
 it('keeps shop owners out of the admin panel', function (string $path) {

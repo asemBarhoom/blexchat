@@ -7,6 +7,7 @@ use Database\Factories\PlanFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Translatable\HasTranslations;
 
@@ -18,8 +19,9 @@ use Spatie\Translatable\HasTranslations;
  * @property int $annual_price
  * @property int $contacts_limit
  * @property int $trial_days
+ * @property bool $in_checkout
  */
-#[Fillable(['slug', 'name', 'tagline', 'monthly_price', 'annual_price', 'contacts_limit', 'has_ai', 'features', 'trial_days', 'is_recommended', 'sort', 'active'])]
+#[Fillable(['slug', 'name', 'tagline', 'monthly_price', 'annual_price', 'contacts_limit', 'has_ai', 'features', 'trial_days', 'is_recommended', 'in_checkout', 'sort', 'active'])]
 class Plan extends Model
 {
     /** @use HasFactory<PlanFactory> */
@@ -42,6 +44,7 @@ class Plan extends Model
             'has_ai' => 'boolean',
             'trial_days' => 'integer',
             'is_recommended' => 'boolean',
+            'in_checkout' => 'boolean',
         ];
     }
 
@@ -58,6 +61,32 @@ class Plan extends Model
     public function hasTrial(): bool
     {
         return $this->trial_days > 0;
+    }
+
+    /**
+     * Whole US dollars a month for the billing period: the annual price is per month, billed yearly.
+     */
+    public function priceFor(string $billing): int
+    {
+        return $billing === 'annual' ? $this->annual_price : $this->monthly_price;
+    }
+
+    /**
+     * The most paying a year up front saves over paying monthly, in whole percent: "Save up to 30%".
+     *
+     * @param  iterable<Plan>  $plans
+     */
+    public static function annualSavingUpTo(iterable $plans): int
+    {
+        return (int) collect($plans)
+            ->reject(fn (Plan $plan): bool => $plan->isFree())
+            ->map(fn (Plan $plan): int => (int) round((1 - $plan->annual_price / $plan->monthly_price) * 100))
+            ->max();
+    }
+
+    public function coupons(): BelongsToMany
+    {
+        return $this->belongsToMany(Coupon::class);
     }
 
     public function subscriptions(): HasMany

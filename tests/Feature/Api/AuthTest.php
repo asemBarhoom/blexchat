@@ -352,3 +352,19 @@ describe('PATCH /api/v1/auth/me', function () {
         'too long' => [str_repeat('a', 256)],
     ]);
 });
+
+describe('CORS for the frontend', function () {
+    it('lets the frontend origin call the API with a bearer token', function (string $method) {
+        $origin = config('app.frontend_url');
+
+        $this->call('OPTIONS', '/api/v1/auth/me', server: [
+            'HTTP_ORIGIN' => $origin,
+            'HTTP_ACCESS_CONTROL_REQUEST_METHOD' => $method,
+            'HTTP_ACCESS_CONTROL_REQUEST_HEADERS' => 'authorization,content-type',
+        ])
+            ->assertNoContent()
+            ->assertHeader('Access-Control-Allow-Origin', '*')
+            ->assertHeader('Access-Control-Allow-Methods', $method)
+            ->assertHeader('Access-Control-Allow-Headers', 'authorization,content-type');
+    })->with(['GET', 'POST', 'PATCH']);
+});
