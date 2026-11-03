@@ -29,7 +29,9 @@ it('renders every admin list page', function (string $path) {
     '/admin/demo-reply-rules', '/admin/comparison-points',
     '/admin/channels', '/admin/automations', '/admin/conversations', '/admin/posts',
     '/admin/plans', '/admin/survey-questions', '/admin/survey-questions/create', '/admin/survey-answers', '/admin/subscriptions', '/admin/first-moves',
+    '/admin/email-templates', '/admin/email-templates/1/edit',
     '/admin/channel-options',
+    '/admin/auth-screens',
     '/admin/pricing-page', '/admin/pricing-compare-groups', '/admin/pricing-compare-rows', '/admin/pricing-compare-rows/create', '/admin/pricing-faq-items',
 ]);
 

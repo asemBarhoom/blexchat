@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Auth\AuthScreenController;
 use App\Http\Controllers\Api\V1\Auth\GoogleController;
 use App\Http\Controllers\Api\V1\Auth\LoginLinkController;
 use App\Http\Controllers\Api\V1\AutomationController;
@@ -40,6 +41,9 @@ Route::prefix('v1/auth')->name('auth.')->middleware('throttle:30,1')->group(func
     Route::post('google', [GoogleController::class, 'signIn'])->name('google.sign-in');
     Route::get('google/callback', [GoogleController::class, 'callback'])->name('google.callback');
 });
+
+// The texts of the sign-up and sign-in screens (W01–W04), edited in the admin panel
+Route::get('v1/auth/screens', AuthScreenController::class)->name('api.v1.auth.screens');
 
 Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function () {
     // App home screen
