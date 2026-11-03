@@ -51,6 +51,89 @@
                         "sanctum": []
                     }
                 ]
+            },
+            "patch": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Save the account name and business name",
+                "description": "For the onboarding step that asks for them. Send either field or both; a field left out keeps its value, and an empty `business_name` clears it.",
+                "operationId": "544026e8d914fcc712743c946a04e3bb",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the validation messages. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Nour",
+                                        "maxLength": 255
+                                    },
+                                    "business_name": {
+                                        "type": "string",
+                                        "example": "Nour Boutique",
+                                        "nullable": true,
+                                        "maxLength": 255
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The updated account",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    },
+                    "422": {
+                        "description": "An empty name, or a value over 255 characters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/api/v1/auth/logout": {
@@ -87,6 +170,100 @@
                         "sanctum": []
                     }
                 ]
+            }
+        },
+        "/api/v1/auth/screens": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "The texts of the sign-up and sign-in screens (W01–W04)",
+                "description": "Headings, leads, button and field labels, notices and links of the auth screens, as edited in the admin panel. No authentication.\n\n- Send `?lang=ar` for Arabic or `?lang=en` for English; without it, `Accept-Language` is used, and anything else returns English.\n- A text not yet translated is served in English, and `meta.fallback` is then `true`.\n- Validation and sign-in errors returned by the other auth endpoints keep coming in their own responses.",
+                "operationId": "100a50f586ba2e9fc4e91248e1c731bd",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts in the response. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    },
+                    {
+                        "name": "Accept-Language",
+                        "in": "header",
+                        "description": "Used only when `lang` is absent; the first two letters are read (ar-SA → ar).",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The screens’ texts",
+                        "headers": {
+                            "Content-Language": {
+                                "description": "Language of the returned texts",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AuthScreens"
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "locale": {
+                                                    "description": "Language the texts were served in",
+                                                    "type": "string",
+                                                    "example": "ar",
+                                                    "enum": [
+                                                        "en",
+                                                        "ar"
+                                                    ]
+                                                },
+                                                "fallback": {
+                                                    "description": "True when at least one text is not translated yet and is served in English",
+                                                    "type": "boolean"
+                                                },
+                                                "available_locales": {
+                                                    "description": "Every value `lang` accepts",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "en",
+                                                        "ar"
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The screens’ texts have not been seeded"
+                    }
+                }
             }
         },
         "/api/v1/auth/google": {
@@ -493,6 +670,262 @@
                 }
             }
         },
+        "/api/v1/channels/access-requests": {
+            "get": {
+                "tags": [
+                    "Channels"
+                ],
+                "summary": "This owner’s Request access history",
+                "description": "Newest first.",
+                "operationId": "81d0d51c055984158085373b3f7b69c9",
+                "responses": {
+                    "200": {
+                        "description": "The requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ChannelAccessRequest"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Channels"
+                ],
+                "summary": "Request access to an account another workspace connected (W06 taken → requested)",
+                "description": "Send the `access_request_token` from the `account_taken` refusal. Asking again while a request is pending returns that request (200).",
+                "operationId": "1ba4e7d86260f636410eab00df0cf892",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the error messages. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "token"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "description": "`access_request_token` from POST /api/v1/channels/instagram",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Request sent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ChannelAccessRequest"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "Already asked; the pending request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ChannelAccessRequest"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    },
+                    "422": {
+                        "description": "The token is invalid, expired or another owner’s",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/onboarding/channels/{platform}/connect": {
+            "get": {
+                "tags": [
+                    "Onboarding"
+                ],
+                "summary": "The connect-a-channel screen (W06)",
+                "description": "The copy for one channel, and which state to open in. The denied, ineligible and taken states come from POST /api/v1/channels/instagram.",
+                "operationId": "7bc7291e63cc797091b9ec7d22d2f949",
+                "parameters": [
+                    {
+                        "name": "platform",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "instagram",
+                                "whatsapp",
+                                "tiktok",
+                                "messenger"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts in the response. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The screen",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ChannelConnectScreen"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    },
+                    "404": {
+                        "description": "Unknown channel, or hidden by an admin"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/onboarding/channels": {
+            "get": {
+                "tags": [
+                    "Onboarding"
+                ],
+                "summary": "The channel picker (W05)",
+                "description": "\"Where would you like to start?\": the channels on offer, in the admin order, each marked when this owner has already connected it.",
+                "operationId": "48dc22159a8ead70a01764324f6ce70e",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts in the response. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The channels",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ChannelOption"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/onboarding/first-moves": {
             "get": {
                 "tags": [
@@ -686,23 +1119,51 @@
                     "Channels"
                 ],
                 "summary": "Finish connecting an Instagram professional account",
-                "description": "Exchanges the code for a long-lived token, saves the account and subscribes it to comments and messages. Reconnecting an account refreshes its token.",
+                "description": "Post what Instagram sent back to the redirect page. Exchanges the code for a long-lived token, saves the account and subscribes it to comments and messages.\n\n- **Reconnect** (W06 `reconnect`): signing in again to an account this owner already has refreshes its token and makes it `active`, so its paused automations run again. `meta.reconnected` is true.\n- **`access_denied`** (422): Instagram sent `error` instead of `code`: the owner cancelled or refused (W06 `denied`).\n- **`account_ineligible`** (422): Instagram says the account is not a professional one (W06 `ineligible`).\n- **`account_taken`** (409): another workspace already connected this account (W06 `taken`). Send `access_request_token` for \"Request access\".",
                 "operationId": "4a69d43d7963cc4f9189745b726df6b9",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the error messages. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "code",
                                     "state"
                                 ],
                                 "properties": {
                                     "code": {
+                                        "description": "Required unless `error` is sent",
                                         "type": "string"
                                     },
                                     "state": {
                                         "type": "string"
+                                    },
+                                    "error": {
+                                        "description": "As Instagram sent it, when the owner cancelled or refused",
+                                        "type": "string",
+                                        "example": "access_denied",
+                                        "nullable": true
+                                    },
+                                    "error_reason": {
+                                        "type": "string",
+                                        "example": "user_denied",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -712,13 +1173,57 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Channel connected"
+                        "description": "Channel connected, or reconnected",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "reconnected": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "`account_taken`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConnectError"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Invalid or expired state"
+                        "description": "`access_denied`, `account_ineligible`, or an invalid or expired state",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConnectError"
+                                }
+                            }
+                        }
                     },
                     "502": {
-                        "description": "Instagram refused the connection"
+                        "description": "`provider_error`: Instagram refused the connection",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConnectError"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -823,6 +1328,120 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/api/v1/pricing": {
+            "get": {
+                "tags": [
+                    "Pricing"
+                ],
+                "summary": "Get the public pricing page",
+                "description": "The page copy, the plan comparison table and the pricing FAQ. No authentication.\nPrices, limits and the plan cards come from `GET /api/v1/plans`; the table's cells are keyed by the same plan ids.\n\n**Language**: `?lang=ar|en`, else `Accept-Language`, else English. Any text not yet translated is served in English, field by field, and `meta.fallback` is then `true`.",
+                "operationId": "863b195c132dae7ad611b5329324ed51",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts in the response. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    },
+                    {
+                        "name": "Accept-Language",
+                        "in": "header",
+                        "description": "Used only when `lang` is absent; the first two letters are read (ar-SA → ar).",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pricing page content",
+                        "headers": {
+                            "Content-Language": {
+                                "description": "Language of the returned content",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "copy": {
+                                                    "$ref": "#/components/schemas/PricingCopy"
+                                                },
+                                                "max_saving": {
+                                                    "description": "The most a year up front saves over monthly, in percent",
+                                                    "type": "integer",
+                                                    "example": 30
+                                                },
+                                                "compare": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/PricingCompareGroup"
+                                                    }
+                                                },
+                                                "faq": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/PricingFaqItem"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "locale": {
+                                                    "type": "string",
+                                                    "example": "ar",
+                                                    "enum": [
+                                                        "en",
+                                                        "ar"
+                                                    ]
+                                                },
+                                                "fallback": {
+                                                    "description": "True when at least one text is not translated yet and is served in English",
+                                                    "type": "boolean"
+                                                },
+                                                "available_locales": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "en",
+                                                        "ar"
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Pricing page content has not been seeded"
                     }
                 }
             }
@@ -1233,6 +1852,336 @@
                                 "type": "string"
                             }
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "AuthScreens": {
+                "description": "The visible copy of the sign-up and sign-in screens, one object of texts per screen. Words in braces are placeholders the frontend fills in: {email} the address, {time} the resend countdown (0:59), {name} the owner’s first name, {terms} and {privacy} the legal links (labelled by `legal_terms` and `legal_privacy`).",
+                "properties": {
+                    "layout": {
+                        "description": "The frame every auth screen shares: brand panel, header and footer",
+                        "type": "object",
+                        "example": {
+                            "panel_line": "Turn comments into customers.",
+                            "home_label": "Blexchat home",
+                            "copyright": "© 2026 Blexchat",
+                            "privacy": "Privacy",
+                            "terms": "Terms"
+                        },
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "email_form": {
+                        "description": "The email form and notices shared by W01 and W04",
+                        "type": "object",
+                        "example": {
+                            "or": "or",
+                            "email_label": "Email",
+                            "email_placeholder": "name@yourbrand.com",
+                            "email_required": "Enter your email address to continue.",
+                            "email_invalid": "Enter a full email address, like name@yourbrand.com.",
+                            "notice_google_failed": "Google sign-in didn’t finish. Try again, or continue with email.",
+                            "notice_signed_out": "You were signed out. Sign in again to pick up where you left off."
+                        },
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "signup": {
+                        "description": "W01 — sign up",
+                        "type": "object",
+                        "example": {
+                            "title": "Create your free account",
+                            "lead": "Automate replies on Instagram, WhatsApp, TikTok and Messenger. No credit card.",
+                            "google": "Sign up with Google",
+                            "submit": "Continue with email",
+                            "aside_text": "Have an account?",
+                            "aside_link": "Sign in",
+                            "legal": "By continuing you agree to our {terms} and {privacy}.",
+                            "legal_terms": "Terms",
+                            "legal_privacy": "Privacy Policy"
+                        },
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "signin": {
+                        "description": "W04 — sign in",
+                        "type": "object",
+                        "example": {
+                            "title": "Welcome back",
+                            "lead": "Sign in with Google, or we’ll email you a link. No password to remember.",
+                            "google": "Sign in with Google",
+                            "submit": "Email me a sign-in link",
+                            "aside_text": "New to Blexchat?",
+                            "aside_link": "Create an account"
+                        },
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "check_email": {
+                        "description": "W02 — check your email; `lead_signup` or `lead_signin` by mode",
+                        "type": "object",
+                        "example": {
+                            "title": "Check your email",
+                            "lead_signup": "We sent a sign-in link to {email}. Open it on this device to finish setting up your account.",
+                            "lead_signin": "We sent a sign-in link to {email}. Open it on this device to finish signing in.",
+                            "open_gmail": "Open Gmail",
+                            "open_outlook": "Open Outlook",
+                            "resend_countdown": "Didn’t get it? Check your spam folder, or resend in {time}.",
+                            "resend_prompt": "Didn’t get it?",
+                            "resend": "Resend the link",
+                            "resend_limited": "Too many attempts. Try again in a few minutes.",
+                            "wrong_address": "Wrong address?",
+                            "use_another": "Use another email"
+                        },
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "verify": {
+                        "description": "W03 — one more step, and the toasts it ends with",
+                        "type": "object",
+                        "example": {
+                            "title": "One more step",
+                            "lead": "We’re making sure this sign-in is really you. It only takes a moment.",
+                            "status_title": "Verifying your link…",
+                            "status_note": "This page continues on its own.",
+                            "badge": "Secure",
+                            "fine": "Don’t close this tab. If nothing happens in a minute, open the link again.",
+                            "toast_created_title": "Account created",
+                            "toast_created_text": "Welcome to Blexchat.",
+                            "toast_welcome_back": "Welcome back, {name}"
+                        },
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "link_expired": {
+                        "description": "W03 when the link was used or is past its 15 minutes",
+                        "type": "object",
+                        "example": {
+                            "title": "This link has expired",
+                            "lead": "Sign-in links work once, for 15 minutes. We can send a new one to {email}.",
+                            "submit": "Send a new link",
+                            "use_another": "Use another email",
+                            "toast_title": "New link sent",
+                            "toast_text": "Check {email}."
+                        },
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "ChannelAccessRequest": {
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "platform": {
+                        "type": "string",
+                        "example": "instagram"
+                    },
+                    "account": {
+                        "properties": {
+                            "handle": {
+                                "type": "string",
+                                "example": "nourboutique",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "approved",
+                            "declined"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "decided_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ChannelConnectScreen": {
+                "properties": {
+                    "platform": {
+                        "type": "string",
+                        "enum": [
+                            "instagram",
+                            "whatsapp",
+                            "tiktok",
+                            "messenger"
+                        ]
+                    },
+                    "method": {
+                        "description": "Whose sign-in connects it: sets the button’s mark",
+                        "type": "string",
+                        "enum": [
+                            "meta",
+                            "tiktok"
+                        ]
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Instagram"
+                    },
+                    "cta": {
+                        "type": "string",
+                        "example": "Connect via Meta"
+                    },
+                    "lead": {
+                        "type": "string"
+                    },
+                    "steps": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "Log in to Facebook",
+                            "Choose your Instagram account",
+                            "Review the permissions and save"
+                        ]
+                    },
+                    "options": {
+                        "description": "\"See more options\"",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "title": {
+                                    "type": "string"
+                                },
+                                "note": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "url": {
+                                    "description": "Help page; null until there is one",
+                                    "type": "string",
+                                    "nullable": true
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "account_kind": {
+                        "description": "Under the account handle on the taken and reconnect cards",
+                        "type": "string",
+                        "example": "Instagram · Professional account",
+                        "nullable": true
+                    },
+                    "can": {
+                        "description": "What Blexchat can do once connected (W07)",
+                        "type": "string",
+                        "example": "answer comments and DMs on your account",
+                        "nullable": true
+                    },
+                    "reconnect_cta": {
+                        "type": "string",
+                        "example": "Reconnect via Meta"
+                    },
+                    "waiting_in": {
+                        "description": "connecting state: \"Finish in …\"",
+                        "type": "string",
+                        "example": "the Meta window"
+                    },
+                    "ineligible": {
+                        "properties": {
+                            "title": {
+                                "type": "string"
+                            },
+                            "text": {
+                                "type": "string"
+                            },
+                            "kind": {
+                                "type": "string",
+                                "example": "Instagram · Personal account",
+                                "nullable": true
+                            },
+                            "how": {
+                                "type": "string",
+                                "example": "How to switch to a professional account",
+                                "nullable": true
+                            },
+                            "help_url": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "state": {
+                        "description": "reconnect: this owner’s channel on this platform dropped and its automations are paused. requested: a Request access is waiting. connected: already active",
+                        "type": "string",
+                        "enum": [
+                            "default",
+                            "reconnect",
+                            "requested",
+                            "connected"
+                        ]
+                    },
+                    "channel": {
+                        "description": "This owner’s channel on this platform (the active one first), as in GET /api/v1/dashboard",
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "access_request": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/ChannelAccessRequest"
+                            },
+                            {
+                                "type": "object",
+                                "nullable": true,
+                                "enum": [
+                                    null
+                                ]
+                            }
+                        ],
+                        "description": "The latest pending Request access for this platform"
+                    }
+                },
+                "type": "object"
+            },
+            "ChannelOption": {
+                "properties": {
+                    "id": {
+                        "description": "Stable; pick the icon and the /onboarding/connect/:channel link by it",
+                        "type": "string",
+                        "example": "instagram",
+                        "enum": [
+                            "instagram",
+                            "whatsapp",
+                            "tiktok",
+                            "messenger"
+                        ]
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Instagram"
+                    },
+                    "line": {
+                        "type": "string",
+                        "example": "Comments, DMs and story replies"
+                    },
+                    "connected": {
+                        "description": "This owner already has an account on this platform",
+                        "type": "boolean"
                     }
                 },
                 "type": "object"
@@ -2250,6 +3199,60 @@
                 },
                 "type": "object"
             },
+            "ConnectError": {
+                "required": [
+                    "message",
+                    "code"
+                ],
+                "properties": {
+                    "message": {
+                        "description": "Ready to show, in the requested language",
+                        "type": "string"
+                    },
+                    "code": {
+                        "description": "Stable value to branch on; picks the W06 state (taken, denied, ineligible)",
+                        "type": "string",
+                        "enum": [
+                            "account_taken",
+                            "access_denied",
+                            "account_ineligible",
+                            "provider_error"
+                        ]
+                    },
+                    "account": {
+                        "description": "The account the sign-in returned (account_taken, account_ineligible)",
+                        "properties": {
+                            "platform": {
+                                "type": "string",
+                                "example": "instagram"
+                            },
+                            "handle": {
+                                "type": "string",
+                                "example": "nourboutique"
+                            },
+                            "type": {
+                                "description": "What the provider says the account is",
+                                "type": "string",
+                                "example": "PERSONAL",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "access_request_token": {
+                        "description": "account_taken only: send it to POST /api/v1/channels/access-requests (\"Request access\") within 60 minutes",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "error": {
+                        "description": "provider_error only: the provider’s own reason",
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "Onboarding": {
                 "properties": {
                     "next_step": {
@@ -2358,6 +3361,127 @@
                     "is_recommended": {
                         "description": "\"Our pick for you\"",
                         "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "PricingCopy": {
+                "description": "The page's own words, grouped by part of the page. `{max_saving}`, `{free_contacts}`, `{trial_days}` and `{trial_plan}` are already filled in.\nThe card texts keep per-plan placeholders for the frontend to fill: `{total}` (annual_total), `{days}` (trial_days), `{plan}` (name) and `{contacts}` (contacts_limit).",
+                "properties": {
+                    "hero": {
+                        "type": "object",
+                        "example": {
+                            "chip": "Pricing",
+                            "title": "Start free. Pay when your audience grows.",
+                            "lead": "Every plan answers comments and DMs for you.",
+                            "billing_label": "Billing period",
+                            "monthly": "Monthly",
+                            "annual": "Annually",
+                            "save": "Save up to 30%",
+                            "note": "Prices in US dollars. Change or cancel any time."
+                        }
+                    },
+                    "card": {
+                        "type": "object",
+                        "example": {
+                            "ribbon": "Most popular",
+                            "forever": "forever",
+                            "per_month": "/ month",
+                            "no_card": "No card needed",
+                            "billed_annually": "Billed ${total} a year",
+                            "billed_monthly": "Billed monthly",
+                            "start_free": "Start free",
+                            "try_free": "Try {days} days free",
+                            "choose": "Choose {plan}",
+                            "contacts": "Up to {contacts} contacts",
+                            "ai": "+ Blexchat AI"
+                        }
+                    },
+                    "compare": {
+                        "type": "object",
+                        "example": {
+                            "title": "Compare the plans",
+                            "feature": "Feature",
+                            "included": "Included",
+                            "not_included": "Not included"
+                        }
+                    },
+                    "agency": {
+                        "type": "object",
+                        "example": {
+                            "title": "Running accounts for clients?",
+                            "line": "Many accounts from one seat.",
+                            "link_label": "Blexchat for agencies",
+                            "link_url": "/solutions/agencies"
+                        }
+                    },
+                    "faq": {
+                        "description": "`marked` is the word of `title` drawn with the marker band",
+                        "type": "object",
+                        "example": {
+                            "title": "Before you pay.",
+                            "marked": "pay"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "PricingCompareGroup": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "automation"
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Automation"
+                    },
+                    "rows": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "string",
+                                    "example": "automations"
+                                },
+                                "label": {
+                                    "type": "string",
+                                    "example": "Automations"
+                                },
+                                "cells": {
+                                    "description": "One cell per plan on sale, keyed by plan id: true a tick, false a dash, or text",
+                                    "type": "object",
+                                    "example": {
+                                        "free": "3",
+                                        "essential": "Unlimited",
+                                        "pro": true
+                                    },
+                                    "additionalProperties": {
+                                        "oneOf": [
+                                            {
+                                                "type": "boolean"
+                                            },
+                                            {
+                                                "type": "string"
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "PricingFaqItem": {
+                "properties": {
+                    "question": {
+                        "type": "string",
+                        "example": "Is the free plan really free?"
+                    },
+                    "answer": {
+                        "type": "string"
                     }
                 },
                 "type": "object"
@@ -2530,6 +3654,10 @@
         {
             "name": "Plans",
             "description": "The plan ladder, for the pricing page and the onboarding plan screen (W09)"
+        },
+        {
+            "name": "Pricing",
+            "description": "Public marketing pricing page content; the prices themselves come from GET /api/v1/plans"
         }
     ]
 }
