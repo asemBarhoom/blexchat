@@ -2,12 +2,20 @@
 
 namespace App\Models;
 
+use Database\Factories\PostFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 class Post extends Model
 {
+    /** @use HasFactory<PostFactory> */
+    use HasFactory;
+
+    private const MEDIA_TYPES = ['IMAGE' => 'image', 'VIDEO' => 'video', 'CAROUSEL_ALBUM' => 'carousel'];
+
     protected $fillable = [
         'channel_id',
         'platform_post_id',
@@ -21,6 +29,22 @@ class Post extends Model
     {
         return [
             'posted_at' => 'datetime',
+        ];
+    }
+
+    /**
+     * Columns for a post as Instagram's media endpoint describes it.
+     *
+     * @param  array{caption?: string, media_product_type?: string|null, media_type?: string, timestamp?: string, thumbnail_url?: string, media_url?: string}  $media
+     * @return array<string, mixed>
+     */
+    public static function attributesFromInstagram(array $media): array
+    {
+        return [
+            'caption' => $media['caption'] ?? null,
+            'media_type' => ($media['media_product_type'] ?? null) === 'REELS' ? 'reel' : (self::MEDIA_TYPES[$media['media_type'] ?? ''] ?? null),
+            'thumbnail_url' => $media['thumbnail_url'] ?? $media['media_url'] ?? null,
+            'posted_at' => isset($media['timestamp']) ? Carbon::parse($media['timestamp']) : null,
         ];
     }
 

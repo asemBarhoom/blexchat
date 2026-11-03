@@ -35,6 +35,7 @@ it('renders every admin list page', function (string $path) {
     '/admin/channel-options',
     '/admin/auth-screens',
     '/admin/pricing-page', '/admin/pricing-compare-groups', '/admin/pricing-compare-rows', '/admin/pricing-compare-rows/create', '/admin/pricing-faq-items',
+    '/admin/automation-templates',
 ]);
 
 it('keeps shop owners out of the admin panel', function (string $path) {

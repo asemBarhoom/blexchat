@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             HomeContentSeeder::class,
             OnboardingSeeder::class,
             CheckoutSeeder::class,
+            AutomationTemplateSeeder::class,
             ChannelConnectScreenSeeder::class,
             PricingPageSeeder::class,
             AuthScreenSeeder::class,
