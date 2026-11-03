@@ -313,3 +313,42 @@ describe('GET /api/v1/auth/me and POST /api/v1/auth/logout', function () {
         $this->withToken($otherDevice)->getJson('/api/v1/auth/me')->assertOk();
     });
 });
+
+describe('PATCH /api/v1/auth/me', function () {
+    it('refuses a request without a token', function () {
+        $this->patchJson('/api/v1/auth/me', ['name' => 'Nour'])->assertUnauthorized();
+    });
+
+    it('saves the name and business name from onboarding', function () {
+        $user = User::factory()->create(['name' => null, 'business_name' => null]);
+
+        $this->actingAs($user)->patchJson('/api/v1/auth/me', ['name' => ' Nour ', 'business_name' => 'Nour Boutique'])
+            ->assertOk()
+            ->assertJsonPath('data.name', 'Nour')
+            ->assertJsonPath('data.business_name', 'Nour Boutique');
+
+        $this->getJson('/api/v1/auth/me')->assertJsonPath('data.business_name', 'Nour Boutique');
+    });
+
+    it('keeps a field that is left out, and clears an empty business name', function () {
+        $user = User::factory()->create(['name' => 'Nour', 'business_name' => 'Nour Boutique']);
+
+        $this->actingAs($user)->patchJson('/api/v1/auth/me', ['business_name' => ''])
+            ->assertOk()
+            ->assertJsonPath('data.name', 'Nour')
+            ->assertJsonPath('data.business_name', null);
+    });
+
+    it('refuses an empty or overlong name', function (mixed $name) {
+        $user = User::factory()->create(['name' => 'Nour']);
+
+        $this->actingAs($user)->patchJson('/api/v1/auth/me', ['name' => $name])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('name');
+
+        expect($user->fresh()->name)->toBe('Nour');
+    })->with([
+        'blank' => ['   '],
+        'too long' => [str_repeat('a', 256)],
+    ]);
+});
