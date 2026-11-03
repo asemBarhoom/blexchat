@@ -1,11 +1,15 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Auth\AuthScreenController;
 use App\Http\Controllers\Api\V1\Auth\GoogleController;
 use App\Http\Controllers\Api\V1\Auth\LoginLinkController;
 use App\Http\Controllers\Api\V1\AutomationController;
+use App\Http\Controllers\Api\V1\ChannelAccessRequestController;
+use App\Http\Controllers\Api\V1\ChannelConnectScreenController;
 use App\Http\Controllers\Api\V1\ChannelController;
 use App\Http\Controllers\Api\V1\CheckoutController;
+use App\Http\Controllers\Api\V1\ChannelOptionController;
 use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\CouponController;
 use App\Http\Controllers\Api\V1\DashboardController;
@@ -15,6 +19,7 @@ use App\Http\Controllers\Api\V1\InstagramConnectionController;
 use App\Http\Controllers\Api\V1\InstagramWebhookController;
 use App\Http\Controllers\Api\V1\OnboardingController;
 use App\Http\Controllers\Api\V1\PlanController;
+use App\Http\Controllers\Api\V1\PricingController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\SurveyController;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +32,8 @@ Route::get('v1/plans', PlanController::class)->name('api.v1.plans');
 
 // Checkout modal: the tiers it offers and the trial reminder day
 Route::get('v1/checkout', CheckoutController::class)->name('api.v1.checkout');
+// Marketing site: PricingPage (copy, plan comparison, FAQ)
+Route::get('v1/pricing', PricingController::class)->name('api.v1.pricing');
 
 // Meta calls these; requests are authenticated by their signature, not a user
 Route::get('v1/webhooks/instagram', [InstagramWebhookController::class, 'verify'])->name('webhooks.instagram.verify');
@@ -41,6 +48,9 @@ Route::prefix('v1/auth')->name('auth.')->middleware('throttle:30,1')->group(func
     Route::get('google/callback', [GoogleController::class, 'callback'])->name('google.callback');
 });
 
+// The texts of the sign-up and sign-in screens (W01–W04), edited in the admin panel
+Route::get('v1/auth/screens', AuthScreenController::class)->name('api.v1.auth.screens');
+
 Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function () {
     // App home screen
     Route::get('dashboard', DashboardController::class)->name('dashboard');
@@ -52,6 +62,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
 
     // Onboarding after sign-up: progress, the survey (W08) and the plan (W09); channels connect below
     Route::get('onboarding', OnboardingController::class)->name('onboarding');
+    Route::get('onboarding/channels', ChannelOptionController::class)->name('onboarding.channels'); // W05 channel picker
     Route::get('onboarding/survey', [SurveyController::class, 'show'])->name('onboarding.survey');
     Route::post('onboarding/survey', [SurveyController::class, 'store'])->name('onboarding.survey.store');
     Route::post('onboarding/plan', [SubscriptionController::class, 'store'])->name('onboarding.plan');
@@ -65,6 +76,11 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::get('channels/instagram/authorize', [InstagramConnectionController::class, 'authorize'])->name('channels.instagram.authorize');
     Route::post('channels/instagram', [InstagramConnectionController::class, 'store'])->name('channels.instagram.store');
     Route::post('channels/connect', [ChannelController::class, 'connect'])->name('channels.connect');
+
+    // Connect a channel (W06): the screen per channel, and Request access for an account another workspace has
+    Route::get('onboarding/channels/{platform}/connect', ChannelConnectScreenController::class)->name('onboarding.channels.connect');
+    Route::get('channels/access-requests', [ChannelAccessRequestController::class, 'index'])->name('channels.access-requests.index');
+    Route::post('channels/access-requests', [ChannelAccessRequestController::class, 'store'])->name('channels.access-requests.store');
     Route::delete('channels/{channel}', [ChannelController::class, 'destroy'])->name('channels.destroy');
 
     // Automations list, detail, wizard, start/stop, move to Trash
