@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Solution;
+use App\Models\SolutionLabel;
 use App\Models\UseCase;
 use Illuminate\Database\Seeder;
 
@@ -69,6 +70,45 @@ class SolutionSeeder extends Seeder
                 $solution->faqItems()->create(['question' => $this->t($question), 'answer' => $this->t($answer), 'sort' => $index]);
             }
         }
+
+        (SolutionLabel::current() ?? new SolutionLabel)->fill(['texts' => $this->labels()])->save();
+    }
+
+    /**
+     * The words SolutionPage.tsx writes around every page's content.
+     *
+     * @return array{en: array<string, array<string, string>>, ar: array<string, array<string, string>>}
+     */
+    private function labels(): array
+    {
+        return [
+            'en' => [
+                'hero' => ['chip' => 'Blexchat for {name}', 'get_started' => 'Get started free', 'see_pricing' => 'See pricing'],
+                'art' => ['replied_in' => 'Replied in 0.4s'],
+                'automations' => ['title' => 'Three automations to start with'],
+                'trigger' => [
+                    'comment' => 'Comment', 'dm' => 'DM', 'story' => 'Story reply',
+                    'every_comment' => 'every comment', 'every_dm' => 'every first message', 'every_story' => 'every reply',
+                    'keyword' => 'keyword', 'keywords' => 'keywords', 'or' => 'or',
+                ],
+                'steps' => ['title' => 'How it works'],
+                'faq' => ['title_lead' => 'Before you', 'title_marked' => 'start', 'title_end' => '.'],
+                'closing' => ['cta' => 'Get started free'],
+            ],
+            'ar' => [
+                'hero' => ['chip' => 'Blexchat لـ{name}', 'get_started' => 'ابدأ مجاناً', 'see_pricing' => 'شاهد الأسعار'],
+                'art' => ['replied_in' => 'تم الرد خلال 0.4 ثانية'],
+                'automations' => ['title' => 'ثلاث أتمتات للبداية'],
+                'trigger' => [
+                    'comment' => 'تعليق', 'dm' => 'رسالة خاصة', 'story' => 'رد على ستوري',
+                    'every_comment' => 'كل تعليق', 'every_dm' => 'كل رسالة أولى', 'every_story' => 'كل رد',
+                    'keyword' => 'الكلمة', 'keywords' => 'الكلمات', 'or' => 'أو',
+                ],
+                'steps' => ['title' => 'كيف يعمل'],
+                'faq' => ['title_lead' => 'قبل أن', 'title_marked' => 'تبدأ', 'title_end' => '.'],
+                'closing' => ['cta' => 'ابدأ مجاناً'],
+            ],
+        ];
     }
 
     /**

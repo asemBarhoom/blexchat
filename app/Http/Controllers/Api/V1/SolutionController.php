@@ -43,6 +43,33 @@ use OpenApi\Attributes as OA;
     ]),
     new OA\Property(property: 'account', ref: '#/components/schemas/SolutionAccount', description: 'Whose account it runs on where it is not the page’s sample (an agency’s clients). Absent otherwise.'),
 ])]
+#[OA\Schema(schema: 'SolutionLabels', description: 'The words the template writes around every page’s content, in the requested language; any label not translated yet is in English.', properties: [
+    new OA\Property(property: 'hero', type: 'object', properties: [
+        new OA\Property(property: 'chip', type: 'string', example: 'Blexchat for {name}', description: '`{name}` is the page name, filled by the frontend'),
+        new OA\Property(property: 'get_started', type: 'string', example: 'Get started free'),
+        new OA\Property(property: 'see_pricing', type: 'string', example: 'See pricing'),
+    ]),
+    new OA\Property(property: 'art', type: 'object', properties: [new OA\Property(property: 'replied_in', type: 'string', example: 'Replied in 0.4s')]),
+    new OA\Property(property: 'automations', type: 'object', properties: [new OA\Property(property: 'title', type: 'string', example: 'Three automations to start with')]),
+    new OA\Property(property: 'trigger', type: 'object', description: 'The trigger line: the source, then the keywords or what sets it off when there are none', properties: [
+        new OA\Property(property: 'comment', type: 'string', example: 'Comment'),
+        new OA\Property(property: 'dm', type: 'string', example: 'DM'),
+        new OA\Property(property: 'story', type: 'string', example: 'Story reply'),
+        new OA\Property(property: 'every_comment', type: 'string', example: 'every comment'),
+        new OA\Property(property: 'every_dm', type: 'string', example: 'every first message'),
+        new OA\Property(property: 'every_story', type: 'string', example: 'every reply'),
+        new OA\Property(property: 'keyword', type: 'string', example: 'keyword'),
+        new OA\Property(property: 'keywords', type: 'string', example: 'keywords'),
+        new OA\Property(property: 'or', type: 'string', example: 'or'),
+    ]),
+    new OA\Property(property: 'steps', type: 'object', properties: [new OA\Property(property: 'title', type: 'string', example: 'How it works')]),
+    new OA\Property(property: 'faq', type: 'object', description: 'The title in three parts; `title_marked` carries the marker band', properties: [
+        new OA\Property(property: 'title_lead', type: 'string', example: 'Before you'),
+        new OA\Property(property: 'title_marked', type: 'string', example: 'start'),
+        new OA\Property(property: 'title_end', type: 'string', example: '.'),
+    ]),
+    new OA\Property(property: 'closing', type: 'object', properties: [new OA\Property(property: 'cta', type: 'string', example: 'Get started free')]),
+])]
 #[OA\Schema(schema: 'Solution', allOf: [
     new OA\Schema(ref: '#/components/schemas/SolutionSummary'),
     new OA\Schema(properties: [
@@ -58,6 +85,7 @@ use OpenApi\Attributes as OA;
             new OA\Property(property: 'a', type: 'string'),
         ])),
         new OA\Property(property: 'closing', type: 'string', description: 'The closing line above the sign-up button'),
+        new OA\Property(property: 'labels', ref: '#/components/schemas/SolutionLabels'),
     ]),
 ])]
 class SolutionController extends Controller

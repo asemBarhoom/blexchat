@@ -2,6 +2,7 @@
 
 use App\Models\Solution;
 use App\Models\SolutionAutomation;
+use App\Models\SolutionLabel;
 use App\Models\UseCase;
 use Database\Seeders\HomeContentSeeder;
 use Database\Seeders\SolutionSeeder;
@@ -110,4 +111,19 @@ it('seeds again without duplicating anything', function () {
         ->and(SolutionAutomation::count())->toBe(24)
         ->and(Solution::whereNotNull('use_case_id')->count())->toBe(6)
         ->and(Solution::forSlug('education')->firstOrFail()->use_case_id)->toBeNull();
+});
+
+it('serves the template labels in the requested language, English where one is not translated', function () {
+    $this->seed([HomeContentSeeder::class, SolutionSeeder::class]);
+    $labels = SolutionLabel::current();
+    $labels->setTranslation('texts', 'ar', [...$labels->getTranslation('texts', 'ar'), 'steps' => ['title' => '']])->save();
+
+    $this->getJson('/api/v1/solutions/clinics?lang=ar')
+        ->assertOk()
+        ->assertJsonPath('data.labels.automations.title', 'ثلاث أتمتات للبداية')
+        ->assertJsonPath('data.labels.trigger.every_dm', 'كل رسالة أولى')
+        ->assertJsonPath('data.labels.faq.title_marked', 'تبدأ')
+        ->assertJsonPath('data.labels.steps.title', 'How it works');
+
+    $this->getJson('/api/v1/solutions/clinics')->assertJsonPath('data.labels.hero.chip', 'Blexchat for {name}');
 });
