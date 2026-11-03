@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\V1\Auth\AuthScreenController;
 use App\Http\Controllers\Api\V1\Auth\GoogleController;
 use App\Http\Controllers\Api\V1\Auth\LoginLinkController;
 use App\Http\Controllers\Api\V1\AutomationController;
+use App\Http\Controllers\Api\V1\ChannelAccessRequestController;
+use App\Http\Controllers\Api\V1\ChannelConnectScreenController;
 use App\Http\Controllers\Api\V1\ChannelController;
 use App\Http\Controllers\Api\V1\ChannelOptionController;
 use App\Http\Controllers\Api\V1\ConversationController;
@@ -68,6 +70,11 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::get('channels/instagram/authorize', [InstagramConnectionController::class, 'authorize'])->name('channels.instagram.authorize');
     Route::post('channels/instagram', [InstagramConnectionController::class, 'store'])->name('channels.instagram.store');
     Route::post('channels/connect', [ChannelController::class, 'connect'])->name('channels.connect');
+
+    // Connect a channel (W06): the screen per channel, and Request access for an account another workspace has
+    Route::get('onboarding/channels/{platform}/connect', ChannelConnectScreenController::class)->name('onboarding.channels.connect');
+    Route::get('channels/access-requests', [ChannelAccessRequestController::class, 'index'])->name('channels.access-requests.index');
+    Route::post('channels/access-requests', [ChannelAccessRequestController::class, 'store'])->name('channels.access-requests.store');
     Route::delete('channels/{channel}', [ChannelController::class, 'destroy'])->name('channels.destroy');
 
     // Automations list, detail, wizard, start/stop, move to Trash
