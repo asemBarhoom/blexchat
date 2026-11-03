@@ -28,6 +28,9 @@ class SurveyQuestionResource extends JsonResource
                 'id' => $option->key,
                 'label' => $option->label,
                 'note' => $option->note,
+                'icon' => $option->icon,
+                'icon_url' => $option->iconImageUrl(),
+                'icon_box' => $option->icon_box,
             ])->all(),
             // The signed-in owner's answer, so Back and a reload keep what was picked.
             'answer' => $this->whenLoaded('answers', fn (): ?array => ($answer = $this->answers->first()) instanceof SurveyAnswer
