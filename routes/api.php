@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\ChannelController;
 use App\Http\Controllers\Api\V1\CheckoutController;
 use App\Http\Controllers\Api\V1\ChannelOptionController;
 use App\Http\Controllers\Api\V1\ChannelPostController;
+use App\Http\Controllers\Api\V1\ConnectedChannelController;
 use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\CouponController;
 use App\Http\Controllers\Api\V1\DashboardController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\Api\V1\InstagramWebhookController;
 use App\Http\Controllers\Api\V1\OnboardingController;
 use App\Http\Controllers\Api\V1\PlanController;
 use App\Http\Controllers\Api\V1\PricingController;
+use App\Http\Controllers\Api\V1\SolutionController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\SurveyController;
 use Illuminate\Support\Facades\Route;
@@ -32,8 +34,13 @@ Route::get('v1/home', HomeController::class)->name('api.v1.home');
 // Plan ladder: pricing page and the onboarding plan screen (W09)
 Route::get('v1/plans', PlanController::class)->name('api.v1.plans');
 
+// Marketing site: the /solutions/{slug} pages
+Route::get('v1/solutions', [SolutionController::class, 'index'])->name('api.v1.solutions.index');
+Route::get('v1/solutions/{slug}', [SolutionController::class, 'show'])->name('api.v1.solutions.show');
+
 // Checkout modal: the tiers it offers and the trial reminder day
 Route::get('v1/checkout', CheckoutController::class)->name('api.v1.checkout');
+
 // Marketing site: PricingPage (copy, plan comparison, FAQ)
 Route::get('v1/pricing', PricingController::class)->name('api.v1.pricing');
 
@@ -84,6 +91,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::get('channels/access-requests', [ChannelAccessRequestController::class, 'index'])->name('channels.access-requests.index');
     Route::post('channels/access-requests', [ChannelAccessRequestController::class, 'store'])->name('channels.access-requests.store');
     Route::delete('channels/{channel}', [ChannelController::class, 'destroy'])->name('channels.destroy');
+    // Channel connected (W07)
+    Route::get('channels/{channel}', ConnectedChannelController::class)->whereNumber('channel')->name('channels.show');
 
     // Automations list, detail, wizard, start/stop, move to Trash
     Route::get('automations', [AutomationController::class, 'index'])->name('automations.index');
