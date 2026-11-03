@@ -55,6 +55,7 @@ return [
                     base_path('app/Http/Controllers/Api/V1/SubscriptionController.php'),
                     base_path('app/Http/Controllers/Api/V1/CheckoutController.php'),
                     base_path('app/Http/Controllers/Api/V1/CouponController.php'),
+                    base_path('app/Http/Controllers/Api/V1/FirstMoveController.php'),
                     base_path('app/Http/Controllers/Api/V1/InstagramConnectionController.php'),
                 ],
             ],
