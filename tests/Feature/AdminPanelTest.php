@@ -30,6 +30,7 @@ it('renders every admin list page', function (string $path) {
     '/admin/channels', '/admin/automations', '/admin/conversations', '/admin/posts',
     '/admin/plans', '/admin/survey-questions', '/admin/survey-questions/create', '/admin/survey-answers', '/admin/subscriptions', '/admin/first-moves',
     '/admin/email-templates', '/admin/email-templates/1/edit',
+    '/admin/channel-options',
 ]);
 
 it('keeps shop owners out of the admin panel', function (string $path) {
