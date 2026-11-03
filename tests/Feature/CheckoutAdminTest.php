@@ -2,6 +2,7 @@
 
 use App\Filament\Pages\ManageCheckoutSettings;
 use App\Filament\Resources\CouponResource\Pages\ManageCoupons;
+use App\Filament\Resources\PlanResource\Pages\ManagePlans;
 use App\Models\Coupon;
 use App\Models\Plan;
 use App\Models\Setting;
@@ -77,4 +78,15 @@ it('needs at least one tier and a reminder day', function () {
         ->fillForm(['checkout_plans' => [], 'trial_reminder_days' => 0])
         ->call('save')
         ->assertHasFormErrors(['checkout_plans', 'trial_reminder_days']);
+});
+
+it('keeps the reminder day before the end of the shortest trial', function () {
+    Livewire::test(ManageCheckoutSettings::class)
+        ->fillForm(['trial_reminder_days' => 14])
+        ->call('save')
+        ->assertHasFormErrors(['trial_reminder_days' => 'max']);
+
+    Livewire::test(ManagePlans::class)
+        ->callAction(TestAction::make('edit')->table(Plan::where('slug', 'pro')->firstOrFail()), ['trial_days' => 7])
+        ->assertHasFormErrors(['trial_days']);
 });

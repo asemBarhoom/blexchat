@@ -59,8 +59,11 @@ class CouponController extends Controller
         $rejection = $coupon === null ? Coupon::INVALID : $coupon->rejectionFor($plan);
 
         if ($rejection !== null) {
+            // A used-up code shares coupon_expired's code, but says what happened.
+            $message = $rejection === Coupon::EXPIRED && ! $coupon->isExpired() ? 'coupon_used_up' : $rejection;
+
             return response()->json([
-                'message' => __("checkout.{$rejection}", ['plan' => $plan->name]),
+                'message' => __("checkout.{$message}", ['plan' => $plan->name]),
                 'code' => $rejection,
             ], 422);
         }
