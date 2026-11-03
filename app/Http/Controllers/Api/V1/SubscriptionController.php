@@ -4,8 +4,12 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Onboarding\ChoosePlanRequest;
+use App\Http\Requests\Api\Subscription\ChangePlanRequest;
 use App\Http\Resources\Api\V1\SubscriptionResource;
+use App\Services\Subscriptions\PlanChanger;
+use App\Services\Subscriptions\PlanChangeRefused;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 #[OA\Schema(schema: 'Subscription', properties: [
@@ -20,8 +24,11 @@ use OpenApi\Attributes as OA;
     new OA\Property(property: 'message', type: 'string', description: 'Ready to show, in the requested language'),
     new OA\Property(property: 'code', type: 'string', enum: ['payment_required', 'trial_used'], description: 'Stable value to branch on'),
 ])]
+#[OA\Tag(name: 'Subscription', description: 'The plan after onboarding: read it, change it, cancel back to Free')]
 class SubscriptionController extends Controller
 {
+    public function __construct(private PlanChanger $planChanger) {}
+
     #[OA\Post(
         path: '/api/v1/onboarding/plan',
         summary: 'Choose a plan (W09)',
@@ -51,37 +58,99 @@ class SubscriptionController extends Controller
     )]
     public function store(ChoosePlanRequest $request): JsonResponse
     {
-        $plan = $request->plan();
-        $current = $request->user()->subscription()->first();
-
-        if (! $plan->isFree() && ! $plan->hasTrial()) {
-            return $this->planError(402, 'payment_required');
+        try {
+            $subscription = $this->planChanger->change($request->user(), $request->plan(), $request->billing());
+        } catch (PlanChangeRefused $refused) {
+            return $refused->toResponse('onboarding.plan');
         }
 
-        // Picking the plan you are already trying keeps the trial's clock as it is.
-        $keepsTrial = $current?->onTrial() === true && $current->plan_id === $plan->id;
-
-        if ($plan->hasTrial() && ! $keepsTrial && $current?->trial_used_at !== null) {
-            return $this->planError(409, 'trial_used');
-        }
-
-        $state = match (true) {
-            $keepsTrial => [],
-            $plan->hasTrial() => ['status' => 'trialing', 'trial_ends_at' => now()->addDays($plan->trial_days), 'trial_used_at' => now()],
-            default => ['status' => 'active', 'trial_ends_at' => null],
-        };
-
-        $subscription = $request->user()->subscription()->updateOrCreate([], [
-            'plan_id' => $plan->id,
-            'billing_period' => $request->billing(),
-            ...$state,
-        ]);
-
-        return (new SubscriptionResource($subscription->load('plan')))->response()->setStatusCode(200);
+        return (new SubscriptionResource($subscription))->response()->setStatusCode(200);
     }
 
-    private function planError(int $status, string $code): JsonResponse
+    #[OA\Get(
+        path: '/api/v1/subscription',
+        summary: 'The current plan',
+        description: 'The same `subscription` as GET /api/v1/onboarding. `data` is null before a plan is chosen (W09); the account is then on Free.',
+        security: [['sanctum' => []]],
+        tags: ['Subscription'],
+        parameters: [new OA\Parameter(name: 'lang', in: 'query', required: false, description: 'Language of the texts in the response. Takes precedence over Accept-Language. Defaults to en.', schema: new OA\Schema(type: 'string', default: 'en', enum: ['en', 'ar']), example: 'ar')],
+        responses: [
+            new OA\Response(response: 200, description: 'The subscription, or null', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'data', ref: '#/components/schemas/Subscription', nullable: true),
+            ])),
+            new OA\Response(response: 401, description: 'Missing, revoked or unknown token'),
+        ],
+    )]
+    public function show(Request $request): JsonResponse
     {
-        return response()->json(['message' => __("onboarding.plan.{$code}"), 'code' => $code], $status);
+        $subscription = $request->user()->subscription()->with('plan')->first();
+
+        return $subscription
+            ? (new SubscriptionResource($subscription))->response()
+            : response()->json(['data' => null]);
+    }
+
+    #[OA\Post(
+        path: '/api/v1/subscription',
+        summary: 'Change the plan or the billing period',
+        description: <<<'MD'
+            The same rules as POST /api/v1/onboarding/plan:
+            - **Free**: active at once, ending any trial.
+            - **A plan with `trial_days`**: its trial starts, once per account (409 `trial_used` after). Picking the plan being tried again keeps the trial's clock.
+            - **Any other paid plan**: 402 `payment_required` until card payments exist.
+
+            Send `plan`, `billing` or both; what is left out stays as it is. `billing` alone needs a plan chosen already.
+            MD,
+        security: [['sanctum' => []]],
+        tags: ['Subscription'],
+        parameters: [new OA\Parameter(name: 'lang', in: 'query', required: false, description: 'Language of the texts and error messages in the response. Takes precedence over Accept-Language. Defaults to en.', schema: new OA\Schema(type: 'string', default: 'en', enum: ['en', 'ar']), example: 'ar')],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(properties: [
+            new OA\Property(property: 'plan', type: 'string', example: 'essential', description: 'A plan `id` from GET /api/v1/plans. Required without `billing`.'),
+            new OA\Property(property: 'billing', type: 'string', enum: ['monthly', 'annual'], description: 'Required without `plan`. Defaults to the current billing period.'),
+        ])),
+        responses: [
+            new OA\Response(response: 200, description: 'The plan is in place', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'data', ref: '#/components/schemas/Subscription'),
+            ])),
+            new OA\Response(response: 401, description: 'Missing, revoked or unknown token'),
+            new OA\Response(response: 402, description: '`payment_required`: a paid plan without a trial', content: new OA\JsonContent(ref: '#/components/schemas/PlanError')),
+            new OA\Response(response: 409, description: '`trial_used`: this account already had its free trial', content: new OA\JsonContent(ref: '#/components/schemas/PlanError')),
+            new OA\Response(response: 422, description: 'Unknown plan or billing period, or neither sent', content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')),
+        ],
+    )]
+    public function update(ChangePlanRequest $request): JsonResponse
+    {
+        try {
+            $subscription = $this->planChanger->change($request->user(), $request->plan(), $request->billing());
+        } catch (PlanChangeRefused $refused) {
+            return $refused->toResponse('subscription');
+        }
+
+        return (new SubscriptionResource($subscription))->response()->setStatusCode(200);
+    }
+
+    #[OA\Delete(
+        path: '/api/v1/subscription',
+        summary: 'Cancel back to Free',
+        description: 'Free at once, ending any trial; the billing period stays. A trial used stays used.',
+        security: [['sanctum' => []]],
+        tags: ['Subscription'],
+        parameters: [new OA\Parameter(name: 'lang', in: 'query', required: false, description: 'Language of the texts and messages in the response. Takes precedence over Accept-Language. Defaults to en.', schema: new OA\Schema(type: 'string', default: 'en', enum: ['en', 'ar']), example: 'ar')],
+        responses: [
+            new OA\Response(response: 200, description: 'On Free now', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'message', type: 'string', example: 'You’re on the Free plan now.'),
+                new OA\Property(property: 'data', ref: '#/components/schemas/Subscription'),
+            ])),
+            new OA\Response(response: 401, description: 'Missing, revoked or unknown token'),
+        ],
+    )]
+    public function destroy(Request $request): JsonResponse
+    {
+        $subscription = $this->planChanger->cancel($request->user());
+
+        return (new SubscriptionResource($subscription))
+            ->additional(['message' => __('subscription.cancelled')])
+            ->response()
+            ->setStatusCode(200);
     }
 }

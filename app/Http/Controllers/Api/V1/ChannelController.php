@@ -4,15 +4,50 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Channel\ConnectChannelRequest;
+use App\Http\Requests\Api\Channel\ListChannelsRequest;
 use App\Http\Resources\Api\V1\ChannelResource;
+use App\Http\Resources\Api\V1\ConnectedChannelResource;
 use App\Models\Channel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use OpenApi\Attributes as OA;
 
-#[OA\Tag(name: 'Channels', description: 'Connect and disconnect social channels (the connected list comes with GET /api/v1/dashboard)')]
+#[OA\Tag(name: 'Channels', description: 'List, connect and disconnect social channels')]
 class ChannelController extends Controller
 {
+    #[OA\Get(
+        path: '/api/v1/channels',
+        summary: 'The connected channels, for the sidebar and the channels page',
+        description: 'Every channel of the signed-in owner, oldest connection first. Each item has the fields of GET /api/v1/channels/{channel} without `screen` and `next_step`. A channel whose `status` is not `active` has dropped and needs reconnecting.',
+        security: [['sanctum' => []]],
+        tags: ['Channels'],
+        responses: [
+            new OA\Response(response: 200, description: 'The channels; an empty list before the first one connects', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'data', type: 'array', items: new OA\Items(properties: [
+                    new OA\Property(property: 'id', type: 'integer', example: 12),
+                    new OA\Property(property: 'platform', type: 'string', enum: ['instagram', 'whatsapp', 'tiktok', 'messenger']),
+                    new OA\Property(property: 'account_id', type: 'string', example: '17841400000'),
+                    new OA\Property(property: 'username', type: 'string', nullable: true, example: '@nourboutique'),
+                    new OA\Property(property: 'profile_picture', type: 'string', format: 'uri', nullable: true),
+                    new OA\Property(property: 'followers', type: 'integer', example: 12400),
+                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'inactive', 'expired']),
+                    new OA\Property(property: 'connected_at', type: 'string', format: 'date-time', nullable: true),
+                    new OA\Property(property: 'token_expires_at', type: 'string', format: 'date-time', nullable: true),
+                ])),
+            ])),
+            new OA\Response(response: 401, description: 'Missing, revoked or unknown token'),
+        ],
+    )]
+    public function index(ListChannelsRequest $request): AnonymousResourceCollection
+    {
+        $channels = $request->user()->channels()->oldest('connected_at')->oldest('id')->get();
+
+        return ConnectedChannelResource::collection(
+            $channels->map(fn (Channel $channel): ConnectedChannelResource => new ConnectedChannelResource($channel, forScreen: false)),
+        );
+    }
+
     #[OA\Post(
         path: '/api/v1/channels/connect',
         summary: 'Connect a new social channel',
