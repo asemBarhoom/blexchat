@@ -28,7 +28,8 @@ it('renders every admin list page', function (string $path) {
     '/admin', '/admin/users', '/admin/users/create', '/admin/marketing-home', '/admin/faq-items', '/admin/creators', '/admin/use-cases', '/admin/home-stats',
     '/admin/demo-reply-rules', '/admin/comparison-points',
     '/admin/channels', '/admin/automations', '/admin/conversations', '/admin/posts',
-    '/admin/plans', '/admin/survey-questions', '/admin/survey-questions/create', '/admin/survey-answers', '/admin/subscriptions',
+    '/admin/plans', '/admin/survey-questions', '/admin/survey-questions/create', '/admin/survey-answers', '/admin/subscriptions', '/admin/first-moves',
+    '/admin/channel-options',
     '/admin/pricing-page', '/admin/pricing-compare-groups', '/admin/pricing-compare-rows', '/admin/pricing-compare-rows/create', '/admin/pricing-faq-items',
 ]);
 
