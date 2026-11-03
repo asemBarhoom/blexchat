@@ -28,8 +28,8 @@ it('renders every admin list page', function (string $path) {
     '/admin', '/admin/users', '/admin/users/create', '/admin/marketing-home', '/admin/faq-items', '/admin/creators', '/admin/use-cases', '/admin/home-stats',
     '/admin/demo-reply-rules', '/admin/comparison-points',
     '/admin/channels', '/admin/automations', '/admin/conversations', '/admin/posts',
-    '/admin/plans', '/admin/survey-questions', '/admin/survey-questions/create', '/admin/survey-answers', '/admin/subscriptions',
     '/admin/channel-connect-screens', '/admin/channel-connect-screens/create', '/admin/channel-access-requests',
+    '/admin/plans', '/admin/survey-questions', '/admin/survey-questions/create', '/admin/survey-answers', '/admin/subscriptions', '/admin/first-moves',
 ]);
 
 it('keeps shop owners out of the admin panel', function (string $path) {
