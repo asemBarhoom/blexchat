@@ -14,6 +14,8 @@ use Database\Seeders\OnboardingSeeder;
 use Filament\Actions\CreateAction;
 use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
@@ -84,6 +86,59 @@ it('creates a survey question with its options and shows it to owners', function
         ->assertJsonPath('data.4.question', 'ما حجم فريقك؟')
         ->assertJsonPath('data.4.options.0.label', 'أنا فقط');
 });
+
+it('gives each option a simple-icons logo, a cropped wordmark or an uploaded one', function () {
+    Storage::fake('public');
+
+    Livewire::test(CreateSurveyQuestion::class)
+        ->fillForm([
+            'key' => 'crm',
+            'kind' => 'grid',
+            'question' => ['en' => 'Which CRM do you use?'],
+            'active' => true,
+            'options' => [
+                ['key' => 'hubspot', 'label' => ['en' => 'HubSpot'], 'icon' => 'hubspot', 'icon_box' => ['viewBox' => '', 'width' => '', 'height' => '']],
+                ['key' => 'zoho', 'label' => ['en' => 'Zoho'], 'icon' => 'zoho', 'icon_box' => ['viewBox' => '0 9.5 24 5', 'width' => '60', 'height' => '12']],
+            ],
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $options = SurveyQuestion::where('key', 'crm')->firstOrFail()->options->keyBy('key');
+    expect($options['hubspot']->icon_box)->toBeNull()
+        ->and($options['zoho']->icon_box)->toBe(['viewBox' => '0 9.5 24 5', 'width' => 60, 'height' => 12]);
+
+    $test = Livewire::test(EditSurveyQuestion::class, ['record' => SurveyQuestion::where('key', 'crm')->firstOrFail()->getRouteKey()]);
+    $secondItem = array_keys($test->get('data.options'))[1];
+    $test->fillForm(["options.{$secondItem}.icon_image" => [UploadedFile::fake()->image('zoho.png')]])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $zoho = $options['zoho']->fresh();
+    Storage::disk('public')->assertExists($zoho->icon_image);
+
+    $this->actingAs(User::factory()->create())->getJson('/api/v1/onboarding/survey')
+        ->assertJsonPath('data.4.options.0.icon', 'hubspot')
+        ->assertJsonPath('data.4.options.0.icon_url', null)
+        ->assertJsonPath('data.4.options.1.icon_box.width', 60)
+        ->assertJsonPath('data.4.options.1.icon_url', Storage::disk('public')->url($zoho->icon_image));
+});
+
+it('refuses an icon that is not a simple-icons slug, and a half-filled crop', function (array $option, string $field) {
+    $question = SurveyQuestion::where('key', 'heard')->firstOrFail();
+
+    $test = Livewire::test(EditSurveyQuestion::class, ['record' => $question->getRouteKey()]);
+    $firstItem = array_key_first($test->get('data.options'));
+
+    $test->fillForm(['options' => [$firstItem => ['key' => 'instagram', 'label' => ['en' => 'Instagram'], ...$option]]])
+        ->call('save')
+        ->assertHasFormErrors(["options.{$firstItem}.{$field}"]);
+})->with([
+    'an icon name with capitals' => [['icon' => 'Instagram'], 'icon'],
+    'an icon URL' => [['icon' => 'https://cdn.simpleicons.org/instagram'], 'icon'],
+    'a viewBox with three numbers' => [['icon_box' => ['viewBox' => '0 0 24', 'width' => '20', 'height' => '20']], 'icon_box.viewBox'],
+    'a viewBox without a size' => [['icon_box' => ['viewBox' => '0 0 24 24', 'width' => '', 'height' => '']], 'icon_box.width'],
+]);
 
 it('refuses an "other" option that is not one of the question’s options', function () {
     $question = SurveyQuestion::where('key', 'heard')->firstOrFail();
