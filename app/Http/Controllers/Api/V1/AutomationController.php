@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Automation\StoreAutomationRequest;
+use App\Http\Requests\Api\Automation\StoreWizardAutomationRequest;
 use App\Http\Requests\Api\Automation\ToggleAutomationRequest;
 use App\Http\Requests\Api\Automation\UpdateAutomationRequest;
+use App\Http\Requests\Api\Automation\UpdateWizardAutomationRequest;
 use App\Http\Resources\Api\V1\AutomationCollection;
 use App\Http\Resources\Api\V1\AutomationResource;
 use App\Models\Automation;
@@ -14,6 +16,29 @@ use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'Automations', description: 'Create and manage keyword-triggered automation rules')]
+#[OA\Schema(schema: 'WizardAnswers', required: ['name', 'channel_id', 'kind', 'trigger', 'dm_text'], properties: [
+    new OA\Property(property: 'name', type: 'string', maxLength: 255, example: 'Comment a word → send the catalogue', description: 'The automation’s name in the list: the template’s or the starter’s name'),
+    new OA\Property(property: 'channel_id', type: 'integer', description: 'One of the owner’s channels. Fixed once saved: ignored on an edit'),
+    new OA\Property(property: 'kind', type: 'string', enum: ['comment', 'story', 'dm'], description: 'Fixed once saved: ignored on an edit'),
+    new OA\Property(property: 'template', type: 'string', nullable: true, example: 't1', description: 'New automations only: the template the wizard started from'),
+    new OA\Property(property: 'post_mode', type: 'string', enum: ['specific', 'any', 'next'], description: 'Comment only, required there. any and next need a paid plan'),
+    new OA\Property(property: 'post_id', type: 'integer', description: 'With post_mode specific: a post of the channel, from GET /api/v1/channels/{channel}/posts'),
+    new OA\Property(property: 'trigger', type: 'string', enum: ['words', 'any']),
+    new OA\Property(property: 'words', type: 'array', maxItems: 20, items: new OA\Items(type: 'string', maxLength: 100), example: ['السعر'], description: 'With trigger words: at least one'),
+    new OA\Property(property: 'public_reply', type: 'boolean', description: 'Comment only: reply publicly under the comment'),
+    new OA\Property(property: 'public_reply_text', type: 'string', maxLength: 300, example: 'أرسلنا لك التفاصيل بالخاص 💌', description: 'Required with public_reply'),
+    new OA\Property(property: 'dm_text', type: 'string', maxLength: 640),
+    new OA\Property(property: 'dm_button', type: 'string', maxLength: 20, nullable: true, description: 'Required with link_url; without a link no button is sent'),
+    new OA\Property(property: 'link_url', type: 'string', format: 'uri', nullable: true, example: 'https://nourboutique.com/abaya-winter'),
+    new OA\Property(property: 'ask_follow', type: 'boolean', description: 'Paid extra'),
+    new OA\Property(property: 'follow_text', type: 'string', maxLength: 640, description: 'Required with ask_follow'),
+    new OA\Property(property: 'follow_button', type: 'string', maxLength: 20, description: 'Required with ask_follow'),
+    new OA\Property(property: 'ask_email', type: 'boolean', description: 'Paid extra'),
+    new OA\Property(property: 'email_ask', type: 'string', maxLength: 640, description: 'Required with ask_email'),
+    new OA\Property(property: 'follow_up', type: 'boolean', description: 'Paid extra'),
+    new OA\Property(property: 'follow_up_after', type: 'string', enum: ['1h', '6h', '24h'], description: 'Required with follow_up'),
+    new OA\Property(property: 'follow_up_text', type: 'string', maxLength: 640, description: 'Required with follow_up'),
+])]
 class AutomationController extends Controller
 {
     #[OA\Get(
@@ -31,7 +56,7 @@ class AutomationController extends Controller
     )]
     public function index(Request $request): AutomationCollection
     {
-        $query = $request->user()->automations()->with('channel');
+        $query = $request->user()->automations()->with(['channel', 'template']);
 
         if ($request->filled('channel_id')) {
             $query->where('channel_id', $request->channel_id);
@@ -137,5 +162,61 @@ class AutomationController extends Controller
         $automation->update(['active' => $request->boolean('active')]);
 
         return response()->json(['data' => ['id' => $automation->id, 'active' => $automation->active]]);
+    }
+
+    #[OA\Post(
+        path: '/api/v1/automations/wizard',
+        summary: 'Save a new automation from the wizard (Go live on Review)',
+        description: 'Takes the wizard’s answers and stores the automation live. A paid answer (post_mode any or next, ask_follow, ask_email, follow_up) needs a paid plan or a running trial.',
+        security: [['sanctum' => []]],
+        tags: ['Automation wizard'],
+        parameters: [new OA\Parameter(name: 'lang', in: 'query', required: false, description: 'Language of the error messages. Takes precedence over Accept-Language. Defaults to en.', schema: new OA\Schema(type: 'string', default: 'en', enum: ['en', 'ar']))],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/WizardAnswers', example: [
+            'name' => 'Comment a word → send the catalogue', 'channel_id' => 1, 'kind' => 'comment', 'template' => 't1',
+            'post_mode' => 'specific', 'post_id' => 1, 'trigger' => 'words', 'words' => ['كتالوج'],
+            'public_reply' => true, 'public_reply_text' => 'أرسلنا لك التفاصيل بالخاص 💌',
+            'dm_text' => 'هلا والله! 👋 هذا كتالوج الموسم كامل، بالأسعار والمقاسات:', 'dm_button' => 'افتحي الكتالوج',
+            'link_url' => 'https://nourboutique.com/abaya-winter',
+        ])),
+        responses: [
+            new OA\Response(response: 201, description: 'Saved and live; `data.wizard` holds the answers back'),
+            new OA\Response(response: 401, description: 'Missing, revoked or unknown token'),
+            new OA\Response(response: 422, description: 'A missing or invalid answer, another account’s channel or post, or a paid answer on Free', content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')),
+        ]
+    )]
+    public function storeFromWizard(StoreWizardAutomationRequest $request): JsonResponse
+    {
+        $automation = $request->user()->automations()->create([
+            ...$request->automationAttributes(),
+            'channel_id' => $request->integer('channel_id'),
+            'automation_template_id' => $request->template()?->id,
+        ]);
+
+        return response()->json(['data' => new AutomationResource($automation)], 201);
+    }
+
+    #[OA\Put(
+        path: '/api/v1/automations/{id}/wizard',
+        summary: 'Save an edit made in the wizard',
+        description: 'Send every answer again, as on create. The kind and the channel stay as saved. A paid answer already saved stays allowed after a trial ends; switching a new one on needs a paid plan.',
+        security: [['sanctum' => []]],
+        tags: ['Automation wizard'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'lang', in: 'query', required: false, description: 'Language of the error messages. Takes precedence over Accept-Language. Defaults to en.', schema: new OA\Schema(type: 'string', default: 'en', enum: ['en', 'ar'])),
+        ],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/WizardAnswers')),
+        responses: [
+            new OA\Response(response: 200, description: 'Saved'),
+            new OA\Response(response: 401, description: 'Missing, revoked or unknown token'),
+            new OA\Response(response: 403, description: 'Another account’s automation'),
+            new OA\Response(response: 422, description: 'A missing or invalid answer', content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')),
+        ]
+    )]
+    public function updateFromWizard(UpdateWizardAutomationRequest $request, Automation $automation): JsonResponse
+    {
+        $automation->update($request->automationAttributes());
+
+        return response()->json(['data' => new AutomationResource($automation->fresh())]);
     }
 }

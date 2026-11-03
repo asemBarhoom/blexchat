@@ -22,7 +22,26 @@ class SurveyOptionFactory extends Factory
             'survey_question_id' => SurveyQuestion::factory(),
             'key' => fake()->unique()->word(),
             'label' => ['en' => fake()->words(2, true)],
+            'icon' => null,
             'sort' => 0,
         ];
+    }
+
+    /**
+     * Show a simple-icons logo, optionally cropped for a wordmark.
+     *
+     * @param  array{viewBox: string, width: int, height: int}|null  $box
+     */
+    public function withIcon(string $slug = 'instagram', ?array $box = null): static
+    {
+        return $this->state(fn (): array => ['icon' => $slug, 'icon_box' => $box]);
+    }
+
+    /**
+     * Show an uploaded logo from the public disk.
+     */
+    public function withUploadedIcon(string $path = 'survey/icons/logo.png'): static
+    {
+        return $this->state(fn (): array => ['icon_image' => $path]);
     }
 }

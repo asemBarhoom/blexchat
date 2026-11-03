@@ -7,6 +7,7 @@ use App\Models\Channel;
 use App\Models\Comment;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\Post;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Log;
@@ -27,7 +28,7 @@ class AutomationRunner
      */
     public function forComment(Channel $channel, Comment $comment): void
     {
-        $automation = $this->firstMatch($channel, 'comment_keyword', $comment->text);
+        $automation = $this->firstMatch($channel, 'comment_keyword', $comment->text, post: $comment->post);
 
         if ($automation === null) {
             return;
@@ -84,9 +85,9 @@ class AutomationRunner
 
     /**
      * Keywords match anywhere in the text, ignoring case; an automation without keywords matches
-     * anything when $answerAny allows it.
+     * anything when $answerAny allows it. A comment only matches automations watching its post.
      */
-    private function firstMatch(Channel $channel, string $trigger, string $text, bool $answerAny = true): ?Automation
+    private function firstMatch(Channel $channel, string $trigger, string $text, bool $answerAny = true, ?Post $post = null): ?Automation
     {
         $text = mb_strtolower($text);
 
@@ -96,7 +97,11 @@ class AutomationRunner
             ->where('active', true)
             ->orderBy('id')
             ->get()
-            ->first(function (Automation $automation) use ($text, $answerAny): bool {
+            ->first(function (Automation $automation) use ($text, $answerAny, $post): bool {
+                if ($post !== null && ! $automation->watchesPost($post)) {
+                    return false;
+                }
+
                 $keywords = array_filter(array_map(fn (string $keyword): string => mb_strtolower(trim($keyword)), $automation->keywords ?? []));
 
                 if ($keywords === []) {

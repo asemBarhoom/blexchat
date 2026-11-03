@@ -5,12 +5,16 @@ use App\Http\Controllers\Api\V1\Auth\AuthScreenController;
 use App\Http\Controllers\Api\V1\Auth\GoogleController;
 use App\Http\Controllers\Api\V1\Auth\LoginLinkController;
 use App\Http\Controllers\Api\V1\AutomationController;
+use App\Http\Controllers\Api\V1\AutomationTemplateController;
 use App\Http\Controllers\Api\V1\ChannelAccessRequestController;
 use App\Http\Controllers\Api\V1\ChannelConnectScreenController;
 use App\Http\Controllers\Api\V1\ChannelController;
+use App\Http\Controllers\Api\V1\CheckoutController;
 use App\Http\Controllers\Api\V1\ChannelOptionController;
 use App\Http\Controllers\Api\V1\ConnectedChannelController;
+use App\Http\Controllers\Api\V1\ChannelPostController;
 use App\Http\Controllers\Api\V1\ConversationController;
+use App\Http\Controllers\Api\V1\CouponController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\FirstMoveController;
 use App\Http\Controllers\Api\V1\HomeController;
@@ -29,6 +33,8 @@ Route::get('v1/home', HomeController::class)->name('api.v1.home');
 // Plan ladder: pricing page and the onboarding plan screen (W09)
 Route::get('v1/plans', PlanController::class)->name('api.v1.plans');
 
+// Checkout modal: the tiers it offers and the trial reminder day
+Route::get('v1/checkout', CheckoutController::class)->name('api.v1.checkout');
 // Marketing site: PricingPage (copy, plan comparison, FAQ)
 Route::get('v1/pricing', PricingController::class)->name('api.v1.pricing');
 
@@ -64,6 +70,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::post('onboarding/survey', [SurveyController::class, 'store'])->name('onboarding.survey.store');
     Route::post('onboarding/plan', [SubscriptionController::class, 'store'])->name('onboarding.plan');
 
+    // Checkout: "Apply coupon" (checks and prices only; nothing is redeemed yet)
+    Route::post('coupons/check', [CouponController::class, 'check'])->middleware('throttle:30,1')->name('coupons.check');
     // Onboarding W10: the "popular first move" cards that open the automation wizard
     Route::get('onboarding/first-moves', FirstMoveController::class)->name('onboarding.first-moves');
 
@@ -87,6 +95,12 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::patch('automations/{automation}', [AutomationController::class, 'update'])->name('automations.update');
     Route::delete('automations/{automation}', [AutomationController::class, 'destroy'])->name('automations.destroy');
     Route::patch('automations/{automation}/toggle', [AutomationController::class, 'toggle'])->name('automations.toggle');
+
+    // Automation wizard (W11–W15, Review) and its template picker (W19)
+    Route::get('automation-templates', AutomationTemplateController::class)->name('automation-templates.index');
+    Route::get('channels/{channel}/posts', ChannelPostController::class)->name('channels.posts');
+    Route::post('automations/wizard', [AutomationController::class, 'storeFromWizard'])->name('automations.wizard.store');
+    Route::put('automations/{automation}/wizard', [AutomationController::class, 'updateFromWizard'])->name('automations.wizard.update');
 
     // Inbox: conversation list, thread, reply
     Route::get('conversations', [ConversationController::class, 'index'])->name('conversations.index');
