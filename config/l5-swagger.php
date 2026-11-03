@@ -55,6 +55,7 @@ return [
                     base_path('app/Http/Controllers/Api/V1/HomeController.php'),
                     base_path('app/Http/Controllers/Api/V1/Auth'),
                     base_path('app/Http/Controllers/Api/V1/PlanController.php'),
+                    base_path('app/Http/Controllers/Api/V1/SolutionController.php'),
                     base_path('app/Http/Controllers/Api/V1/PricingController.php'),
                     base_path('app/Http/Controllers/Api/V1/OnboardingController.php'),
                     base_path('app/Http/Controllers/Api/V1/ChannelOptionController.php'),
