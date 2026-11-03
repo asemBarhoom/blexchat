@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Auth\UpdateProfileRequest;
 use App\Http\Resources\Api\V1\UserResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -49,6 +50,32 @@ class AuthController extends Controller
     )]
     public function me(Request $request): UserResource
     {
+        return new UserResource($request->user());
+    }
+
+    #[OA\Patch(
+        path: '/api/v1/auth/me',
+        summary: 'Save the account name and business name',
+        description: 'For the onboarding step that asks for them. Send either field or both; a field left out keeps its value, and an empty `business_name` clears it.',
+        security: [['sanctum' => []]],
+        tags: ['Authentication'],
+        parameters: [new OA\Parameter(name: 'lang', in: 'query', required: false, description: 'Language of the validation messages. Takes precedence over Accept-Language. Defaults to en.', schema: new OA\Schema(type: 'string', default: 'en', enum: ['en', 'ar']), example: 'ar')],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(properties: [
+            new OA\Property(property: 'name', type: 'string', maxLength: 255, example: 'Nour'),
+            new OA\Property(property: 'business_name', type: 'string', maxLength: 255, nullable: true, example: 'Nour Boutique'),
+        ])),
+        responses: [
+            new OA\Response(response: 200, description: 'The updated account', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'data', ref: '#/components/schemas/User'),
+            ])),
+            new OA\Response(response: 401, description: 'Missing, revoked or unknown token'),
+            new OA\Response(response: 422, description: 'An empty name, or a value over 255 characters', content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')),
+        ],
+    )]
+    public function update(UpdateProfileRequest $request): UserResource
+    {
+        $request->user()->update($request->validated());
+
         return new UserResource($request->user());
     }
 
