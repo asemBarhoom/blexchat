@@ -25,6 +25,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             HomeContentSeeder::class,
             OnboardingSeeder::class,
+            ChannelConnectedScreenSeeder::class,
+            CheckoutSeeder::class,
+            AutomationTemplateSeeder::class,
             ChannelConnectScreenSeeder::class,
             PricingPageSeeder::class,
             AuthScreenSeeder::class,

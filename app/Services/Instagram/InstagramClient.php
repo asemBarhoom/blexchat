@@ -88,6 +88,19 @@ class InstagramClient
     }
 
     /**
+     * The account's latest posts and reels, newest first.
+     *
+     * @return list<array{id: string, caption?: string, media_product_type?: string, media_type?: string, timestamp?: string, thumbnail_url?: string, media_url?: string}>
+     */
+    public function recentMedia(Channel $channel, int $limit = 50): array
+    {
+        return $this->read($channel->access_token)->get('/me/media', [
+            'fields' => 'id,caption,media_type,media_product_type,timestamp,thumbnail_url,media_url',
+            'limit' => $limit,
+        ])->throw()->json('data') ?? [];
+    }
+
+    /**
      * The person behind an Instagram-scoped id, for naming a new conversation.
      *
      * @return array{username?: string, name?: string, profile_pic?: string}

@@ -87,9 +87,20 @@ describe('the survey', function () {
             ->assertOk()
             ->assertJsonPath('data.*.id', ['for', 'money', 'tools', 'heard'])
             ->assertJsonPath('data.0.kind', 'radio')
-            ->assertJsonPath('data.0.options.1', ['id' => 'myself', 'label' => 'Myself', 'note' => 'My own brand, shop or creator account.'])
+            ->assertJsonPath('data.0.options.1', ['id' => 'myself', 'label' => 'Myself', 'note' => 'My own brand, shop or creator account.', 'icon' => null, 'icon_url' => null, 'icon_box' => null])
+            ->assertJsonPath('data.2.options.*.icon', ['shopify', 'salla', 'woocommerce', 'googlesheets', 'mailchimp', 'calendly', 'stripe', 'zapier'])
+            ->assertJsonPath('data.2.options.2.icon_box', ['viewBox' => '0 9.58 24 4.84', 'width' => 64, 'height' => 13])
+            ->assertJsonPath('data.3.options.*.icon', ['instagram', 'tiktok', 'snapchat', 'youtube', null, null, null])
             ->assertJsonPath('data.3.other_option', 'other')
             ->assertJsonPath('data.*.answer', [null, null, null, null]);
+    });
+
+    it('gives an uploaded logo as an absolute URL', function () {
+        SurveyQuestion::where('key', 'heard')->firstOrFail()->options()->where('key', 'friend')->update(['icon_image' => 'survey/icons/friend.png']);
+
+        $this->actingAs($this->user)->getJson('/api/v1/onboarding/survey')
+            ->assertJsonPath('data.3.options.5.icon', null)
+            ->assertJsonPath('data.3.options.5.icon_url', url('/storage/survey/icons/friend.png'));
     });
 
     it('saves the answers, keeps a skipped step empty, and shows them back', function () {
