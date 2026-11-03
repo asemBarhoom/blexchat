@@ -55,8 +55,8 @@ class ManageCheckoutSettings extends Page
                     ->required()
                     ->helperText('الخطط التي يتنقّل بينها العميل في صفحة الدفع، بترتيب الخطط.'),
                 TextInput::make('trial_reminder_days')->label('يوم تذكير التجربة المجانية')
-                    ->numeric()->integer()->minValue(1)->maxValue(365)->required()
-                    ->helperText('في أي يوم من التجربة المجانية نرسل بريد التذكير. يجب أن يسبق نهاية التجربة.'),
+                    ->numeric()->integer()->minValue(1)->maxValue(fn (): int => self::shortestTrial() - 1)->required()
+                    ->helperText(fn (): string => 'في أي يوم من التجربة المجانية نرسل بريد التذكير. يجب أن يسبق نهاية أقصر تجربة ('.self::shortestTrial().' يوماً).'),
             ]);
     }
 
@@ -72,6 +72,14 @@ class ManageCheckoutSettings extends Page
                     ])->key('form-actions'),
                 ]),
         ]);
+    }
+
+    /**
+     * The shortest free trial on sale, in days: the reminder has to go out before it ends.
+     */
+    public static function shortestTrial(): int
+    {
+        return (int) (Plan::where('active', true)->where('trial_days', '>', 0)->min('trial_days') ?? 366);
     }
 
     public function save(): void

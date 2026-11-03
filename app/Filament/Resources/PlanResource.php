@@ -5,6 +5,8 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PlanResource\Pages;
 use App\Filament\Support\Translations;
 use App\Models\Plan;
+use App\Models\Setting;
+use Closure;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\TagsInput;
@@ -53,7 +55,15 @@ class PlanResource extends Resource
                 TextInput::make('annual_price')->label('السعر الشهري بالدفع السنوي ($)')->numeric()->integer()->minValue(0)->required(),
                 TextInput::make('contacts_limit')->label('حد جهات الاتصال')->numeric()->integer()->minValue(1)->required(),
                 TextInput::make('trial_days')->label('أيام التجربة المجانية')->numeric()->integer()->minValue(0)->maxValue(365)->default(0)
-                    ->helperText('0 = بدون تجربة: تُدفع الخطة من اليوم.'),
+                    ->helperText('0 = بدون تجربة: تُدفع الخطة من اليوم.')
+                    // A trial has to outlast the reminder email (إعدادات الدفع).
+                    ->rule(fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
+                        $reminderDay = (int) Setting::get(Setting::TRIAL_REMINDER_DAYS);
+
+                        if ((int) $value > 0 && (int) $value <= $reminderDay) {
+                            $fail("يجب أن تكون التجربة أطول من يوم التذكير ({$reminderDay}).");
+                        }
+                    }),
             ])->columns(2),
 
             Grid::make(count(config('app.supported_locales')))->schema(array_map(

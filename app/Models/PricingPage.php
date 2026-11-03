@@ -72,9 +72,7 @@ class PricingPage extends Model
         $trialPlan = $plans->first(fn (Plan $plan): bool => $plan->hasTrial());
 
         return [
-            'max_saving' => (int) $plans->reject(fn (Plan $plan): bool => $plan->isFree())
-                ->map(fn (Plan $plan): int => (int) round((1 - $plan->annual_price / $plan->monthly_price) * 100))
-                ->max(),
+            'max_saving' => Plan::annualSavingUpTo($plans),
             'free_contacts' => $plans->first(fn (Plan $plan): bool => $plan->isFree())?->contacts_limit ?? 0,
             'trial_days' => $trialPlan?->trial_days ?? 0,
             'trial_plan' => $trialPlan?->name ?? '',
