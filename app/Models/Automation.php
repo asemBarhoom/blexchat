@@ -6,9 +6,36 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * A rule that answers comments, DMs or story replies. The wizard (W11+) speaks in its own terms
+ * — a kind, a post, words, a DM with a link — and `fromWizard` / `wizardAnswers` translate
+ * between those and the trigger, keywords and actions the AutomationRunner reads.
+ *
+ * @property string $trigger_type
+ * @property string|null $post_mode
+ * @property int|null $post_id
+ * @property array<string, mixed>|null $extras
+ */
 class Automation extends Model
 {
     use HasFactory;
+
+    /** The wizard's kinds, by the trigger_type each one is stored as. */
+    public const KINDS = ['comment_keyword' => 'comment', 'story_mention' => 'story', 'dm_keyword' => 'dm'];
+
+    public const POST_MODES = ['specific', 'any', 'next'];
+
+    /** Post modes beyond one specific post need a paid plan. */
+    public const PAID_POST_MODES = ['any', 'next'];
+
+    /** The paid extras (W13, W14) and the answers each one keeps. */
+    public const EXTRAS = [
+        'ask_follow' => ['follow_text', 'follow_button'],
+        'ask_email' => ['email_ask'],
+        'follow_up' => ['follow_up_after', 'follow_up_text'],
+    ];
+
+    public const FOLLOW_UP_AFTER = ['1h', '6h', '24h'];
 
     protected $attributes = [
         'active' => true,
@@ -17,10 +44,14 @@ class Automation extends Model
     protected $fillable = [
         'user_id',
         'channel_id',
+        'automation_template_id',
         'name',
         'trigger_type',
+        'post_mode',
+        'post_id',
         'keywords',
         'actions',
+        'extras',
         'active',
     ];
 
@@ -29,8 +60,124 @@ class Automation extends Model
         return [
             'keywords' => 'array',
             'actions' => 'array',
+            'extras' => 'array',
             'active' => 'boolean',
         ];
+    }
+
+    /**
+     * Storage attributes for a set of wizard answers. A public reply is only kept for a comment,
+     * and a post only for a comment watching one specific post.
+     *
+     * @param  array<string, mixed>  $answers  validated wizard answers, with `kind`
+     * @return array<string, mixed>
+     */
+    public static function fromWizard(array $answers): array
+    {
+        $kind = $answers['kind'];
+        $isComment = $kind === 'comment';
+        $postMode = $isComment ? $answers['post_mode'] : null;
+        $linkUrl = $answers['link_url'] ?? null;
+        $actions = [];
+
+        if ($isComment && ($answers['public_reply'] ?? false)) {
+            $actions[] = ['type' => 'reply_comment', 'message' => $answers['public_reply_text']];
+        }
+
+        $actions[] = array_filter([
+            'type' => filled($linkUrl) && filled($answers['dm_button'] ?? null) ? 'send_dm_with_button' : 'send_dm',
+            'message' => $answers['dm_text'],
+            'button_label' => $answers['dm_button'] ?? null,
+            'button_url' => $linkUrl,
+        ], fn (mixed $value): bool => filled($value));
+
+        $extras = [];
+        foreach (self::EXTRAS as $switch => $fields) {
+            $extras[$switch] = (bool) ($answers[$switch] ?? false);
+            foreach ($fields as $field) {
+                if ($extras[$switch]) {
+                    $extras[$field] = $answers[$field];
+                }
+            }
+        }
+
+        return [
+            'name' => $answers['name'],
+            'trigger_type' => array_search($kind, self::KINDS, true),
+            'post_mode' => $postMode,
+            'post_id' => $postMode === 'specific' ? $answers['post_id'] : null,
+            'keywords' => $answers['trigger'] === 'words' ? array_values($answers['words']) : [],
+            'actions' => $actions,
+            'extras' => $extras,
+        ];
+    }
+
+    /**
+     * The automation as the wizard's answers, so an edit opens where it was left. Rules made
+     * before the wizard read the same way: their first DM is the message.
+     *
+     * @return array<string, mixed>
+     */
+    public function wizardAnswers(): array
+    {
+        $actions = collect($this->actions ?? []);
+        $publicReply = $actions->firstWhere('type', 'reply_comment');
+        $dm = $actions->first(fn (array $action): bool => $action['type'] !== 'reply_comment');
+        $keywords = $this->keywords ?? [];
+        $extras = $this->extras ?? [];
+
+        $answers = [
+            'kind' => $this->kind(),
+            'post_mode' => $this->kind() === 'comment' ? ($this->post_mode ?? 'any') : null,
+            'post_id' => $this->post_id,
+            'trigger' => $keywords === [] ? 'any' : 'words',
+            'words' => array_values($keywords),
+            'public_reply' => $publicReply !== null,
+            'public_reply_text' => $publicReply['message'] ?? null,
+            'dm_text' => $dm['message'] ?? '',
+            'dm_button' => $dm['button_label'] ?? null,
+            'link_url' => $dm['button_url'] ?? null,
+        ];
+
+        foreach (self::EXTRAS as $switch => $fields) {
+            $answers[$switch] = (bool) ($extras[$switch] ?? false);
+            foreach ($fields as $field) {
+                $answers[$field] = $extras[$field] ?? null;
+            }
+        }
+
+        return $answers;
+    }
+
+    /**
+     * comment, story or dm.
+     */
+    public function kind(): ?string
+    {
+        return self::KINDS[$this->trigger_type] ?? null;
+    }
+
+    /**
+     * Whether a comment on this post sets the automation off. "Next post" is the first post the
+     * account published after the automation was made; rules made before the wizard watch every post.
+     */
+    public function watchesPost(Post $post): bool
+    {
+        return match ($this->post_mode) {
+            'specific' => $this->post_id === $post->id,
+            'next' => $post->is($this->nextPost()),
+            default => true,
+        };
+    }
+
+    private function nextPost(): ?Post
+    {
+        return Post::query()
+            ->where('channel_id', $this->channel_id)
+            ->where('posted_at', '>=', $this->created_at)
+            ->orderBy('posted_at')
+            ->orderBy('id')
+            ->first();
     }
 
     public function user(): BelongsTo
@@ -41,5 +188,15 @@ class Automation extends Model
     public function channel(): BelongsTo
     {
         return $this->belongsTo(Channel::class);
+    }
+
+    public function post(): BelongsTo
+    {
+        return $this->belongsTo(Post::class);
+    }
+
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(AutomationTemplate::class, 'automation_template_id');
     }
 }

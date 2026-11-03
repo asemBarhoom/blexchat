@@ -6,6 +6,7 @@ use App\Models\Channel;
 use App\Models\Comment;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\Post;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
@@ -211,6 +212,22 @@ it('leaves comments alone when nothing matches or the shop wrote them', function
     expect(Comment::where('platform_comment_id', 'c2')->value('automated_reply'))->toBeFalse()
         ->and(Comment::where('platform_comment_id', 'c3')->exists())->toBeFalse();
     Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), 'replies') || str_contains($request->url(), 'messages'));
+});
+
+it('answers only comments on the post a wizard automation watches', function () {
+    $channel = instagramChannel();
+    $other = Post::factory()->create(['channel_id' => $channel->id, 'posted_at' => '2026-10-01 00:00:00']);
+    $specific = Automation::factory()->for($channel->user)->for($channel)->create([
+        'trigger_type' => 'comment_keyword', 'keywords' => ['السعر'], 'post_mode' => 'specific', 'post_id' => $other->id,
+    ]);
+    fakeInstagramSends();
+
+    deliverWebhook([commentEntry('c4', 'السعر؟')]);
+    expect(Comment::where('platform_comment_id', 'c4')->value('automated_reply'))->toBeFalse();
+
+    $specific->forceFill(['post_mode' => 'next', 'post_id' => null, 'created_at' => '2026-10-29 00:00:00'])->save();
+    deliverWebhook([commentEntry('c5', 'السعر؟')]);
+    expect(Comment::where('platform_comment_id', 'c5')->value('automation_id'))->toBe($specific->id);
 });
 
 it('greets the first DM, ignores its own echoes, and answers story replies', function () {

@@ -17,8 +17,6 @@ use Illuminate\Support\Carbon;
  */
 class InstagramEventHandler
 {
-    private const MEDIA_TYPES = ['IMAGE' => 'image', 'VIDEO' => 'video', 'CAROUSEL_ALBUM' => 'carousel'];
-
     public function __construct(private InstagramClient $instagram, private AutomationRunner $automations) {}
 
     /**
@@ -111,12 +109,7 @@ class InstagramEventHandler
         if ($post->wasRecentlyCreated) {
             try {
                 $media = $this->instagram->media($channel, $mediaId);
-                $post->update([
-                    'caption' => $media['caption'] ?? null,
-                    'media_type' => ($productType ?? $media['media_product_type'] ?? null) === 'REELS' ? 'reel' : (self::MEDIA_TYPES[$media['media_type'] ?? ''] ?? null),
-                    'thumbnail_url' => $media['thumbnail_url'] ?? $media['media_url'] ?? null,
-                    'posted_at' => isset($media['timestamp']) ? Carbon::parse($media['timestamp']) : null,
-                ]);
+                $post->update(Post::attributesFromInstagram([...$media, 'media_product_type' => $productType ?? $media['media_product_type'] ?? null]));
             } catch (RequestException|ConnectionException) {
                 // The comment is still handled; the post shows without its caption.
             }

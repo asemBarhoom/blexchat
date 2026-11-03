@@ -4,7 +4,9 @@ use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\GoogleController;
 use App\Http\Controllers\Api\V1\Auth\LoginLinkController;
 use App\Http\Controllers\Api\V1\AutomationController;
+use App\Http\Controllers\Api\V1\AutomationTemplateController;
 use App\Http\Controllers\Api\V1\ChannelController;
+use App\Http\Controllers\Api\V1\ChannelPostController;
 use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\HomeController;
@@ -62,6 +64,12 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::patch('automations/{automation}', [AutomationController::class, 'update'])->name('automations.update');
     Route::delete('automations/{automation}', [AutomationController::class, 'destroy'])->name('automations.destroy');
     Route::patch('automations/{automation}/toggle', [AutomationController::class, 'toggle'])->name('automations.toggle');
+
+    // Automation wizard (W11–W15, Review) and its template picker (W19)
+    Route::get('automation-templates', AutomationTemplateController::class)->name('automation-templates.index');
+    Route::get('channels/{channel}/posts', ChannelPostController::class)->name('channels.posts');
+    Route::post('automations/wizard', [AutomationController::class, 'storeFromWizard'])->name('automations.wizard.store');
+    Route::put('automations/{automation}/wizard', [AutomationController::class, 'updateFromWizard'])->name('automations.wizard.update');
 
     // Inbox: conversation list, thread, reply
     Route::get('conversations', [ConversationController::class, 'index'])->name('conversations.index');
