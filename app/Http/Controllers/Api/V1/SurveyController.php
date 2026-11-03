@@ -19,9 +19,16 @@ use OpenApi\Attributes as OA;
     new OA\Property(property: 'kind', type: 'string', enum: ['radio', 'multi', 'grid'], description: 'radio: one answer. multi and grid: any number (grid is the tool-logo layout)'),
     new OA\Property(property: 'other_option', type: 'string', nullable: true, example: 'other', description: 'The option that reveals a free-text field'),
     new OA\Property(property: 'options', type: 'array', items: new OA\Items(properties: [
-        new OA\Property(property: 'id', type: 'string', example: 'instagram', description: 'Stable; pick the icon by it'),
+        new OA\Property(property: 'id', type: 'string', example: 'instagram', description: 'Stable; send it back in the answer'),
         new OA\Property(property: 'label', type: 'string', example: 'Instagram'),
         new OA\Property(property: 'note', type: 'string', nullable: true),
+        new OA\Property(property: 'icon', type: 'string', nullable: true, example: 'instagram', description: 'A simple-icons slug (siInstagram in the simple-icons package); null for no logo'),
+        new OA\Property(property: 'icon_url', type: 'string', format: 'uri', nullable: true, example: 'https://blexchat.com/storage/survey/icons/logo.png', description: 'An uploaded logo; when set, show it instead of `icon`'),
+        new OA\Property(property: 'icon_box', type: 'object', nullable: true, description: 'Crop for a wordmark-shaped logo; null renders it square at 0 0 24 24', properties: [
+            new OA\Property(property: 'viewBox', type: 'string', example: '0 9.58 24 4.84'),
+            new OA\Property(property: 'width', type: 'integer', example: 64),
+            new OA\Property(property: 'height', type: 'integer', example: 13),
+        ]),
     ])),
     new OA\Property(property: 'answer', type: 'object', nullable: true, description: 'What this owner picked; null when skipped or not answered yet', properties: [
         new OA\Property(property: 'options', type: 'array', items: new OA\Items(type: 'string'), example: ['instagram', 'other']),
