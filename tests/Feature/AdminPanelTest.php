@@ -31,6 +31,7 @@ it('renders every admin list page', function (string $path) {
     '/admin/channel-connected-screens',
     '/admin/plans', '/admin/survey-questions', '/admin/survey-questions/create', '/admin/survey-answers', '/admin/subscriptions',
     '/admin/plans', '/admin/survey-questions', '/admin/survey-questions/create', '/admin/survey-answers', '/admin/subscriptions', '/admin/first-moves',
+    '/admin/channel-options',
 ]);
 
 it('keeps shop owners out of the admin panel', function (string $path) {
