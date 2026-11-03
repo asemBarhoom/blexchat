@@ -33,7 +33,7 @@ it('creates, edits and deletes a plan in both languages', function () {
             'monthly_price' => 9,
             'annual_price' => 7,
             'contacts_limit' => 100,
-            'trial_days' => 7,
+            'trial_days' => 10,
             'features' => ['en' => ['2 channels'], 'ar' => ['قناتان']],
             'active' => true,
         ])
@@ -43,7 +43,7 @@ it('creates, edits and deletes a plan in both languages', function () {
     expect($plan->sort)->toBe(5)
         ->and($plan->getTranslations('features'))->toBe(['en' => ['2 channels'], 'ar' => ['قناتان']]);
 
-    $this->getJson('/api/v1/plans?lang=ar')->assertJsonPath('data.5.name', 'البداية')->assertJsonPath('data.5.trial_days', 7);
+    $this->getJson('/api/v1/plans?lang=ar')->assertJsonPath('data.5.name', 'البداية')->assertJsonPath('data.5.trial_days', 10);
 
     Livewire::test(ManagePlans::class)
         ->callAction(TestAction::make('edit')->table($plan), ['monthly_price' => 12])
