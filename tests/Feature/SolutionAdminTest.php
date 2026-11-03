@@ -1,10 +1,12 @@
 <?php
 
+use App\Filament\Pages\ManageSolutionLabels;
 use App\Filament\Resources\SolutionResource\Pages\CreateSolution;
 use App\Filament\Resources\SolutionResource\Pages\EditSolution;
 use App\Filament\Resources\SolutionResource\Pages\ListSolutions;
 use App\Filament\Resources\UseCaseResource\Pages\ManageUseCases;
 use App\Models\Solution;
+use App\Models\SolutionLabel;
 use App\Models\UseCase;
 use App\Models\User;
 use Database\Seeders\HomeContentSeeder;
@@ -147,4 +149,18 @@ it('keeps the page when its card is deleted', function () {
 
 it('renders the edit page of every seeded page', function () {
     Solution::all()->each(fn (Solution $solution) => $this->get("/admin/solutions/{$solution->id}/edit")->assertOk());
+});
+
+it('edits the template labels, and a cleared Arabic label falls back to English', function () {
+    Livewire::test(ManageSolutionLabels::class)
+        ->assertFormSet(['texts.ar.steps.title' => 'كيف يعمل'])
+        ->fillForm(['texts.en.steps.title' => 'Three steps', 'texts.ar.automations.title' => 'ابدأ بهذه الثلاث', 'texts.ar.steps.title' => ''])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect(SolutionLabel::current()->getTranslations('texts')['ar']['steps'] ?? [])->not->toHaveKey('title');
+
+    $this->getJson('/api/v1/solutions/clinics?lang=ar')
+        ->assertJsonPath('data.labels.automations.title', 'ابدأ بهذه الثلاث')
+        ->assertJsonPath('data.labels.steps.title', 'Three steps');
 });
