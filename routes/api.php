@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\AutomationController;
 use App\Http\Controllers\Api\V1\ChannelController;
 use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\FirstMoveController;
 use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\InstagramConnectionController;
 use App\Http\Controllers\Api\V1\InstagramWebhookController;
@@ -41,6 +42,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
 
     // The signed-in account, and sign out
     Route::get('auth/me', [AuthController::class, 'me'])->name('auth.me');
+    Route::patch('auth/me', [AuthController::class, 'update'])->name('auth.me.update');
     Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
     // Onboarding after sign-up: progress, the survey (W08) and the plan (W09); channels connect below
@@ -48,6 +50,9 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::get('onboarding/survey', [SurveyController::class, 'show'])->name('onboarding.survey');
     Route::post('onboarding/survey', [SurveyController::class, 'store'])->name('onboarding.survey.store');
     Route::post('onboarding/plan', [SubscriptionController::class, 'store'])->name('onboarding.plan');
+
+    // Onboarding W10: the "popular first move" cards that open the automation wizard
+    Route::get('onboarding/first-moves', FirstMoveController::class)->name('onboarding.first-moves');
 
     // Connect / disconnect channel screens
     Route::get('channels/instagram/authorize', [InstagramConnectionController::class, 'authorize'])->name('channels.instagram.authorize');
