@@ -90,7 +90,7 @@ class CheckoutSessionController extends Controller
             }
         }
 
-        return self::startCheckout($this->checkout, $request, $plan, $request->billing(), $coupon, 201);
+        return $this->startCheckout($request, $plan, $coupon);
     }
 
     #[OA\Get(
@@ -121,27 +121,24 @@ class CheckoutSessionController extends Controller
         return new CheckoutSessionResource($session->load(['plan', 'coupon']));
     }
 
-    /**
-     * Opens the Stripe payment page, shared with POST /onboarding/plan for a plan that has to be paid.
-     */
-    public static function startCheckout(StripeCheckout $checkout, Request $request, Plan $plan, string $billing, ?Coupon $coupon, int $status): JsonResponse
+    private function startCheckout(CreateCheckoutSessionRequest $request, Plan $plan, ?Coupon $coupon): JsonResponse
     {
         if (! StripeClient::isConfigured()) {
             return self::error(503, 'payments_unavailable');
         }
 
         try {
-            $session = $checkout->start($request->user(), $plan, $billing, $coupon);
+            $session = $this->checkout->start($request->user(), $plan, $request->billing(), $coupon);
         } catch (RequestException|ConnectionException $exception) {
             report($exception);
 
             return self::error(502, 'payment_provider_error');
         }
 
-        return (new CheckoutSessionResource($session->load(['plan', 'coupon'])))->response()->setStatusCode($status);
+        return (new CheckoutSessionResource($session->load(['plan', 'coupon'])))->response()->setStatusCode(201);
     }
 
-    public static function error(int $status, string $code): JsonResponse
+    private static function error(int $status, string $code): JsonResponse
     {
         return response()->json(['message' => __("checkout.{$code}"), 'code' => $code], $status);
     }

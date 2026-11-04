@@ -53,7 +53,7 @@ describe('GET /api/v1/channels/{channel}', function () {
         $this->actingAs($this->user, 'sanctum')
             ->getJson("/api/v1/channels/{$channel->id}?lang=ar")
             ->assertOk()
-            ->assertJsonPath('data.screen.title', 'تم ربط حسابك على تيك توك!')
+            ->assertJsonPath('data.screen.title', 'تم ربط TikTok بنجاح!')
             ->assertJsonPath('data.screen.continue_label', 'متابعة');
     });
 

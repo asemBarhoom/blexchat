@@ -22,6 +22,7 @@ class PostResource extends JsonResource
             'caption' => $this->caption,
             'thumbnail_url' => $this->thumbnail_url,
             'media_type' => $this->media_type,
+            'likes' => $this->like_count,
             'posted_at' => $this->posted_at?->toIso8601String(),
         ];
     }

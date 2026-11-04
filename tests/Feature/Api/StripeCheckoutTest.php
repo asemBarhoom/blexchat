@@ -222,6 +222,32 @@ describe('POST /api/v1/onboarding/plan with Stripe set up', function () {
     });
 });
 
+describe('/api/v1/subscription with Stripe set up', function () {
+    it('answers an upgrade with the payment page', function () {
+        Subscription::factory()->for($this->user)->create(['plan_id' => Plan::where('slug', 'free')->value('id')]);
+        Http::fake(stripeSessionCreated());
+
+        $this->actingAs($this->user)->postJson('/api/v1/subscription', ['plan' => 'pro', 'billing' => 'annual'])
+            ->assertAccepted()
+            ->assertJsonPath('data.plan', 'pro')
+            ->assertJsonPath('data.amount_total', 348);
+
+        expect($this->user->subscription->fresh()->plan->slug)->toBe('free');
+    });
+
+    it('stops the card payments on cancel', function () {
+        Subscription::factory()->for($this->user)->create(['plan_id' => Plan::where('slug', 'pro')->value('id'), 'stripe_subscription_id' => 'sub_1']);
+        Http::fake(['api.stripe.com/v1/subscriptions/sub_1' => Http::response(['id' => 'sub_1', 'status' => 'canceled'])]);
+
+        $this->actingAs($this->user)->deleteJson('/api/v1/subscription')
+            ->assertOk()
+            ->assertJsonPath('data.plan.id', 'free')
+            ->assertJsonPath('data.paid_by_card', false);
+
+        Http::assertSent(fn (Request $request) => $request->method() === 'DELETE' && str_ends_with($request->url(), '/subscriptions/sub_1'));
+    });
+});
+
 it('lets the coupon check price the trial plan once the trial was used', function () {
     Subscription::factory()->for($this->user)->trialEnded()->create(['plan_id' => Plan::where('slug', 'essential')->value('id')]);
 

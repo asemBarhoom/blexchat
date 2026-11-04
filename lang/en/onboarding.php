@@ -10,6 +10,7 @@ return [
     'plan' => [
         'payment_required' => 'This plan is paid today, and card payments aren’t available yet. Continue with Free or start the free trial.',
         'trial_used' => 'You’ve already used your free trial. Continue with Free for now.',
+        'payment_provider_error' => 'We couldn’t reach the payment provider. Nothing changed. Try again in a moment.',
     ],
 
 ];
