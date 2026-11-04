@@ -49,6 +49,9 @@ return [
         'redirect_uri' => env('INSTAGRAM_REDIRECT_URI'),
         'webhook_verify_token' => env('INSTAGRAM_WEBHOOK_VERIFY_TOKEN'),
         'graph_version' => env('INSTAGRAM_GRAPH_VERSION', 'v21.0'),
+        // meta: the real Graph API. fake: a test sign-in page, demo posts, logged replies (default on local).
+        'driver' => env('INSTAGRAM_DRIVER', env('APP_ENV', 'production') === 'local' ? 'fake' : 'meta'),
+        'allow_fake' => (bool) env('INSTAGRAM_ALLOW_FAKE', false),
     ],
 
     /*

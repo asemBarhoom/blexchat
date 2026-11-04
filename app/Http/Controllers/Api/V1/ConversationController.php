@@ -36,7 +36,8 @@ class ConversationController extends Controller
 
         $query = Conversation::with('channel')
             ->whereIn('channel_id', $channelIds)
-            ->orderByDesc('last_message_at');
+            ->orderByDesc('last_message_at')
+            ->orderByDesc('id');
 
         if ($request->filled('channel_id')) {
             $query->where('channel_id', $request->channel_id);
@@ -74,6 +75,7 @@ class ConversationController extends Controller
 
         $messages = $conversation->messages()
             ->orderByDesc('sent_at')
+            ->orderByDesc('id')
             ->limit($request->integer('limit', 30))
             ->get();
 

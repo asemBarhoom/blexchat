@@ -35,6 +35,19 @@ describe('GET /api/v1/conversations/{id}/messages', function () {
             ->assertJsonCount(5, 'data');
     });
 
+    it('puts the later of two messages sent in the same second first', function () {
+        $user = User::factory()->create();
+        $conversation = Conversation::factory()->for(Channel::factory()->for($user))->create();
+        $sentAt = now()->startOfSecond();
+        $question = Message::factory()->for($conversation)->create(['sent_at' => $sentAt]);
+        $autoReply = Message::factory()->for($conversation)->create(['sent_at' => $sentAt]);
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson("/api/v1/conversations/{$conversation->id}/messages")
+            ->assertJsonPath('data.0.id', $autoReply->id)
+            ->assertJsonPath('data.1.id', $question->id);
+    });
+
     it('returns 403 for conversation from another user channel', function () {
         $user = User::factory()->create();
         $conversation = Conversation::factory()->create(); // different channel
