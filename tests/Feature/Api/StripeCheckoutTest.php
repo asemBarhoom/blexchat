@@ -20,6 +20,7 @@ beforeEach(function () {
     config([
         'services.stripe.secret' => 'sk_test_fake',
         'services.stripe.webhook_secret' => 'whsec_fake',
+        'services.payments.driver' => 'stripe',
         'services.stripe.currency' => 'usd',
         'app.frontend_url' => 'https://app.example.test',
     ]);

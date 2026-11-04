@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Filament\Resources\PlanResource;
 use App\Models\Plan;
 use App\Models\Setting;
+use App\Services\Payments\FakeGateway;
 use App\Services\Stripe\StripeClient;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
@@ -84,6 +85,14 @@ class ManageCheckoutSettings extends Page
     {
         $webhook = route('webhooks.stripe');
         $prices = 'الأسعار تُرسل من جدول الخطط مباشرة (السنوي = السعر الشهري للخطة السنوية × 12)، والقسيمة تُخصم من أول دفعة.';
+
+        if (config('services.payments.driver') === 'fake') {
+            return FakeGateway::allowed()
+                ? Callout::make('الدفع التجريبي (PAYMENT_DRIVER=fake) مُفعّل')->warning()
+                    ->description("لا يُخصم أي مبلغ: صفحة الدفع صفحة اختبار في هذا الخادم بزرّي «ادفع (اختبار)» و«رفض». {$prices} للدفع الحقيقي اضبط PAYMENT_DRIVER=stripe.")
+                : Callout::make('الدفع التجريبي مرفوض في الإنتاج')->danger()
+                    ->description('PAYMENT_DRIVER=fake على خادم إنتاج، فالخطط المدفوعة ترد بـ «الدفع غير متاح». اضبط PAYMENT_DRIVER=stripe، أو PAYMENT_ALLOW_FAKE=true على خادم تطوير فقط.');
+        }
 
         if (! StripeClient::isConfigured()) {
             return Callout::make('الدفع بالبطاقة (Stripe) غير مُفعّل')->warning()

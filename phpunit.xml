@@ -23,6 +23,8 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="AUTH_EXPOSE_LOGIN_LINKS" value="false"/>
         <env name="GOOGLE_REDIRECT_URI" value=""/>
+        <!-- Stripe without a key, so paid plans keep their 402; the fake driver is tested on its own -->
+        <env name="PAYMENT_DRIVER" value="stripe"/>
         <env name="STRIPE_SECRET" value=""/>
         <env name="STRIPE_WEBHOOK_SECRET" value=""/>
         <env name="BROADCAST_CONNECTION" value="null"/>

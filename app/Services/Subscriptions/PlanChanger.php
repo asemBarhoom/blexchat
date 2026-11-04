@@ -6,8 +6,7 @@ use App\Models\CheckoutSession;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
-use App\Services\Stripe\StripeCheckout;
-use App\Services\Stripe\StripeClient;
+use App\Services\Payments\PaymentCheckout;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 
@@ -15,13 +14,13 @@ use Illuminate\Http\Client\RequestException;
  * Puts an owner on a plan, from the onboarding plan screen (W09) or later from the app.
  *
  * Free applies at once. A plan with a trial starts it, once per account, and takes no card.
- * Any other paid plan (and the trial plan after the account's trial) opens a Stripe payment page
- * and changes once it is paid; without a Stripe key it is refused. Moving off a plan paid by card
- * to Free or a trial stops its card payments.
+ * Any other paid plan (and the trial plan after the account's trial) opens a payment page (Stripe,
+ * or the fake one in development) and changes once it is paid; with no payments available it is
+ * refused. Moving off a paid plan to Free or a trial stops its payments.
  */
 class PlanChanger
 {
-    public function __construct(private StripeCheckout $checkout) {}
+    public function __construct(private PaymentCheckout $checkout) {}
 
     /**
      * The plan in place, or the payment page to send the owner to.
@@ -37,15 +36,15 @@ class PlanChanger
                 return $current->load('plan');
             }
 
-            if (! StripeClient::isConfigured()) {
+            if (! $this->checkout->isAvailable()) {
                 throw $plan->hasTrial() ? new PlanChangeRefused('trial_used', 409) : new PlanChangeRefused('payment_required', 402);
             }
 
-            return $this->withStripe(fn (): CheckoutSession => $this->checkout->start($user, $plan, $billing)->load(['plan', 'coupon']));
+            return $this->withProvider(fn (): CheckoutSession => $this->checkout->start($user, $plan, $billing)->load(['plan', 'coupon']));
         }
 
         if ($current?->paidByCard()) {
-            $this->withStripe(fn () => $this->checkout->cancel($current));
+            $this->withProvider(fn () => $this->checkout->cancel($current));
         }
 
         // Picking the plan you are already trying keeps the trial's clock as it is.
@@ -84,9 +83,9 @@ class PlanChanger
      * @param  callable(): T  $call
      * @return T
      *
-     * @throws PlanChangeRefused when Stripe cannot be reached or refuses
+     * @throws PlanChangeRefused when the payment provider cannot be reached or refuses
      */
-    private function withStripe(callable $call): mixed
+    private function withProvider(callable $call): mixed
     {
         try {
             return $call();

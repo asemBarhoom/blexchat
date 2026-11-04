@@ -1,29 +1,50 @@
 <?php
 
-namespace App\Services\Stripe;
+namespace App\Services\Payments;
 
 use App\Models\CheckoutSession;
 use App\Models\Coupon;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Paid plans through Stripe Checkout, the hosted payment page. Prices come from the plans table
- * and go to Stripe inline, so nothing has to be set up in the Stripe dashboard. Stripe reports the
- * payment by webhook (or the success page asks); every step can run twice and changes nothing more.
+ * Paid plans through a payment page: Stripe Checkout, or the fake page in development (PaymentGateway).
+ * Prices come from the plans table. The provider reports the payment (Stripe's webhook, the fake
+ * page's "Pay" button, or the success page asking) as a Stripe-shaped session; every step can run
+ * twice and changes nothing more.
  */
-class StripeCheckout
+class PaymentCheckout
 {
-    public function __construct(private StripeClient $stripe) {}
+    public function __construct(private PaymentGateway $gateway) {}
+
+    public function isAvailable(): bool
+    {
+        return $this->gateway->isAvailable();
+    }
 
     /**
-     * Opens a Checkout Session in subscription mode for the plan. The first period costs the
+     * Where the payment page sends the visitor after paying. The provider fills in {CHECKOUT_SESSION_ID};
+     * the success page passes it to GET /checkout/session/{id}.
+     */
+    public static function successUrl(?string $sessionId = null): string
+    {
+        return rtrim((string) config('app.frontend_url'), '/').'/app?checkout=success&session_id='.($sessionId ?? '{CHECKOUT_SESSION_ID}');
+    }
+
+    /**
+     * Where "Back" (or "Decline" on the fake page) goes, with nothing charged.
+     */
+    public static function cancelUrl(): string
+    {
+        return rtrim((string) config('app.frontend_url'), '/').'/app?checkout=cancelled';
+    }
+
+    /**
+     * Opens a payment page for the plan, renewing monthly or yearly. The first period costs the
      * coupon quote's `billed_total`; renewals cost the list price.
      */
     public function start(User $user, Plan $plan, string $billing, ?Coupon $coupon = null): CheckoutSession
@@ -34,42 +55,7 @@ class StripeCheckout
         $amountCents = $listCents * $months;
         $discountCents = $coupon === null ? 0 : $coupon->discountCents($listCents) * $months;
 
-        $customerId = $this->customerFor($user);
-        $frontend = rtrim((string) config('app.frontend_url'), '/');
-
-        $params = [
-            'mode' => 'subscription',
-            'customer' => $customerId,
-            'client_reference_id' => (string) $user->id,
-            'line_items' => [[
-                'quantity' => 1,
-                'price_data' => [
-                    'currency' => $currency,
-                    'unit_amount' => $amountCents,
-                    'recurring' => ['interval' => $billing === 'annual' ? 'year' : 'month'],
-                    'product_data' => ['name' => "Blexchat {$plan->getTranslation('name', 'en')}"],
-                ],
-            ]],
-            'metadata' => ['user_id' => $user->id, 'plan' => $plan->slug, 'billing' => $billing],
-            'subscription_data' => ['metadata' => ['user_id' => $user->id, 'plan' => $plan->slug, 'billing' => $billing]],
-            // Stripe fills in {CHECKOUT_SESSION_ID}; the success page passes it to GET /checkout/session/{id}.
-            'success_url' => $frontend.'/app?checkout=success&session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => $frontend.'/app?checkout=cancelled',
-        ];
-
-        if ($discountCents > 0) {
-            $stripeCoupon = $this->stripe->createCoupon([
-                'amount_off' => $discountCents,
-                'currency' => $currency,
-                'duration' => 'once',
-                'max_redemptions' => 1,
-                'name' => "{$coupon->code} — {$coupon->percent_off}% off",
-                'metadata' => ['coupon_id' => $coupon->id],
-            ]);
-            $params['discounts'] = [['coupon' => $stripeCoupon['id']]];
-        }
-
-        $session = $this->stripe->createCheckoutSession($params);
+        $session = $this->gateway->createCheckout($user, $plan, $billing, $amountCents, $coupon, $discountCents, self::successUrl(), self::cancelUrl());
 
         return $user->checkoutSessions()->create([
             'plan_id' => $plan->id,
@@ -84,20 +70,25 @@ class StripeCheckout
     }
 
     /**
-     * Asks Stripe how a session ended and acts on it, for the success page when the webhook has not
-     * arrived yet (or no webhook is set up on a developer's machine).
+     * Asks the provider how a session ended and acts on it, for the success page when the webhook has
+     * not arrived yet (or no webhook is set up on a developer's machine).
      */
     public function refresh(CheckoutSession $session): CheckoutSession
     {
-        if ($session->status === 'open' && StripeClient::isConfigured()) {
-            $this->handleSession($this->stripe->checkoutSession($session->stripe_session_id));
+        if ($session->status === 'open' && $this->gateway->isAvailable()) {
+            $found = $this->gateway->findCheckout($session->stripe_session_id);
+
+            if ($found !== null) {
+                $this->handleSession($found);
+            }
         }
 
         return $session->refresh();
     }
 
     /**
-     * checkout.session.completed / checkout.session.expired, or a session fetched from Stripe.
+     * checkout.session.completed / checkout.session.expired, a session fetched from Stripe, or the
+     * fake page's "Pay (test)": the one path that puts a paid plan in place.
      *
      * @param  array<string, mixed>  $stripeSession
      */
@@ -185,7 +176,7 @@ class StripeCheckout
     }
 
     /**
-     * Stops the card payments behind a plan that is being replaced by one chosen without paying
+     * Stops the payments behind a plan that is being replaced by one chosen without paying
      * (Free, or the free trial).
      */
     public function cancel(Subscription $subscription): void
@@ -194,13 +185,13 @@ class StripeCheckout
             return;
         }
 
-        $this->stripe->cancelSubscription($subscription->stripe_subscription_id);
+        $this->gateway->cancelSubscription($subscription->stripe_subscription_id);
         $subscription->update(['stripe_subscription_id' => null, 'current_period_end' => null]);
     }
 
     /**
      * Puts the paid plan in place and counts the coupon, once even when Stripe and the success page
-     * report the payment at the same moment. A card plan it replaces is cancelled at Stripe.
+     * report the payment at the same moment. A paid plan it replaces is cancelled with the provider.
      */
     private function complete(CheckoutSession $session, string $subscriptionId, Carbon $periodEnd): void
     {
@@ -230,35 +221,16 @@ class StripeCheckout
 
         // The new plan is paid either way; a failed cancel is reported, not retried.
         if ($replaced !== null) {
-            rescue(fn () => $this->stripe->cancelSubscription($replaced), report: true);
+            rescue(fn () => $this->gateway->cancelSubscription($replaced), report: true);
         }
-    }
-
-    private function customerFor(User $user): string
-    {
-        if ($user->stripe_customer_id === null) {
-            $customer = $this->stripe->createCustomer([
-                'email' => $user->email,
-                'name' => $user->business_name ?? $user->name,
-                'metadata' => ['user_id' => $user->id],
-            ]);
-            $user->update(['stripe_customer_id' => $customer['id']]);
-        }
-
-        return $user->stripe_customer_id;
     }
 
     /**
-     * When the first paid period ends. Newer Stripe API versions keep it on the subscription items.
+     * When the first paid period ends: as the provider says, or a month or a year from now.
      */
     private function periodEnd(string $subscriptionId, string $billing): Carbon
     {
-        try {
-            $subscription = $this->stripe->subscription($subscriptionId);
-            $end = $subscription['current_period_end'] ?? Arr::get($subscription, 'items.data.0.current_period_end');
-        } catch (RequestException|ConnectionException) {
-            $end = null;
-        }
+        $end = $this->gateway->periodEnd($subscriptionId);
 
         return $end !== null ? Carbon::createFromTimestamp($end) : ($billing === 'annual' ? now()->addYear() : now()->addMonth());
     }

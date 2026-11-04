@@ -52,6 +52,16 @@ return [
     ],
 
     /*
+    | Which payment page paid plans use. `fake` is a page this app serves, with "Pay (test)" and
+    | "Decline" buttons: no keys, no network, for development (Stripe is not available everywhere).
+    | It is refused in production unless PAYMENT_ALLOW_FAKE=true (a development server on Cloud).
+    */
+    'payments' => [
+        'driver' => env('PAYMENT_DRIVER', in_array(env('APP_ENV', 'production'), ['local', 'testing'], true) ? 'fake' : 'stripe'),
+        'allow_fake' => (bool) env('PAYMENT_ALLOW_FAKE', false),
+    ],
+
+    /*
     | Card payments with Stripe Checkout (the hosted payment page), called over its REST API.
     | Use test-mode keys in development: sk_test_… from the dashboard, and the whsec_… that
     | `stripe listen` prints (or the webhook endpoint's signing secret on a deployed site).

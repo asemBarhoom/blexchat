@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Services\Stripe\StripeCheckout;
+use App\Services\Payments\PaymentCheckout;
 use App\Services\Stripe\StripeClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,7 +31,7 @@ class StripeWebhookController extends Controller
             new OA\Response(response: 400, description: 'Missing, invalid or stale signature'),
         ]
     )]
-    public function __invoke(Request $request, StripeCheckout $checkout): JsonResponse
+    public function __invoke(Request $request, PaymentCheckout $checkout): JsonResponse
     {
         $event = StripeClient::verifiedEvent($request->getContent(), (string) $request->header('Stripe-Signature'));
 
