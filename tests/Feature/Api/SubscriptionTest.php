@@ -122,7 +122,7 @@ describe('DELETE /api/v1/subscription', function () {
 
         $this->actingAs($this->user)->deleteJson('/api/v1/subscription?lang=ar')
             ->assertOk()
-            ->assertJsonPath('message', 'أنت الآن على الخطة المجانية.')
+            ->assertJsonPath('message', 'أنت الآن على باقة Free.')
             ->assertJsonPath('data.plan.id', 'free')
             ->assertJsonPath('data.billing_period', 'annual')
             ->assertJsonPath('data.status', 'active');

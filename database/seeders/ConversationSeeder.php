@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Automation;
 use App\Models\Channel;
 use App\Models\Conversation;
-use App\Models\Message;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -13,105 +12,101 @@ class ConversationSeeder extends Seeder
 {
     public function run(): void
     {
-        $user      = User::where('email', 'nour@nourboutique.com')->firstOrFail();
-        $ig        = Channel::where('user_id', $user->id)->where('platform', 'instagram')->firstOrFail();
-        $wa        = Channel::where('user_id', $user->id)->where('platform', 'whatsapp')->firstOrFail();
+        $user = User::where('email', 'nour@nourboutique.com')->firstOrFail();
+        $ig = Channel::where('user_id', $user->id)->where('platform', 'instagram')->firstOrFail();
+        $wa = Channel::where('user_id', $user->id)->where('platform', 'whatsapp')->firstOrFail();
         $automation = Automation::where('user_id', $user->id)->where('name', 'Comment "PRICE" → send the catalogue')->firstOrFail();
 
-        $dm = 'هلا والله! 👋 هذي عباية الشتاء اللي سألتِ عنها — ٢٤٩ ريال. المقاسات والطلب من هنا:';
+        $dm = 'أهلًا وسهلًا! 👋 هذا جاكيت الشتاء الذي سألتِ عنه — 65 دولار. المقاسات والطلب من هنا:';
+        $bot = fn (int $minutesAgo): array => ['direction' => 'outbound', 'type' => 'text_with_button', 'content' => $dm, 'button_label' => 'شاهدي المنتج', 'button_url' => 'https://nourboutique.com/winter-jacket', 'automated' => true, 'automation_id' => $automation->id, 'sent_at' => now()->subMinutes($minutesAgo)];
+        $customer = fn (string $text, mixed $sentAt): array => ['direction' => 'inbound', 'type' => 'text', 'content' => $text, 'automated' => false, 'automation_id' => null, 'sent_at' => $sentAt];
 
+        // The six threads of the frontend's inbox (src/pages/app/inbox/inboxContent.ts), newest first.
         $conversations = [
-            // 1 — Reem (human handover, unread)
+            // 1 — Reem: answered by the automation, then a question it cannot answer (unread)
             [
-                'channel_id'               => $ig->id,
+                'channel_id' => $ig->id,
                 'platform_conversation_id' => 'ig_conv_reem_k',
-                'contact_name'             => 'Reem Khalid',
-                'contact_avatar'           => 'avatars/khalid.webp',
-                'contact_platform_id'      => 'reem.k',
-                'status'                   => 'open',
-                'unread_count'             => 1,
-                'last_message'             => 'طيب عندكم مقاس ٥٨؟ وأبي التوصيل لجدة قبل الخميس 🙏',
-                'last_message_at'          => now()->subMinutes(2),
+                'contact_name' => 'Reem Khalid',
+                'contact_avatar' => 'avatars/khalid.webp',
+                'contact_platform_id' => 'reem.k',
+                'status' => 'open',
+                'unread_count' => 1,
+                'last_message' => 'طيب، هل يتوفر مقاس L؟ وأريد التوصيل إلى القاهرة قبل الخميس 🙏',
+                'last_message_at' => now()->subMinutes(2),
                 'messages' => [
-                    ['direction' => 'inbound',  'type' => 'text', 'content' => 'السعر لو سمحتي؟ 😍',           'automated' => false, 'automation_id' => null,          'sent_at' => now()->subMinutes(7)],
-                    ['direction' => 'outbound', 'type' => 'text_with_button', 'content' => $dm, 'button_label' => 'شوفي المنتج', 'button_url' => 'https://nourboutique.com/abaya-winter', 'automated' => true, 'automation_id' => $automation->id, 'sent_at' => now()->subMinutes(7)],
-                    ['direction' => 'inbound',  'type' => 'text', 'content' => 'طيب عندكم مقاس ٥٨؟ وأبي التوصيل لجدة قبل الخميس 🙏', 'automated' => false, 'automation_id' => null, 'sent_at' => now()->subMinutes(2)],
+                    $customer('السعر من فضلك؟ 😍', now()->subMinutes(5)),
+                    $bot(5),
+                    $customer('طيب، هل يتوفر مقاس L؟ وأريد التوصيل إلى القاهرة قبل الخميس 🙏', now()->subMinutes(2)),
                 ],
             ],
-            // 2 — Sara (automation handled, no unread)
+            // 2 — Sara: handled by the automation
             [
-                'channel_id'               => $ig->id,
+                'channel_id' => $ig->id,
                 'platform_conversation_id' => 'ig_conv_sara_m',
-                'contact_name'             => 'Sara M.',
-                'contact_avatar'           => 'avatars/sara.webp',
-                'contact_platform_id'      => 'sara.m',
-                'status'                   => 'open',
-                'unread_count'             => 0,
-                'last_message'             => $dm,
-                'last_message_at'          => now()->subMinutes(14),
-                'messages' => [
-                    ['direction' => 'inbound',  'type' => 'text', 'content' => 'بكم هذي؟', 'automated' => false, 'automation_id' => null, 'sent_at' => now()->subMinutes(14)],
-                    ['direction' => 'outbound', 'type' => 'text_with_button', 'content' => $dm, 'button_label' => 'شوفي المنتج', 'button_url' => 'https://nourboutique.com/abaya-winter', 'automated' => true, 'automation_id' => $automation->id, 'sent_at' => now()->subMinutes(14)],
-                ],
+                'contact_name' => 'Sara M.',
+                'contact_avatar' => 'avatars/sara.webp',
+                'contact_platform_id' => 'sara.m',
+                'status' => 'open',
+                'unread_count' => 0,
+                'last_message' => $dm,
+                'last_message_at' => now()->subMinutes(14),
+                'messages' => [$customer('بكم هذه؟', now()->subMinutes(14)), $bot(14)],
             ],
-            // 3 — Hessa (automation handled, unread)
+            // 3 — Hala: handled by the automation (unread)
             [
-                'channel_id'               => $ig->id,
+                'channel_id' => $ig->id,
                 'platform_conversation_id' => 'ig_conv_hessa_q',
-                'contact_name'             => 'Hessa Q.',
-                'contact_platform_id'      => 'hessa.q',
-                'status'                   => 'open',
-                'unread_count'             => 1,
-                'last_message'             => $dm,
-                'last_message_at'          => now()->subMinutes(41),
-                'messages' => [
-                    ['direction' => 'inbound',  'type' => 'text', 'content' => 'أبي أطلب، وين الرابط؟', 'automated' => false, 'automation_id' => null, 'sent_at' => now()->subMinutes(41)],
-                    ['direction' => 'outbound', 'type' => 'text_with_button', 'content' => $dm, 'button_label' => 'شوفي المنتج', 'button_url' => 'https://nourboutique.com/abaya-winter', 'automated' => true, 'automation_id' => $automation->id, 'sent_at' => now()->subMinutes(41)],
-                ],
+                'contact_name' => 'Hala Q.',
+                'contact_avatar' => null,
+                'contact_platform_id' => 'hala.q',
+                'status' => 'open',
+                'unread_count' => 1,
+                'last_message' => $dm,
+                'last_message_at' => now()->subMinutes(41),
+                'messages' => [$customer('أريد أن أطلب، أين الرابط؟', now()->subMinutes(41)), $bot(41)],
             ],
-            // 4 — أم فيصل (WhatsApp, repeat buyer, resolved)
+            // 4 — Mona: WhatsApp, a repeat buyer
             [
-                'channel_id'               => $wa->id,
+                'channel_id' => $wa->id,
                 'platform_conversation_id' => 'wa_conv_um_faisal',
-                'contact_name'             => 'أم فيصل',
-                'contact_avatar'           => 'avatars/faisal.webp',
-                'contact_platform_id'      => '+966502102210',
-                'status'                   => 'resolved',
-                'unread_count'             => 0,
-                'last_message'             => 'وصلني الطلب اليوم، تسلمون! 🙏',
-                'last_message_at'          => now()->subHours(1),
+                'contact_name' => 'Mona F.',
+                'contact_avatar' => 'avatars/faisal.webp',
+                'contact_platform_id' => '+962790002210',
+                'status' => 'open',
+                'unread_count' => 0,
+                'last_message' => 'وصلني الطلب اليوم، شكرًا لكم! 🙏',
+                'last_message_at' => now()->subHours(1),
                 'messages' => [
-                    ['direction' => 'outbound', 'type' => 'text', 'content' => 'طلبك طلع مع المندوب، يوصلك اليوم إن شاء الله 🚚', 'automated' => false, 'automation_id' => null, 'sent_at' => now()->subHours(3)],
-                    ['direction' => 'inbound',  'type' => 'text', 'content' => 'وصلني الطلب اليوم، تسلمون! 🙏', 'automated' => false, 'automation_id' => null, 'sent_at' => now()->subHours(1)],
+                    ['direction' => 'outbound', 'type' => 'text', 'content' => 'طلبك خرج مع المندوب، ويصلك اليوم إن شاء الله 🚚', 'automated' => false, 'automation_id' => null, 'sent_at' => now()->subHours(3)],
+                    $customer('وصلني الطلب اليوم، شكرًا لكم! 🙏', now()->subHours(1)),
                 ],
             ],
-            // 5 — Noor A. (fan, unread)
+            // 5 — Noor A.: a fan (unread)
             [
-                'channel_id'               => $ig->id,
+                'channel_id' => $ig->id,
                 'platform_conversation_id' => 'ig_conv_noor_a',
-                'contact_name'             => 'Noor A.',
-                'contact_platform_id'      => 'noor_a',
-                'status'                   => 'open',
-                'unread_count'             => 1,
-                'last_message'             => 'تجنن ما شاء الله 💜 متى ينزل لون الموكا؟',
-                'last_message_at'          => now()->subHours(3),
-                'messages' => [
-                    ['direction' => 'inbound', 'type' => 'text', 'content' => 'تجنن ما شاء الله 💜 متى ينزل لون الموكا؟', 'automated' => false, 'automation_id' => null, 'sent_at' => now()->subHours(3)],
-                ],
+                'contact_name' => 'Noor A.',
+                'contact_avatar' => null,
+                'contact_platform_id' => 'noor_a',
+                'status' => 'open',
+                'unread_count' => 1,
+                'last_message' => 'رائعة ما شاء الله 💜 متى يتوفر لون الموكا؟',
+                'last_message_at' => now()->subHours(3),
+                'messages' => [$customer('رائعة ما شاء الله 💜 متى يتوفر لون الموكا؟', now()->subHours(3))],
             ],
-            // 6 — Lulu (TikTok customer from Kuwait, yesterday)
+            // 6 — Lulu: yesterday
             [
-                'channel_id'               => $ig->id,
+                'channel_id' => $ig->id,
                 'platform_conversation_id' => 'ig_conv_lulu_style',
-                'contact_name'             => 'Lulu',
-                'contact_platform_id'      => 'lulu.style',
-                'status'                   => 'open',
-                'unread_count'             => 0,
-                'last_message'             => 'كم سعر الطرحة الشيفون؟ وفيه شحن للكويت؟',
-                'last_message_at'          => now()->subDay(),
-                'messages' => [
-                    ['direction' => 'inbound', 'type' => 'text', 'content' => 'كم سعر الطرحة الشيفون؟ وفيه شحن للكويت؟', 'automated' => false, 'automation_id' => null, 'sent_at' => now()->subDay()],
-                ],
+                'contact_name' => 'Lulu',
+                'contact_avatar' => null,
+                'contact_platform_id' => 'lulu.style',
+                'status' => 'open',
+                'unread_count' => 0,
+                'last_message' => 'كم سعر الطرحة الشيفون؟ وهل يوجد شحن إلى بيروت؟',
+                'last_message_at' => now()->subDay(),
+                'messages' => [$customer('كم سعر الطرحة الشيفون؟ وهل يوجد شحن إلى بيروت؟', now()->subDay())],
             ],
         ];
 
@@ -121,17 +116,16 @@ class ConversationSeeder extends Seeder
 
             $conv = Conversation::updateOrCreate(
                 [
-                    'channel_id'               => $data['channel_id'],
+                    'channel_id' => $data['channel_id'],
                     'platform_conversation_id' => $data['platform_conversation_id'],
                 ],
                 $data
             );
 
-            // Only seed messages if the conversation was just created
-            if ($conv->messages()->count() === 0) {
-                foreach ($messages as $msg) {
-                    $conv->messages()->create($msg);
-                }
+            // The sample thread is replaced whole, so a second run brings it up to date
+            $conv->messages()->delete();
+            foreach ($messages as $msg) {
+                $conv->messages()->create($msg);
             }
         }
     }

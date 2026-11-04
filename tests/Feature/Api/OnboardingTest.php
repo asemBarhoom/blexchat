@@ -213,7 +213,7 @@ describe('POST /api/v1/onboarding/plan', function () {
         $this->postJson('/api/v1/onboarding/plan?lang=ar', ['plan' => 'essential'])
             ->assertConflict()
             ->assertJsonPath('code', 'trial_used')
-            ->assertJsonPath('message', 'لقد استخدمت فترتك التجريبية من قبل. تابع بالخطة المجانية حالياً.');
+            ->assertJsonPath('message', 'لقد استخدمت فترتك التجريبية من قبل. تابع بباقة Free حاليًا.');
 
         expect($this->user->fresh()->subscription->plan->slug)->toBe('free');
     });
