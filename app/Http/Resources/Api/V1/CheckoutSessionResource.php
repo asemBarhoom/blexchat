@@ -17,7 +17,7 @@ class CheckoutSessionResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->stripe_session_id,
+            'id' => $this->payment_session_id,
             'url' => $this->url,
             'status' => $this->status,
             'plan' => $this->plan->slug,

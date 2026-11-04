@@ -22,10 +22,11 @@ class CheckoutSessionFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
+            'payment_provider' => 'paddle',
             'plan_id' => Plan::factory(),
             'billing_period' => 'monthly',
-            'stripe_session_id' => 'cs_test_'.Str::random(24),
-            'url' => 'https://checkout.stripe.com/c/pay/cs_test_example',
+            'payment_session_id' => 'txn_'.Str::lower(Str::random(26)),
+            'url' => 'https://blexchat.test/payments/paddle?_ptxn=txn_example',
             'amount_total' => 3900,
             'currency' => 'usd',
             'status' => 'open',
@@ -36,7 +37,7 @@ class CheckoutSessionFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'complete',
-            'stripe_subscription_id' => 'sub_'.Str::random(14),
+            'payment_subscription_id' => 'sub_'.Str::random(14),
             'completed_at' => now(),
         ]);
     }

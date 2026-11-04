@@ -52,26 +52,28 @@ return [
     ],
 
     /*
-    | Which payment page paid plans use. `fake` is a page this app serves, with "Pay (test)" and
-    | "Decline" buttons: no keys, no network, for development (Stripe is not available everywhere).
-    | It is refused in production unless PAYMENT_ALLOW_FAKE=true (a development server on Cloud).
+    | Which payment page paid plans use. `paddle` is Paddle Billing. `fake` is a page this app serves,
+    | with "Pay (test)" and "Decline" buttons: no keys, no network, for development. It is refused in
+    | production unless PAYMENT_ALLOW_FAKE=true (a development server on Cloud).
     */
     'payments' => [
-        'driver' => env('PAYMENT_DRIVER', in_array(env('APP_ENV', 'production'), ['local', 'testing'], true) ? 'fake' : 'stripe'),
+        'driver' => env('PAYMENT_DRIVER', in_array(env('APP_ENV', 'production'), ['local', 'testing'], true) ? 'fake' : 'paddle'),
         'allow_fake' => (bool) env('PAYMENT_ALLOW_FAKE', false),
+        'currency' => env('PAYMENT_CURRENCY', 'usd'),
     ],
 
     /*
-    | Card payments with Stripe Checkout (the hosted payment page), called over its REST API.
-    | Use test-mode keys in development: sk_test_… from the dashboard, and the whsec_… that
-    | `stripe listen` prints (or the webhook endpoint's signing secret on a deployed site).
+    | Paddle Billing (sandbox-vendors.paddle.com while testing). The API key needs transaction.write
+    | and subscription.write; the client-side token (test_… / live_…) opens the checkout in
+    | Paddle.js on GET /payments/paddle, which must be the dashboard's default payment link.
     */
-    'stripe' => [
-        'secret' => env('STRIPE_SECRET'),
-        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
-        'currency' => env('STRIPE_CURRENCY', 'usd'),
-        // Seconds a signed webhook stays valid, against replays.
-        'webhook_tolerance' => 300,
+    'paddle' => [
+        'environment' => env('PADDLE_ENV', 'sandbox'),
+        'api_key' => env('PADDLE_API_KEY'),
+        'webhook_secret' => env('PADDLE_WEBHOOK_SECRET'),
+        'client_token' => env('PADDLE_CLIENT_TOKEN'),
+        // Seconds a signed webhook stays valid, against replays (Paddle's own default is 5).
+        'webhook_tolerance' => 5,
     ],
 
     'slack' => [

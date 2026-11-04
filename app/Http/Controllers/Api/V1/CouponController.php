@@ -32,7 +32,7 @@ class CouponController extends Controller
         description: <<<'MD'
             The "Apply coupon" button in the checkout. Codes match ignoring case. Nothing is redeemed here:
             this only checks the code and prices the plan with it. Send the code on to
-            POST /api/v1/checkout/session; it counts as used once Stripe takes the payment.
+            POST /api/v1/checkout/session; it counts as used once the payment goes through.
 
             There is no coupon on Free or on a free trial (`coupon_not_for_plan`). A plan sold with a trial
             takes one when this account has already had its trial, since it is paid for today.

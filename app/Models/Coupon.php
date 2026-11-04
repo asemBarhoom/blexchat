@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
 
 /**
  * A checkout discount code: a percentage off the plan's price. It is checked and priced by
- * POST /coupons/check, sent to Stripe as an amount off the first payment, and counted as used
+ * POST /coupons/check, sent to the payment provider as an amount off the first payment, and counted as used
  * once that payment goes through.
  *
  * @property string $code

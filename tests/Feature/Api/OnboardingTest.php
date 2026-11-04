@@ -198,7 +198,7 @@ describe('POST /api/v1/onboarding/plan', function () {
             ->assertJsonPath('data.trial_days_left', 14);
     });
 
-    it('asks for payment on a paid plan without a trial when no Stripe key is set', function () {
+    it('asks for payment on a paid plan without a trial when no payment provider is set up', function () {
         $this->actingAs($this->user)->postJson('/api/v1/onboarding/plan', ['plan' => 'pro'])
             ->assertStatus(402)
             ->assertExactJson(['code' => 'payment_required', 'message' => __('onboarding.plan.payment_required')]);

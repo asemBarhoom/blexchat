@@ -12,16 +12,17 @@ use Illuminate\Support\Carbon;
 /**
  * An owner's plan. A trial is the only state with an end: it takes no card and does not convert,
  * so once trial_ends_at passes the account is treated as Free (FLOW-CLOSURE S6.4). A paid plan is
- * paid by a Stripe subscription, renewed until it is cancelled.
+ * paid by a Paddle subscription (or the fake driver), renewed until it is cancelled.
  *
  * @property string $billing_period
  * @property string $status
  * @property Carbon|null $trial_ends_at
  * @property Carbon|null $trial_used_at
- * @property string|null $stripe_subscription_id
+ * @property string|null $payment_provider
+ * @property string|null $payment_subscription_id
  * @property Carbon|null $current_period_end
  */
-#[Fillable(['user_id', 'plan_id', 'billing_period', 'status', 'trial_ends_at', 'trial_used_at', 'stripe_subscription_id', 'current_period_end'])]
+#[Fillable(['user_id', 'plan_id', 'billing_period', 'status', 'trial_ends_at', 'trial_used_at', 'payment_provider', 'payment_subscription_id', 'current_period_end'])]
 class Subscription extends Model
 {
     /** @use HasFactory<SubscriptionFactory> */
@@ -54,11 +55,11 @@ class Subscription extends Model
     }
 
     /**
-     * Whether a card pays for this plan through Stripe.
+     * Whether a card pays for this plan through the payment provider.
      */
     public function paidByCard(): bool
     {
-        return $this->stripe_subscription_id !== null;
+        return $this->payment_subscription_id !== null;
     }
 
     public function trialEnded(): bool
