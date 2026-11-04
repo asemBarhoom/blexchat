@@ -37,5 +37,18 @@ class ChannelSeeder extends Seeder
                 'connected_at' => now()->subMonths(2),
             ]
         );
+
+        // TikTok Business (@nourboutique), where Lulu writes from in the frontend's inbox
+        Channel::updateOrCreate(
+            ['user_id' => $user->id, 'platform' => 'tiktok', 'account_id' => '7300000000000000001'],
+            [
+                'username' => 'nourboutique',
+                'profile_picture' => 'avatars/sara.webp',
+                'access_token' => 'nourboutiqueTikTokToken',
+                'followers' => 6200,
+                'status' => 'active',
+                'connected_at' => now()->subMonth(),
+            ]
+        );
     }
 }

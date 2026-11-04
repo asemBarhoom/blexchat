@@ -15,6 +15,7 @@ class ConversationSeeder extends Seeder
         $user = User::where('email', 'nour@nourboutique.com')->firstOrFail();
         $ig = Channel::where('user_id', $user->id)->where('platform', 'instagram')->firstOrFail();
         $wa = Channel::where('user_id', $user->id)->where('platform', 'whatsapp')->firstOrFail();
+        $tiktok = Channel::where('user_id', $user->id)->where('platform', 'tiktok')->firstOrFail();
         $automation = Automation::where('user_id', $user->id)->where('name', 'Comment "PRICE" → send the catalogue')->firstOrFail();
 
         $dm = 'أهلًا وسهلًا! 👋 هذا جاكيت الشتاء الذي سألتِ عنه — 65 دولار. المقاسات والطلب من هنا:';
@@ -95,10 +96,10 @@ class ConversationSeeder extends Seeder
                 'last_message_at' => now()->subHours(3),
                 'messages' => [$customer('رائعة ما شاء الله 💜 متى يتوفر لون الموكا؟', now()->subHours(3))],
             ],
-            // 6 — Lulu: yesterday
+            // 6 — Lulu: TikTok, yesterday
             [
-                'channel_id' => $ig->id,
-                'platform_conversation_id' => 'ig_conv_lulu_style',
+                'channel_id' => $tiktok->id,
+                'platform_conversation_id' => 'tt_conv_lulu_style',
                 'contact_name' => 'Lulu',
                 'contact_avatar' => null,
                 'contact_platform_id' => 'lulu.style',
@@ -109,6 +110,9 @@ class ConversationSeeder extends Seeder
                 'messages' => [$customer('كم سعر الطرحة الشيفون؟ وهل يوجد شحن إلى بيروت؟', now()->subDay())],
             ],
         ];
+
+        // Lulu's thread moved from Instagram to TikTok, as in the frontend
+        Conversation::where('channel_id', $ig->id)->where('platform_conversation_id', 'ig_conv_lulu_style')->delete();
 
         foreach ($conversations as $data) {
             $messages = $data['messages'];
