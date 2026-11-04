@@ -8,14 +8,15 @@ use App\Http\Resources\Api\V1\CheckoutSessionResource;
 use App\Models\Coupon;
 use App\Models\Plan;
 use App\Services\Payments\PaymentCheckout;
-use App\Services\Payments\PaymentProviderException;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 #[OA\Schema(schema: 'CheckoutSession', properties: [
-    new OA\Property(property: 'id', type: 'string', example: 'txn_01hv8wptq8987qeep44cyrewp9', description: 'The payment session id (a Paddle transaction `txn_…`, or `fake_cs_…` on the fake driver); the success page gets it back as `session_id`'),
-    new OA\Property(property: 'url', type: 'string', example: 'https://blexchat.example/payments/paddle?_ptxn=txn_01hv8wptq8987qeep44cyrewp9', description: 'Send the browser here: Paddle\'s checkout (opened by Paddle.js on the default payment link), or the fake test page on development servers'),
+    new OA\Property(property: 'id', type: 'string', example: 'cs_test_a1B2c3', description: 'The payment session id (`cs_…` on Stripe, `fake_cs_…` on the fake driver); the success page gets it back as `session_id`'),
+    new OA\Property(property: 'url', type: 'string', example: 'https://checkout.stripe.com/c/pay/cs_test_a1B2c3', description: 'Send the browser here: the Stripe-hosted payment page, or the fake test page on development servers'),
     new OA\Property(property: 'status', type: 'string', enum: ['open', 'complete', 'expired'], description: '`complete` once paid: `subscription` then holds the plan in place'),
     new OA\Property(property: 'plan', type: 'string', example: 'pro'),
     new OA\Property(property: 'billing', type: 'string', enum: ['monthly', 'annual']),
@@ -34,17 +35,17 @@ class CheckoutSessionController extends Controller
 
     #[OA\Post(
         path: '/api/v1/checkout/session',
-        summary: 'Pay for a plan by card (Paddle, or the fake page in development)',
+        summary: 'Pay for a plan by card (Stripe Checkout, or the fake page in development)',
         description: <<<'MD'
-            "Continue To Payment" in the checkout. Opens a Paddle transaction and returns its checkout `url`: send the
-            browser there. After paying, the visitor lands on `FRONTEND_URL/app?checkout=success&session_id=…`
+            "Continue To Payment" in the checkout. Opens a Stripe Checkout Session and returns its `url`: send the
+            browser there. After paying, Stripe sends the visitor to `FRONTEND_URL/app?checkout=success&session_id=…`
             (call GET /api/v1/checkout/session/{id} there); "Back" on the payment page returns to
             `FRONTEND_URL/app?checkout=cancelled` with nothing charged.
 
-            The plan is in place once Paddle reports the payment. It renews every month or year until cancelled.
+            The plan is in place once Stripe reports the payment. It renews every month or year until cancelled.
 
             With `PAYMENT_DRIVER=fake` (the default on local servers) `url` is a test page on this API with
-            "Pay (test)" and "Decline" buttons instead: no card, no Paddle, the same redirects and the same result.
+            "Pay (test)" and "Decline" buttons instead: no card, no Stripe, the same redirects and the same result.
             A `coupon` (checked with POST /api/v1/coupons/check) comes off the first payment.
 
             Free trials never come here: they take no card (POST /api/v1/onboarding/plan).
@@ -65,8 +66,8 @@ class CheckoutSessionController extends Controller
             new OA\Response(response: 409, description: '`plan_already_paid`: this plan and billing period are already paid by card', content: new OA\JsonContent(ref: '#/components/schemas/CheckoutError')),
             new OA\Response(response: 422, description: 'A coupon that does not apply (CouponError), or an unknown or free plan or billing period (ValidationError)', content: new OA\JsonContent(ref: '#/components/schemas/CouponError')),
             new OA\Response(response: 429, description: 'Too many attempts; try again in a minute'),
-            new OA\Response(response: 502, description: '`payment_provider_error`: Paddle could not be reached, refused, or has no default payment link', content: new OA\JsonContent(ref: '#/components/schemas/CheckoutError')),
-            new OA\Response(response: 503, description: '`payments_unavailable`: no Paddle API key is set on this server (or the fake driver is refused in production)', content: new OA\JsonContent(ref: '#/components/schemas/CheckoutError')),
+            new OA\Response(response: 502, description: '`payment_provider_error`: Stripe could not be reached', content: new OA\JsonContent(ref: '#/components/schemas/CheckoutError')),
+            new OA\Response(response: 503, description: '`payments_unavailable`: no Stripe key is set on this server (or the fake driver is refused in production)', content: new OA\JsonContent(ref: '#/components/schemas/CheckoutError')),
         ],
     )]
     public function store(CreateCheckoutSessionRequest $request): JsonResponse
@@ -97,11 +98,11 @@ class CheckoutSessionController extends Controller
     #[OA\Get(
         path: '/api/v1/checkout/session/{id}',
         summary: 'How a card payment ended',
-        description: 'For the success page: `session_id` from its address. While Paddle has not reported the payment yet, this asks Paddle, so the plan shows as soon as it is paid. Poll every few seconds while `status` is `open`.',
+        description: 'For the success page: `session_id` from its address. While Stripe has not reported the payment yet, this asks Stripe, so the plan shows as soon as it is paid. Poll every few seconds while `status` is `open`.',
         security: [['sanctum' => []]],
         tags: ['Checkout'],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'txn_01hv8wptq8987qeep44cyrewp9'),
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'cs_test_a1B2c3'),
             new OA\Parameter(name: 'lang', in: 'query', required: false, description: 'Language of the plan texts. Defaults to en.', schema: new OA\Schema(type: 'string', default: 'en', enum: ['en', 'ar']), example: 'ar'),
         ],
         responses: [
@@ -114,9 +115,9 @@ class CheckoutSessionController extends Controller
     )]
     public function show(Request $request, string $id): CheckoutSessionResource
     {
-        $session = $request->user()->checkoutSessions()->where('payment_session_id', $id)->firstOrFail();
+        $session = $request->user()->checkoutSessions()->where('stripe_session_id', $id)->firstOrFail();
 
-        // The provider being unreachable only means the answer is "not yet".
+        // Stripe being unreachable only means the answer is "not yet".
         rescue(fn () => $this->checkout->refresh($session), report: true);
 
         return new CheckoutSessionResource($session->load(['plan', 'coupon']));
@@ -130,7 +131,7 @@ class CheckoutSessionController extends Controller
 
         try {
             $session = $this->checkout->start($request->user(), $plan, $request->billing(), $coupon);
-        } catch (PaymentProviderException $exception) {
+        } catch (RequestException|ConnectionException $exception) {
             report($exception);
 
             return self::error(502, 'payment_provider_error');

@@ -2,6 +2,7 @@
 
 namespace App\Services\Payments;
 
+use App\Models\CheckoutSession;
 use App\Models\Coupon;
 use App\Models\Plan;
 use App\Models\User;
@@ -10,12 +11,12 @@ use Illuminate\Support\Str;
 
 /**
  * Payments for development, with no keys and no network: the payment page is one this app serves
- * (GET /payments/fake/{session}), behind a signed link. "Pay (test)" reports the payment through
- * PaymentCheckout::markPaid(), as Paddle's webhook does. Never in production unless PAYMENT_ALLOW_FAKE is true.
+ * (GET /payments/fake/{session}), behind a signed link. "Pay (test)" reports the session paid the
+ * way Stripe's webhook does. Never in production unless PAYMENT_ALLOW_FAKE is true.
  */
 class FakeGateway implements PaymentGateway
 {
-    /** How long the payment page link works. */
+    /** How long the payment page link works, like a Stripe Checkout Session. */
     public const LINK_HOURS = 24;
 
     public static function allowed(): bool
@@ -23,17 +24,12 @@ class FakeGateway implements PaymentGateway
         return ! app()->isProduction() || (bool) config('services.payments.allow_fake');
     }
 
-    public function name(): string
-    {
-        return 'fake';
-    }
-
     public function isAvailable(): bool
     {
         return self::allowed();
     }
 
-    public function createCheckout(User $user, Plan $plan, string $billing, int $amountCents, ?Coupon $coupon, int $discountCents): array
+    public function createCheckout(User $user, Plan $plan, string $billing, int $amountCents, ?Coupon $coupon, int $discountCents, string $successUrl, string $cancelUrl): array
     {
         $id = 'fake_cs_'.Str::random(24);
 
@@ -44,6 +40,11 @@ class FakeGateway implements PaymentGateway
      * The fake page reports payments itself, so there is nothing to ask.
      */
     public function findCheckout(string $id): ?array
+    {
+        return null;
+    }
+
+    public function periodEnd(string $subscriptionId): ?int
     {
         return null;
     }
@@ -60,10 +61,17 @@ class FakeGateway implements PaymentGateway
     }
 
     /**
-     * A subscription id for a fake payment, as a provider would hand out.
+     * What Stripe's checkout.session.completed carries for a paid session.
+     *
+     * @return array{id: string, status: string, payment_status: string, subscription: string}
      */
-    public static function subscriptionId(): string
+    public static function paidSession(CheckoutSession $session): array
     {
-        return 'fake_sub_'.Str::random(14);
+        return [
+            'id' => $session->stripe_session_id,
+            'status' => 'complete',
+            'payment_status' => 'paid',
+            'subscription' => 'fake_sub_'.Str::random(14),
+        ];
     }
 }

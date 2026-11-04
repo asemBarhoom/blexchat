@@ -7,13 +7,14 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Services\Payments\PaymentCheckout;
-use App\Services\Payments\PaymentProviderException;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 
 /**
  * Puts an owner on a plan, from the onboarding plan screen (W09) or later from the app.
  *
  * Free applies at once. A plan with a trial starts it, once per account, and takes no card.
- * Any other paid plan (and the trial plan after the account's trial) opens a payment page (Paddle,
+ * Any other paid plan (and the trial plan after the account's trial) opens a payment page (Stripe,
  * or the fake one in development) and changes once it is paid; with no payments available it is
  * refused. Moving off a paid plan to Free or a trial stops its payments.
  */
@@ -88,7 +89,7 @@ class PlanChanger
     {
         try {
             return $call();
-        } catch (PaymentProviderException $exception) {
+        } catch (RequestException|ConnectionException $exception) {
             report($exception);
 
             throw new PlanChangeRefused('payment_provider_error', 502);

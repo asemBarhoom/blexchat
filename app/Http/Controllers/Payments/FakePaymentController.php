@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\View\View;
 
 /**
- * The fake driver's payment page (PAYMENT_DRIVER=fake): what Paddle's checkout shows, with "Pay (test)"
+ * The fake driver's payment page (PAYMENT_DRIVER=fake): what Stripe Checkout shows, with "Pay (test)"
  * and "Decline" instead of a card form. Every link is signed, so nobody can pay by guessing an id;
  * the page answers 404 wherever the fake driver is refused.
  */
@@ -37,7 +37,7 @@ class FakePaymentController extends Controller
     }
 
     /**
-     * "Pay (test)": reported through the same path as Paddle's webhook, then on to the success page.
+     * "Pay (test)": reported exactly as Stripe's checkout.session.completed is, then on to the success page.
      */
     public function pay(Request $request, string $session, PaymentCheckout $payments): RedirectResponse
     {
@@ -47,13 +47,13 @@ class FakePaymentController extends Controller
             return redirect()->away(PaymentCheckout::cancelUrl());
         }
 
-        $payments->markPaid($checkout, FakeGateway::subscriptionId());
+        $payments->handleSession(FakeGateway::paidSession($checkout));
 
-        return redirect()->away(PaymentCheckout::successUrl($checkout->payment_session_id));
+        return redirect()->away(PaymentCheckout::successUrl($checkout->stripe_session_id));
     }
 
     /**
-     * "Decline": back to the app with nothing charged, as closing Paddle's checkout.
+     * "Decline": back to the app with nothing charged, as "Back" on Stripe's page.
      */
     public function decline(Request $request, string $session): RedirectResponse
     {
@@ -67,6 +67,6 @@ class FakePaymentController extends Controller
         abort_unless(config('services.payments.driver') === 'fake' && FakeGateway::allowed(), 404);
         abort_unless($request->hasValidSignatureWhileIgnoring(['lang']), 403);
 
-        return CheckoutSession::where('payment_session_id', $session)->firstOrFail();
+        return CheckoutSession::where('stripe_session_id', $session)->firstOrFail();
     }
 }

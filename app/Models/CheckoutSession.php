@@ -10,20 +10,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * A payment page opened for a paid plan: a Paddle transaction, or the fake driver's page. It stays
- * `open` until the provider reports it paid; completing it puts the plan in place, once.
+ * A Stripe Checkout Session (the hosted payment page) opened for a paid plan. It stays `open`
+ * until Stripe reports it paid; completing it puts the plan in place, once.
  *
  * @property string $billing_period
- * @property string $payment_provider
- * @property string $payment_session_id
+ * @property string $stripe_session_id
  * @property string|null $url
  * @property int $amount_total
  * @property string $currency
  * @property string $status
- * @property string|null $payment_subscription_id
+ * @property string|null $stripe_subscription_id
  * @property Carbon|null $completed_at
  */
-#[Fillable(['user_id', 'payment_provider', 'plan_id', 'coupon_id', 'billing_period', 'payment_session_id', 'url', 'amount_total', 'currency', 'status', 'payment_subscription_id', 'completed_at'])]
+#[Fillable(['user_id', 'plan_id', 'coupon_id', 'billing_period', 'stripe_session_id', 'url', 'amount_total', 'currency', 'status', 'stripe_subscription_id', 'completed_at'])]
 class CheckoutSession extends Model
 {
     /** @use HasFactory<CheckoutSessionFactory> */
