@@ -76,13 +76,13 @@ describe('POST /api/v1/coupons/check', function () {
             ->assertUnprocessable()
             ->assertExactJson(['code' => $code, 'message' => $message]);
     })->with([
-        'unknown' => [fn () => Coupon::query()->delete(), 'pro', 'coupon_invalid', 'هذا الرمز غير صالح'],
-        'switched off' => [fn () => Coupon::query()->update(['active' => false]), 'pro', 'coupon_invalid', 'هذا الرمز غير صالح'],
-        'expired' => [fn () => Coupon::query()->update(['expires_at' => now()->subMinute()]), 'pro', 'coupon_expired', 'انتهت صلاحية هذا الرمز'],
-        'used up' => [fn () => Coupon::query()->update(['usage_limit' => 3, 'times_used' => 3]), 'pro', 'coupon_expired', 'هذا الرمز لم يعد متاحاً'],
-        'on a trial' => [fn () => null, 'essential', 'coupon_not_for_plan', 'هذا الرمز لا ينطبق على خطة Essential'],
-        'on Free' => [fn () => null, 'free', 'coupon_not_for_plan', 'هذا الرمز لا ينطبق على خطة Free'],
-        'other plans only' => [fn () => Coupon::firstOrFail()->plans()->sync(Plan::where('slug', 'business')->pluck('id')), 'pro', 'coupon_not_for_plan', 'هذا الرمز لا ينطبق على خطة Pro'],
+        'unknown' => [fn () => Coupon::query()->delete(), 'pro', 'coupon_invalid', 'هذا الكود غير صالح'],
+        'switched off' => [fn () => Coupon::query()->update(['active' => false]), 'pro', 'coupon_invalid', 'هذا الكود غير صالح'],
+        'expired' => [fn () => Coupon::query()->update(['expires_at' => now()->subMinute()]), 'pro', 'coupon_expired', 'انتهت صلاحية هذا الكود'],
+        'used up' => [fn () => Coupon::query()->update(['usage_limit' => 3, 'times_used' => 3]), 'pro', 'coupon_expired', 'هذا الكود لم يعد متاحًا'],
+        'on a trial' => [fn () => null, 'essential', 'coupon_not_for_plan', 'هذا الكود لا ينطبق على باقة Essential'],
+        'on Free' => [fn () => null, 'free', 'coupon_not_for_plan', 'هذا الكود لا ينطبق على باقة Free'],
+        'other plans only' => [fn () => Coupon::firstOrFail()->plans()->sync(Plan::where('slug', 'business')->pluck('id')), 'pro', 'coupon_not_for_plan', 'هذا الكود لا ينطبق على باقة Pro'],
     ]);
 
     it('accepts a code limited to the chosen plan', function () {

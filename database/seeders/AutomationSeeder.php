@@ -4,117 +4,101 @@ namespace Database\Seeders;
 
 use App\Models\Automation;
 use App\Models\Channel;
+use App\Models\Post;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
+/**
+ * @nourboutique's five automations, as the frontend lists them (src/pages/app/automationsContent.ts)
+ * with the wizard answers it keeps for each (src/app/automationsStore.ts). Run after PostSeeder:
+ * the comment automations watch the winter-jacket post.
+ */
 class AutomationSeeder extends Seeder
 {
+    private const DM_TEXT = 'أهلًا وسهلًا! 👋 هذا جاكيت الشتاء الذي سألتِ عنه — 65 دولار. المقاسات والطلب من هنا:';
+
+    private const DM_BUTTON = 'شاهدي المنتج';
+
+    private const PUBLIC_REPLY = 'أرسلنا لك التفاصيل بالخاص 💌';
+
     public function run(): void
     {
-        $user    = User::where('email', 'nour@nourboutique.com')->firstOrFail();
-        $ig      = Channel::where('user_id', $user->id)->where('platform', 'instagram')->firstOrFail();
-        $wa      = Channel::where('user_id', $user->id)->where('platform', 'whatsapp')->firstOrFail();
+        $user = User::where('email', 'nour@nourboutique.com')->firstOrFail();
+        $ig = Channel::where('user_id', $user->id)->where('platform', 'instagram')->firstOrFail();
+        $winterPost = Post::where('channel_id', $ig->id)->where('platform_post_id', 'CwinterAbaya001')->firstOrFail();
 
-        // a1 — Comment "السعر" → send the catalogue (the hero scenario)
-        Automation::updateOrCreate(
-            ['user_id' => $user->id, 'name' => 'Comment "PRICE" → send the catalogue'],
+        $automations = [
+            // a1 — the one that just went live
             [
-                'channel_id'   => $ig->id,
+                'name' => 'Comment "PRICE" → send the catalogue',
                 'trigger_type' => 'comment_keyword',
-                'keywords'     => ['السعر', 'رابط', 'طلب', 'بكم'],
-                'active'       => true,
-                'actions'      => [
-                    [
-                        'type'    => 'reply_comment',
-                        'message' => 'أرسلنا لك التفاصيل بالخاص 💌',
-                    ],
-                    [
-                        'type'         => 'send_dm_with_button',
-                        'message'      => 'هلا والله! 👋 هذي عباية الشتاء اللي سألتِ عنها — ٢٤٩ ريال. المقاسات والطلب من هنا:',
-                        'button_label' => 'شوفي المنتج',
-                        'button_url'   => 'https://nourboutique.com/abaya-winter',
-                    ],
-                ],
+                'keywords' => ['السعر'],
+                'link' => 'https://nourboutique.com/winter-jacket',
+                'active' => true,
                 'created_at' => now()->subMinutes(5),
-            ]
-        );
-
-        // a2 — Story reply → thank you + link
-        Automation::updateOrCreate(
-            ['user_id' => $user->id, 'name' => 'Story reply → thank you + link'],
+            ],
+            // a2
             [
-                'channel_id'   => $ig->id,
+                'name' => 'Story reply → thank you + link',
                 'trigger_type' => 'story_mention',
-                'keywords'     => null,
-                'active'       => true,
-                'actions'      => [
-                    [
-                        'type'         => 'send_dm_with_button',
-                        'message'      => 'يسعدنا ردّك 💜 هذي القطعة اللي في الستوري، بالسعر والمقاسات:',
-                        'button_label' => 'شوفي القطعة',
-                        'button_url'   => 'https://nourboutique.com/abaya-winter',
-                    ],
-                ],
+                'keywords' => [],
+                'link' => 'https://nourboutique.com/winter-jacket',
+                'active' => true,
                 'created_at' => now()->subDays(2),
-            ]
-        );
-
-        // a3 — First DM → welcome and catalogue
-        Automation::updateOrCreate(
-            ['user_id' => $user->id, 'name' => 'First DM → welcome and catalogue'],
+            ],
+            // a3
             [
-                'channel_id'   => $ig->id,
+                'name' => 'First DM → welcome and catalogue',
                 'trigger_type' => 'dm_keyword',
-                'keywords'     => [],
-                'active'       => true,
-                'actions'      => [
-                    [
-                        'type'         => 'send_dm_with_button',
-                        'message'      => 'هلا والله! 👋 وصلتنا رسالتك ونرد عليك بأسرع وقت. لين ذاك الوقت، كل المنتجات والأسعار هنا:',
-                        'button_label' => 'تصفّحي المتجر',
-                        'button_url'   => 'https://nourboutique.com/shop',
-                    ],
-                ],
+                'keywords' => [],
+                'link' => 'https://nourboutique.com/new-in',
+                'active' => true,
                 'created_at' => now()->subDays(6),
-            ]
-        );
-
-        // a4 — Ramadan collection — stopped (seasonal)
-        Automation::updateOrCreate(
-            ['user_id' => $user->id, 'name' => 'Ramadan collection — comment to DM'],
+            ],
+            // a4 — seasonal, stopped
             [
-                'channel_id'   => $ig->id,
+                'name' => 'Ramadan collection — comment to DM',
                 'trigger_type' => 'comment_keyword',
-                'keywords'     => ['رمضان', 'كولكشن', 'مجموعة'],
-                'active'       => false,
-                'actions'      => [
-                    [
-                        'type'         => 'send_dm_with_button',
-                        'message'      => 'هلا والله! 💜 مجموعة رمضان وصلت — المقاسات والأسعار من هنا:',
-                        'button_label' => 'شوفي المجموعة',
-                        'button_url'   => 'https://nourboutique.com/ramadan',
-                    ],
-                ],
-                'created_at' => now()->subWeeks(6),
-            ]
-        );
-
-        // a5 — Eid restock waitlist — stopped
-        Automation::updateOrCreate(
-            ['user_id' => $user->id, 'name' => 'Eid restock waitlist'],
+                'keywords' => ['رمضان'],
+                'link' => 'https://nourboutique.com/ramadan',
+                'active' => false,
+                'created_at' => now()->setDate(now()->year, 3, 18),
+            ],
+            // a5 — seasonal, stopped, never ran
             [
-                'channel_id'   => $ig->id,
+                'name' => 'Eid restock waitlist',
                 'trigger_type' => 'comment_keyword',
-                'keywords'     => ['عيد', 'ريستوك', 'متى يرجع'],
-                'active'       => false,
-                'actions'      => [
-                    [
-                        'type'    => 'send_dm',
-                        'message' => 'هلا 🌙 حطينا اسمك في قائمة الانتظار — نعلمك أول ما يرجع المنتج!',
+                'keywords' => ['تنبيه'],
+                'link' => 'https://nourboutique.com/waitlist',
+                'active' => false,
+                'created_at' => now()->setDate(now()->year, 4, 2),
+            ],
+        ];
+
+        foreach ($automations as $automation) {
+            $isComment = $automation['trigger_type'] === 'comment_keyword';
+
+            Automation::updateOrCreate(
+                ['user_id' => $user->id, 'name' => $automation['name']],
+                [
+                    'channel_id' => $ig->id,
+                    'trigger_type' => $automation['trigger_type'],
+                    'post_mode' => $isComment ? 'specific' : null,
+                    'post_id' => $isComment ? $winterPost->id : null,
+                    'keywords' => $automation['keywords'],
+                    'active' => $automation['active'],
+                    'actions' => [
+                        ...($isComment ? [['type' => 'reply_comment', 'message' => self::PUBLIC_REPLY]] : []),
+                        [
+                            'type' => 'send_dm_with_button',
+                            'message' => self::DM_TEXT,
+                            'button_label' => self::DM_BUTTON,
+                            'button_url' => $automation['link'],
+                        ],
                     ],
-                ],
-                'created_at' => now()->subWeeks(4),
-            ]
-        );
+                    'created_at' => $automation['created_at'],
+                ]
+            );
+        }
     }
 }

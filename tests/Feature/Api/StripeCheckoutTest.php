@@ -121,7 +121,7 @@ describe('POST /api/v1/checkout/session', function () {
         Sanctum::actingAs($this->user);
         $this->postJson('/api/v1/checkout/session?lang=ar', ['plan' => 'pro', 'coupon' => 'BLEX20'])
             ->assertUnprocessable()
-            ->assertExactJson(['code' => 'coupon_invalid', 'message' => 'هذا الرمز غير صالح']);
+            ->assertExactJson(['code' => 'coupon_invalid', 'message' => 'هذا الكود غير صالح']);
 
         Http::assertNothingSent();
     });

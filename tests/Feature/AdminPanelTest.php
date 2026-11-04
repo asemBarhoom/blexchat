@@ -122,5 +122,5 @@ it('renders every admin detail page with seeded data', function () {
     $this->get('/admin/channels/'.Channel::firstOrFail()->id)->assertOk();
     $this->get('/admin/automations/'.Automation::firstOrFail()->id)->assertOk();
     $this->get('/admin/conversations/'.Conversation::firstOrFail()->id)->assertOk();
-    $this->get('/admin/posts/'.Post::firstOrFail()->id)->assertOk()->assertSee('عباية الشتاء وصلت');
+    $this->get('/admin/posts/'.Post::firstOrFail()->id)->assertOk()->assertSee('جاكيت الشتاء وصل');
 });

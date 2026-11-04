@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
             ]
         )->forceFill(['is_admin' => true, 'email_verified_at' => now()])->save();
 
-        // @nourboutique demo data (realistic Gulf Arabic abaya boutique)
+        // @nourboutique demo data: the frontend's sample fashion boutique (neutral Arabic, USD)
         $this->call([
             HomeContentSeeder::class,
             SolutionSeeder::class,
@@ -37,8 +37,8 @@ class DatabaseSeeder extends Seeder
             FirstMoveSeeder::class,
             UserSeeder::class,
             ChannelSeeder::class,
-            AutomationSeeder::class,
             PostSeeder::class,
+            AutomationSeeder::class,
             CommentSeeder::class,
             ConversationSeeder::class,
             ContactSeeder::class,
