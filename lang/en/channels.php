@@ -12,5 +12,14 @@ return [
     'access_request' => [
         'token_invalid' => 'This request expired. Connect the account again to ask for access.',
     ],
+    'fake' => [
+        'title' => 'Connect Instagram (test)',
+        'switch' => 'العربية',
+        'badge' => 'Test mode — no Instagram account is used',
+        'intro' => 'This page stands in for Instagram’s sign-in on development servers. Pick how Instagram answers.',
+        'allow' => 'Allow — professional account',
+        'personal' => 'Personal account (refused)',
+        'deny' => 'Cancel',
+    ],
 
 ];

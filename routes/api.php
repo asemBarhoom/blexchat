@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\ChannelConnectScreenController;
 use App\Http\Controllers\Api\V1\ChannelController;
 use App\Http\Controllers\Api\V1\ChannelOptionController;
 use App\Http\Controllers\Api\V1\ChannelPostController;
+use App\Http\Controllers\Api\V1\ChannelTestEventController;
 use App\Http\Controllers\Api\V1\CheckoutController;
 use App\Http\Controllers\Api\V1\CheckoutSessionController;
 use App\Http\Controllers\Api\V1\ConnectedChannelController;
@@ -107,6 +108,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::delete('channels/{channel}', [ChannelController::class, 'destroy'])->name('channels.destroy');
     // Channel connected (W07)
     Route::get('channels/{channel}', ConnectedChannelController::class)->whereNumber('channel')->name('channels.show');
+    // INSTAGRAM_DRIVER=fake only: a simulated comment or DM, handled like Instagram's webhook
+    Route::post('channels/{channel}/test-events', ChannelTestEventController::class)->whereNumber('channel')->name('channels.test-events');
 
     // Automations list, detail, wizard, start/stop, move to Trash
     Route::get('automations', [AutomationController::class, 'index'])->name('automations.index');
