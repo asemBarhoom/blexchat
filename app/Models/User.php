@@ -14,8 +14,8 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'google_id', 'password', 'business_name', 'is_admin'])]
-#[Hidden(['password', 'remember_token', 'google_id'])]
+#[Fillable(['name', 'email', 'google_id', 'password', 'business_name', 'is_admin', 'stripe_customer_id'])]
+#[Hidden(['password', 'remember_token', 'google_id', 'stripe_customer_id'])]
 class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -69,6 +69,26 @@ class User extends Authenticatable implements FilamentUser
     public function subscription(): HasOne
     {
         return $this->hasOne(Subscription::class);
+    }
+
+    public function checkoutSessions(): HasMany
+    {
+        return $this->hasMany(CheckoutSession::class);
+    }
+
+    /**
+     * Whether choosing this plan starts a free trial: the plan has one and this account has not
+     * had its one trial, or is trying this very plan now.
+     */
+    public function canStartTrialOn(Plan $plan): bool
+    {
+        if (! $plan->hasTrial()) {
+            return false;
+        }
+
+        $current = $this->subscription()->first();
+
+        return $current?->trial_used_at === null || ($current->onTrial() && $current->plan_id === $plan->id);
     }
 
     public function surveyAnswers(): HasMany
