@@ -77,12 +77,18 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::post('onboarding/survey', [SurveyController::class, 'store'])->name('onboarding.survey.store');
     Route::post('onboarding/plan', [SubscriptionController::class, 'store'])->name('onboarding.plan');
 
+    // The plan after onboarding: read it, switch plan or billing period, cancel back to Free
+    Route::get('subscription', [SubscriptionController::class, 'show'])->name('subscription.show');
+    Route::post('subscription', [SubscriptionController::class, 'update'])->name('subscription.update');
+    Route::delete('subscription', [SubscriptionController::class, 'destroy'])->name('subscription.destroy');
+
     // Checkout: "Apply coupon" (checks and prices only; nothing is redeemed yet)
     Route::post('coupons/check', [CouponController::class, 'check'])->middleware('throttle:30,1')->name('coupons.check');
     // Onboarding W10: the "popular first move" cards that open the automation wizard
     Route::get('onboarding/first-moves', FirstMoveController::class)->name('onboarding.first-moves');
 
-    // Connect / disconnect channel screens
+    // The connected channels (sidebar and channels page), and connect / disconnect channel screens
+    Route::get('channels', [ChannelController::class, 'index'])->name('channels.index');
     Route::get('channels/instagram/authorize', [InstagramConnectionController::class, 'authorize'])->name('channels.instagram.authorize');
     Route::post('channels/instagram', [InstagramConnectionController::class, 'store'])->name('channels.instagram.store');
     Route::post('channels/connect', [ChannelController::class, 'connect'])->name('channels.connect');
