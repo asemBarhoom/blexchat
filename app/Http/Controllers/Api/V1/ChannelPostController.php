@@ -35,6 +35,7 @@ class ChannelPostController extends Controller
                     new OA\Property(property: 'caption', type: 'string', nullable: true),
                     new OA\Property(property: 'thumbnail_url', type: 'string', nullable: true),
                     new OA\Property(property: 'media_type', type: 'string', nullable: true, enum: ['image', 'video', 'carousel', 'reel']),
+                    new OA\Property(property: 'likes', type: 'integer', nullable: true, example: 1204, description: 'Like count, for the phone preview'),
                     new OA\Property(property: 'posted_at', type: 'string', format: 'date-time', nullable: true),
                 ])),
                 new OA\Property(property: 'meta', type: 'object', properties: [

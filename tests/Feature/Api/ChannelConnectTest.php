@@ -69,8 +69,8 @@ describe('GET /api/v1/onboarding/channels/{platform}/connect', function () {
     it('answers in Arabic with ?lang=ar', function () {
         $this->getJson('/api/v1/onboarding/channels/whatsapp/connect?lang=ar')
             ->assertOk()
-            ->assertJsonPath('data.name', 'واتساب')
-            ->assertJsonPath('data.steps.0', 'سجّل الدخول إلى فيسبوك')
+            ->assertJsonPath('data.name', 'WhatsApp')
+            ->assertJsonPath('data.steps.0', 'سجّل الدخول إلى Facebook')
             ->assertJsonPath('data.options.2.title', 'دليل حل المشكلات');
     });
 

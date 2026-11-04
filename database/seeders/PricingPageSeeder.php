@@ -98,36 +98,36 @@ class PricingPageSeeder extends Seeder
             'ar' => [
                 'hero' => [
                     'chip' => 'الأسعار',
-                    'title' => 'ابدأ مجاناً، وادفع حين يكبر جمهورك.',
-                    'lead' => 'كل خطة ترد على التعليقات والرسائل عنك. تدفع حسب عدد الأشخاص الذين تتحدث معهم، ولا شيء غير ذلك.',
-                    'billing_label' => 'مدة الفوترة',
-                    'monthly' => 'شهرياً',
-                    'annual' => 'سنوياً',
+                    'title' => 'ابدأ مجانًا. وادفع حين يكبر جمهورك.',
+                    'lead' => 'كل باقة ترد على التعليقات والرسائل الخاصة نيابةً عنك. تدفع حسب عدد الأشخاص الذين تتحدث معهم، لا أكثر.',
+                    'billing_label' => 'دورة الفوترة',
+                    'monthly' => 'شهري',
+                    'annual' => 'سنوي',
                     'save' => 'وفّر حتى {max_saving}%',
-                    'note' => 'الأسعار بالدولار الأمريكي. غيّر خطتك أو ألغها متى شئت.',
+                    'note' => 'الأسعار بالدولار الأمريكي. غيّر باقتك أو ألغِها في أي وقت.',
                 ],
                 'card' => [
-                    'ribbon' => 'الأكثر طلباً',
+                    'ribbon' => 'الأكثر طلبًا',
                     'forever' => 'للأبد',
                     'per_month' => '/ شهرياً',
                     'no_card' => 'بدون بطاقة دفع',
-                    'billed_annually' => 'تُدفع ${total} سنوياً',
-                    'billed_monthly' => 'تُدفع شهرياً',
-                    'start_free' => 'ابدأ مجاناً',
-                    'try_free' => 'جرّبها {days} يوماً مجاناً',
-                    'choose' => 'اختر {plan}',
+                    'billed_annually' => 'الفوترة سنويًا: ${total}',
+                    'billed_monthly' => 'الفوترة شهريًا',
+                    'start_free' => 'ابدأ مجانًا',
+                    'try_free' => 'جرّب مجانًا لمدة {days} يوم',
+                    'choose' => 'اختر باقة {plan}',
                     'contacts' => 'حتى {contacts} جهة اتصال',
                     'ai' => '+ Blexchat AI',
                 ],
                 'compare' => [
-                    'title' => 'قارن بين الخطط',
+                    'title' => 'قارن بين الباقات',
                     'feature' => 'الميزة',
-                    'included' => 'مشمولة',
-                    'not_included' => 'غير مشمولة',
+                    'included' => 'متاحة',
+                    'not_included' => 'غير متاحة',
                 ],
                 'agency' => [
                     'title' => 'تدير حسابات لعملائك؟',
-                    'line' => 'حسابات كثيرة من مقعد واحد، وخطة تناسب طريقة فوترة الوكالات.',
+                    'line' => 'حسابات كثيرة بمستخدم واحد، وباقة تناسب طريقة فوترة الوكالات.',
                     'link_label' => 'Blexchat للوكالات',
                 ],
                 'faq' => [
@@ -155,16 +155,16 @@ class PricingPageSeeder extends Seeder
                 'title' => $text('Audience', 'الجمهور'),
                 'rows' => [
                     ['key' => 'contacts', 'label' => $text('Contacts', 'جهات الاتصال'), 'cells' => $everyPlan($text('Up to {contacts}', 'حتى {contacts}'))],
-                    ['key' => 'channels', 'label' => $text('Channels', 'القنوات'), 'cells' => [...$everyPlan($text('All four', 'الأربع كلها')), 'free' => $text('1', '1')]],
+                    ['key' => 'channels', 'label' => $text('Channels', 'القنوات'), 'cells' => [...$everyPlan($text('All four', 'القنوات الأربع')), 'free' => $text('1', '1')]],
                 ],
             ],
             [
                 'key' => 'automation',
                 'title' => $text('Automation', 'الأتمتة'),
                 'rows' => [
-                    ['key' => 'replies', 'label' => $text('Comment and DM replies', 'الرد على التعليقات والرسائل'), 'cells' => $everyPlan(true)],
-                    ['key' => 'automations', 'label' => $text('Automations', 'الأتمتة'), 'cells' => [...$everyPlan($text('Unlimited', 'بلا حدود')), 'free' => $text('3', '3')]],
-                    ['key' => 'follow-ups', 'label' => $text('Follow-ups and email capture', 'رسائل المتابعة وجمع الإيميلات'), 'cells' => $byPlan(false, false, true, true, true)],
+                    ['key' => 'replies', 'label' => $text('Comment and DM replies', 'الرد على التعليقات والرسائل الخاصة'), 'cells' => $everyPlan(true)],
+                    ['key' => 'automations', 'label' => $text('Automations', 'الأتمتات'), 'cells' => [...$everyPlan($text('Unlimited', 'بلا حدود')), 'free' => $text('3', '3')]],
+                    ['key' => 'follow-ups', 'label' => $text('Follow-ups and email capture', 'رسائل المتابعة وجمع البريد الإلكتروني'), 'cells' => $byPlan(false, false, true, true, true)],
                     ['key' => 'ai', 'label' => $text('Blexchat AI', 'Blexchat AI'), 'source' => 'has_ai'],
                     ['key' => 'no-branding', 'label' => $text('No Blexchat branding', 'بدون شعار Blexchat'), 'source' => 'paid'],
                 ],
@@ -173,9 +173,9 @@ class PricingPageSeeder extends Seeder
                 'key' => 'team',
                 'title' => $text('Team', 'الفريق'),
                 'rows' => [
-                    ['key' => 'teammates', 'label' => $text('Inbox teammates', 'أعضاء الفريق في صندوق الرسائل'), 'cells' => $byPlan($text('1', '1'), $text('1', '1'), $text('3', '3'), $text('10', '10'), $text('25', '25'))],
+                    ['key' => 'teammates', 'label' => $text('Inbox teammates', 'أعضاء الفريق في صندوق الوارد'), 'cells' => $byPlan($text('1', '1'), $text('1', '1'), $text('3', '3'), $text('10', '10'), $text('25', '25'))],
                     ['key' => 'roles', 'label' => $text('Team roles and assignment', 'أدوار الفريق وتوزيع المحادثات'), 'cells' => $byPlan(false, false, false, true, true)],
-                    ['key' => 'many-accounts', 'label' => $text('Many accounts, one seat', 'حسابات كثيرة بمقعد واحد'), 'cells' => $byPlan(false, false, false, false, true)],
+                    ['key' => 'many-accounts', 'label' => $text('Many accounts, one seat', 'حسابات كثيرة بمستخدم واحد'), 'cells' => $byPlan(false, false, false, false, true)],
                 ],
             ],
             [
@@ -186,10 +186,10 @@ class PricingPageSeeder extends Seeder
                         $text('Help center', 'مركز المساعدة'),
                         $text('Email', 'البريد الإلكتروني'),
                         $text('Email', 'البريد الإلكتروني'),
-                        $text('Priority', 'بأولوية'),
-                        $text('Priority', 'بأولوية'),
+                        $text('Priority', 'دعم بأولوية'),
+                        $text('Priority', 'دعم بأولوية'),
                     )],
-                    ['key' => 'onboarding-call', 'label' => $text('Onboarding call', 'مكالمة لتجهيز الحساب'), 'cells' => $byPlan(false, false, false, false, true)],
+                    ['key' => 'onboarding-call', 'label' => $text('Onboarding call', 'مكالمة الإعداد الأولي'), 'cells' => $byPlan(false, false, false, false, true)],
                 ],
             ],
         ];
@@ -202,45 +202,45 @@ class PricingPageSeeder extends Seeder
     {
         return [
             [
-                'question' => ['en' => 'Is the free plan really free?', 'ar' => 'هل الخطة المجانية مجانية فعلاً؟'],
+                'question' => ['en' => 'Is the free plan really free?', 'ar' => 'هل باقة Free مجانية حقًا؟'],
                 'answer' => [
                     'en' => 'Yes. No card, no time limit. You get one channel and up to {free_contacts} contacts, and you can stay on it as long as you like.',
-                    'ar' => 'نعم. بدون بطاقة وبدون مدة محددة. تحصل على قناة واحدة وحتى {free_contacts} جهة اتصال، وتبقى عليها ما دمت تريد.',
+                    'ar' => 'نعم. بدون بطاقة وبدون حد زمني. تحصل على قناة واحدة وما يصل إلى {free_contacts} جهة اتصال، ويمكنك البقاء عليها ما شئت.',
                 ],
             ],
             [
-                'question' => ['en' => 'What counts as a contact?', 'ar' => 'من يُحسب جهة اتصال؟'],
+                'question' => ['en' => 'What counts as a contact?', 'ar' => 'ما الذي يُحسب جهة اتصال؟'],
                 'answer' => [
                     'en' => 'Anyone who has messaged you or commented and got a reply from Blexchat. Each person counts once, however many times they write.',
-                    'ar' => 'كل من راسلك أو علّق ووصله رد من Blexchat. يُحسب كل شخص مرة واحدة مهما كتب لك.',
+                    'ar' => 'أي شخص راسلك أو علّق وتلقى ردًا من Blexchat. يُحسب كل شخص مرة واحدة، مهما تكررت رسائله.',
                 ],
             ],
             [
-                'question' => ['en' => 'What happens when I reach my contact limit?', 'ar' => 'ماذا يحدث حين أصل إلى حد جهات الاتصال؟'],
+                'question' => ['en' => 'What happens when I reach my contact limit?', 'ar' => 'ماذا يحدث عندما أصل إلى الحد المسموح من جهات الاتصال؟'],
                 'answer' => [
                     'en' => 'Nothing stops mid-conversation. We tell you before you get there, and you choose whether to move up a plan.',
-                    'ar' => 'لا تتوقف أي محادثة في منتصفها. ننبهك قبل أن تصل، وأنت تقرر إن كنت تريد الانتقال إلى خطة أعلى.',
+                    'ar' => 'لا تتوقف أي محادثة في منتصفها. ننبّهك قبل أن تصل إليه، وأنت تقرر إن كنت تريد الترقية إلى باقة أعلى.',
                 ],
             ],
             [
-                'question' => ['en' => 'Can I change or cancel any time?', 'ar' => 'هل أستطيع تغيير خطتي أو إلغاءها في أي وقت؟'],
+                'question' => ['en' => 'Can I change or cancel any time?', 'ar' => 'هل يمكنني تغيير باقتي أو إلغاؤها في أي وقت؟'],
                 'answer' => [
                     'en' => 'Any time, from your account. Move up and the new plan starts straight away; move down or cancel and it applies from your next bill.',
-                    'ar' => 'في أي وقت ومن حسابك. إن انتقلت إلى خطة أعلى تبدأ فوراً، وإن انتقلت إلى أقل أو ألغيت يسري ذلك من فاتورتك التالية.',
+                    'ar' => 'في أي وقت، من حسابك. عند الترقية تبدأ الباقة الجديدة فورًا، وعند التخفيض أو الإلغاء يُطبَّق التغيير من فاتورتك التالية.',
                 ],
             ],
             [
                 'question' => ['en' => 'What is the difference between monthly and annual?', 'ar' => 'ما الفرق بين الدفع الشهري والسنوي؟'],
                 'answer' => [
                     'en' => 'The same plan, paid a year up front — and up to {max_saving}% less for it.',
-                    'ar' => 'الخطة نفسها، تدفعها عن سنة مقدماً — وبسعر أقل حتى {max_saving}%.',
+                    'ar' => 'الباقة نفسها، تدفعها لسنة كاملة مقدمًا — وبسعر أقل بنسبة تصل إلى {max_saving}%.',
                 ],
             ],
             [
-                'question' => ['en' => 'Is there a free trial?', 'ar' => 'هل هناك فترة تجربة مجانية؟'],
+                'question' => ['en' => 'Is there a free trial?', 'ar' => 'هل توجد تجربة مجانية؟'],
                 'answer' => [
                     'en' => '{trial_plan} comes with {trial_days} days free. You are not charged until the trial ends, and we remind you before it does.',
-                    'ar' => 'خطة {trial_plan} تأتي مع {trial_days} يوماً مجاناً. لن تُحاسَب بشيء حتى تنتهي التجربة، ونذكّرك قبل انتهائها.',
+                    'ar' => 'باقة {trial_plan} تأتي بتجربة مجانية مدتها {trial_days} يوم. لن تدفع شيئًا حتى تنتهي التجربة، وسنذكّرك قبل انتهائها.',
                 ],
             ],
         ];

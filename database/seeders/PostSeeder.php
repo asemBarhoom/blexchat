@@ -7,62 +7,80 @@ use App\Models\Post;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
+/**
+ * The sample shop's posts, as the wizard's post picker shows them (src/components/preview/nourBoutique.ts).
+ */
 class PostSeeder extends Seeder
 {
     public function run(): void
     {
         $user = User::where('email', 'nour@nourboutique.com')->firstOrFail();
-        $ig   = Channel::where('user_id', $user->id)->where('platform', 'instagram')->firstOrFail();
+        $ig = Channel::where('user_id', $user->id)->where('platform', 'instagram')->firstOrFail();
 
         $posts = [
             [
                 'platform_post_id' => 'CwinterAbaya001',
-                'caption'          => 'عباية الشتاء وصلت ✨ اكتبي «السعر» بالتعليقات ونرسل لك التفاصيل بالخاص',
-                'thumbnail_url'    => 'posts/huda.webp',
-                'media_type'       => 'image',
-                'posted_at'        => now()->subDays(1),
+                'caption' => 'جاكيت الشتاء وصل ✨ اكتبي «السعر» في التعليقات ونرسل لكِ التفاصيل في الخاص',
+                'thumbnail_url' => 'posts/huda.webp',
+                'media_type' => 'image',
+                'like_count' => 1204,
+                'posted_at' => now()->subDays(1),
             ],
             [
                 'platform_post_id' => 'CnewIn002',
-                'caption'          => 'تشكيلة جديدة كل خميس 🤍',
-                'thumbnail_url'    => null,
-                'media_type'       => 'reel',
-                'posted_at'        => now()->subDays(4),
+                'caption' => 'تشكيلة جديدة كل خميس 🤍',
+                'thumbnail_url' => null,
+                'media_type' => 'reel',
+                'like_count' => 863,
+                'posted_at' => now()->subDays(4),
             ],
             [
                 'platform_post_id' => 'Cchiffon003',
-                'caption'          => 'طرحة شيفون ناعمة — ٨ ألوان',
-                'thumbnail_url'    => 'posts/nora.webp',
-                'media_type'       => 'carousel',
-                'posted_at'        => now()->subDays(7),
+                'caption' => 'طرحة شيفون ناعمة — 8 ألوان',
+                'thumbnail_url' => 'posts/nora.webp',
+                'media_type' => 'carousel',
+                'like_count' => 940,
+                'posted_at' => now()->subDays(7),
             ],
             [
                 'platform_post_id' => 'Csale004',
-                'caption'          => 'خصم ٢٠٪ على كل العبايات لين الأحد',
-                'thumbnail_url'    => null,
-                'media_type'       => 'image',
-                'posted_at'        => now()->subDays(10),
+                'caption' => 'خصم 20% على كل القطع حتى الأحد',
+                'thumbnail_url' => null,
+                'media_type' => 'image',
+                'like_count' => 2315,
+                'posted_at' => now()->subDays(10),
             ],
             [
                 'platform_post_id' => 'CworkLook005',
-                'caption'          => 'إطلالة الدوام المريحة',
-                'thumbnail_url'    => 'posts/lina.webp',
-                'media_type'       => 'image',
-                'posted_at'        => now()->subDays(14),
+                'caption' => 'إطلالة العمل المريحة',
+                'thumbnail_url' => 'posts/lina.webp',
+                'media_type' => 'image',
+                'like_count' => 712,
+                'posted_at' => now()->subDays(14),
             ],
             [
                 'platform_post_id' => 'Cdelivery006',
-                'caption'          => 'توصيل مجاني للرياض وجدة فوق ٢٠٠ ريال',
-                'thumbnail_url'    => null,
-                'media_type'       => 'image',
-                'posted_at'        => now()->subDays(18),
+                'caption' => 'توصيل مجاني لكل المدن للطلبات فوق 50 دولار',
+                'thumbnail_url' => null,
+                'media_type' => 'image',
+                'like_count' => 598,
+                'posted_at' => now()->subDays(18),
             ],
             [
                 'platform_post_id' => 'Cramadan007',
-                'caption'          => 'مجموعة رمضان — قريباً 🌙',
-                'thumbnail_url'    => null,
-                'media_type'       => 'image',
-                'posted_at'        => now()->subMonths(2),
+                'caption' => 'مجموعة رمضان — قريباً 🌙',
+                'thumbnail_url' => null,
+                'media_type' => 'image',
+                'like_count' => 1047,
+                'posted_at' => now()->subMonths(2),
+            ],
+            [
+                'platform_post_id' => 'Csizes008',
+                'caption' => 'متوفّرة الآن مقاسات XS و XXL',
+                'thumbnail_url' => null,
+                'media_type' => 'image',
+                'like_count' => 430,
+                'posted_at' => now()->subMonths(3),
             ],
         ];
 

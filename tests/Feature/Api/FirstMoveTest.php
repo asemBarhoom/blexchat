@@ -25,13 +25,13 @@ describe('GET /api/v1/onboarding/first-moves', function () {
                 'title' => 'Auto-DM links from comments',
                 'line' => 'Someone comments a keyword on your post — they get your link in a DM, instantly.',
                 'incoming' => ['who' => 'reem.k', 'text' => 'LINK 😍 how much?', 'kind' => 'Comment'],
-                'reply' => 'Here’s the link 👉 nourboutique.com/abaya',
+                'reply' => 'Here’s the link 👉 nourboutique.com/winter-jacket',
             ]);
     });
 
     it('answers in Arabic with ?lang=ar', function () {
         $this->actingAs($this->user)->getJson('/api/v1/onboarding/first-moves?lang=ar')
-            ->assertJsonPath('data.1.title', 'ردّ على كل رسائلك الخاصة')
+            ->assertJsonPath('data.1.title', 'الرد على كل رسائلك الخاصة')
             ->assertJsonPath('data.1.incoming.kind', 'رسالة خاصة')
             ->assertJsonPath('data.1.incoming.who', 'faisal.a');
     });

@@ -26,6 +26,16 @@ class OnboardingSeeder extends Seeder
                 $stored->options()->updateOrCreate(['key' => $option['key']], [...$option, 'sort' => $optionSort]);
             }
         }
+
+        $this->removeRetiredOptions();
+    }
+
+    /**
+     * Options the frontend has dropped since they were first seeded: Salla gave way to Wix.
+     */
+    private function removeRetiredOptions(): void
+    {
+        SurveyQuestion::where('key', 'tools')->first()?->options()->where('key', 'salla')->delete();
     }
 
     /**
@@ -36,67 +46,67 @@ class OnboardingSeeder extends Seeder
         return [
             [
                 'slug' => 'free',
-                'name' => ['en' => 'Free', 'ar' => 'مجانية'],
-                'tagline' => ['en' => 'Try it on one channel.', 'ar' => 'جرّبها على قناة واحدة.'],
+                'name' => ['en' => 'Free', 'ar' => 'Free'],
+                'tagline' => ['en' => 'Try it on one channel.', 'ar' => 'جرّبه على قناة واحدة.'],
                 'monthly_price' => 0,
                 'annual_price' => 0,
                 'contacts_limit' => 25,
                 'has_ai' => false,
                 'features' => [
                     'en' => ['1 channel', 'Comment and DM replies', 'Blexchat branding'],
-                    'ar' => ['قناة واحدة', 'ردود على التعليقات والرسائل', 'شعار Blexchat'],
+                    'ar' => ['قناة واحدة', 'الرد على التعليقات والرسائل الخاصة', 'تظهر علامة Blexchat'],
                 ],
                 'trial_days' => 0,
                 'is_recommended' => false,
             ],
             [
                 'slug' => 'essential',
-                'name' => ['en' => 'Essential', 'ar' => 'الأساسية'],
-                'tagline' => ['en' => 'For a growing shop or creator.', 'ar' => 'لمتجر أو صانع محتوى في نمو.'],
+                'name' => ['en' => 'Essential', 'ar' => 'Essential'],
+                'tagline' => ['en' => 'For a growing shop or creator.', 'ar' => 'للمتاجر وصنّاع المحتوى في مرحلة النمو.'],
                 'monthly_price' => 17,
                 'annual_price' => 14,
                 'contacts_limit' => 250,
                 'has_ai' => false,
                 'features' => [
                     'en' => ['All four channels', 'Unlimited automations', 'No Blexchat branding'],
-                    'ar' => ['القنوات الأربع كلها', 'أتمتة بلا حدود', 'بدون شعار Blexchat'],
+                    'ar' => ['القنوات الأربع كلها', 'أتمتات غير محدودة', 'بدون شعار Blexchat'],
                 ],
                 'trial_days' => 14,
                 'is_recommended' => true,
             ],
             [
                 'slug' => 'pro',
-                'name' => ['en' => 'Pro', 'ar' => 'الاحترافية'],
-                'tagline' => ['en' => 'When DMs become a sales channel.', 'ar' => 'حين تصبح الرسائل قناة مبيعات.'],
+                'name' => ['en' => 'Pro', 'ar' => 'Pro'],
+                'tagline' => ['en' => 'When DMs become a sales channel.', 'ar' => 'حين تصبح الرسائل الخاصة قناة مبيعات.'],
                 'monthly_price' => 39,
                 'annual_price' => 29,
                 'contacts_limit' => 2500,
                 'has_ai' => true,
                 'features' => [
                     'en' => ['Everything in Essential', 'Follow-ups and email capture', 'Inbox for 3 teammates'],
-                    'ar' => ['كل ما في الأساسية', 'رسائل متابعة وجمع الإيميلات', 'صندوق رسائل لـ 3 من الفريق'],
+                    'ar' => ['كل مزايا Essential', 'رسائل المتابعة وجمع البريد الإلكتروني', 'صندوق الوارد لـ 3 من أعضاء الفريق'],
                 ],
                 'trial_days' => 0,
                 'is_recommended' => false,
             ],
             [
                 'slug' => 'business',
-                'name' => ['en' => 'Business', 'ar' => 'الأعمال'],
-                'tagline' => ['en' => 'For teams answering at volume.', 'ar' => 'لفرق ترد على عدد كبير من الرسائل.'],
+                'name' => ['en' => 'Business', 'ar' => 'Business'],
+                'tagline' => ['en' => 'For teams answering at volume.', 'ar' => 'للفرق التي ترد على أعداد كبيرة من الرسائل.'],
                 'monthly_price' => 99,
                 'annual_price' => 69,
                 'contacts_limit' => 7500,
                 'has_ai' => true,
                 'features' => [
                     'en' => ['Everything in Pro', 'Team roles and assignment', 'Priority support'],
-                    'ar' => ['كل ما في الاحترافية', 'أدوار الفريق وتوزيع المحادثات', 'دعم بأولوية'],
+                    'ar' => ['كل مزايا Pro', 'أدوار الفريق وتوزيع المحادثات', 'دعم ذو أولوية'],
                 ],
                 'trial_days' => 0,
                 'is_recommended' => false,
             ],
             [
                 'slug' => 'advanced',
-                'name' => ['en' => 'Advanced', 'ar' => 'المتقدمة'],
+                'name' => ['en' => 'Advanced', 'ar' => 'Advanced'],
                 'tagline' => ['en' => 'For brands and agencies at scale.', 'ar' => 'للعلامات التجارية والوكالات الكبيرة.'],
                 'monthly_price' => 199,
                 'annual_price' => 139,
@@ -104,7 +114,7 @@ class OnboardingSeeder extends Seeder
                 'has_ai' => true,
                 'features' => [
                     'en' => ['Everything in Business', 'Many accounts, one seat', 'Onboarding call'],
-                    'ar' => ['كل ما في الأعمال', 'حسابات كثيرة بمقعد واحد', 'مكالمة لتجهيز الحساب'],
+                    'ar' => ['كل مزايا Business', 'حسابات كثيرة بمستخدم واحد', 'مكالمة الإعداد الأولي'],
                 ],
                 'trial_days' => 0,
                 'is_recommended' => false,
@@ -121,13 +131,13 @@ class OnboardingSeeder extends Seeder
             [
                 'key' => 'for',
                 'question' => ['en' => 'Who is this account for?', 'ar' => 'لمن هذا الحساب؟'],
-                'hint' => ['en' => 'Pick one.', 'ar' => 'اختر واحداً.'],
+                'hint' => ['en' => 'Pick one.', 'ar' => 'اختر خيارًا واحدًا.'],
                 'kind' => 'radio',
                 'other_option' => null,
                 'options' => [
-                    ['key' => 'employer', 'label' => ['en' => 'The company I work for', 'ar' => 'الشركة التي أعمل فيها'], 'note' => ['en' => 'You run its social channels.', 'ar' => 'تدير حساباتها على مواقع التواصل.']],
-                    ['key' => 'myself', 'label' => ['en' => 'Myself', 'ar' => 'لنفسي'], 'note' => ['en' => 'My own brand, shop or creator account.', 'ar' => 'علامتي أو متجري أو حسابي كصانع محتوى.']],
-                    ['key' => 'client', 'label' => ['en' => 'A client', 'ar' => 'لعميل'], 'note' => ['en' => 'You manage accounts for others.', 'ar' => 'تدير حسابات لآخرين.']],
+                    ['key' => 'employer', 'label' => ['en' => 'The company I work for', 'ar' => 'الشركة التي أعمل بها'], 'note' => ['en' => 'You run its social channels.', 'ar' => 'تدير قنواتها على مواقع التواصل.']],
+                    ['key' => 'myself', 'label' => ['en' => 'Myself', 'ar' => 'لنفسي'], 'note' => ['en' => 'My own brand, shop or creator account.', 'ar' => 'علامتي التجارية أو متجري أو حسابي كصانع محتوى.']],
+                    ['key' => 'client', 'label' => ['en' => 'A client', 'ar' => 'عميل'], 'note' => ['en' => 'You manage accounts for others.', 'ar' => 'تدير حسابات لآخرين.']],
                 ],
             ],
             [
@@ -137,23 +147,23 @@ class OnboardingSeeder extends Seeder
                 'kind' => 'multi',
                 'other_option' => null,
                 'options' => [
-                    ['key' => 'products', 'label' => ['en' => 'Selling products', 'ar' => 'بيع منتجات']],
-                    ['key' => 'services', 'label' => ['en' => 'Selling services or bookings', 'ar' => 'بيع خدمات أو حجوزات']],
-                    ['key' => 'deals', 'label' => ['en' => 'Brand deals and sponsorships', 'ar' => 'إعلانات ورعايات']],
-                    ['key' => 'courses', 'label' => ['en' => 'Courses, coaching or memberships', 'ar' => 'دورات أو تدريب أو اشتراكات']],
-                    ['key' => 'affiliate', 'label' => ['en' => 'Affiliate links', 'ar' => 'روابط تسويق بالعمولة']],
-                    ['key' => 'notyet', 'label' => ['en' => 'Not making money yet', 'ar' => 'لا أحقق دخلاً بعد']],
+                    ['key' => 'products', 'label' => ['en' => 'Selling products', 'ar' => 'بيع المنتجات']],
+                    ['key' => 'services', 'label' => ['en' => 'Selling services or bookings', 'ar' => 'بيع الخدمات أو الحجوزات']],
+                    ['key' => 'deals', 'label' => ['en' => 'Brand deals and sponsorships', 'ar' => 'صفقات مع العلامات التجارية ورعايات']],
+                    ['key' => 'courses', 'label' => ['en' => 'Courses, coaching or memberships', 'ar' => 'دورات أو تدريب أو اشتراكات عضوية']],
+                    ['key' => 'affiliate', 'label' => ['en' => 'Affiliate links', 'ar' => 'روابط التسويق بالعمولة']],
+                    ['key' => 'notyet', 'label' => ['en' => 'Not making money yet', 'ar' => 'لا أحقق دخلًا بعد']],
                 ],
             ],
             [
                 'key' => 'tools',
                 'question' => ['en' => 'Which tools do you use?', 'ar' => 'ما الأدوات التي تستخدمها؟'],
-                'hint' => ['en' => 'Pick all that apply — we’ll suggest the right connections.', 'ar' => 'اختر كل ما ينطبق، وسنقترح الربط المناسب.'],
+                'hint' => ['en' => 'Pick all that apply — we’ll suggest the right connections.', 'ar' => 'اختر كل ما ينطبق — وسنقترح عليك عمليات الربط المناسبة.'],
                 'kind' => 'grid',
                 'other_option' => null,
                 'options' => [
                     ['key' => 'shopify', 'label' => ['en' => 'Shopify'], 'icon' => 'shopify'],
-                    ['key' => 'salla', 'label' => ['en' => 'Salla', 'ar' => 'سلة'], 'icon' => 'salla'],
+                    ['key' => 'wix', 'label' => ['en' => 'Wix'], 'icon' => 'wix'],
                     ['key' => 'woocommerce', 'label' => ['en' => 'WooCommerce'], 'icon' => 'woocommerce', 'icon_box' => ['viewBox' => '0 9.58 24 4.84', 'width' => 64, 'height' => 13]],
                     ['key' => 'sheets', 'label' => ['en' => 'Google Sheets'], 'icon' => 'googlesheets'],
                     ['key' => 'mailchimp', 'label' => ['en' => 'Mailchimp'], 'icon' => 'mailchimp'],
@@ -173,7 +183,7 @@ class OnboardingSeeder extends Seeder
                     ['key' => 'tiktok', 'label' => ['en' => 'TikTok'], 'icon' => 'tiktok'],
                     ['key' => 'snapchat', 'label' => ['en' => 'Snapchat'], 'icon' => 'snapchat'],
                     ['key' => 'youtube', 'label' => ['en' => 'YouTube'], 'icon' => 'youtube'],
-                    ['key' => 'search', 'label' => ['en' => 'Google search', 'ar' => 'بحث Google']],
+                    ['key' => 'search', 'label' => ['en' => 'Google search', 'ar' => 'البحث في Google']],
                     ['key' => 'friend', 'label' => ['en' => 'A friend or colleague', 'ar' => 'صديق أو زميل']],
                     ['key' => 'other', 'label' => ['en' => 'Other', 'ar' => 'غير ذلك']],
                 ],
