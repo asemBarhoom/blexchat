@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\ChannelController;
 use App\Http\Controllers\Api\V1\ChannelOptionController;
 use App\Http\Controllers\Api\V1\ChannelPostController;
 use App\Http\Controllers\Api\V1\CheckoutController;
+use App\Http\Controllers\Api\V1\CheckoutSessionController;
 use App\Http\Controllers\Api\V1\ConnectedChannelController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\ConversationController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Api\V1\OnboardingController;
 use App\Http\Controllers\Api\V1\PlanController;
 use App\Http\Controllers\Api\V1\PricingController;
 use App\Http\Controllers\Api\V1\SolutionController;
+use App\Http\Controllers\Api\V1\StripeWebhookController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\SurveyController;
 use Illuminate\Support\Facades\Route;
@@ -48,6 +50,8 @@ Route::get('v1/pricing', PricingController::class)->name('api.v1.pricing');
 // Meta calls these; requests are authenticated by their signature, not a user
 Route::get('v1/webhooks/instagram', [InstagramWebhookController::class, 'verify'])->name('webhooks.instagram.verify');
 Route::post('v1/webhooks/instagram', [InstagramWebhookController::class, 'receive'])->name('webhooks.instagram');
+// Stripe calls this about card payments; authenticated by the Stripe-Signature header
+Route::post('v1/webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
 
 // Sign up / sign in (W01, W04), check email (W02), one more step (W03): passwordless, by emailed link or Google
 Route::prefix('v1/auth')->name('auth.')->middleware('throttle:30,1')->group(function () {
@@ -82,8 +86,11 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::post('subscription', [SubscriptionController::class, 'update'])->name('subscription.update');
     Route::delete('subscription', [SubscriptionController::class, 'destroy'])->name('subscription.destroy');
 
-    // Checkout: "Apply coupon" (checks and prices only; nothing is redeemed yet)
+    // Checkout: "Apply coupon" (checks and prices only; redeemed once Stripe takes the payment)
     Route::post('coupons/check', [CouponController::class, 'check'])->middleware('throttle:30,1')->name('coupons.check');
+    // Checkout: "Continue To Payment" opens the Stripe payment page; its success page checks the result
+    Route::post('checkout/session', [CheckoutSessionController::class, 'store'])->middleware('throttle:10,1')->name('checkout.session.store');
+    Route::get('checkout/session/{id}', [CheckoutSessionController::class, 'show'])->name('checkout.session.show');
     // Onboarding W10: the "popular first move" cards that open the automation wizard
     Route::get('onboarding/first-moves', FirstMoveController::class)->name('onboarding.first-moves');
 

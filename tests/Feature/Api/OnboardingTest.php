@@ -39,7 +39,7 @@ describe('GET /api/v1/plans', function () {
 
     it('answers in Arabic with ?lang=ar', function () {
         $this->getJson('/api/v1/plans?lang=ar')
-            ->assertJsonPath('data.0.name', 'مجانية')
+            ->assertJsonPath('data.0.name', 'Free')
             ->assertJsonPath('data.0.features.0', 'قناة واحدة');
     });
 
@@ -88,11 +88,19 @@ describe('the survey', function () {
             ->assertJsonPath('data.*.id', ['for', 'money', 'tools', 'heard'])
             ->assertJsonPath('data.0.kind', 'radio')
             ->assertJsonPath('data.0.options.1', ['id' => 'myself', 'label' => 'Myself', 'note' => 'My own brand, shop or creator account.', 'icon' => null, 'icon_url' => null, 'icon_box' => null])
-            ->assertJsonPath('data.2.options.*.icon', ['shopify', 'salla', 'woocommerce', 'googlesheets', 'mailchimp', 'calendly', 'stripe', 'zapier'])
+            ->assertJsonPath('data.2.options.*.icon', ['shopify', 'wix', 'woocommerce', 'googlesheets', 'mailchimp', 'calendly', 'stripe', 'zapier'])
             ->assertJsonPath('data.2.options.2.icon_box', ['viewBox' => '0 9.58 24 4.84', 'width' => 64, 'height' => 13])
             ->assertJsonPath('data.3.options.*.icon', ['instagram', 'tiktok', 'snapchat', 'youtube', null, null, null])
             ->assertJsonPath('data.3.other_option', 'other')
             ->assertJsonPath('data.*.answer', [null, null, null, null]);
+    });
+
+    it('drops the retired Salla option when seeded again', function () {
+        SurveyQuestion::where('key', 'tools')->firstOrFail()->options()->create(['key' => 'salla', 'label' => ['en' => 'Salla'], 'sort' => 1]);
+
+        $this->seed(OnboardingSeeder::class);
+
+        expect(SurveyQuestion::where('key', 'tools')->firstOrFail()->options()->pluck('key')->all())->not->toContain('salla');
     });
 
     it('gives an uploaded logo as an absolute URL', function () {
@@ -118,10 +126,10 @@ describe('the survey', function () {
 
     it('replaces earlier answers when sent again', function () {
         $this->actingAs($this->user)->postJson('/api/v1/onboarding/survey', ['answers' => [['question' => 'money', 'options' => ['products']]]]);
-        $this->postJson('/api/v1/onboarding/survey', ['answers' => [['question' => 'tools', 'options' => ['salla', 'shopify']]]])->assertOk();
+        $this->postJson('/api/v1/onboarding/survey', ['answers' => [['question' => 'tools', 'options' => ['wix', 'shopify']]]])->assertOk();
 
         expect($this->user->surveyAnswers()->with('question')->get()->map(fn ($answer) => [$answer->question->key, $answer->options])->all())
-            ->toBe([['tools', ['salla', 'shopify']]]);
+            ->toBe([['tools', ['wix', 'shopify']]]);
     });
 
     it('only shows each owner their own answers', function () {
@@ -134,7 +142,7 @@ describe('the survey', function () {
         SurveyQuestion::where('key', 'tools')->update(['active' => false]);
 
         $this->actingAs($this->user)->getJson('/api/v1/onboarding/survey')->assertJsonPath('data.*.id', ['for', 'money', 'heard']);
-        $this->postJson('/api/v1/onboarding/survey', ['answers' => [['question' => 'tools', 'options' => ['salla']]]])
+        $this->postJson('/api/v1/onboarding/survey', ['answers' => [['question' => 'tools', 'options' => ['wix']]]])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('answers.0.question');
     });
@@ -190,7 +198,7 @@ describe('POST /api/v1/onboarding/plan', function () {
             ->assertJsonPath('data.trial_days_left', 14);
     });
 
-    it('asks for payment on a paid plan without a trial', function () {
+    it('asks for payment on a paid plan without a trial when no Stripe key is set', function () {
         $this->actingAs($this->user)->postJson('/api/v1/onboarding/plan', ['plan' => 'pro'])
             ->assertStatus(402)
             ->assertExactJson(['code' => 'payment_required', 'message' => __('onboarding.plan.payment_required')]);

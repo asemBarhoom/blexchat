@@ -13,7 +13,7 @@ use Illuminate\Database\Seeder;
  */
 class AutomationTemplateSeeder extends Seeder
 {
-    private const SAMPLE_LINK = 'https://nourboutique.com/abaya-winter';
+    private const SAMPLE_LINK = 'https://nourboutique.com/winter-jacket';
 
     private const SHOP_LINK = 'https://nourboutique.com/shop';
 
@@ -28,7 +28,7 @@ class AutomationTemplateSeeder extends Seeder
 
     /**
      * What the wizard opens with when no template is named: the automation's name in the list,
-     * and the Gulf-shop sample answers.
+     * and the sample shop's starting answers.
      *
      * @return list<array<string, mixed>>
      */
@@ -38,43 +38,43 @@ class AutomationTemplateSeeder extends Seeder
             [
                 'key' => 'starter-comment',
                 'is_starter' => true,
-                'name' => ['en' => 'Auto-DM links from comments', 'ar' => 'رابط بالخاص لكل تعليق'],
+                'name' => ['en' => 'Auto-DM links from comments', 'ar' => 'إرسال الروابط تلقائيًا لمن يعلّق'],
                 'build' => 'quick',
                 'trigger' => 'comment',
                 'match' => 'words',
                 'keywords' => ['en' => ['price'], 'ar' => ['السعر']],
                 'public_reply' => self::PUBLIC_REPLY,
                 'dm_text' => [
-                    'en' => 'Hi there! 👋 Here is the winter abaya you asked about — 249 SAR. Sizes and ordering here:',
-                    'ar' => 'هلا والله! 👋 هذي عباية الشتاء اللي سألتِ عنها — ٢٤٩ ريال. المقاسات والطلب من هنا:',
+                    'en' => 'Hi there! 👋 Here is the winter jacket you asked about — $65. Sizes and ordering here:',
+                    'ar' => 'أهلًا وسهلًا! 👋 هذا جاكيت الشتاء الذي سألتِ عنه — 65 دولار. المقاسات والطلب من هنا:',
                 ],
-                'dm_button' => ['en' => 'See the product', 'ar' => 'شوفي المنتج'],
+                'dm_button' => ['en' => 'See the product', 'ar' => 'شاهدي المنتج'],
                 'link_url' => self::SAMPLE_LINK,
             ],
             [
                 'key' => 'starter-story',
                 'is_starter' => true,
-                'name' => ['en' => 'Reply to story replies', 'ar' => 'الرد على ردود الستوري'],
+                'name' => ['en' => 'Reply to story replies', 'ar' => 'الرد على ردود القصص'],
                 'build' => 'quick',
                 'trigger' => 'story',
                 'match' => 'any',
                 'dm_text' => [
                     'en' => 'So glad you replied 💜 Here is the piece from the story, with price and sizes:',
-                    'ar' => 'يسعدنا ردّك 💜 هذي القطعة اللي في الستوري، بالسعر والمقاسات:',
+                    'ar' => 'يسعدنا ردّك 💜 هذه القطعة التي في الستوري، بالسعر والمقاسات:',
                 ],
-                'dm_button' => ['en' => 'See the piece', 'ar' => 'شوفي القطعة'],
+                'dm_button' => ['en' => 'See the piece', 'ar' => 'شاهدي القطعة'],
                 'link_url' => self::SAMPLE_LINK,
             ],
             [
                 'key' => 'starter-dm',
                 'is_starter' => true,
-                'name' => ['en' => 'Respond to all your DMs', 'ar' => 'الرد على كل رسائلك'],
+                'name' => ['en' => 'Respond to all your DMs', 'ar' => 'الرد على كل رسائلك الخاصة'],
                 'build' => 'quick',
                 'trigger' => 'dm',
                 'match' => 'any',
                 'dm_text' => [
                     'en' => 'Hi there! 👋 We got your message and will answer soon. Meanwhile, every product and price is here:',
-                    'ar' => 'هلا والله! 👋 وصلتنا رسالتك ونرد عليك بأسرع وقت. لين ذاك الوقت، كل المنتجات والأسعار هنا:',
+                    'ar' => 'أهلًا وسهلًا! 👋 وصلتنا رسالتك وسنرد عليك بأسرع وقت. وفي الأثناء، كل المنتجات والأسعار هنا:',
                 ],
                 'dm_button' => ['en' => 'Browse the shop', 'ar' => 'تصفّحي المتجر'],
                 'link_url' => self::SHOP_LINK,
@@ -93,10 +93,10 @@ class AutomationTemplateSeeder extends Seeder
         return [
             [
                 'key' => 't1',
-                'name' => ['en' => 'Comment a word → send the catalogue', 'ar' => 'كلمة في التعليق ← أرسل الكتالوج'],
+                'name' => ['en' => 'Comment a word → send the catalogue', 'ar' => 'تعليق بكلمة ← إرسال الكتالوج'],
                 'line' => [
                     'en' => 'The one most shops start with. A word in the comments, a DM with the product link.',
-                    'ar' => 'أول أتمتة تبدأ بها أغلب المتاجر: كلمة في التعليقات، ورسالة خاصة فيها رابط المنتج.',
+                    'ar' => 'القالب الذي تبدأ به معظم المتاجر. كلمة في التعليقات، ورسالة خاصة فيها رابط المنتج.',
                 ],
                 'build' => 'quick',
                 'goal' => 'sell',
@@ -106,17 +106,17 @@ class AutomationTemplateSeeder extends Seeder
                 'public_reply' => self::PUBLIC_REPLY,
                 'dm_text' => [
                     'en' => 'Hi there! 👋 Here is the whole season’s catalogue, with prices and sizes:',
-                    'ar' => 'هلا والله! 👋 هذا كتالوج الموسم كامل، بالأسعار والمقاسات:',
+                    'ar' => 'أهلًا وسهلًا! 👋 هذا كتالوج الموسم كاملًا، بالأسعار والمقاسات:',
                 ],
                 'dm_button' => ['en' => 'Open the catalogue', 'ar' => 'افتحي الكتالوج'],
                 'link_url' => self::SAMPLE_LINK,
             ],
             [
                 'key' => 't2',
-                'name' => ['en' => 'Story reply → thank you and a link', 'ar' => 'رد على الستوري ← شكر ورابط'],
+                'name' => ['en' => 'Story reply → thank you and a link', 'ar' => 'رد على القصة ← شكرًا ورابط'],
                 'line' => [
                     'en' => 'Anyone who replies to a story gets a warm answer and somewhere to go.',
-                    'ar' => 'كل من يرد على ستوري يصله رد دافئ ورابط يكمل منه.',
+                    'ar' => 'كل من يرد على قصة يحصل على رد ودود ومكان يذهب إليه.',
                 ],
                 'build' => 'quick',
                 'goal' => 'sell',
@@ -124,17 +124,17 @@ class AutomationTemplateSeeder extends Seeder
                 'match' => 'any',
                 'dm_text' => [
                     'en' => 'So glad you replied 💜 Here is the piece from the story, with price and sizes:',
-                    'ar' => 'يسعدنا ردّك 💜 هذي القطعة اللي في الستوري، بالسعر والمقاسات:',
+                    'ar' => 'يسعدنا ردّك 💜 هذه القطعة التي في الستوري، بالسعر والمقاسات:',
                 ],
-                'dm_button' => ['en' => 'See the piece', 'ar' => 'شوفي القطعة'],
+                'dm_button' => ['en' => 'See the piece', 'ar' => 'شاهدي القطعة'],
                 'link_url' => self::SAMPLE_LINK,
             ],
             [
                 'key' => 't3',
-                'name' => ['en' => 'First DM → welcome and menu', 'ar' => 'أول رسالة ← ترحيب وقائمة'],
+                'name' => ['en' => 'First DM → welcome and menu', 'ar' => 'أول رسالة خاصة ← ترحيب وقائمة'],
                 'line' => [
                     'en' => 'A first-time DM gets a greeting and three buttons instead of silence.',
-                    'ar' => 'أول رسالة تصلك يقابلها ترحيب وأزرار، بدل الانتظار.',
+                    'ar' => 'أول رسالة خاصة من شخص جديد تحصل على تحية وثلاثة أزرار بدل الصمت.',
                 ],
                 'build' => 'quick',
                 'goal' => 'support',
@@ -142,17 +142,17 @@ class AutomationTemplateSeeder extends Seeder
                 'match' => 'any',
                 'dm_text' => [
                     'en' => 'Hi there! 👋 Welcome. You can browse every product and price from here:',
-                    'ar' => 'هلا والله! 👋 نورتينا. تقدرين تتصفحين كل المنتجات والأسعار من هنا:',
+                    'ar' => 'أهلًا وسهلًا! 👋 سعدنا بزيارتك. يمكنكِ تصفّح كل المنتجات والأسعار من هنا:',
                 ],
                 'dm_button' => ['en' => 'Browse the shop', 'ar' => 'تصفّحي المتجر'],
                 'link_url' => self::SHOP_LINK,
             ],
             [
                 'key' => 't4',
-                'name' => ['en' => 'Comment → ask for the email, then send', 'ar' => 'تعليق ← اطلب الإيميل ثم أرسل'],
+                'name' => ['en' => 'Comment → ask for the email, then send', 'ar' => 'تعليق ← طلب البريد الإلكتروني ثم الإرسال'],
                 'line' => [
                     'en' => 'Collect the address before the link, so the contact outlives the sale.',
-                    'ar' => 'خذ الإيميل قبل الرابط، فيبقى التواصل بعد البيعة.',
+                    'ar' => 'اجمع العنوان قبل الرابط، لتبقى جهة الاتصال بعد انتهاء البيع.',
                 ],
                 'build' => 'flow',
                 'locked' => true,
@@ -161,10 +161,10 @@ class AutomationTemplateSeeder extends Seeder
             ],
             [
                 'key' => 't5',
-                'name' => ['en' => 'Abandoned chat → follow up after a day', 'ar' => 'محادثة متروكة ← تذكير بعد يوم'],
+                'name' => ['en' => 'Abandoned chat → follow up after a day', 'ar' => 'محادثة متروكة ← متابعة بعد يوم'],
                 'line' => [
                     'en' => 'Nudge the people who opened the DM and never tapped the button.',
-                    'ar' => 'ذكّر من فتح الرسالة ولم يضغط الزر.',
+                    'ar' => 'ذكّر من فتحوا الرسالة الخاصة ولم يضغطوا على الزر.',
                 ],
                 'build' => 'flow',
                 'locked' => true,
@@ -173,7 +173,7 @@ class AutomationTemplateSeeder extends Seeder
             ],
             [
                 'key' => 't6',
-                'name' => ['en' => 'Common questions → instant answers', 'ar' => 'الأسئلة المتكررة ← إجابات فورية'],
+                'name' => ['en' => 'Common questions → instant answers', 'ar' => 'الأسئلة الشائعة ← إجابات فورية'],
                 'line' => [
                     'en' => 'Price, delivery and sizes answered the moment they are asked.',
                     'ar' => 'السعر والتوصيل والمقاسات، يُجاب عنها لحظة السؤال.',
@@ -185,17 +185,17 @@ class AutomationTemplateSeeder extends Seeder
                 'keywords' => ['en' => ['price', 'delivery', 'size'], 'ar' => ['السعر', 'توصيل', 'مقاس']],
                 'dm_text' => [
                     'en' => 'Hi! Prices, sizes and delivery times are all on this page:',
-                    'ar' => 'هلا! الأسعار والمقاسات ومدة التوصيل كلها في هذي الصفحة:',
+                    'ar' => 'أهلًا! الأسعار والمقاسات ومدة التوصيل كلها في هذه الصفحة:',
                 ],
                 'dm_button' => ['en' => 'Common questions', 'ar' => 'الأسئلة الشائعة'],
                 'link_url' => self::SHOP_LINK,
             ],
             [
                 'key' => 't7',
-                'name' => ['en' => 'Booking request → collect the details', 'ar' => 'طلب حجز ← اجمع التفاصيل'],
+                'name' => ['en' => 'Booking request → collect the details', 'ar' => 'طلب حجز ← جمع التفاصيل'],
                 'line' => [
                     'en' => 'Name, day and service, then hand the conversation to you.',
-                    'ar' => 'الاسم واليوم والخدمة، ثم تنتقل المحادثة إليك.',
+                    'ar' => 'الاسم واليوم والخدمة، ثم تُحوَّل المحادثة إليك.',
                 ],
                 'build' => 'flow',
                 'goal' => 'book',
@@ -203,10 +203,10 @@ class AutomationTemplateSeeder extends Seeder
             ],
             [
                 'key' => 't8',
-                'name' => ['en' => 'Ad click → qualify, then reply', 'ar' => 'نقرة على إعلان ← سؤال ثم رد'],
+                'name' => ['en' => 'Ad click → qualify, then reply', 'ar' => 'نقرة على إعلان ← تأهيل ثم رد'],
                 'line' => [
                     'en' => 'People arriving from a click-to-message ad get a question first.',
-                    'ar' => 'القادمون من إعلان المراسلة يصلهم سؤال أولاً.',
+                    'ar' => 'من يصل من إعلان النقر للمراسلة يُسأل سؤالًا أولًا.',
                 ],
                 'build' => 'flow',
                 'locked' => true,
@@ -215,10 +215,10 @@ class AutomationTemplateSeeder extends Seeder
             ],
             [
                 'key' => 't9',
-                'name' => ['en' => 'Story reply → join the waitlist', 'ar' => 'رد على الستوري ← قائمة الانتظار'],
+                'name' => ['en' => 'Story reply → join the waitlist', 'ar' => 'رد على القصة ← الانضمام إلى قائمة الانتظار'],
                 'line' => [
                     'en' => 'Turn a restock story into a list you can message when it lands.',
-                    'ar' => 'حوّل ستوري إعادة التوفير إلى قائمة تراسلها أول ما يوصل.',
+                    'ar' => 'حوّل قصة عودة المنتج إلى قائمة تراسلها عند وصوله.',
                 ],
                 'build' => 'quick',
                 'goal' => 'grow',
@@ -226,7 +226,7 @@ class AutomationTemplateSeeder extends Seeder
                 'match' => 'any',
                 'dm_text' => [
                     'en' => 'Welcome! 💜 Join the waitlist and we will tell you the moment it lands:',
-                    'ar' => 'حيّاك! 💜 سجّلي في قائمة الانتظار ونخبرك أول ما ينزل:',
+                    'ar' => 'أهلًا بكِ! 💜 سجّلي في قائمة الانتظار ونخبركِ فور توفّره:',
                 ],
                 'dm_button' => ['en' => 'Sign me up', 'ar' => 'سجّليني'],
                 'link_url' => 'https://nourboutique.com/waitlist',

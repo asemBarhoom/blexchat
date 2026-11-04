@@ -46,8 +46,8 @@ it('marks only the platforms this owner has connected', function () {
 
 it('answers in Arabic with ?lang=ar', function () {
     $this->actingAs($this->user)->getJson('/api/v1/onboarding/channels?lang=ar')
-        ->assertJsonPath('data.1.name', 'واتساب')
-        ->assertJsonPath('data.1.line', 'محادثاتك مع عملائك');
+        ->assertJsonPath('data.1.name', 'WhatsApp')
+        ->assertJsonPath('data.1.line', 'المحادثات مع عملائك');
 });
 
 it('hides channels switched off in the panel', function () {

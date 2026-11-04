@@ -10,9 +10,11 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -54,6 +56,14 @@ class SubscriptionResource extends Resource
                 ->visible(fn (Get $get): bool => $get('status') === 'trialing'),
             DateTimePicker::make('trial_used_at')->label('تاريخ استخدام التجربة')
                 ->helperText('لكل حساب تجربة واحدة. امسحه ليسمح للمستخدم بتجربة جديدة.'),
+            // Stripe sets these by webhook; editing them here would not change what Stripe charges.
+            TextInput::make('stripe_subscription_id')->label('معرّف اشتراك Stripe')->disabled()->dehydrated(false)->placeholder('— بدون دفع بالبطاقة')
+                ->helperText('يُملأ تلقائيًا عند الدفع في Stripe. الإلغاء والاسترداد من لوحة Stripe.'),
+            DateTimePicker::make('current_period_end')->label('نهاية الفترة المدفوعة')->disabled()->dehydrated(false)
+                ->visible(fn (?Subscription $record): bool => $record?->paidByCard() === true),
+            TextInput::make('stripe_customer_id')->label('معرّف عميل Stripe')->disabled()->dehydrated(false)
+                ->formatStateUsing(fn (?Subscription $record): ?string => $record?->user?->stripe_customer_id)
+                ->visibleOn(['edit', 'view']),
         ])->columns(2);
     }
 
@@ -74,6 +84,14 @@ class SubscriptionResource extends Resource
                         default => 'gray',
                     }),
                 TextColumn::make('trial_ends_at')->label('نهاية التجربة')->dateTime('Y-m-d')->placeholder('—')->sortable(),
+                IconColumn::make('paid_by_card')->label('بالبطاقة')->boolean()
+                    ->state(fn (Subscription $record): bool => $record->paidByCard()),
+                TextColumn::make('current_period_end')->label('التجديد القادم')->dateTime('Y-m-d')->placeholder('—')->sortable(),
+                TextColumn::make('stripe_subscription_id')->label('اشتراك Stripe')->placeholder('—')->copyable()->searchable()
+                    ->url(fn (Subscription $record): ?string => $record->paidByCard() ? self::stripeDashboardUrl('subscriptions/'.$record->stripe_subscription_id) : null, shouldOpenInNewTab: true)
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('user.stripe_customer_id')->label('عميل Stripe')->placeholder('—')->copyable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')->label('آخر تغيير')->dateTime('Y-m-d H:i')->sortable(),
             ])
             ->defaultSort('updated_at', 'desc')
@@ -88,6 +106,16 @@ class SubscriptionResource extends Resource
                 EditAction::make()->label('تعديل'),
                 DeleteAction::make()->label('حذف')->modalDescription('يعود المستخدم إلى خطوة اختيار الخطة.'),
             ]);
+    }
+
+    /**
+     * A page of the Stripe dashboard, in test mode while the key is a test key.
+     */
+    public static function stripeDashboardUrl(string $path): string
+    {
+        $mode = str_starts_with((string) config('services.stripe.secret'), 'sk_live_') ? '' : 'test/';
+
+        return "https://dashboard.stripe.com/{$mode}{$path}";
     }
 
     public static function getPages(): array

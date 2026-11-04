@@ -24,6 +24,8 @@ class SubscriptionResource extends JsonResource
             'status' => $this->trialEnded() ? 'trial_ended' : $this->status,
             'trial_ends_at' => $this->trial_ends_at?->toIso8601String(),
             'trial_days_left' => $this->trialDaysLeft(),
+            'paid_by_card' => $this->paidByCard(),
+            'current_period_end' => $this->current_period_end?->toIso8601String(),
         ];
     }
 }

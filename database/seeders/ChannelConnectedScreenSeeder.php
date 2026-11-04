@@ -19,7 +19,7 @@ class ChannelConnectedScreenSeeder extends Seeder
                 ...$screen,
                 'status_label' => ['en' => 'Connected', 'ar' => 'متصل'],
                 'continue_label' => ['en' => 'Continue', 'ar' => 'متابعة'],
-                'connect_another_label' => ['en' => 'Connect another channel', 'ar' => 'ربط قناة أخرى'],
+                'connect_another_label' => ['en' => 'Connect another channel', 'ar' => 'اربط قناة أخرى'],
             ]);
         }
     }
@@ -31,40 +31,40 @@ class ChannelConnectedScreenSeeder extends Seeder
     {
         return [
             'instagram' => [
-                'channel_name' => ['en' => 'Instagram', 'ar' => 'إنستغرام'],
-                'title' => ['en' => 'Your Instagram is connected!', 'ar' => 'تم ربط حسابك على إنستغرام!'],
+                'channel_name' => ['en' => 'Instagram', 'ar' => 'Instagram'],
+                'title' => ['en' => 'Your Instagram is connected!', 'ar' => 'تم ربط Instagram بنجاح!'],
                 'lead' => [
                     'en' => 'Blexchat can now answer comments and DMs on your account. Next, a few quick questions so we can suggest your first automation.',
-                    'ar' => 'أصبح بإمكان Blexchat الآن الرد على التعليقات والرسائل في حسابك. والآن بعض الأسئلة السريعة لنقترح عليك أول أتمتة.',
+                    'ar' => 'أصبح بإمكان Blexchat الآن الرد على التعليقات والرسائل الخاصة في حسابك. والآن بضعة أسئلة سريعة لنقترح عليك أول أتمتة.',
                 ],
-                'account_kind' => ['en' => 'Instagram · Professional account', 'ar' => 'إنستغرام · حساب احترافي'],
+                'account_kind' => ['en' => 'Instagram · Professional account', 'ar' => 'Instagram · حساب احترافي'],
             ],
             'whatsapp' => [
-                'channel_name' => ['en' => 'WhatsApp', 'ar' => 'واتساب'],
-                'title' => ['en' => 'Your WhatsApp is connected!', 'ar' => 'تم ربط واتساب الخاص بك!'],
+                'channel_name' => ['en' => 'WhatsApp', 'ar' => 'WhatsApp'],
+                'title' => ['en' => 'Your WhatsApp is connected!', 'ar' => 'تم ربط WhatsApp بنجاح!'],
                 'lead' => [
                     'en' => 'Blexchat can now answer chats on your number. Next, a few quick questions so we can suggest your first automation.',
-                    'ar' => 'أصبح بإمكان Blexchat الآن الرد على المحادثات على رقمك. والآن بعض الأسئلة السريعة لنقترح عليك أول أتمتة.',
+                    'ar' => 'أصبح بإمكان Blexchat الآن الرد على المحادثات على رقمك. والآن بضعة أسئلة سريعة لنقترح عليك أول أتمتة.',
                 ],
-                'account_kind' => ['en' => 'WhatsApp Business', 'ar' => 'واتساب للأعمال'],
+                'account_kind' => ['en' => 'WhatsApp Business', 'ar' => 'WhatsApp Business'],
             ],
             'tiktok' => [
-                'channel_name' => ['en' => 'TikTok', 'ar' => 'تيك توك'],
-                'title' => ['en' => 'Your TikTok is connected!', 'ar' => 'تم ربط حسابك على تيك توك!'],
+                'channel_name' => ['en' => 'TikTok', 'ar' => 'TikTok'],
+                'title' => ['en' => 'Your TikTok is connected!', 'ar' => 'تم ربط TikTok بنجاح!'],
                 'lead' => [
                     'en' => 'Blexchat can now answer comments and DMs on your videos. Next, a few quick questions so we can suggest your first automation.',
-                    'ar' => 'أصبح بإمكان Blexchat الآن الرد على التعليقات والرسائل على فيديوهاتك. والآن بعض الأسئلة السريعة لنقترح عليك أول أتمتة.',
+                    'ar' => 'أصبح بإمكان Blexchat الآن الرد على التعليقات والرسائل الخاصة على فيديوهاتك. والآن بضعة أسئلة سريعة لنقترح عليك أول أتمتة.',
                 ],
-                'account_kind' => ['en' => 'TikTok · Business account', 'ar' => 'تيك توك · حساب أعمال'],
+                'account_kind' => ['en' => 'TikTok · Business account', 'ar' => 'TikTok · حساب تجاري'],
             ],
             'messenger' => [
-                'channel_name' => ['en' => 'Messenger', 'ar' => 'ماسنجر'],
-                'title' => ['en' => 'Your Messenger is connected!', 'ar' => 'تم ربط ماسنجر الخاص بك!'],
+                'channel_name' => ['en' => 'Messenger', 'ar' => 'Messenger'],
+                'title' => ['en' => 'Your Messenger is connected!', 'ar' => 'تم ربط Messenger بنجاح!'],
                 'lead' => [
                     'en' => 'Blexchat can now answer messages to your Page. Next, a few quick questions so we can suggest your first automation.',
-                    'ar' => 'أصبح بإمكان Blexchat الآن الرد على الرسائل الواردة إلى صفحتك. والآن بعض الأسئلة السريعة لنقترح عليك أول أتمتة.',
+                    'ar' => 'أصبح بإمكان Blexchat الآن الرد على الرسائل المرسلة إلى صفحتك. والآن بضعة أسئلة سريعة لنقترح عليك أول أتمتة.',
                 ],
-                'account_kind' => ['en' => 'Facebook Page', 'ar' => 'صفحة فيسبوك'],
+                'account_kind' => ['en' => 'Facebook Page', 'ar' => 'صفحة Facebook'],
             ],
         ];
     }

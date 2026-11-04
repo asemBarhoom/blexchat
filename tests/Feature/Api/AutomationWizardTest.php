@@ -63,15 +63,15 @@ describe('GET /api/v1/automation-templates', function () {
 
         expect($response->json('data.*.id'))->toBe(['t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9']);
         $response
-            ->assertJsonPath('data.0.name', 'كلمة في التعليق ← أرسل الكتالوج')
+            ->assertJsonPath('data.0.name', 'تعليق بكلمة ← إرسال الكتالوج')
             ->assertJsonPath('data.0.draft.words', ['كتالوج'])
             ->assertJsonPath('data.0.draft.public_reply', true)
             ->assertJsonPath('data.1.draft.trigger', 'any')
             ->assertJsonPath('data.1.draft.public_reply', false)
             ->assertJsonPath('data.3.draft', null)
             ->assertJsonPath('data.3.locked', true)
-            ->assertJsonPath('starters.dm.name', 'الرد على كل رسائلك')
-            ->assertJsonPath('starters.comment.draft.dm_button', 'شوفي المنتج');
+            ->assertJsonPath('starters.dm.name', 'الرد على كل رسائلك الخاصة')
+            ->assertJsonPath('starters.comment.draft.dm_button', 'شاهدي المنتج');
 
         $this->getJson('/api/v1/automation-templates')->assertJsonPath('data.0.name', 'Comment a word → send the catalogue');
     });
@@ -97,14 +97,15 @@ describe('GET /api/v1/channels/{channel}/posts', function () {
     it('brings in the latest posts from Instagram, and still answers when Instagram fails', function () {
         $instagram = Channel::factory()->create(['user_id' => $this->owner->id, 'platform' => 'instagram', 'status' => 'active', 'access_token' => 'IGAA']);
         Http::fake(['graph.instagram.com/v21.0/me/media*' => Http::sequence()
-            ->push(['data' => [['id' => 'm1', 'caption' => 'ريل جديد', 'media_type' => 'VIDEO', 'media_product_type' => 'REELS', 'thumbnail_url' => 'https://cdn.example.com/m1.jpg', 'timestamp' => '2026-11-01T10:00:00+0000']]])
+            ->push(['data' => [['id' => 'm1', 'caption' => 'ريل جديد', 'media_type' => 'VIDEO', 'media_product_type' => 'REELS', 'thumbnail_url' => 'https://cdn.example.com/m1.jpg', 'like_count' => 1204, 'timestamp' => '2026-11-01T10:00:00+0000']]])
             ->push(['error' => ['message' => 'Expired']], 400)]);
 
         $this->actingAs($this->owner, 'sanctum')->getJson("/api/v1/channels/{$instagram->id}/posts")
             ->assertOk()
             ->assertJsonPath('meta.synced', true)
             ->assertJsonPath('data.0.platform_post_id', 'm1')
-            ->assertJsonPath('data.0.media_type', 'reel');
+            ->assertJsonPath('data.0.media_type', 'reel')
+            ->assertJsonPath('data.0.likes', 1204);
 
         $this->getJson("/api/v1/channels/{$instagram->id}/posts")->assertOk()->assertJsonPath('meta.synced', false)->assertJsonPath('meta.total', 1);
         Http::assertSent(fn (Request $request): bool => $request->hasHeader('Authorization', 'Bearer IGAA'));
