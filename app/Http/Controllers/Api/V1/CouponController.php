@@ -30,10 +30,12 @@ class CouponController extends Controller
         path: '/api/v1/coupons/check',
         summary: 'Check a coupon code for a plan',
         description: <<<'MD'
-            The "Apply coupon" button in the checkout. Codes match ignoring case. Nothing is redeemed:
-            card payments are not built yet, so this only checks the code and prices the plan with it.
+            The "Apply coupon" button in the checkout. Codes match ignoring case. Nothing is redeemed here:
+            this only checks the code and prices the plan with it. Send the code on to
+            POST /api/v1/checkout/session; it counts as used once Stripe takes the payment.
 
-            There is no coupon on Free or on a plan sold with a free trial (`coupon_not_for_plan`).
+            There is no coupon on Free or on a free trial (`coupon_not_for_plan`). A plan sold with a trial
+            takes one when this account has already had its trial, since it is paid for today.
             MD,
         security: [['sanctum' => []]],
         tags: ['Checkout'],
@@ -56,7 +58,7 @@ class CouponController extends Controller
     {
         $plan = $request->plan();
         $coupon = Coupon::findByCode($request->string('code'));
-        $rejection = $coupon === null ? Coupon::INVALID : $coupon->rejectionFor($plan);
+        $rejection = $coupon === null ? Coupon::INVALID : $coupon->rejectionFor($plan, onTrial: $request->user()->canStartTrialOn($plan));
 
         if ($rejection !== null) {
             // A used-up code shares coupon_expired's code, but says what happened.

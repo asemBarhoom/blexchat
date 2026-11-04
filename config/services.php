@@ -51,6 +51,19 @@ return [
         'graph_version' => env('INSTAGRAM_GRAPH_VERSION', 'v21.0'),
     ],
 
+    /*
+    | Card payments with Stripe Checkout (the hosted payment page), called over its REST API.
+    | Use test-mode keys in development: sk_test_… from the dashboard, and the whsec_… that
+    | `stripe listen` prints (or the webhook endpoint's signing secret on a deployed site).
+    */
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'currency' => env('STRIPE_CURRENCY', 'usd'),
+        // Seconds a signed webhook stays valid, against replays.
+        'webhook_tolerance' => 300,
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

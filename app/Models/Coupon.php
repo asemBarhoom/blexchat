@@ -12,8 +12,9 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * A checkout discount code: a percentage off the plan's price. Payments are not built yet, so a
- * coupon is only checked and priced here, never redeemed.
+ * A checkout discount code: a percentage off the plan's price. It is checked and priced by
+ * POST /coupons/check, sent to Stripe as an amount off the first payment, and counted as used
+ * once that payment goes through.
  *
  * @property string $code
  * @property int $percent_off
@@ -83,14 +84,15 @@ class Coupon extends Model
 
     /**
      * Why this coupon can't be used on the plan, as a stable error code, or null when it can.
-     * There is no coupon on Free or on a plan sold with a free trial: nothing is charged to take a percentage of.
+     * There is no coupon on Free or on a free trial: nothing is charged to take a percentage of.
+     * A plan sold with a trial takes one once it is paid for, after the account's trial.
      */
-    public function rejectionFor(Plan $plan): ?string
+    public function rejectionFor(Plan $plan, ?bool $onTrial = null): ?string
     {
         return match (true) {
             ! $this->active => self::INVALID,
             $this->isExpired(), $this->isUsedUp() => self::EXPIRED,
-            $plan->isFree(), $plan->hasTrial() => self::NOT_FOR_PLAN,
+            $plan->isFree(), $onTrial ?? $plan->hasTrial() => self::NOT_FOR_PLAN,
             $this->plans->isNotEmpty() && ! $this->plans->contains($plan) => self::NOT_FOR_PLAN,
             default => null,
         };
@@ -102,6 +104,14 @@ class Coupon extends Model
     public function discountCents(int $priceCents): int
     {
         return (int) round($priceCents * $this->percent_off / 100);
+    }
+
+    /**
+     * Counts one use, once a payment with this coupon went through.
+     */
+    public function redeem(): void
+    {
+        $this->increment('times_used');
     }
 
     /**
