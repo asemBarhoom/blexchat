@@ -49,28 +49,9 @@ return [
                  * Absolute paths to directory containing the swagger annotations are stored.
                  */
                 'annotations' => [
-                    // Only the endpoints shared with the frontend so far. The other controllers keep their
-                    // OpenAPI attributes; add a controller here once its documentation is complete.
+                    // Every API controller; each documents its endpoints with OpenAPI attributes.
                     base_path('app/Http/Controllers/Controller.php'),
-                    base_path('app/Http/Controllers/Api/V1/HomeController.php'),
-                    base_path('app/Http/Controllers/Api/V1/Auth'),
-                    base_path('app/Http/Controllers/Api/V1/PlanController.php'),
-                    base_path('app/Http/Controllers/Api/V1/SolutionController.php'),
-                    base_path('app/Http/Controllers/Api/V1/PricingController.php'),
-                    base_path('app/Http/Controllers/Api/V1/OnboardingController.php'),
-                    base_path('app/Http/Controllers/Api/V1/ChannelOptionController.php'),
-                    base_path('app/Http/Controllers/Api/V1/SurveyController.php'),
-                    base_path('app/Http/Controllers/Api/V1/SubscriptionController.php'),
-                    base_path('app/Http/Controllers/Api/V1/CheckoutController.php'),
-                    base_path('app/Http/Controllers/Api/V1/CouponController.php'),
-                    base_path('app/Http/Controllers/Api/V1/FirstMoveController.php'),
-                    base_path('app/Http/Controllers/Api/V1/InstagramConnectionController.php'),
-                    base_path('app/Http/Controllers/Api/V1/ConnectedChannelController.php'),
-                    base_path('app/Http/Controllers/Api/V1/AutomationController.php'),
-                    base_path('app/Http/Controllers/Api/V1/AutomationTemplateController.php'),
-                    base_path('app/Http/Controllers/Api/V1/ChannelPostController.php'),
-                    base_path('app/Http/Controllers/Api/V1/ChannelConnectScreenController.php'),
-                    base_path('app/Http/Controllers/Api/V1/ChannelAccessRequestController.php'),
+                    base_path('app/Http/Controllers/Api/V1'),
                 ],
             ],
         ],

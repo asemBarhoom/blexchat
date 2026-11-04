@@ -1293,6 +1293,189 @@
                 ]
             }
         },
+        "/api/v1/channels": {
+            "get": {
+                "tags": [
+                    "Channels"
+                ],
+                "summary": "The connected channels, for the sidebar and the channels page",
+                "description": "Every channel of the signed-in owner, oldest connection first. Each item has the fields of GET /api/v1/channels/{channel} without `screen` and `next_step`. A channel whose `status` is not `active` has dropped and needs reconnecting.",
+                "operationId": "9bdb1228fc1d55f033e87acc04516814",
+                "responses": {
+                    "200": {
+                        "description": "The channels; an empty list before the first one connects",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 12
+                                                    },
+                                                    "platform": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "instagram",
+                                                            "whatsapp",
+                                                            "tiktok",
+                                                            "messenger"
+                                                        ]
+                                                    },
+                                                    "account_id": {
+                                                        "type": "string",
+                                                        "example": "17841400000"
+                                                    },
+                                                    "username": {
+                                                        "type": "string",
+                                                        "example": "@nourboutique",
+                                                        "nullable": true
+                                                    },
+                                                    "profile_picture": {
+                                                        "type": "string",
+                                                        "format": "uri",
+                                                        "nullable": true
+                                                    },
+                                                    "followers": {
+                                                        "type": "integer",
+                                                        "example": 12400
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "active",
+                                                            "inactive",
+                                                            "expired"
+                                                        ]
+                                                    },
+                                                    "connected_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "nullable": true
+                                                    },
+                                                    "token_expires_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/channels/connect": {
+            "post": {
+                "tags": [
+                    "Channels"
+                ],
+                "summary": "Connect a new social channel",
+                "operationId": "96ddfe7d8006f03ce5382f9c6ace62c6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "platform",
+                                    "access_token",
+                                    "account_id"
+                                ],
+                                "properties": {
+                                    "platform": {
+                                        "type": "string",
+                                        "enum": [
+                                            "instagram",
+                                            "whatsapp",
+                                            "tiktok",
+                                            "messenger"
+                                        ]
+                                    },
+                                    "access_token": {
+                                        "type": "string",
+                                        "example": "EAATjTKF4xxx"
+                                    },
+                                    "account_id": {
+                                        "type": "string",
+                                        "example": "17841400000"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Channel connected"
+                    },
+                    "409": {
+                        "description": "Already connected"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/channels/{channelId}": {
+            "delete": {
+                "tags": [
+                    "Channels"
+                ],
+                "summary": "Disconnect a channel",
+                "operationId": "b88aa233ecb20af237c52926a6ee3bd3",
+                "parameters": [
+                    {
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Disconnected"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/onboarding/channels": {
             "get": {
                 "tags": [
@@ -1421,6 +1604,12 @@
                                                             "reel"
                                                         ]
                                                     },
+                                                    "likes": {
+                                                        "description": "Like count, for the phone preview",
+                                                        "type": "integer",
+                                                        "example": 1204,
+                                                        "nullable": true
+                                                    },
                                                     "posted_at": {
                                                         "type": "string",
                                                         "format": "date-time",
@@ -1512,6 +1701,198 @@
                 }
             }
         },
+        "/api/v1/checkout/session": {
+            "post": {
+                "tags": [
+                    "Checkout"
+                ],
+                "summary": "Pay for a plan by card (Stripe Checkout)",
+                "description": "\"Continue To Payment\" in the checkout. Opens a Stripe Checkout Session and returns its `url`: send the\nbrowser there. After paying, Stripe sends the visitor to `FRONTEND_URL/app?checkout=success&session_id=…`\n(call GET /api/v1/checkout/session/{id} there); \"Back\" on the payment page returns to\n`FRONTEND_URL/app?checkout=cancelled` with nothing charged.\n\nThe plan is in place once Stripe reports the payment. It renews every month or year until cancelled.\nA `coupon` (checked with POST /api/v1/coupons/check) comes off the first payment.\n\nFree trials never come here: they take no card (POST /api/v1/onboarding/plan).",
+                "operationId": "07ee7867627ed699feda4fb60bb8a065",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the error messages. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "plan"
+                                ],
+                                "properties": {
+                                    "plan": {
+                                        "description": "A paid plan `id` from GET /api/v1/plans",
+                                        "type": "string",
+                                        "example": "pro"
+                                    },
+                                    "billing": {
+                                        "type": "string",
+                                        "default": "monthly",
+                                        "enum": [
+                                            "monthly",
+                                            "annual"
+                                        ]
+                                    },
+                                    "coupon": {
+                                        "type": "string",
+                                        "example": "BLEX20",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The payment page is ready",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CheckoutSession"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    },
+                    "409": {
+                        "description": "`plan_already_paid`: this plan and billing period are already paid by card",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CheckoutError"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "A coupon that does not apply (CouponError), or an unknown or free plan or billing period (ValidationError)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CouponError"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many attempts; try again in a minute"
+                    },
+                    "502": {
+                        "description": "`payment_provider_error`: Stripe could not be reached",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CheckoutError"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "`payments_unavailable`: no Stripe key is set on this server",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CheckoutError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/checkout/session/{id}": {
+            "get": {
+                "tags": [
+                    "Checkout"
+                ],
+                "summary": "How a card payment ended",
+                "description": "For the success page: `session_id` from its address. While Stripe has not reported the payment yet, this asks Stripe, so the plan shows as soon as it is paid. Poll every few seconds while `status` is `open`.",
+                "operationId": "a8980e927aaec1430f5f459e27e911f8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "cs_test_a1B2c3"
+                    },
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the plan texts. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The session",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CheckoutSession"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    },
+                    "404": {
+                        "description": "No such session for this account"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/channels/{channel}": {
             "get": {
                 "tags": [
@@ -1579,13 +1960,626 @@
                 ]
             }
         },
+        "/api/v1/contacts": {
+            "get": {
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "List contacts",
+                "description": "Most recently active first. The search matches the name, handle, city, a tag or the channel’s name, ignoring case.",
+                "operationId": "7ba58fcc6fbe7a027323651586d2fd7f",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 100
+                        },
+                        "example": "jeddah"
+                    },
+                    {
+                        "name": "channel",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "instagram",
+                                "whatsapp",
+                                "tiktok",
+                                "messenger"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "tag",
+                        "in": "query",
+                        "description": "Exact tag, ignoring case",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "source",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "automation",
+                                "messaged",
+                                "added"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "recent",
+                            "enum": [
+                                "recent",
+                                "newest",
+                                "name"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 50,
+                            "maximum": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contacts",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Contact"
+                                            }
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "total": {
+                                                    "description": "Matching the search and filters",
+                                                    "type": "integer"
+                                                },
+                                                "page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "usage": {
+                                                    "$ref": "#/components/schemas/ContactsUsage"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Create a contact by hand",
+                "description": "Create New Contact (W23). Saved as a WhatsApp contact reached by phone. Refused once the plan’s contacts limit is reached.",
+                "operationId": "15c43d3f7dcf308412eae1fed188e42a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "first_name",
+                                    "dial_code",
+                                    "phone",
+                                    "consent"
+                                ],
+                                "properties": {
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "Maha",
+                                        "maxLength": 100
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "Saad",
+                                        "nullable": true,
+                                        "maxLength": 100
+                                    },
+                                    "dial_code": {
+                                        "type": "string",
+                                        "example": "+966"
+                                    },
+                                    "phone": {
+                                        "description": "At least 7 digits",
+                                        "type": "string",
+                                        "example": "55 123 4567"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "nullable": true
+                                    },
+                                    "gender": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "enum": [
+                                            "female",
+                                            "male"
+                                        ]
+                                    },
+                                    "consent": {
+                                        "description": "Must be true: they agreed to receive messages",
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Contact"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Contacts limit reached",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "usage": {
+                                            "$ref": "#/components/schemas/ContactsUsage"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/contacts/usage": {
+            "get": {
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Contacts used against the plan’s limit",
+                "description": "The sidebar meter (\"6/25\").",
+                "operationId": "25ba8703726016da476e4d2bc7312eba",
+                "responses": {
+                    "200": {
+                        "description": "Usage",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ContactsUsage"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/contacts/{id}": {
+            "get": {
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Contact detail",
+                "description": "W22. Includes their latest conversation for \"Open in Inbox\"; its messages come from GET /api/v1/conversations/{id}/messages.",
+                "operationId": "9ff6ecca2b683fe6e04145d21cd2412e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contact",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Contact"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not one of the owner’s contacts"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Delete a contact",
+                "description": "Their conversation stays in the inbox. If they message again they come back as a new contact.",
+                "operationId": "b9811eb977a1c3d348dbe900e8bc2f69",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted"
+                    },
+                    "404": {
+                        "description": "Not one of the owner’s contacts"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Update a contact",
+                "description": "The contact page edits the tags; send the whole list. Send only the fields that change.",
+                "operationId": "f10d46801e7437bb900c7462362a97ba",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "tags": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 50
+                                        },
+                                        "example": [
+                                            "Winter abaya",
+                                            "VIP"
+                                        ],
+                                        "maxItems": 30
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "nullable": true
+                                    },
+                                    "city": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "gender": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "enum": [
+                                            "female",
+                                            "male"
+                                        ]
+                                    },
+                                    "language": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "subscribed": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Contact"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not one of the owner’s contacts"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/conversations": {
+            "get": {
+                "tags": [
+                    "Conversations"
+                ],
+                "summary": "List DM conversations",
+                "operationId": "df6321e79444300a74bb84507cf09c39",
+                "parameters": [
+                    {
+                        "name": "channel_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "open",
+                                "resolved",
+                                "all"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Conversation list"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/conversations/{id}/messages": {
+            "get": {
+                "tags": [
+                    "Conversations"
+                ],
+                "summary": "Get messages in a conversation",
+                "operationId": "06df41448323875e458585b036f3531c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Message thread"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Conversations"
+                ],
+                "summary": "Send a message in a conversation",
+                "operationId": "6ab186930ca2df0785ef39d959acb26e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "type",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "text",
+                                            "text_with_button"
+                                        ]
+                                    },
+                                    "content": {
+                                        "type": "string"
+                                    },
+                                    "button_label": {
+                                        "type": "string"
+                                    },
+                                    "button_url": {
+                                        "type": "string",
+                                        "format": "url"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Message sent"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "502": {
+                        "description": "Instagram refused the message (e.g. the 24-hour messaging window has closed)"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/coupons/check": {
             "post": {
                 "tags": [
                     "Checkout"
                 ],
                 "summary": "Check a coupon code for a plan",
-                "description": "The \"Apply coupon\" button in the checkout. Codes match ignoring case. Nothing is redeemed:\ncard payments are not built yet, so this only checks the code and prices the plan with it.\n\nThere is no coupon on Free or on a plan sold with a free trial (`coupon_not_for_plan`).",
+                "description": "The \"Apply coupon\" button in the checkout. Codes match ignoring case. Nothing is redeemed here:\nthis only checks the code and prices the plan with it. Send the code on to\nPOST /api/v1/checkout/session; it counts as used once Stripe takes the payment.\n\nThere is no coupon on Free or on a free trial (`coupon_not_for_plan`). A plan sold with a trial\ntakes one when this account has already had its trial, since it is paid for today.",
                 "operationId": "35ca11b1140f5b60b50921c03b7ef368",
                 "parameters": [
                     {
@@ -1668,6 +2662,254 @@
                     },
                     "429": {
                         "description": "Too many checks; try again in a minute"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/dashboard": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "App home screen — one request, all data",
+                "description": "Everything the signed-in home screen shows: the user, connected channels, automations, first-steps checklist, automation templates and last-7-day metrics.",
+                "operationId": "586c555829058ad3fb649163f82834d4",
+                "responses": {
+                    "200": {
+                        "description": "Dashboard payload",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Nour"
+                                                        },
+                                                        "business_name": {
+                                                            "type": "string",
+                                                            "example": "Nour Boutique"
+                                                        },
+                                                        "plan": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "free",
+                                                                "essential",
+                                                                "pro"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "channels": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "platform": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "instagram",
+                                                                    "whatsapp",
+                                                                    "tiktok",
+                                                                    "messenger"
+                                                                ]
+                                                            },
+                                                            "username": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "profile_picture": {
+                                                                "type": "string",
+                                                                "format": "uri",
+                                                                "nullable": true
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "active",
+                                                                    "inactive",
+                                                                    "expired"
+                                                                ]
+                                                            },
+                                                            "followers": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "automations": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "live",
+                                                                    "stopped"
+                                                                ]
+                                                            },
+                                                            "trigger_type": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "comment_keyword",
+                                                                    "dm_keyword",
+                                                                    "story_mention"
+                                                                ]
+                                                            },
+                                                            "runs": {
+                                                                "description": "Automated messages this automation has sent",
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "checklist": {
+                                                    "properties": {
+                                                        "title": {
+                                                            "type": "string"
+                                                        },
+                                                        "steps": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "connect",
+                                                                            "automation",
+                                                                            "test"
+                                                                        ]
+                                                                    },
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "done": {
+                                                                        "type": "boolean"
+                                                                    },
+                                                                    "to": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "start_here": {
+                                                    "properties": {
+                                                        "title": {
+                                                            "type": "string"
+                                                        },
+                                                        "lead": {
+                                                            "type": "string"
+                                                        },
+                                                        "templates": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "title": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "line": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "trigger": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "popular": {
+                                                                        "type": "boolean"
+                                                                    },
+                                                                    "to": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "last_seven": {
+                                                    "properties": {
+                                                        "title": {
+                                                            "type": "string"
+                                                        },
+                                                        "has_data": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "metrics": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "engagement",
+                                                                            "time",
+                                                                            "leads"
+                                                                        ]
+                                                                    },
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "hint": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "value": {
+                                                                        "type": "string",
+                                                                        "nullable": true
+                                                                    },
+                                                                    "note": {
+                                                                        "type": "string",
+                                                                        "nullable": true
+                                                                    },
+                                                                    "locked": {
+                                                                        "type": "boolean"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
                     }
                 },
                 "security": [
@@ -1984,6 +3226,65 @@
                 ]
             }
         },
+        "/api/v1/webhooks/instagram": {
+            "get": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Meta webhook verification",
+                "operationId": "88f3159caff2795e2dcba067f048931d",
+                "parameters": [
+                    {
+                        "name": "hub.mode",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "hub.verify_token",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "hub.challenge",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Echoes hub.challenge"
+                    },
+                    "403": {
+                        "description": "Wrong verify token"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Receive Instagram comments, messages and story replies",
+                "description": "Requires a valid X-Hub-Signature-256 header. Events are processed in the background; replies from matching automations are sent from there.",
+                "operationId": "9762cf47afd801f9522a1714b4de68fd",
+                "responses": {
+                    "200": {
+                        "description": "Accepted"
+                    },
+                    "403": {
+                        "description": "Missing or invalid signature"
+                    }
+                }
+            }
+        },
         "/api/v1/onboarding": {
             "get": {
                 "tags": [
@@ -2197,13 +3498,134 @@
                 }
             }
         },
+        "/api/v1/solutions": {
+            "get": {
+                "tags": [
+                    "Solutions"
+                ],
+                "summary": "Every solution page",
+                "description": "The visible pages in the admin order, for the Solutions menu. No authentication. Texts not yet translated are served in English.",
+                "operationId": "5af61b56d98434af0d51fd27928cb5df",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts in the response. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The pages",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/SolutionSummary"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/solutions/{slug}": {
+            "get": {
+                "tags": [
+                    "Solutions"
+                ],
+                "summary": "One solution page",
+                "description": "Everything /solutions/{slug} shows: the hero, three automations with their conversations, the steps, the FAQ and the closing line. No authentication. Page copy follows `lang`; the conversations are Gulf Arabic in every language.",
+                "operationId": "8c9edd85ee17e1a754e943973c9e8fc5",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "e-commerce"
+                    },
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts in the response. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The page",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Solution"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No page has this slug, or it is hidden"
+                    }
+                }
+            }
+        },
+        "/api/v1/webhooks/stripe": {
+            "post": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Receive Stripe payment events",
+                "description": "Stripe calls this; requests are authenticated by the `Stripe-Signature` header (HMAC-SHA256 with\nSTRIPE_WEBHOOK_SECRET, at most 5 minutes old), not a user. Events handled:\n\n- `checkout.session.completed`: the plan paid for is put in place.\n- `invoice.paid`: a renewal; the paid period moves on.\n- `customer.subscription.deleted`: the card plan ended; the account is on Free again.\n- `checkout.session.expired`: the payment page closed unpaid.\n\nStripe may send an event more than once; handling it again changes nothing. Other events are acknowledged and ignored.",
+                "operationId": "5aefb72a08ba896c9783387b7c41e3ec",
+                "responses": {
+                    "200": {
+                        "description": "Accepted"
+                    },
+                    "400": {
+                        "description": "Missing, invalid or stale signature"
+                    }
+                }
+            }
+        },
         "/api/v1/onboarding/plan": {
             "post": {
                 "tags": [
                     "Onboarding"
                 ],
                 "summary": "Choose a plan (W09)",
-                "description": "- **Free** (\"Continue with Free\"): active at once.\n- **A plan with `trial_days`** (\"Start free trial\" in the checkout): a trial starts and no card is taken. It does not convert: when it ends the account is on Free again. One trial per account.\n- **Any other paid plan** answers 402 `payment_required`: card payments are not built yet.\n\nChoosing again replaces the current plan.",
+                "description": "- **Free** (\"Continue with Free\"): active at once.\n- **A plan with `trial_days`** (\"Start free trial\" in the checkout): a trial starts and no card is taken. It does not convert: when it ends the account is on Free again. One trial per account.\n- **Any other paid plan**, and the trial plan once the account has had its trial: 202 with a Stripe payment page\n  (`data.url`, as POST /api/v1/checkout/session). The plan changes once it is paid. Without a Stripe key on the\n  server: 402 `payment_required` (409 `trial_used` for the trial plan) instead.\n\nChoosing again replaces the current plan. Choosing Free or a trial stops the card payments of a plan paid by card.",
                 "operationId": "32f504decf2b46e4b88ffa543d282681",
                 "parameters": [
                     {
@@ -2267,11 +3689,26 @@
                             }
                         }
                     },
+                    "202": {
+                        "description": "A paid plan: send the browser to `data.url` to pay",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CheckoutSession"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
                     "401": {
                         "description": "Missing, revoked or unknown token"
                     },
                     "402": {
-                        "description": "`payment_required`: a paid plan without a trial",
+                        "description": "`payment_required`: a paid plan, and no Stripe key on this server",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2281,7 +3718,7 @@
                         }
                     },
                     "409": {
-                        "description": "`trial_used`: this account already had its free trial",
+                        "description": "`trial_used`: this account already had its free trial, and no Stripe key on this server",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2296,6 +3733,273 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "`payment_provider_error`: Stripe could not be reached",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlanError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/subscription": {
+            "get": {
+                "tags": [
+                    "Subscription"
+                ],
+                "summary": "The current plan",
+                "description": "The same `subscription` as GET /api/v1/onboarding. `data` is null before a plan is chosen (W09); the account is then on Free.",
+                "operationId": "79898df37ae3ddcf7ecc4db274254e22",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts in the response. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The subscription, or null",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "oneOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/Subscription"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "nullable": true,
+                                                    "enum": [
+                                                        null
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Subscription"
+                ],
+                "summary": "Change the plan or the billing period",
+                "description": "The same rules as POST /api/v1/onboarding/plan:\n- **Free**: active at once, ending any trial.\n- **A plan with `trial_days`**: its trial starts, once per account (409 `trial_used` after). Picking the plan being tried again keeps the trial's clock.\n- **Any other paid plan**, and the trial plan after the trial: 202 with a Stripe payment page (`data.url`); the plan\n  changes once it is paid. Without a Stripe key on the server: 402 `payment_required` (409 `trial_used`).\n- Moving off a plan paid by card to Free or a trial stops its card payments.\n\nSend `plan`, `billing` or both; what is left out stays as it is. `billing` alone needs a plan chosen already.",
+                "operationId": "4cccc554fb12d64e9865734884cf33af",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts and error messages in the response. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "plan": {
+                                        "description": "A plan `id` from GET /api/v1/plans. Required without `billing`.",
+                                        "type": "string",
+                                        "example": "essential"
+                                    },
+                                    "billing": {
+                                        "description": "Required without `plan`. Defaults to the current billing period.",
+                                        "type": "string",
+                                        "enum": [
+                                            "monthly",
+                                            "annual"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The plan is in place",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Subscription"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "202": {
+                        "description": "A paid plan: send the browser to `data.url` to pay",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CheckoutSession"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    },
+                    "402": {
+                        "description": "`payment_required`: a paid plan, and no Stripe key on this server",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlanError"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "`trial_used`: this account already had its free trial, and no Stripe key on this server",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlanError"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unknown plan or billing period, or neither sent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "`payment_provider_error`: Stripe could not be reached",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlanError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Subscription"
+                ],
+                "summary": "Cancel back to Free",
+                "description": "Free at once, ending any trial and stopping any card payments; the billing period stays. A trial used stays used.",
+                "operationId": "9ca65c3be055643cd7deafb257754fd7",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the texts and messages in the response. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "On Free now",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You’re on the Free plan now."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Subscription"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    },
+                    "502": {
+                        "description": "`payment_provider_error`: Stripe could not stop the card payments; nothing changed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlanError"
                                 }
                             }
                         }
@@ -3192,6 +4896,80 @@
                 },
                 "type": "object"
             },
+            "CheckoutSession": {
+                "properties": {
+                    "id": {
+                        "description": "The Stripe Checkout Session id; the success page gets it back as `session_id`",
+                        "type": "string",
+                        "example": "cs_test_a1B2c3"
+                    },
+                    "url": {
+                        "description": "Send the browser here: the Stripe-hosted payment page",
+                        "type": "string",
+                        "example": "https://checkout.stripe.com/c/pay/cs_test_a1B2c3"
+                    },
+                    "status": {
+                        "description": "`complete` once paid: `subscription` then holds the plan in place",
+                        "type": "string",
+                        "enum": [
+                            "open",
+                            "complete",
+                            "expired"
+                        ]
+                    },
+                    "plan": {
+                        "type": "string",
+                        "example": "pro"
+                    },
+                    "billing": {
+                        "type": "string",
+                        "enum": [
+                            "monthly",
+                            "annual"
+                        ]
+                    },
+                    "coupon": {
+                        "type": "string",
+                        "example": "BLEX20",
+                        "nullable": true
+                    },
+                    "amount_total": {
+                        "description": "What the first payment charges, after the coupon: twelve months when billed yearly. Renewals charge the list price",
+                        "type": "number",
+                        "example": 31.2
+                    },
+                    "currency": {
+                        "type": "string",
+                        "example": "usd"
+                    },
+                    "subscription": {
+                        "$ref": "#/components/schemas/Subscription"
+                    }
+                },
+                "type": "object"
+            },
+            "CheckoutError": {
+                "required": [
+                    "message",
+                    "code"
+                ],
+                "properties": {
+                    "message": {
+                        "description": "Ready to show, in the requested language",
+                        "type": "string"
+                    },
+                    "code": {
+                        "description": "Stable value to branch on",
+                        "type": "string",
+                        "enum": [
+                            "plan_already_paid",
+                            "payments_unavailable",
+                            "payment_provider_error"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
             "ChannelConnectedScreen": {
                 "description": "The W07 copy for the channel’s platform, in the requested language",
                 "properties": {
@@ -3313,6 +5091,150 @@
                             "plan",
                             "done"
                         ]
+                    }
+                },
+                "type": "object"
+            },
+            "Contact": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 12
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Reem Khalid"
+                    },
+                    "handle": {
+                        "description": "Username, or the phone number for someone added by hand",
+                        "type": "string",
+                        "example": "reem.k",
+                        "nullable": true
+                    },
+                    "channel": {
+                        "type": "string",
+                        "enum": [
+                            "instagram",
+                            "whatsapp",
+                            "tiktok",
+                            "messenger"
+                        ]
+                    },
+                    "channel_id": {
+                        "description": "Null for someone added by hand or whose channel was disconnected",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "avatar": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "Winter abaya",
+                            "Asked price"
+                        ]
+                    },
+                    "source": {
+                        "description": "The automation that brought them in. When null, `added` tells \"Added by you\" from \"Messaged you\"",
+                        "type": "string",
+                        "example": "Auto-DM links from comments",
+                        "nullable": true
+                    },
+                    "source_automation_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "added": {
+                        "description": "Added by hand from Create New Contact, with their consent",
+                        "type": "boolean"
+                    },
+                    "gender": {
+                        "type": "string",
+                        "nullable": true,
+                        "enum": [
+                            "female",
+                            "male"
+                        ]
+                    },
+                    "city": {
+                        "type": "string",
+                        "example": "Jeddah",
+                        "nullable": true
+                    },
+                    "phone": {
+                        "type": "string",
+                        "example": "+966 55 123 4821",
+                        "nullable": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "language": {
+                        "type": "string",
+                        "example": "ar",
+                        "nullable": true
+                    },
+                    "subscribed": {
+                        "type": "boolean"
+                    },
+                    "conversation": {
+                        "description": "Detail only: their latest conversation, for \"Open in Inbox\" and the message count",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "status": {
+                                "type": "string",
+                                "enum": [
+                                    "open",
+                                    "resolved"
+                                ]
+                            },
+                            "messages_count": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "first_seen_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "last_active_at": {
+                        "description": "Null for someone added by hand who has not written yet",
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ContactsUsage": {
+                "description": "The sidebar meter: contacts saved against the current plan’s limit",
+                "properties": {
+                    "used": {
+                        "type": "integer",
+                        "example": 6
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "example": 25
+                    },
+                    "plan": {
+                        "description": "The tier in force: Free with no plan chosen, or once a trial ended",
+                        "type": "string",
+                        "example": "free"
+                    },
+                    "over_limit": {
+                        "description": "More saved than the plan holds, e.g. after a trial ended. Nobody is removed",
+                        "type": "boolean"
                     }
                 },
                 "type": "object"
@@ -4685,6 +6607,336 @@
                 },
                 "type": "object"
             },
+            "SolutionSummary": {
+                "properties": {
+                    "slug": {
+                        "description": "The page is /solutions/{slug}; the homepage use-case card with this slug links to it",
+                        "type": "string",
+                        "example": "e-commerce"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "E-commerce"
+                    },
+                    "shape": {
+                        "description": "The use-case card shape drawn behind the hero",
+                        "type": "string",
+                        "enum": [
+                            "rounded",
+                            "blob",
+                            "arch",
+                            "circle",
+                            "pill",
+                            "house"
+                        ]
+                    },
+                    "tone": {
+                        "description": "The hero backdrop; the *-ink tones draw the shape in ink",
+                        "type": "string",
+                        "enum": [
+                            "brand",
+                            "tint",
+                            "ink",
+                            "tint-ink",
+                            "brand-ink"
+                        ]
+                    },
+                    "headline": {
+                        "type": "string",
+                        "example": "The price is asked a hundred times. Answer it once."
+                    }
+                },
+                "type": "object"
+            },
+            "SolutionAccount": {
+                "description": "An account in the phone preview",
+                "properties": {
+                    "handle": {
+                        "type": "string",
+                        "example": "nourboutique"
+                    },
+                    "avatar": {
+                        "description": "An image URL, or a data:image/svg+xml URI of the initial on a colour",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "SolutionAutomation": {
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "example": "Price in the DMs"
+                    },
+                    "line": {
+                        "type": "string"
+                    },
+                    "trigger": {
+                        "properties": {
+                            "source": {
+                                "type": "string",
+                                "enum": [
+                                    "comment",
+                                    "dm",
+                                    "story"
+                                ]
+                            },
+                            "words": {
+                                "description": "Keywords, in Arabic as typed. Empty: every comment, first message or reply",
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": [
+                                    "السعر"
+                                ]
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "customer": {
+                        "description": "The customer’s comment or message (Gulf Arabic in every language)",
+                        "type": "string"
+                    },
+                    "reply": {
+                        "description": "The automated DM",
+                        "type": "string"
+                    },
+                    "button": {
+                        "description": "Button label in the DM",
+                        "type": "string",
+                        "maxLength": 20
+                    },
+                    "link": {
+                        "type": "string",
+                        "example": "nourboutique.com/winter-abaya"
+                    },
+                    "post": {
+                        "description": "The post the comment sits under, or the story replied to. Absent when there is none. Exactly one of `image` and `tile`.",
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "example": "post-12"
+                            },
+                            "image": {
+                                "type": "string",
+                                "format": "uri"
+                            },
+                            "tile": {
+                                "properties": {
+                                    "text": {
+                                        "type": "string"
+                                    },
+                                    "tone": {
+                                        "type": "string",
+                                        "enum": [
+                                            "tint",
+                                            "ink",
+                                            "yellow",
+                                            "pink",
+                                            "surface"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "caption": {
+                                "type": "string"
+                            },
+                            "likes": {
+                                "type": "string",
+                                "example": "١٬٢٠٤"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "account": {
+                        "$ref": "#/components/schemas/SolutionAccount"
+                    }
+                },
+                "type": "object"
+            },
+            "SolutionLabels": {
+                "description": "The words the template writes around every page’s content, in the requested language; any label not translated yet is in English.",
+                "properties": {
+                    "hero": {
+                        "properties": {
+                            "chip": {
+                                "description": "`{name}` is the page name, filled by the frontend",
+                                "type": "string",
+                                "example": "Blexchat for {name}"
+                            },
+                            "get_started": {
+                                "type": "string",
+                                "example": "Get started free"
+                            },
+                            "see_pricing": {
+                                "type": "string",
+                                "example": "See pricing"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "art": {
+                        "properties": {
+                            "replied_in": {
+                                "type": "string",
+                                "example": "Replied in 0.4s"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "automations": {
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "example": "Three automations to start with"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "trigger": {
+                        "description": "The trigger line: the source, then the keywords or what sets it off when there are none",
+                        "properties": {
+                            "comment": {
+                                "type": "string",
+                                "example": "Comment"
+                            },
+                            "dm": {
+                                "type": "string",
+                                "example": "DM"
+                            },
+                            "story": {
+                                "type": "string",
+                                "example": "Story reply"
+                            },
+                            "every_comment": {
+                                "type": "string",
+                                "example": "every comment"
+                            },
+                            "every_dm": {
+                                "type": "string",
+                                "example": "every first message"
+                            },
+                            "every_story": {
+                                "type": "string",
+                                "example": "every reply"
+                            },
+                            "keyword": {
+                                "type": "string",
+                                "example": "keyword"
+                            },
+                            "keywords": {
+                                "type": "string",
+                                "example": "keywords"
+                            },
+                            "or": {
+                                "type": "string",
+                                "example": "or"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "steps": {
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "example": "How it works"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "faq": {
+                        "description": "The title in three parts; `title_marked` carries the marker band",
+                        "properties": {
+                            "title_lead": {
+                                "type": "string",
+                                "example": "Before you"
+                            },
+                            "title_marked": {
+                                "type": "string",
+                                "example": "start"
+                            },
+                            "title_end": {
+                                "type": "string",
+                                "example": "."
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "closing": {
+                        "properties": {
+                            "cta": {
+                                "type": "string",
+                                "example": "Get started free"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "Solution": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/SolutionSummary"
+                    },
+                    {
+                        "properties": {
+                            "sample": {
+                                "$ref": "#/components/schemas/SolutionAccount"
+                            },
+                            "hero": {
+                                "properties": {
+                                    "headline": {
+                                        "type": "string"
+                                    },
+                                    "supporting": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "automations": {
+                                "description": "Three, in order",
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/SolutionAutomation"
+                                }
+                            },
+                            "steps": {
+                                "description": "\"How it works\", in order",
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "faq": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "q": {
+                                            "type": "string"
+                                        },
+                                        "a": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "closing": {
+                                "description": "The closing line above the sign-up button",
+                                "type": "string"
+                            },
+                            "labels": {
+                                "$ref": "#/components/schemas/SolutionLabels"
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
+            },
             "Subscription": {
                 "properties": {
                     "plan": {
@@ -4721,6 +6973,17 @@
                         "type": "integer",
                         "example": 14,
                         "nullable": true
+                    },
+                    "paid_by_card": {
+                        "description": "A Stripe subscription pays for the plan and renews it",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "current_period_end": {
+                        "description": "When the paid period renews; card plans only",
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -4740,7 +7003,8 @@
                         "type": "string",
                         "enum": [
                             "payment_required",
-                            "trial_used"
+                            "trial_used",
+                            "payment_provider_error"
                         ]
                     }
                 },
@@ -4879,16 +7143,32 @@
             "description": "The template picker (W19) and the automation wizard (W11–W15, Review)"
         },
         {
+            "name": "Channels",
+            "description": "List, connect and disconnect social channels"
+        },
+        {
+            "name": "Contacts",
+            "description": "Everyone who commented on or messaged the owner’s channels, or was added by hand (W22, W23)"
+        },
+        {
+            "name": "Conversations",
+            "description": "DM conversations across connected channels"
+        },
+        {
             "name": "Checkout",
             "description": "The checkout modal: tiers, trial reminder and coupons"
+        },
+        {
+            "name": "Dashboard",
+            "description": "Signed-in app home screen"
         },
         {
             "name": "Home",
             "description": "Public marketing homepage content"
         },
         {
-            "name": "Channels",
-            "description": "Connect and disconnect social channels (the connected list comes with GET /api/v1/dashboard)"
+            "name": "Webhooks",
+            "description": "Events Meta sends about connected Instagram accounts"
         },
         {
             "name": "Onboarding",
@@ -4901,6 +7181,14 @@
         {
             "name": "Pricing",
             "description": "Public marketing pricing page content; the prices themselves come from GET /api/v1/plans"
+        },
+        {
+            "name": "Solutions",
+            "description": "Public /solutions/{slug} pages: one template, one entry per vertical"
+        },
+        {
+            "name": "Subscription",
+            "description": "The plan after onboarding: read it, change it, cancel back to Free"
         }
     ]
 }
