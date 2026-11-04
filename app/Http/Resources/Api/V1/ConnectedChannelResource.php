@@ -9,13 +9,14 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * One connected channel with everything the "channel connected" screen (W07) shows.
+ * One connected channel with everything the "channel connected" screen (W07) shows,
+ * or, in the channels list, the account alone (no screen copy or next step).
  *
  * @mixin Channel
  */
 class ConnectedChannelResource extends JsonResource
 {
-    public function __construct(Channel $resource, private ?ChannelConnectedScreen $screen = null)
+    public function __construct(Channel $resource, private ?ChannelConnectedScreen $screen = null, private bool $forScreen = true)
     {
         parent::__construct($resource);
     }
@@ -35,8 +36,10 @@ class ConnectedChannelResource extends JsonResource
             'status' => $this->status,
             'connected_at' => $this->connected_at?->toIso8601String(),
             'token_expires_at' => $this->token_expires_at?->toIso8601String(),
-            'screen' => $this->screen ? new ChannelConnectedScreenResource($this->screen) : null,
-            'next_step' => $this->user->onboardingStep(),
+            $this->mergeWhen($this->forScreen, fn (): array => [
+                'screen' => $this->screen ? new ChannelConnectedScreenResource($this->screen) : null,
+                'next_step' => $this->user->onboardingStep(),
+            ]),
         ];
     }
 

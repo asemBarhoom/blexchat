@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use OpenApi\Attributes as OA;
 
-#[OA\Tag(name: 'Channels', description: 'Connect and disconnect social channels (the connected list comes with GET /api/v1/dashboard)')]
+#[OA\Tag(name: 'Channels', description: 'List, connect and disconnect social channels')]
 #[OA\Schema(schema: 'ConnectError', required: ['message', 'code'], properties: [
     new OA\Property(property: 'message', type: 'string', description: 'Ready to show, in the requested language'),
     new OA\Property(property: 'code', type: 'string', enum: ['account_taken', 'access_denied', 'account_ineligible', 'provider_error'], description: 'Stable value to branch on; picks the W06 state (taken, denied, ineligible)'),
