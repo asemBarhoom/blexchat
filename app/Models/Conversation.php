@@ -13,6 +13,7 @@ class Conversation extends Model
 
     protected $fillable = [
         'channel_id',
+        'contact_id',
         'platform_conversation_id',
         'contact_name',
         'contact_avatar',
@@ -26,7 +27,7 @@ class Conversation extends Model
     protected function casts(): array
     {
         return [
-            'unread_count'    => 'integer',
+            'unread_count' => 'integer',
             'last_message_at' => 'datetime',
         ];
     }
@@ -34,6 +35,11 @@ class Conversation extends Model
     public function channel(): BelongsTo
     {
         return $this->belongsTo(Channel::class);
+    }
+
+    public function contact(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class);
     }
 
     public function messages(): HasMany

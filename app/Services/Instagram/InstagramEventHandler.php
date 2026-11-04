@@ -4,6 +4,7 @@ namespace App\Services\Instagram;
 
 use App\Models\Channel;
 use App\Models\Comment;
+use App\Models\Contact;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Post;
@@ -12,7 +13,7 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Carbon;
 
 /**
- * Turns Instagram webhook events into posts, comments, conversations and messages.
+ * Turns Instagram webhook events into posts, comments, conversations, messages and contacts.
  * Every event is keyed by Instagram's own id, so a redelivered event changes nothing.
  */
 class InstagramEventHandler
@@ -42,9 +43,16 @@ class InstagramEventHandler
             ],
         );
 
-        if ($comment->wasRecentlyCreated) {
-            $this->automations->forComment($channel, $comment);
+        if (! $comment->wasRecentlyCreated) {
+            return;
         }
+
+        $contact = Contact::recordActivity($channel, $authorId, handle: $comment->author_name);
+        $this->automations->forComment($channel, $comment);
+
+        // The private reply may have opened their conversation.
+        Conversation::where('channel_id', $channel->id)->where('contact_platform_id', $authorId)->whereNull('contact_id')->update(['contact_id' => $contact->id]);
+        $this->creditAutomation($contact, $comment->refresh()->automation_id);
     }
 
     /**
@@ -81,6 +89,17 @@ class InstagramEventHandler
         $conversation->increment('unread_count');
 
         $this->automations->forMessage($channel, $conversation, $message, isStoryReply: isset($payload['reply_to']['story']));
+        $this->creditAutomation($conversation->contact, $conversation->messages()->where('automated', true)->value('automation_id'));
+    }
+
+    /**
+     * The automation that answered someone first is what brought them in: the contacts list's Source.
+     */
+    private function creditAutomation(?Contact $contact, ?int $automationId): void
+    {
+        if ($contact !== null && $automationId !== null && $contact->wasRecentlyCreated) {
+            $contact->update(['source_automation_id' => $automationId]);
+        }
     }
 
     private function conversation(Channel $channel, string $contactId): Conversation
@@ -90,14 +109,19 @@ class InstagramEventHandler
             ['contact_platform_id' => $contactId, 'status' => 'open'],
         );
 
+        $profile = [];
+
         if ($conversation->wasRecentlyCreated) {
             try {
-                $contact = $this->instagram->contact($channel, $contactId);
-                $conversation->update(['contact_name' => $contact['username'] ?? $contact['name'] ?? null, 'contact_avatar' => $contact['profile_pic'] ?? null]);
+                $profile = $this->instagram->contact($channel, $contactId);
+                $conversation->update(['contact_name' => $profile['username'] ?? $profile['name'] ?? null, 'contact_avatar' => $profile['profile_pic'] ?? null]);
             } catch (RequestException|ConnectionException) {
                 // The conversation works without a name; Instagram only shares it for some accounts.
             }
         }
+
+        $contact = Contact::recordActivity($channel, $contactId, $profile['name'] ?? null, $profile['username'] ?? $conversation->contact_name, $profile['profile_pic'] ?? $conversation->contact_avatar);
+        $conversation->contact()->associate($contact)->save();
 
         return $conversation;
     }

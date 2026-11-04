@@ -27,7 +27,7 @@ it('renders every admin list page', function (string $path) {
 })->with([
     '/admin', '/admin/users', '/admin/users/create', '/admin/marketing-home', '/admin/faq-items', '/admin/creators', '/admin/use-cases', '/admin/home-stats',
     '/admin/demo-reply-rules', '/admin/comparison-points',
-    '/admin/channels', '/admin/automations', '/admin/conversations', '/admin/posts',
+    '/admin/channels', '/admin/automations', '/admin/conversations', '/admin/contacts', '/admin/posts',
     '/admin/solutions', '/admin/solutions/create', '/admin/solution-labels',
     '/admin/channel-connected-screens',
     '/admin/channel-connect-screens', '/admin/channel-connect-screens/create', '/admin/channel-access-requests',

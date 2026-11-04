@@ -9,10 +9,11 @@ use App\Http\Controllers\Api\V1\AutomationTemplateController;
 use App\Http\Controllers\Api\V1\ChannelAccessRequestController;
 use App\Http\Controllers\Api\V1\ChannelConnectScreenController;
 use App\Http\Controllers\Api\V1\ChannelController;
-use App\Http\Controllers\Api\V1\CheckoutController;
 use App\Http\Controllers\Api\V1\ChannelOptionController;
 use App\Http\Controllers\Api\V1\ChannelPostController;
+use App\Http\Controllers\Api\V1\CheckoutController;
 use App\Http\Controllers\Api\V1\ConnectedChannelController;
+use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\CouponController;
 use App\Http\Controllers\Api\V1\DashboardController;
@@ -107,6 +108,10 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::get('channels/{channel}/posts', ChannelPostController::class)->name('channels.posts');
     Route::post('automations/wizard', [AutomationController::class, 'storeFromWizard'])->name('automations.wizard.store');
     Route::put('automations/{automation}/wizard', [AutomationController::class, 'updateFromWizard'])->name('automations.wizard.update');
+
+    // Contacts list (W23), contact detail (W22), and the sidebar's contacts meter
+    Route::get('contacts/usage', [ContactController::class, 'usage'])->name('contacts.usage');
+    Route::apiResource('contacts', ContactController::class)->whereNumber('contact');
 
     // Inbox: conversation list, thread, reply
     Route::get('conversations', [ConversationController::class, 'index'])->name('conversations.index');

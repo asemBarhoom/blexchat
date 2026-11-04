@@ -71,6 +71,43 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasOne(Subscription::class);
     }
 
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(Contact::class);
+    }
+
+    /**
+     * The tier in force today: the subscription's (Free again once a trial ends), or Free with none.
+     */
+    public function currentPlan(): Plan
+    {
+        return $this->subscription?->effectivePlan() ?? Plan::free();
+    }
+
+    /**
+     * The sidebar's contacts meter: everyone saved against the plan's limit. People who message
+     * are always saved, so an account can be over its limit, for instance after a trial ends.
+     *
+     * @return array{used: int, limit: int, plan: string, over_limit: bool}
+     */
+    public function contactsUsage(): array
+    {
+        $used = $this->contacts()->count();
+        $plan = $this->currentPlan();
+
+        return ['used' => $used, 'limit' => $plan->contacts_limit, 'plan' => $plan->slug, 'over_limit' => $used > $plan->contacts_limit];
+    }
+
+    /**
+     * Adding someone by hand stops at the limit.
+     */
+    public function canAddContact(): bool
+    {
+        $usage = $this->contactsUsage();
+
+        return $usage['used'] < $usage['limit'];
+    }
+
     public function surveyAnswers(): HasMany
     {
         return $this->hasMany(SurveyAnswer::class);
