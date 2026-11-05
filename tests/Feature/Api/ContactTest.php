@@ -124,14 +124,14 @@ describe('POST /api/v1/contacts', function () {
 describe('GET /api/v1/contacts/{id}', function () {
     it('shows a contact with their conversation for "Open in Inbox"', function () {
         $contact = Contact::factory()->forUser($this->owner)->create();
-        $conversation = Conversation::factory()->create(['channel_id' => $contact->channel_id, 'contact_id' => $contact->id, 'status' => 'open']);
+        $conversation = Conversation::factory()->create(['channel_id' => $contact->channel_id, 'contact_id' => $contact->id, 'status' => 'open', 'state' => 'human']);
         Message::factory()->count(3)->create(['conversation_id' => $conversation->id]);
 
         $this->actingAs($this->owner, 'sanctum')
             ->getJson("/api/v1/contacts/{$contact->id}")
             ->assertOk()
             ->assertJsonPath('data.id', $contact->id)
-            ->assertJsonPath('data.conversation', ['id' => $conversation->id, 'status' => 'open', 'messages_count' => 3]);
+            ->assertJsonPath('data.conversation', ['id' => $conversation->id, 'status' => 'open', 'state' => 'human', 'messages_count' => 3]);
     });
 
     it('shows no conversation for someone added by hand', function () {

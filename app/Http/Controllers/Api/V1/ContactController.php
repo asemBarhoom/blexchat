@@ -37,6 +37,7 @@ use OpenApi\Attributes as OA;
     new OA\Property(property: 'conversation', type: 'object', nullable: true, description: 'Detail only: their latest conversation, for "Open in Inbox" and the message count', properties: [
         new OA\Property(property: 'id', type: 'integer'),
         new OA\Property(property: 'status', type: 'string', enum: ['open', 'resolved']),
+        new OA\Property(property: 'state', type: 'string', enum: ['open', 'automation', 'human'], description: 'human: show "Needs you"'),
         new OA\Property(property: 'messages_count', type: 'integer'),
     ]),
     new OA\Property(property: 'first_seen_at', type: 'string', format: 'date-time'),
