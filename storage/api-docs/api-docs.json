@@ -6134,6 +6134,15 @@
                                     "resolved"
                                 ]
                             },
+                            "state": {
+                                "description": "human: show \"Needs you\"",
+                                "type": "string",
+                                "enum": [
+                                    "open",
+                                    "automation",
+                                    "human"
+                                ]
+                            },
                             "messages_count": {
                                 "type": "integer"
                             }
@@ -7734,6 +7743,10 @@
                     },
                     "has_ai": {
                         "description": "Shows the \"+ Blexchat AI\" row",
+                        "type": "boolean"
+                    },
+                    "has_email_capture": {
+                        "description": "Includes email capture: the automation extra ask_email and the dashboard leads card",
                         "type": "boolean"
                     },
                     "features": {
