@@ -57,6 +57,7 @@ class AutomationRunner
                     ['channel_id' => $channel->id, 'platform_conversation_id' => $comment->author_platform_id],
                     ['contact_platform_id' => $comment->author_platform_id, 'contact_name' => $comment->author_name, 'status' => 'open'],
                 );
+                $this->recordComment($conversation, $comment);
                 $this->record($conversation, $automation, $action, $messageId);
             }) || $sent;
         }
@@ -184,6 +185,21 @@ class AutomationRunner
         }
 
         return [...$action, 'link_token' => Str::random(32)];
+    }
+
+    /**
+     * The thread opens with what they commented, so the DM that follows reads as an answer.
+     * Their comment is not counted as unread: it is already on the post.
+     */
+    private function recordComment(Conversation $conversation, Comment $comment): void
+    {
+        $conversation->messages()->firstOrCreate(['comment_id' => $comment->id], [
+            'direction' => 'inbound',
+            'type' => Message::TYPE_COMMENT,
+            'content' => $comment->text,
+            'automated' => false,
+            'sent_at' => $comment->posted_at ?? now(),
+        ]);
     }
 
     /**
