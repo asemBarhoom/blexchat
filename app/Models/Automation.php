@@ -63,11 +63,13 @@ class Automation extends Model
         'actions',
         'extras',
         'active',
+        'ai_enabled',
     ];
 
     protected function casts(): array
     {
         return [
+            'ai_enabled' => 'boolean',
             'keywords' => 'array',
             'actions' => 'array',
             'extras' => 'array',

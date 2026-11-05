@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Automation\StoreAutomationRequest;
 use App\Http\Requests\Api\Automation\StoreWizardAutomationRequest;
+use App\Http\Requests\Api\Automation\ToggleAutomationAiRequest;
 use App\Http\Requests\Api\Automation\ToggleAutomationRequest;
 use App\Http\Requests\Api\Automation\UpdateAutomationRequest;
 use App\Http\Requests\Api\Automation\UpdateWizardAutomationRequest;
@@ -209,6 +210,43 @@ class AutomationController extends Controller
         $automation->update(['active' => $request->boolean('active')]);
 
         return response()->json(['data' => ['id' => $automation->id, 'active' => $automation->active]]);
+    }
+
+    #[OA\Patch(
+        path: '/api/v1/automations/{id}/ai',
+        summary: 'Turn Blexchat AI on or off for one automation',
+        description: 'On plans that include Blexchat AI (`has_ai` on the plan). Turning it off always works, so a downgraded account can still switch it off. The switch is stored now; AI-written replies start once the AI engine is live.',
+        security: [['sanctum' => []]],
+        tags: ['Automations'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['enabled'], properties: [
+            new OA\Property(property: 'enabled', type: 'boolean'),
+        ])),
+        responses: [
+            new OA\Response(response: 200, description: 'Saved', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'data', type: 'object', properties: [
+                    new OA\Property(property: 'id', type: 'integer'),
+                    new OA\Property(property: 'ai_enabled', type: 'boolean'),
+                ]),
+            ])),
+            new OA\Response(response: 403, description: 'Another owner’s automation; or `code: plan_required` when the plan does not include Blexchat AI (show Upgrade)', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'message', type: 'string'),
+                new OA\Property(property: 'code', type: 'string', enum: ['plan_required']),
+            ])),
+            new OA\Response(response: 422, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')),
+        ]
+    )]
+    public function ai(ToggleAutomationAiRequest $request, Automation $automation): JsonResponse
+    {
+        $enabled = $request->boolean('enabled');
+
+        if ($enabled && ! $request->user()->currentPlan()->has_ai) {
+            return response()->json(['message' => 'Blexchat AI is not included in your plan.', 'code' => 'plan_required'], 403);
+        }
+
+        $automation->update(['ai_enabled' => $enabled]);
+
+        return response()->json(['data' => ['id' => $automation->id, 'ai_enabled' => $automation->ai_enabled]]);
     }
 
     #[OA\Post(

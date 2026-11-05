@@ -26,6 +26,7 @@ class AutomationResource extends JsonResource
             'keywords' => $this->keywords ?? [],
             'actions' => $this->actions ?? [],
             'active' => $this->active,
+            'ai_enabled' => $this->ai_enabled,
             // The list's and the detail's Runs and CTR; absent from the other responses.
             'runs' => $this->when($this->hasListFigures(), fn (): int => $this->runs()),
             'ctr' => $this->when($this->hasListFigures(), fn (): ?float => $this->clickThroughRate()),
