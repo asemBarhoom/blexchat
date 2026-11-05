@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\V1\OnboardingController;
 use App\Http\Controllers\Api\V1\PlanController;
 use App\Http\Controllers\Api\V1\PricingController;
 use App\Http\Controllers\Api\V1\SolutionController;
+use App\Http\Controllers\Api\V1\StatsController;
 use App\Http\Controllers\Api\V1\StripeWebhookController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\SurveyController;
@@ -68,8 +69,9 @@ Route::prefix('v1/auth')->name('auth.')->middleware('throttle:30,1')->group(func
 Route::get('v1/auth/screens', AuthScreenController::class)->name('api.v1.auth.screens');
 
 Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function () {
-    // App home screen
+    // App home screen, and its "last 7 days" cards (S7.2)
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+    Route::get('stats/overview', [StatsController::class, 'overview'])->name('stats.overview');
 
     // The signed-in account, and sign out
     Route::get('auth/me', [AuthController::class, 'me'])->name('auth.me');
@@ -117,6 +119,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::post('automations/{automation}/restore', [AutomationController::class, 'restore'])->withTrashed()->name('automations.restore');
     Route::post('automations', [AutomationController::class, 'store'])->name('automations.store');
     Route::get('automations/{automation}', [AutomationController::class, 'show'])->name('automations.show');
+    Route::get('automations/{automation}/stats', [StatsController::class, 'automation'])->name('automations.stats'); // W17's figures
     Route::patch('automations/{automation}', [AutomationController::class, 'update'])->name('automations.update');
     Route::delete('automations/{automation}', [AutomationController::class, 'destroy'])->name('automations.destroy');
     Route::patch('automations/{automation}/toggle', [AutomationController::class, 'toggle'])->name('automations.toggle');

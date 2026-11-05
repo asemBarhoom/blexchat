@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Comment;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\Plan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -108,7 +109,7 @@ class DashboardController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'business_name' => $user->business_name,
-                'plan' => 'free',
+                'plan' => $user->subscription?->effectivePlan()?->slug ?? Plan::FREE_SLUG,
             ],
             'channels' => $channels->map(fn ($channel): array => [
                 'id' => $channel->id,

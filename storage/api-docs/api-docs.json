@@ -3945,6 +3945,91 @@
                 }
             }
         },
+        "/api/v1/automations/{id}/stats": {
+            "get": {
+                "tags": [
+                    "Automations"
+                ],
+                "summary": "One automation’s figures since it went live (W17)",
+                "description": "The four figures on the automation’s page. A DM button’s link goes through this API, which counts the click before sending the customer on.",
+                "operationId": "18f5d5541cfb6a2505735f816f9ca6a1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AutomationStats"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    },
+                    "403": {
+                        "description": "Another owner’s automation"
+                    },
+                    "404": {
+                        "description": "No such automation, or it is in the Trash"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stats/overview": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Home’s \"last 7 days\" cards (S7.2)",
+                "operationId": "8fbc2fc843d706b3a6955700d086da01",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/OverviewStats"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/webhooks/stripe": {
             "post": {
                 "tags": [
@@ -7290,6 +7375,143 @@
                         "type": "object"
                     }
                 ]
+            },
+            "AutomationStats": {
+                "description": "Every figure is null until the automation has answered someone (\"No data yet\"), which is not the same as zero.",
+                "properties": {
+                    "sends": {
+                        "description": "DMs it has sent",
+                        "type": "integer",
+                        "example": 148,
+                        "nullable": true
+                    },
+                    "public_replies": {
+                        "description": "Comments it answered publicly",
+                        "type": "integer",
+                        "example": 120,
+                        "nullable": true
+                    },
+                    "clicks": {
+                        "description": "DMs whose button was clicked, each counted once",
+                        "type": "integer",
+                        "example": 37,
+                        "nullable": true
+                    },
+                    "ctr": {
+                        "description": "clicks ÷ DMs sent with a button; null while none had a button",
+                        "type": "number",
+                        "example": 0.25,
+                        "nullable": true,
+                        "maximum": 1,
+                        "minimum": 0
+                    },
+                    "emails": {
+                        "description": "Addresses collected from the people it brought in; null unless its email question (ask_email) is on",
+                        "type": "integer",
+                        "example": 9,
+                        "nullable": true
+                    },
+                    "last_run_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "OverviewStats": {
+                "description": "Home’s \"last 7 days\" cards. Each card is null until the account has had anything of its kind; after that its figures are numbers, zero included. `previous` is the same figure for the 7 days before.",
+                "properties": {
+                    "from": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "to": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "engagement": {
+                        "description": "Engagement winners: comments on the connected accounts’ posts",
+                        "properties": {
+                            "comments": {
+                                "type": "integer",
+                                "example": 214
+                            },
+                            "previous": {
+                                "type": "integer",
+                                "example": 180
+                            },
+                            "top_posts": {
+                                "description": "Up to 3, most comments first",
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "caption": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "thumbnail_url": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "media_type": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "comments": {
+                                            "type": "integer",
+                                            "example": 61
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "time_saved": {
+                        "description": "Replies the automations sent instead of the owner",
+                        "properties": {
+                            "replies": {
+                                "description": "Automatic DMs and public comment replies",
+                                "type": "integer",
+                                "example": 148
+                            },
+                            "minutes": {
+                                "description": "An estimate: one minute per reply",
+                                "type": "integer",
+                                "example": 148
+                            },
+                            "previous": {
+                                "description": "Replies the 7 days before",
+                                "type": "integer",
+                                "example": 96
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "leads": {
+                        "description": "New contacts who gave an email or a phone number (not those added by hand). Email capture is a paid option; the front end locks this card on plans without it",
+                        "properties": {
+                            "contacts": {
+                                "type": "integer",
+                                "example": 9
+                            },
+                            "previous": {
+                                "type": "integer",
+                                "example": 4
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
             },
             "Subscription": {
                 "properties": {

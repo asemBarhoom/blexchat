@@ -11,6 +11,7 @@ use App\Models\Post;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Runs the first matching automation for an incoming comment or message and sends its replies.
@@ -50,6 +51,7 @@ class AutomationRunner
                     return;
                 }
 
+                $action = $this->withLinkToken($action);
                 $messageId = $this->instagram->sendPrivateReply($channel, $comment->platform_comment_id, $this->payload($action));
                 $conversation = Conversation::firstOrCreate(
                     ['channel_id' => $channel->id, 'platform_conversation_id' => $comment->author_platform_id],
@@ -88,6 +90,7 @@ class AutomationRunner
             }
 
             $this->attempt($automation, $action, function () use ($channel, $conversation, $automation, $action): void {
+                $action = $this->withLinkToken($action);
                 $messageId = $this->instagram->sendMessage($channel, $conversation->contact_platform_id, $this->payload($action));
                 $this->record($conversation, $automation, $action, $messageId);
             });
@@ -158,7 +161,24 @@ class AutomationRunner
      */
     private function payload(array $action): array
     {
-        return InstagramClient::message($action['message'], $action['button_label'] ?? null, $action['button_url'] ?? null);
+        $url = isset($action['link_token']) ? Message::trackedUrl($action['link_token']) : ($action['button_url'] ?? null);
+
+        return InstagramClient::message($action['message'], $action['button_label'] ?? null, $url);
+    }
+
+    /**
+     * A button's link goes out through /l/{token}, so the automation's page can count the clicks.
+     *
+     * @param  array<string, mixed>  $action
+     * @return array<string, mixed>
+     */
+    private function withLinkToken(array $action): array
+    {
+        if (blank($action['button_label'] ?? null) || blank($action['button_url'] ?? null)) {
+            return $action;
+        }
+
+        return [...$action, 'link_token' => Str::random(32)];
     }
 
     /**
@@ -175,6 +195,7 @@ class AutomationRunner
             'content' => $action['message'],
             'button_label' => $withButton ? $action['button_label'] : null,
             'button_url' => $withButton ? $action['button_url'] : null,
+            'link_token' => $withButton ? ($action['link_token'] ?? null) : null,
             'automated' => true,
             'automation_id' => $automation->id,
             'sent_at' => now(),

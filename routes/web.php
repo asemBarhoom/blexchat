@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Channels\FakeInstagramController;
+use App\Http\Controllers\LinkController;
 use App\Http\Controllers\Payments\FakePaymentController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,3 +24,6 @@ Route::prefix('channels/fake/instagram')->name('channels.fake-instagram.')->grou
     Route::get('/', [FakeInstagramController::class, 'show'])->name('show');
     Route::post('/', [FakeInstagramController::class, 'answer'])->name('answer');
 });
+
+// A DM button's link: counts the click for the automation's stats, then redirects to the owner's link
+Route::get('l/{token}', LinkController::class)->where('token', '[A-Za-z0-9]{32}')->name('links.follow');

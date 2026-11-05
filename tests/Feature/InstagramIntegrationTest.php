@@ -186,7 +186,7 @@ it('replies under a matching comment and sends the commenter a DM with a button,
     Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/c1/replies') && $request['message'] === 'أرسلنا لك التفاصيل بالخاص 💌');
     Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/17840001/messages')
         && $request['recipient'] === ['comment_id' => 'c1']
-        && data_get($request->data(), 'message.attachment.payload.buttons.0.url') === 'https://nourboutique.com/abaya-winter'
+        && str_starts_with(data_get($request->data(), 'message.attachment.payload.buttons.0.url'), url('/l/'))
         && $request->hasHeader('Authorization', 'Bearer IGAA-long-lived'));
     Http::assertSentCount(3);
 
@@ -199,6 +199,10 @@ it('replies under a matching comment and sends the commenter a DM with a button,
     expect($dm->platform_message_id)->toBe('mid-out-1')
         ->and($dm->type)->toBe('text_with_button')
         ->and($dm->conversation->contact_name)->toBe('reem.k');
+
+    // The button goes through the click counter, which sends the customer on to the shop.
+    $this->get(Message::trackedUrl($dm->link_token))->assertRedirect('https://nourboutique.com/abaya-winter');
+    expect($dm->refresh()->link_clicks)->toBe(1)->and($dm->first_clicked_at)->not->toBeNull();
 });
 
 it('leaves comments alone when nothing matches or the shop wrote them', function () {
