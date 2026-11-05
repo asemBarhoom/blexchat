@@ -35,8 +35,14 @@ class AutomationRunner
         }
 
         $sent = false;
+        $mayOpenConversation = $this->acceptsNewConversations($channel)
+            || Conversation::where('channel_id', $channel->id)->where('platform_conversation_id', $comment->author_platform_id)->exists();
 
         foreach ($automation->actions as $action) {
+            if (! $mayOpenConversation && in_array($action['type'], self::DM_ACTIONS, true)) {
+                continue;
+            }
+
             $sent = $this->attempt($automation, $action, function () use ($channel, $comment, $automation, $action): void {
                 if ($action['type'] === 'reply_comment') {
                     $this->instagram->replyToComment($channel, $comment->platform_comment_id, $action['message']);
@@ -65,6 +71,11 @@ class AutomationRunner
     public function forMessage(Channel $channel, Conversation $conversation, Message $message, bool $isStoryReply): void
     {
         $isFirstMessage = $conversation->messages()->where('direction', 'inbound')->count() === 1;
+
+        if ($isFirstMessage && $conversation->wasRecentlyCreated && ! $this->acceptsNewConversations($channel)) {
+            return;
+        }
+
         $automation = $this->firstMatch($channel, $isStoryReply ? 'story_mention' : 'dm_keyword', $message->content, answerAny: $isStoryReply || $isFirstMessage);
 
         if ($automation === null) {
@@ -81,6 +92,15 @@ class AutomationRunner
                 $this->record($conversation, $automation, $action, $messageId);
             });
         }
+    }
+
+    /**
+     * The inbox's "Accept new conversations" switch: while it is off, automations leave people
+     * who have no conversation yet unanswered in DMs. Their messages still reach the inbox.
+     */
+    private function acceptsNewConversations(Channel $channel): bool
+    {
+        return (bool) $channel->user->inbox_accepting_new;
     }
 
     /**

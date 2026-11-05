@@ -49,6 +49,7 @@ class AutomationController extends Controller
         parameters: [
             new OA\Parameter(name: 'channel_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['active', 'inactive'])),
+            new OA\Parameter(name: 'trashed', in: 'query', required: false, description: 'true lists the Trash (S5.3) instead, last deleted first; each has `trashed_at` and `purges_at`', schema: new OA\Schema(type: 'boolean', default: false)),
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
         ],
@@ -57,6 +58,10 @@ class AutomationController extends Controller
     public function index(Request $request): AutomationCollection
     {
         $query = $request->user()->automations()->with(['channel', 'template']);
+
+        if ($request->boolean('trashed')) {
+            $query->onlyTrashed()->latest('deleted_at')->orderByDesc('id');
+        }
 
         if ($request->filled('channel_id')) {
             $query->where('channel_id', $request->channel_id);
@@ -125,19 +130,47 @@ class AutomationController extends Controller
 
     #[OA\Delete(
         path: '/api/v1/automations/{id}',
-        summary: 'Delete an automation',
+        summary: 'Move an automation to the Trash',
+        description: 'Stops it and moves it to the Trash, where it is kept for 30 days (`purges_at`) and then deleted for good. Undo and the Trash’s Restore call POST /api/v1/automations/{id}/restore.',
         security: [['sanctum' => []]],
         tags: ['Automations'],
         parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
-        responses: [new OA\Response(response: 200, description: 'Deleted')]
+        responses: [
+            new OA\Response(response: 200, description: 'In the Trash; `data` is the automation with `trashed_at` and `purges_at`'),
+            new OA\Response(response: 403, description: 'Another owner’s automation'),
+            new OA\Response(response: 404, description: 'No such automation, or it is already in the Trash'),
+        ]
     )]
     public function destroy(Request $request, Automation $automation): JsonResponse
     {
         abort_unless($automation->user_id === $request->user()->id, 403);
 
-        $automation->delete();
+        $automation->moveToTrash();
 
-        return response()->json(['message' => 'Automation deleted.']);
+        return response()->json(['message' => 'Automation moved to the Trash.', 'data' => new AutomationResource($automation)]);
+    }
+
+    #[OA\Post(
+        path: '/api/v1/automations/{id}/restore',
+        summary: 'Restore an automation from the Trash',
+        description: 'From the toast’s Undo and the Trash’s Restore. It comes back stopped: restoring does not start it replying again.',
+        security: [['sanctum' => []]],
+        tags: ['Automations'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Back in the list, stopped'),
+            new OA\Response(response: 403, description: 'Another owner’s automation'),
+            new OA\Response(response: 404, description: 'No such automation in the Trash'),
+        ]
+    )]
+    public function restore(Request $request, Automation $automation): JsonResponse
+    {
+        abort_unless($automation->user_id === $request->user()->id, 403);
+        abort_unless($automation->trashed(), 404);
+
+        $automation->restore();
+
+        return response()->json(['data' => new AutomationResource($automation)]);
     }
 
     #[OA\Patch(

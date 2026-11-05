@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Conversation\UpdateConversationRequest;
 use App\Http\Requests\Api\Message\SendMessageRequest;
 use App\Http\Resources\Api\V1\ConversationCollection;
+use App\Http\Resources\Api\V1\ConversationResource;
 use App\Http\Resources\Api\V1\MessageCollection;
 use App\Http\Resources\Api\V1\MessageResource;
 use App\Models\Conversation;
@@ -26,6 +28,7 @@ class ConversationController extends Controller
         parameters: [
             new OA\Parameter(name: 'channel_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['open', 'resolved', 'all'])),
+            new OA\Parameter(name: 'unread', in: 'query', required: false, description: 'true: only conversations with unread messages', schema: new OA\Schema(type: 'boolean')),
             new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
         ],
         responses: [new OA\Response(response: 200, description: 'Conversation list')]
@@ -47,9 +50,41 @@ class ConversationController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->boolean('unread')) {
+            $query->where('unread_count', '>', 0);
+        }
+
         return new ConversationCollection(
             $query->cursorPaginate($request->integer('limit', 20))
         );
+    }
+
+    #[OA\Patch(
+        path: '/api/v1/conversations/{id}',
+        summary: 'Mark a conversation done, reopen it, or mark it read',
+        description: '"Mark done" sends `status: resolved`, "Reopen" sends `status: open`, and opening the thread sends `read: true`, which sets `unread` to 0. A new message from the customer reopens a resolved conversation.',
+        security: [['sanctum' => []]],
+        tags: ['Conversations'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(properties: [
+            new OA\Property(property: 'status', type: 'string', enum: ['open', 'resolved'], description: 'Required without read'),
+            new OA\Property(property: 'read', type: 'boolean', description: 'Required without status; true sets unread to 0'),
+        ], example: ['status' => 'resolved'])),
+        responses: [
+            new OA\Response(response: 200, description: 'The conversation as the list shows it'),
+            new OA\Response(response: 401, description: 'Missing, revoked or unknown token'),
+            new OA\Response(response: 403, description: 'Another owner’s conversation'),
+            new OA\Response(response: 422, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')),
+        ]
+    )]
+    public function update(UpdateConversationRequest $request, Conversation $conversation): JsonResponse
+    {
+        $conversation->update(array_filter([
+            'status' => $request->validated('status'),
+            'unread_count' => $request->boolean('read') ? 0 : null,
+        ], fn (mixed $value): bool => $value !== null));
+
+        return response()->json(['data' => new ConversationResource($conversation->load('channel'))]);
     }
 
     #[OA\Get(

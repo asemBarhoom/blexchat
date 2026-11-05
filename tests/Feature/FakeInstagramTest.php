@@ -137,3 +137,24 @@ it('keeps simulated events to the owner, to valid input, and to the fake client'
     config(['services.instagram.driver' => 'meta']);
     $this->postJson("/api/v1/channels/{$channel->id}/test-events", $event)->assertNotFound();
 });
+
+it('leaves someone new unanswered in DMs while new conversations are paused, but still records them', function () {
+    $channel = Channel::factory()->for($this->owner)->create(['platform' => 'instagram', 'account_id' => 'fake-'.$this->owner->id, 'status' => 'active']);
+    Automation::factory()->for($this->owner)->for($channel)->create(['trigger_type' => 'dm_keyword', 'keywords' => [], 'actions' => [['type' => 'send_dm', 'message' => 'Welcome!']]]);
+    Automation::factory()->for($this->owner)->for($channel)->create([
+        'trigger_type' => 'comment_keyword',
+        'keywords' => ['price'],
+        'actions' => [['type' => 'reply_comment', 'message' => 'Check your DMs'], ['type' => 'send_dm', 'message' => '249 SAR']],
+    ]);
+    $this->owner->update(['inbox_accepting_new' => false]);
+
+    $this->actingAs($this->owner)->postJson("/api/v1/channels/{$channel->id}/test-events", ['type' => 'message', 'text' => 'hi', 'from' => 'new.customer'])
+        ->assertCreated()
+        ->assertJsonPath('data.automation_id', null);
+
+    $this->postJson("/api/v1/channels/{$channel->id}/test-events", ['type' => 'comment', 'text' => 'price?', 'from' => 'another.one'])
+        ->assertCreated()
+        ->assertJsonPath('data.conversation_id', null);
+
+    $this->getJson('/api/v1/conversations')->assertJsonCount(1, 'data')->assertJsonPath('data.0.unread', 1);
+});

@@ -72,7 +72,7 @@ class Contact extends Model
 
     public function sourceAutomation(): BelongsTo
     {
-        return $this->belongsTo(Automation::class, 'source_automation_id');
+        return $this->belongsTo(Automation::class, 'source_automation_id')->withTrashed();
     }
 
     public function conversation(): HasOne

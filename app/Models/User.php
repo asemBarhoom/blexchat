@@ -14,11 +14,15 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'google_id', 'password', 'business_name', 'is_admin', 'stripe_customer_id'])]
+#[Fillable(['name', 'email', 'google_id', 'password', 'business_name', 'inbox_accepting_new', 'is_admin', 'stripe_customer_id'])]
 #[Hidden(['password', 'remember_token', 'google_id', 'stripe_customer_id'])]
 class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable;
+
+    protected $attributes = [
+        'inbox_accepting_new' => true,
+    ];
 
     /**
      * Shop owners sign up through the API; only staff marked as admins may use the panel.
@@ -53,6 +57,7 @@ class User extends Authenticatable implements FilamentUser
             'survey_completed_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'inbox_accepting_new' => 'boolean',
         ];
     }
 

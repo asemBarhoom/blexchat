@@ -28,6 +28,8 @@ class AutomationResource extends JsonResource
             'wizard' => [...$this->wizardAnswers(), 'name' => $this->name, 'channel_id' => $this->channel_id],
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
+            'trashed_at' => $this->deleted_at?->toIso8601String(),
+            'purges_at' => $this->purgesAt()?->toIso8601String(),
         ];
     }
 }

@@ -11,6 +11,9 @@ class Conversation extends Model
 {
     use HasFactory;
 
+    /** Open, or resolved by the inbox's "Mark done". A new message reopens it. */
+    public const STATUSES = ['open', 'resolved'];
+
     protected $fillable = [
         'channel_id',
         'contact_id',

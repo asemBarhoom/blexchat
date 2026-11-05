@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * A rule that answers comments, DMs or story replies. The wizard (W11+) speaks in its own terms
@@ -15,10 +19,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $post_mode
  * @property int|null $post_id
  * @property array<string, mixed>|null $extras
+ * @property Carbon|null $deleted_at
  */
 class Automation extends Model
 {
-    use HasFactory;
+    use HasFactory, Prunable, SoftDeletes;
+
+    /** How long a deleted automation stays in the Trash before it is deleted for good. */
+    public const TRASH_DAYS = 30;
 
     /** The wizard's kinds, by the trigger_type each one is stored as. */
     public const KINDS = ['comment_keyword' => 'comment', 'story_mention' => 'story', 'dm_keyword' => 'dm'];
@@ -147,6 +155,33 @@ class Automation extends Model
         }
 
         return $answers;
+    }
+
+    /**
+     * Moves the automation to the Trash, stopped: it answers nothing from then on, and restoring
+     * it does not start it again.
+     */
+    public function moveToTrash(): void
+    {
+        // A soft delete only writes deleted_at, so the stop is saved on its own first.
+        $this->update(['active' => false]);
+        $this->delete();
+    }
+
+    /**
+     * When a trashed automation is deleted for good.
+     */
+    public function purgesAt(): ?Carbon
+    {
+        return $this->deleted_at?->copy()->addDays(self::TRASH_DAYS);
+    }
+
+    /**
+     * Trashed automations past their time in the Trash, for `model:prune`.
+     */
+    public function prunable(): Builder
+    {
+        return static::onlyTrashed()->where('deleted_at', '<=', now()->subDays(self::TRASH_DAYS));
     }
 
     /**

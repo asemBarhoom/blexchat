@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\V1\CouponController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\FirstMoveController;
 use App\Http\Controllers\Api\V1\HomeController;
+use App\Http\Controllers\Api\V1\InboxSettingsController;
 use App\Http\Controllers\Api\V1\InstagramConnectionController;
 use App\Http\Controllers\Api\V1\InstagramWebhookController;
 use App\Http\Controllers\Api\V1\OnboardingController;
@@ -111,8 +112,9 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     // INSTAGRAM_DRIVER=fake only: a simulated comment or DM, handled like Instagram's webhook
     Route::post('channels/{channel}/test-events', ChannelTestEventController::class)->whereNumber('channel')->name('channels.test-events');
 
-    // Automations list, detail, wizard, start/stop, move to Trash
+    // Automations list, detail, wizard, start/stop, move to Trash and restore (S5.3)
     Route::get('automations', [AutomationController::class, 'index'])->name('automations.index');
+    Route::post('automations/{automation}/restore', [AutomationController::class, 'restore'])->withTrashed()->name('automations.restore');
     Route::post('automations', [AutomationController::class, 'store'])->name('automations.store');
     Route::get('automations/{automation}', [AutomationController::class, 'show'])->name('automations.show');
     Route::patch('automations/{automation}', [AutomationController::class, 'update'])->name('automations.update');
@@ -131,6 +133,9 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
 
     // Inbox: conversation list, thread, reply
     Route::get('conversations', [ConversationController::class, 'index'])->name('conversations.index');
+    Route::patch('conversations/{conversation}', [ConversationController::class, 'update'])->name('conversations.update'); // Mark done, Reopen, read
+    Route::get('inbox/settings', [InboxSettingsController::class, 'show'])->name('inbox.settings.show');
+    Route::patch('inbox/settings', [InboxSettingsController::class, 'update'])->name('inbox.settings.update');
     Route::get('conversations/{conversation}/messages', [ConversationController::class, 'messages'])->name('conversations.messages');
     Route::post('conversations/{conversation}/messages', [ConversationController::class, 'sendMessage'])->name('conversations.send-message');
 });

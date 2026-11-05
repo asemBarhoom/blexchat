@@ -24,6 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('instagram:refresh-tokens')->daily()->onOneServer();
+        // Empties the Trash of automations past Automation::TRASH_DAYS
+        $schedule->command('model:prune')->daily()->onOneServer();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
