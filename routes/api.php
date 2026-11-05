@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\InboxSettingsController;
 use App\Http\Controllers\Api\V1\InstagramConnectionController;
 use App\Http\Controllers\Api\V1\InstagramWebhookController;
+use App\Http\Controllers\Api\V1\LegalPageController;
 use App\Http\Controllers\Api\V1\OnboardingController;
 use App\Http\Controllers\Api\V1\PlanController;
 use App\Http\Controllers\Api\V1\PricingController;
@@ -32,6 +33,7 @@ use App\Http\Controllers\Api\V1\StatsController;
 use App\Http\Controllers\Api\V1\StripeWebhookController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\SurveyController;
+use App\Models\LegalPage;
 use Illuminate\Support\Facades\Route;
 
 // Marketing site: HomePage
@@ -43,6 +45,9 @@ Route::get('v1/plans', PlanController::class)->name('api.v1.plans');
 // Marketing site: the /solutions/{slug} pages
 Route::get('v1/solutions', [SolutionController::class, 'index'])->name('api.v1.solutions.index');
 Route::get('v1/solutions/{slug}', [SolutionController::class, 'show'])->name('api.v1.solutions.show');
+
+// Marketing site: the Privacy Policy and the Terms of Service
+Route::get('v1/legal/{slug}', LegalPageController::class)->whereIn('slug', LegalPage::SLUGS)->name('api.v1.legal.show');
 
 // Checkout modal: the tiers it offers and the trial reminder day
 Route::get('v1/checkout', CheckoutController::class)->name('api.v1.checkout');

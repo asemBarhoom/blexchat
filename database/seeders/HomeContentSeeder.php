@@ -18,7 +18,7 @@ use Illuminate\Database\Seeder;
 class HomeContentSeeder extends Seeder
 {
     /** Keys whose string values are the same in every language (ids, routes, frontend switches). */
-    private const SHARED_KEYS = ['id', 'type', 'channel', 'shape', 'tone', 'loop', 'slug', 'url'];
+    private const SHARED_KEYS = ['id', 'type', 'channel', 'shape', 'tone', 'loop', 'slug', 'url', 'menu', 'icon'];
 
     public function run(): void
     {
@@ -37,13 +37,17 @@ class HomeContentSeeder extends Seeder
                 'handwriting' => 'automatically.',
                 'photos' => ['relax' => $image('hero-photo.webp'), 'celebrate' => $image('hero-photo-celebrate.webp')],
                 'story' => [
-                    'pressure' => ['counter' => 'new messages', 'count' => 47, 'more' => '+44 more', 'chips' => [
+                    'pressure' => ['counter' => 'new messages', 'counter_one' => 'new message', 'counter_other' => 'new messages', 'count' => 47, 'more' => '+44 more', 'chips' => [
                         ['id' => 'c1', 'handle' => 'sara.styles', 'text' => 'How much is this? 😍'],
                         ['id' => 'c2', 'handle' => 'omar.fit', 'text' => 'Do you ship to Riyadh?'],
                         ['id' => 'c3', 'handle' => 'lina.m', 'text' => 'LINK PLEASE 🙏'],
                     ]],
                     'working_badge' => 'BLEXCHAT is replying',
-                    'relief' => ['stats' => [['id' => 'replies', 'to' => 47, 'suffix' => '', 'label' => 'replies'], ['id' => 'orders', 'to' => 12, 'suffix' => '', 'label' => 'orders'], ['id' => 'saved', 'to' => 3, 'suffix' => 'h', 'label' => 'saved']]],
+                    'relief' => ['stats' => [
+                        ['id' => 'replies', 'to' => 47, 'suffix' => '', 'label' => 'replies', 'label_one' => 'reply', 'label_other' => 'replies'],
+                        ['id' => 'orders', 'to' => 12, 'suffix' => '', 'label' => 'orders', 'label_one' => 'order', 'label_other' => 'orders'],
+                        ['id' => 'saved', 'to' => 3, 'suffix' => 'h', 'label' => 'saved', 'label_one' => 'saved', 'label_other' => 'saved'],
+                    ]],
                     'visitor_result' => 'Replied in 0.4s',
                 ],
                 'composer' => ['label' => 'Try it live', 'placeholder_prefix' => 'Write a comment…', 'placeholder' => 'Write a comment… e.g. How much?', 'sr_label' => 'Try a comment and see the automatic reply', 'send_label' => 'Send comment', 'examples' => ['How much?', 'Do you ship to Riyadh?', 'Link please 🙏']],
@@ -84,6 +88,52 @@ class HomeContentSeeder extends Seeder
             'get-started' => ['id' => 'get-started', 'type' => 'steps', 'heading' => 'Live in minutes, not weeks.', 'steps' => [['number' => '01', 'name' => 'Sign up free', 'line' => 'No credit card, no calls.', 'loop' => 'tick'], ['number' => '02', 'name' => 'Connect your channels', 'line' => 'Instagram, WhatsApp, TikTok, Messenger — one tap each.', 'loop' => 'channels'], ['number' => '03', 'name' => 'Go live', 'line' => 'Pick a flow, switch it on, watch replies happen.', 'loop' => 'switch']], 'cta' => ['label' => 'Get started free', 'url' => '/signup'], 'secondary_cta' => ['label' => 'See plans', 'url' => '/pricing']],
             'numbers' => ['id' => 'numbers', 'type' => 'numbers', 'heading' => 'BLEXCHAT in numbers'],
             'faq' => ['id' => 'faq', 'type' => 'faq', 'heading' => 'Questions, answered.'],
+            'navigation' => [
+                'items' => [
+                    ['id' => 'product', 'label' => 'Product', 'menu' => 'product'],
+                    ['id' => 'solutions', 'label' => 'Solutions', 'menu' => 'solutions'],
+                    ['id' => 'agencies', 'label' => 'Agencies', 'url' => '/solutions/agencies'],
+                    ['id' => 'pricing', 'label' => 'Pricing', 'url' => '/pricing'],
+                ],
+                'menus' => [
+                    'product' => ['heading' => 'Automate every conversation', 'items' => [
+                        ['id' => 'instagram', 'title' => 'Instagram', 'desc' => 'Turn comments and DMs into customers', 'channel' => 'instagram', 'url' => '/signup'],
+                        ['id' => 'whatsapp', 'title' => 'WhatsApp', 'desc' => 'Answer every chat, day and night', 'channel' => 'whatsapp', 'url' => '/signup'],
+                        ['id' => 'messenger', 'title' => 'Messenger', 'desc' => 'Automate your Facebook Page inbox', 'channel' => 'messenger', 'url' => '/signup'],
+                        ['id' => 'tiktok', 'title' => 'TikTok', 'desc' => 'Turn comments on your videos into orders', 'channel' => 'tiktok', 'url' => '/signup'],
+                        ['id' => 'ai', 'title' => 'Blexchat AI', 'desc' => 'Replies that know your catalogue', 'icon' => 'spark', 'url' => '#try-it', 'cta' => 'Try it live'],
+                    ]],
+                    'solutions' => ['heading' => 'Built for how you sell', 'columns' => true, 'items' => [
+                        ['id' => 'creators', 'title' => 'Creators', 'desc' => 'Turn followers into a subscriber list.', 'icon' => 'camera', 'url' => '/solutions/creators'],
+                        ['id' => 'e-commerce', 'title' => 'E-commerce', 'desc' => 'Recover carts and confirm orders in DM.', 'icon' => 'bag', 'url' => '/solutions/e-commerce'],
+                        ['id' => 'restaurants', 'title' => 'Restaurants', 'desc' => 'Bookings and orders from DMs.', 'icon' => 'cup', 'url' => '/solutions/restaurants'],
+                        ['id' => 'clinics', 'title' => 'Clinics', 'desc' => 'Appointments booked while you work.', 'icon' => 'tooth', 'url' => '/solutions/clinics'],
+                        ['id' => 'agencies', 'title' => 'Agencies', 'desc' => 'Run many client accounts from one seat.', 'icon' => 'briefcase', 'url' => '/solutions/agencies'],
+                        ['id' => 'real-estate', 'title' => 'Real estate', 'desc' => 'Qualify buyers before the first call.', 'icon' => 'house', 'url' => '/solutions/real-estate'],
+                        ['id' => 'education', 'title' => 'Education', 'desc' => 'Enrol students without a landing page.', 'icon' => 'cap', 'url' => '/solutions/education'],
+                        ['id' => 'support', 'title' => 'Support', 'desc' => 'Deflect repeat questions around the clock.', 'icon' => 'headset', 'url' => '/solutions/support'],
+                    ]],
+                ],
+                'sign_in' => ['label' => 'Sign in', 'url' => '/signin'],
+                'get_started' => ['label' => 'Get started', 'url' => '/signup'],
+                'get_started_mobile' => ['label' => 'Get started free', 'url' => '/signup'],
+                'aria' => ['main' => 'Main', 'mobile' => 'Mobile', 'open_menu' => 'Open menu', 'close_menu' => 'Close menu'],
+            ],
+            'footer' => [
+                'tagline' => 'Turn comments and DMs into customers.',
+                'cta' => ['label' => 'Get started free', 'url' => '/signup'],
+                'columns' => [
+                    ['title' => 'Product', 'links' => [['label' => 'Features', 'url' => '#features'], ['label' => 'Pricing', 'url' => '/pricing'], ['label' => 'Blexchat AI', 'url' => '#try-it']]],
+                    ['title' => 'Solutions', 'links' => [['label' => 'Creators', 'url' => '/solutions/creators'], ['label' => 'E-commerce', 'url' => '/solutions/e-commerce'], ['label' => 'Restaurants', 'url' => '/solutions/restaurants'], ['label' => 'Agencies', 'url' => '/solutions/agencies']]],
+                    ['title' => 'Account', 'links' => [['label' => 'Sign up', 'url' => '/signup'], ['label' => 'Sign in', 'url' => '/signin']]],
+                ],
+                'made_for' => 'Made for',
+                'made_for_sr' => 'Made for creators, brands, sellers and agencies',
+                'giant_words' => ['Creators', 'Brands', 'Sellers', 'Agencies'],
+                'copyright' => '© 2026 BLEXCHAT',
+                'legal' => [['id' => 'privacy', 'label' => 'Privacy', 'url' => '/legal/privacy'], ['id' => 'terms', 'label' => 'Terms', 'url' => '/legal/terms']],
+                'aria' => ['footer' => 'Footer', 'home' => 'Blexchat home'],
+            ],
             'demo_replies' => [
                 'card' => ['label' => 'Auto-reply', 'timer' => '0.4s'],
                 'fallback' => ['id' => 'fallback', 'reply' => 'Got it — sending you the details right now 💌', 'action' => 'View product', 'result' => '✓ Replied in 0.4s'],
@@ -120,13 +170,17 @@ class HomeContentSeeder extends Seeder
                 'headline_rotations' => [['اوصل', 'للملايين'], ['بِع في', 'كل رسالة'], ['رُد على', 'الجميع']],
                 'handwriting' => 'تلقائياً.',
                 'story' => [
-                    'pressure' => ['counter' => 'رسالة جديدة', 'more' => '+44 أخرى', 'chips' => [
+                    'pressure' => ['counter' => 'رسالة جديدة', 'counter_zero' => 'رسالة جديدة', 'counter_one' => 'رسالة جديدة', 'counter_two' => 'رسالتان جديدتان', 'counter_few' => 'رسائل جديدة', 'counter_many' => 'رسالة جديدة', 'counter_other' => 'رسالة جديدة', 'more' => '+44 أخرى', 'chips' => [
                         ['handle' => 'sara.styles', 'text' => $comments['price']],
                         ['handle' => 'omar.fit', 'text' => $comments['shipping']],
                         ['handle' => 'lina.m', 'text' => $comments['link']],
                     ]],
                     'working_badge' => 'بلكس تشات يرد الآن',
-                    'relief' => ['stats' => [['suffix' => '', 'label' => 'رد'], ['suffix' => '', 'label' => 'طلب'], ['suffix' => 'س', 'label' => 'موفّرة']]],
+                    'relief' => ['stats' => [
+                        ['suffix' => '', 'label' => 'رد', 'label_zero' => 'رد', 'label_one' => 'رد', 'label_two' => 'ردّان', 'label_few' => 'ردود', 'label_many' => 'ردًا', 'label_other' => 'رد'],
+                        ['suffix' => '', 'label' => 'طلب', 'label_zero' => 'طلب', 'label_one' => 'طلب', 'label_two' => 'طلبان', 'label_few' => 'طلبات', 'label_many' => 'طلبًا', 'label_other' => 'طلب'],
+                        ['suffix' => 'س', 'label' => 'موفّرة', 'label_zero' => 'موفّرة', 'label_one' => 'موفّرة', 'label_two' => 'موفّرة', 'label_few' => 'موفّرة', 'label_many' => 'موفّرة', 'label_other' => 'موفّرة'],
+                    ]],
                     'visitor_result' => 'تم الرد خلال 0.4 ثانية',
                 ],
                 'composer' => ['label' => 'جرّبه الآن', 'placeholder_prefix' => 'اكتب تعليقاً…', 'placeholder' => 'اكتب تعليقاً… مثلاً: بكم؟', 'sr_label' => 'جرّب تعليقاً وشاهد الرد التلقائي', 'send_label' => 'إرسال التعليق', 'examples' => ['بكم؟', 'توصلون للرياض؟', 'الرابط لو سمحت 🙏']],
@@ -203,6 +257,47 @@ class HomeContentSeeder extends Seeder
             ],
             'numbers' => ['heading' => 'بلكس تشات بالأرقام'],
             'faq' => ['heading' => 'أسئلة وأجوبة.'],
+            'navigation' => [
+                'items' => [['label' => 'المنتج'], ['label' => 'الحلول'], ['label' => 'الوكالات'], ['label' => 'الأسعار']],
+                'menus' => [
+                    'product' => ['heading' => 'أتمتة لكل محادثة', 'items' => [
+                        ['title' => 'Instagram', 'desc' => 'حوّل التعليقات والرسائل الخاصة إلى عملاء'],
+                        ['title' => 'WhatsApp', 'desc' => 'رُدّ على كل محادثة، ليلًا ونهارًا'],
+                        ['title' => 'Messenger', 'desc' => 'أتمتة صندوق الوارد لصفحتك على Facebook'],
+                        ['title' => 'TikTok', 'desc' => 'حوّل التعليقات على فيديوهاتك إلى طلبات'],
+                        ['title' => 'Blexchat AI', 'desc' => 'ردود تعرف كتالوج منتجاتك', 'cta' => 'جرّبه مباشرة'],
+                    ]],
+                    'solutions' => ['heading' => 'مصمَّم لطريقتك في البيع', 'items' => [
+                        ['title' => 'صنّاع المحتوى', 'desc' => 'حوّل متابعيك إلى قائمة مشتركين.'],
+                        ['title' => 'التجارة الإلكترونية', 'desc' => 'استرجع السلال المتروكة وأكّد الطلبات في الرسائل الخاصة.'],
+                        ['title' => 'المطاعم', 'desc' => 'حجوزات وطلبات من الرسائل الخاصة.'],
+                        ['title' => 'العيادات', 'desc' => 'مواعيد تُحجز وأنت منشغل بعملك.'],
+                        ['title' => 'الوكالات', 'desc' => 'أدِر حسابات عملاء كثيرة بمستخدم واحد.'],
+                        ['title' => 'العقارات', 'desc' => 'حدّد المشترين الجادّين قبل أول مكالمة.'],
+                        ['title' => 'التعليم', 'desc' => 'سجّل الطلاب بدون صفحة هبوط.'],
+                        ['title' => 'الدعم', 'desc' => 'أجب عن الأسئلة المتكررة تلقائيًا على مدار الساعة.'],
+                    ]],
+                ],
+                'sign_in' => ['label' => 'تسجيل الدخول'],
+                'get_started' => ['label' => 'ابدأ الآن'],
+                'get_started_mobile' => ['label' => 'ابدأ مجانًا'],
+                'aria' => ['main' => 'التنقل الرئيسي', 'mobile' => 'التنقل على الجوال', 'open_menu' => 'فتح القائمة', 'close_menu' => 'إغلاق القائمة'],
+            ],
+            'footer' => [
+                'tagline' => 'حوّل التعليقات والرسائل الخاصة إلى عملاء.',
+                'cta' => ['label' => 'ابدأ مجانًا'],
+                'columns' => [
+                    ['title' => 'المنتج', 'links' => [['label' => 'المزايا'], ['label' => 'الأسعار'], ['label' => 'Blexchat AI']]],
+                    ['title' => 'الحلول', 'links' => [['label' => 'صنّاع المحتوى'], ['label' => 'التجارة الإلكترونية'], ['label' => 'المطاعم'], ['label' => 'الوكالات']]],
+                    ['title' => 'الحساب', 'links' => [['label' => 'إنشاء حساب'], ['label' => 'تسجيل الدخول']]],
+                ],
+                'made_for' => 'صُمّم من أجل',
+                'made_for_sr' => 'صُمّم من أجل صنّاع المحتوى والعلامات التجارية والبائعين والوكالات',
+                'giant_words' => ['صنّاع المحتوى', 'العلامات التجارية', 'البائعين', 'الوكالات'],
+                'copyright' => '© 2026 BLEXCHAT',
+                'legal' => [['label' => 'الخصوصية'], ['label' => 'الشروط']],
+                'aria' => ['footer' => 'تذييل الصفحة', 'home' => 'الصفحة الرئيسية لـ Blexchat'],
+            ],
             'demo_replies' => [
                 'card' => ['label' => 'رد تلقائي', 'timer' => '0.4 ث'],
                 'fallback' => ['reply' => 'وصلنا — نرسل لك التفاصيل الحين 💌', 'action' => 'شوف المنتج', 'result' => '✓ تم الرد خلال 0.4 ثانية'],

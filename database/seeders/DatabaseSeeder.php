@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             ChannelConnectScreenSeeder::class,
             PricingPageSeeder::class,
             AuthScreenSeeder::class,
+            LegalPageSeeder::class,
             EmailTemplateSeeder::class,
             ChannelOptionSeeder::class,
             FirstMoveSeeder::class,
