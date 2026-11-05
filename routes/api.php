@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Auth\AuthScreenController;
 use App\Http\Controllers\Api\V1\Auth\GoogleController;
 use App\Http\Controllers\Api\V1\Auth\LoginLinkController;
 use App\Http\Controllers\Api\V1\AutomationController;
+use App\Http\Controllers\Api\V1\AutomationFolderController;
 use App\Http\Controllers\Api\V1\AutomationTemplateController;
 use App\Http\Controllers\Api\V1\ChannelAccessRequestController;
 use App\Http\Controllers\Api\V1\ChannelConnectScreenController;
@@ -128,6 +129,9 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::patch('automations/{automation}', [AutomationController::class, 'update'])->name('automations.update');
     Route::delete('automations/{automation}', [AutomationController::class, 'destroy'])->name('automations.destroy');
     Route::patch('automations/{automation}/toggle', [AutomationController::class, 'toggle'])->name('automations.toggle');
+
+    // Automation folders: the list's Create folder, rename and delete; automations move with PATCH automations/{id}
+    Route::apiResource('automation-folders', AutomationFolderController::class)->except('show')->parameters(['automation-folders' => 'folder']);
 
     // Automation wizard (W11–W15, Review) and its template picker (W19)
     Route::get('automation-templates', AutomationTemplateController::class)->name('automation-templates.index');

@@ -71,6 +71,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Automation::class);
     }
 
+    public function automationFolders(): HasMany
+    {
+        return $this->hasMany(AutomationFolder::class);
+    }
+
     public function subscription(): HasOne
     {
         return $this->hasOne(Subscription::class);

@@ -52,6 +52,7 @@ class Automation extends Model
     protected $fillable = [
         'user_id',
         'channel_id',
+        'automation_folder_id',
         'automation_template_id',
         'name',
         'trigger_type',
@@ -223,6 +224,14 @@ class Automation extends Model
     public function channel(): BelongsTo
     {
         return $this->belongsTo(Channel::class);
+    }
+
+    /**
+     * @return BelongsTo<AutomationFolder, $this>
+     */
+    public function folder(): BelongsTo
+    {
+        return $this->belongsTo(AutomationFolder::class, 'automation_folder_id');
     }
 
     public function post(): BelongsTo
