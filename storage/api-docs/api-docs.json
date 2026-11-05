@@ -676,6 +676,7 @@
                     "Automations"
                 ],
                 "summary": "List automations",
+                "description": "Each row carries `runs` (DMs and public replies it sent) and `ctr` (clicks ÷ DMs sent with a button; null while none had one), for the list’s Runs and CTR columns.",
                 "operationId": "c72fb0b8dc11d136aa13f458b1e172ab",
                 "parameters": [
                     {
@@ -696,6 +697,15 @@
                                 "active",
                                 "inactive"
                             ]
+                        }
+                    },
+                    {
+                        "name": "folder_id",
+                        "in": "query",
+                        "description": "Only the automations in this folder",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
                         }
                     },
                     {
@@ -763,6 +773,7 @@
                     "Automations"
                 ],
                 "summary": "Get automation detail",
+                "description": "Adds `runs`, `ctr` and the `post` it watches (null for DM and story automations, or when it watches every post), for the Preview tab.",
                 "operationId": "4e8332fd591748f100c51fae58ab7db7",
                 "parameters": [
                     {
@@ -824,6 +835,7 @@
                     "Automations"
                 ],
                 "summary": "Update an automation",
+                "description": "Also moves it into a folder: send `automation_folder_id`, or null to take it out (drag and drop on the list).",
                 "operationId": "267cf386e7507f3f3560848aa9a77955",
                 "parameters": [
                     {
@@ -835,6 +847,29 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "automation_folder_id": {
+                                        "description": "One of the owner’s folders, or null",
+                                        "type": "integer",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "example": {
+                                "automation_folder_id": 3
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Updated"
@@ -921,6 +956,105 @@
                 "responses": {
                     "200": {
                         "description": "Status updated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/automations/{id}/ai": {
+            "patch": {
+                "tags": [
+                    "Automations"
+                ],
+                "summary": "Turn Blexchat AI on or off for one automation",
+                "description": "On plans that include Blexchat AI (`has_ai` on the plan). Turning it off always works, so a downgraded account can still switch it off. The switch is stored now; AI-written replies start once the AI engine is live.",
+                "operationId": "d7ed251755407b594f29677e46c0012d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "enabled"
+                                ],
+                                "properties": {
+                                    "enabled": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Saved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "ai_enabled": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Another owner’s automation; or `code: plan_required` when the plan does not include Blexchat AI (show Upgrade)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "code": {
+                                            "type": "string",
+                                            "enum": [
+                                                "plan_required"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -1060,6 +1194,207 @@
                     },
                     "422": {
                         "description": "A missing or invalid answer",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/automation-folders": {
+            "get": {
+                "tags": [
+                    "Automations"
+                ],
+                "summary": "The owner’s automation folders, by name",
+                "description": "The folder tabs above the automations list. \"All\" is not a folder: it is the list without `folder_id`.",
+                "operationId": "eb4a7642d3545b356a195e7d4be3384c",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AutomationFolder"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Automations"
+                ],
+                "summary": "Create folder",
+                "operationId": "1051d601b2f00ec89b367a52970e10d9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Summer sale",
+                                        "maxLength": 60
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AutomationFolder"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "No name, a name already used, or 50 folders already",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/automation-folders/{id}": {
+            "delete": {
+                "tags": [
+                    "Automations"
+                ],
+                "summary": "Delete a folder",
+                "description": "Its automations stay, outside any folder; none is stopped or moved to the Trash.",
+                "operationId": "48c06f5a43de198fe2de39e340e59ae4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    },
+                    "403": {
+                        "description": "Another owner’s folder"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Automations"
+                ],
+                "summary": "Rename a folder",
+                "operationId": "965d482c9d6889dd33ed9c7b47da055f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 60
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Renamed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AutomationFolder"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Another owner’s folder"
+                    },
+                    "422": {
+                        "description": "Validation error",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2623,6 +2958,55 @@
                         }
                     },
                     {
+                        "name": "folder",
+                        "in": "query",
+                        "description": "favorites: starred conversations; labels: those with at least one label",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "favorites",
+                                "labels"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "label",
+                        "in": "query",
+                        "description": "Only conversations with this label",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "By the last message: newest (default) or oldest first",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "newest",
+                                "oldest"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "state",
+                        "in": "query",
+                        "description": "human: the Needs you folder; automation: an automation is answering; open: neither",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "open",
+                                "automation",
+                                "human"
+                            ]
+                        }
+                    },
+                    {
                         "name": "unread",
                         "in": "query",
                         "description": "true: only conversations with unread messages",
@@ -2657,7 +3041,7 @@
                 "tags": [
                     "Conversations"
                 ],
-                "summary": "Mark a conversation done, reopen it, or mark it read",
+                "summary": "Mark a conversation done, reopen it, mark it read, star it or label it",
                 "description": "\"Mark done\" sends `status: resolved`, \"Reopen\" sends `status: open`, and opening the thread sends `read: true`, which sets `unread` to 0. A new message from the customer reopens a resolved conversation.",
                 "operationId": "dab0ecd00f155af20b33a55cb61d7f28",
                 "parameters": [
@@ -2685,8 +3069,21 @@
                                         ]
                                     },
                                     "read": {
-                                        "description": "Required without status; true sets unread to 0",
+                                        "description": "true sets unread to 0",
                                         "type": "boolean"
+                                    },
+                                    "starred": {
+                                        "description": "In or out of Favorites",
+                                        "type": "boolean"
+                                    },
+                                    "labels": {
+                                        "description": "The whole list; [] removes every label",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 30
+                                        },
+                                        "maxItems": 10
                                     }
                                 },
                                 "type": "object"
@@ -5088,6 +5485,24 @@
                         "description": "Required with follow_up",
                         "type": "string",
                         "maxLength": 640
+                    }
+                },
+                "type": "object"
+            },
+            "AutomationFolder": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Ramadan"
+                    },
+                    "automations_count": {
+                        "description": "Automations in it, outside the Trash",
+                        "type": "integer",
+                        "example": 2
                     }
                 },
                 "type": "object"
