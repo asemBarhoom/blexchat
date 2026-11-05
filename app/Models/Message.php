@@ -10,6 +10,12 @@ class Message extends Model
 {
     use HasFactory;
 
+    /** inbound and outbound are chat messages; a system line (a handover) was sent to nobody. */
+    public const DIRECTION_SYSTEM = 'system';
+
+    /** "Handed over to you": `content` holds the reason code (Conversation::HANDOVER_REASONS). */
+    public const TYPE_HANDOVER = 'handover';
+
     protected $fillable = [
         'conversation_id',
         'platform_message_id',

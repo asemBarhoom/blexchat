@@ -14,6 +14,15 @@ class Conversation extends Model
     /** Open, or resolved by the inbox's "Mark done". A new message reopens it. */
     public const STATUSES = ['open', 'resolved'];
 
+    /**
+     * Who the conversation waits on: nobody yet (open), an automation that is answering it,
+     * or the owner (human, the inbox's "Needs you"), after an automation handed it over.
+     */
+    public const STATES = ['open', 'automation', 'human'];
+
+    /** Why an automation hands a conversation over; each has a text in lang/{locale}/inbox.php. */
+    public const HANDOVER_REASONS = ['unmatched'];
+
     protected $fillable = [
         'channel_id',
         'contact_id',
@@ -22,9 +31,15 @@ class Conversation extends Model
         'contact_avatar',
         'contact_platform_id',
         'status',
+        'state',
         'unread_count',
         'last_message',
         'last_message_at',
+    ];
+
+    /** The column's default, so a conversation created a moment ago reads it too. */
+    protected $attributes = [
+        'state' => 'open',
     ];
 
     protected function casts(): array
@@ -48,5 +63,44 @@ class Conversation extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);
+    }
+
+    /**
+     * An automation was answering, and the customer wrote something none answers: the thread
+     * gets a "Handed over to you" line and the conversation moves to Needs you.
+     */
+    public function handOver(string $reason): void
+    {
+        if ($this->state === 'human') {
+            return;
+        }
+
+        $this->messages()->create([
+            'direction' => Message::DIRECTION_SYSTEM,
+            'type' => Message::TYPE_HANDOVER,
+            'content' => $reason,
+            'automated' => false,
+            'sent_at' => now(),
+        ]);
+
+        $this->update(['state' => 'human']);
+    }
+
+    /**
+     * An automation answered; a conversation already waiting on the owner stays in Needs you.
+     */
+    public function markAnsweredByAutomation(): void
+    {
+        if ($this->state === 'open') {
+            $this->update(['state' => 'automation']);
+        }
+    }
+
+    /**
+     * The owner replied or marked it done: nobody is waiting any more.
+     */
+    public function markHandledByOwner(): void
+    {
+        $this->update(['state' => 'open']);
     }
 }

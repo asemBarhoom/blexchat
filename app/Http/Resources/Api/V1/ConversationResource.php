@@ -10,19 +10,20 @@ class ConversationResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'              => $this->id,
-            'channel'         => [
-                'id'       => $this->channel_id,
+            'id' => $this->id,
+            'channel' => [
+                'id' => $this->channel_id,
                 'platform' => $this->channel?->platform,
             ],
-            'contact'         => [
-                'name'   => $this->contact_name,
+            'contact' => [
+                'name' => $this->contact_name,
                 'avatar' => $this->contact_avatar,
             ],
-            'last_message'    => $this->last_message,
+            'last_message' => $this->last_message,
             'last_message_at' => $this->last_message_at?->toIso8601String(),
-            'unread'          => $this->unread_count,
-            'status'          => $this->status,
+            'unread' => $this->unread_count,
+            'status' => $this->status,
+            'state' => $this->state,
         ];
     }
 }

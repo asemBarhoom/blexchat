@@ -28,6 +28,7 @@ class ConversationController extends Controller
         parameters: [
             new OA\Parameter(name: 'channel_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['open', 'resolved', 'all'])),
+            new OA\Parameter(name: 'state', in: 'query', required: false, description: 'human: the Needs you folder; automation: an automation is answering; open: neither', schema: new OA\Schema(type: 'string', enum: ['open', 'automation', 'human'])),
             new OA\Parameter(name: 'unread', in: 'query', required: false, description: 'true: only conversations with unread messages', schema: new OA\Schema(type: 'boolean')),
             new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
         ],
@@ -52,6 +53,10 @@ class ConversationController extends Controller
 
         if ($request->boolean('unread')) {
             $query->where('unread_count', '>', 0);
+        }
+
+        if (in_array($request->query('state'), Conversation::STATES, true)) {
+            $query->where('state', $request->query('state'));
         }
 
         return new ConversationCollection(
@@ -83,6 +88,11 @@ class ConversationController extends Controller
             'status' => $request->validated('status'),
             'unread_count' => $request->boolean('read') ? 0 : null,
         ], fn (mixed $value): bool => $value !== null));
+
+        // Marked done: it no longer waits on anyone.
+        if ($request->validated('status') === 'resolved') {
+            $conversation->markHandledByOwner();
+        }
 
         return response()->json(['data' => new ConversationResource($conversation->load('channel'))]);
     }
@@ -180,6 +190,8 @@ class ConversationController extends Controller
             'last_message' => $request->content,
             'last_message_at' => now(),
         ]);
+        // The owner answered, so the conversation is out of Needs you.
+        $conversation->markHandledByOwner();
 
         return response()->json(['data' => new MessageResource($message)], 201);
     }
