@@ -699,6 +699,16 @@
                         }
                     },
                     {
+                        "name": "trashed",
+                        "in": "query",
+                        "description": "true lists the Trash (S5.3) instead, last deleted first; each has `trashed_at` and `purges_at`",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "required": false,
@@ -779,7 +789,8 @@
                 "tags": [
                     "Automations"
                 ],
-                "summary": "Delete an automation",
+                "summary": "Move an automation to the Trash",
+                "description": "Stops it and moves it to the Trash, where it is kept for 30 days (`purges_at`) and then deleted for good. Undo and the Trash’s Restore call POST /api/v1/automations/{id}/restore.",
                 "operationId": "ef4f3a223c8233e24cdbaeea21997cad",
                 "parameters": [
                     {
@@ -793,7 +804,13 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Deleted"
+                        "description": "In the Trash; `data` is the automation with `trashed_at` and `purges_at`"
+                    },
+                    "403": {
+                        "description": "Another owner’s automation"
+                    },
+                    "404": {
+                        "description": "No such automation, or it is already in the Trash"
                     }
                 },
                 "security": [
@@ -821,6 +838,42 @@
                 "responses": {
                     "200": {
                         "description": "Updated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/automations/{id}/restore": {
+            "post": {
+                "tags": [
+                    "Automations"
+                ],
+                "summary": "Restore an automation from the Trash",
+                "description": "From the toast’s Undo and the Trash’s Restore. It comes back stopped: restoring does not start it replying again.",
+                "operationId": "833a972dfc0a3854e1ae9082f9b86793",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Back in the list, stopped"
+                    },
+                    "403": {
+                        "description": "Another owner’s automation"
+                    },
+                    "404": {
+                        "description": "No such automation in the Trash"
                     }
                 },
                 "security": [
@@ -1657,6 +1710,129 @@
                 ]
             }
         },
+        "/api/v1/channels/{channel}/test-events": {
+            "post": {
+                "tags": [
+                    "Channels"
+                ],
+                "summary": "Simulate a comment or DM on a test channel (development only)",
+                "description": "Available only while `INSTAGRAM_DRIVER=fake`; 404 otherwise. Feeds the event through the same handling as Instagram's webhook, so the matching automation answers (its reply is logged, not sent), the contact is recorded and the inbox fills.\n\n- `comment`: a comment on `post` (a post id from **GET /api/v1/channels/{channel}/posts**; the newest post when left out).\n- `message`: a DM from `from`.",
+                "operationId": "ae6ac75eb583103d0419e58dde439d8c",
+                "parameters": [
+                    {
+                        "name": "channel",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "type",
+                                    "text"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "comment",
+                                            "message"
+                                        ]
+                                    },
+                                    "text": {
+                                        "type": "string",
+                                        "example": "price",
+                                        "maxLength": 1000
+                                    },
+                                    "from": {
+                                        "description": "The customer’s Instagram username",
+                                        "type": "string",
+                                        "example": "lulu.styles",
+                                        "maxLength": 30
+                                    },
+                                    "post": {
+                                        "description": "Comments only: the post’s platform id",
+                                        "type": "string",
+                                        "example": "fake-1-post-1"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The event was handled",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "type": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "comment",
+                                                        "message"
+                                                    ]
+                                                },
+                                                "comment_id": {
+                                                    "type": "integer",
+                                                    "nullable": true
+                                                },
+                                                "conversation_id": {
+                                                    "description": "The DM thread, or the one the private reply opened",
+                                                    "type": "integer",
+                                                    "nullable": true
+                                                },
+                                                "automation_id": {
+                                                    "description": "The automation that answered, if any",
+                                                    "type": "integer",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    },
+                    "403": {
+                        "description": "Another owner’s channel"
+                    },
+                    "404": {
+                        "description": "No such channel, or the fake Instagram driver is off"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/checkout": {
             "get": {
                 "tags": [
@@ -1706,8 +1882,8 @@
                 "tags": [
                     "Checkout"
                 ],
-                "summary": "Pay for a plan by card (Stripe Checkout)",
-                "description": "\"Continue To Payment\" in the checkout. Opens a Stripe Checkout Session and returns its `url`: send the\nbrowser there. After paying, Stripe sends the visitor to `FRONTEND_URL/app?checkout=success&session_id=…`\n(call GET /api/v1/checkout/session/{id} there); \"Back\" on the payment page returns to\n`FRONTEND_URL/app?checkout=cancelled` with nothing charged.\n\nThe plan is in place once Stripe reports the payment. It renews every month or year until cancelled.\nA `coupon` (checked with POST /api/v1/coupons/check) comes off the first payment.\n\nFree trials never come here: they take no card (POST /api/v1/onboarding/plan).",
+                "summary": "Open the payment page for a plan (\"Continue To Payment\")",
+                "description": "Returns a payment session; send the browser to its `url`. Which page that is depends on the server's\n`PAYMENT_DRIVER`, and the frontend handles both the same way.\n\n**Fake driver (`PAYMENT_DRIVER=fake`: the development server and local).** `url` is a test page on this\nAPI (`/payments/fake/{id}?expires=…&signature=…`) showing the plan, the billing period, the coupon and\nthe total, with two buttons and no card:\n\n| Button | Effect | Browser goes to |\n|---|---|---|\n| Pay (test) | The plan is paid and in place at once | `FRONTEND_URL/app?checkout=success&session_id={id}` |\n| Decline | Nothing is charged; the session stays `open` | `FRONTEND_URL/app?checkout=cancelled` |\n\nPay on a session that has expired also goes to `checkout=cancelled`. Add `&lang=ar` to `url` for the\nArabic page. The page answers 403 when its link is altered or older than 24 hours, and 404 wherever\nthe fake driver is off.\n\n**Stripe (`PAYMENT_DRIVER=stripe`: production).** `url` is the Stripe-hosted page; it sends the browser\nto the same two addresses. The plan is in place once Stripe reports the payment, a few seconds later.\n\n**On `checkout=success`:** read `session_id` from the address and call\nGET /api/v1/checkout/session/{session_id}. `status: complete` means paid, and `subscription` holds the\nplan; poll every few seconds while it is `open`. **On `checkout=cancelled`:** show the plan unchanged;\nthe visitor may start again.\n\nA `coupon` (checked with POST /api/v1/coupons/check) comes off the first payment. The plan renews every\nmonth or year until cancelled. Free trials never come here: they take no card (POST /api/v1/onboarding/plan).",
                 "operationId": "07ee7867627ed699feda4fb60bb8a065",
                 "parameters": [
                     {
@@ -1812,7 +1988,7 @@
                         }
                     },
                     "503": {
-                        "description": "`payments_unavailable`: no Stripe key is set on this server",
+                        "description": "`payments_unavailable`: no Stripe key is set on this server (or the fake driver is refused in production)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1835,7 +2011,7 @@
                     "Checkout"
                 ],
                 "summary": "How a card payment ended",
-                "description": "For the success page: `session_id` from its address. While Stripe has not reported the payment yet, this asks Stripe, so the plan shows as soon as it is paid. Poll every few seconds while `status` is `open`.",
+                "description": "For `FRONTEND_URL/app?checkout=success&session_id={id}`: pass `session_id` from that address. `complete` means paid and `subscription` holds the plan. On the fake driver it is `complete` straight after \"Pay (test)\"; on Stripe it may still be `open` for a few seconds (this asks Stripe), so poll every few seconds while `status` is `open`. After \"Decline\" it stays `open`.",
                 "operationId": "a8980e927aaec1430f5f459e27e911f8",
                 "parameters": [
                     {
@@ -1845,7 +2021,7 @@
                         "schema": {
                             "type": "string"
                         },
-                        "example": "cs_test_a1B2c3"
+                        "example": "fake_cs_Kq3vX9mT2pLw8RbN4cYh7eFz"
                     },
                     {
                         "name": "lang",
@@ -2447,6 +2623,15 @@
                         }
                     },
                     {
+                        "name": "unread",
+                        "in": "query",
+                        "description": "true: only conversations with unread messages",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "required": false,
@@ -2458,6 +2643,79 @@
                 "responses": {
                     "200": {
                         "description": "Conversation list"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/conversations/{id}": {
+            "patch": {
+                "tags": [
+                    "Conversations"
+                ],
+                "summary": "Mark a conversation done, reopen it, or mark it read",
+                "description": "\"Mark done\" sends `status: resolved`, \"Reopen\" sends `status: open`, and opening the thread sends `read: true`, which sets `unread` to 0. A new message from the customer reopens a resolved conversation.",
+                "operationId": "dab0ecd00f155af20b33a55cb61d7f28",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "status": {
+                                        "description": "Required without read",
+                                        "type": "string",
+                                        "enum": [
+                                            "open",
+                                            "resolved"
+                                        ]
+                                    },
+                                    "read": {
+                                        "description": "Required without status; true sets unread to 0",
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "example": {
+                                "status": "resolved"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The conversation as the list shows it"
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    },
+                    "403": {
+                        "description": "Another owner’s conversation"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -3066,6 +3324,92 @@
                         "description": "Homepage content has not been seeded"
                     }
                 }
+            }
+        },
+        "/api/v1/inbox/settings": {
+            "get": {
+                "tags": [
+                    "Conversations"
+                ],
+                "summary": "Inbox settings",
+                "operationId": "ff7f36db47d96d1554a573468644c7e1",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InboxSettings"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Conversations"
+                ],
+                "summary": "Change inbox settings",
+                "operationId": "81018ddda8b8a019ed60401c3bfd80f0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/InboxSettings"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Saved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InboxSettings"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/api/v1/channels/instagram/authorize": {
@@ -4899,14 +5243,14 @@
             "CheckoutSession": {
                 "properties": {
                     "id": {
-                        "description": "The Stripe Checkout Session id; the success page gets it back as `session_id`",
+                        "description": "The payment session id (`cs_…` on Stripe, `fake_cs_…` on the fake driver); the success page gets it back as `session_id`",
                         "type": "string",
-                        "example": "cs_test_a1B2c3"
+                        "example": "fake_cs_Kq3vX9mT2pLw8RbN4cYh7eFz"
                     },
                     "url": {
-                        "description": "Send the browser here: the Stripe-hosted payment page",
+                        "description": "Send the browser here: the fake test page on development servers, or the Stripe-hosted page in production",
                         "type": "string",
-                        "example": "https://checkout.stripe.com/c/pay/cs_test_a1B2c3"
+                        "example": "https://blexchat-production-ewv0u6.laravel.cloud/payments/fake/fake_cs_Kq3vX9mT2pLw8RbN4cYh7eFz?expires=1793900000&signature=…"
                     },
                     "status": {
                         "description": "`complete` once paid: `subscription` then holds the plan in place",
@@ -6316,6 +6660,16 @@
                             }
                         },
                         "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "InboxSettings": {
+                "properties": {
+                    "accepting_new": {
+                        "description": "The inbox’s \"Accept new conversations\" switch. While off, automations do not open a conversation with someone new: their messages still arrive in the inbox, unanswered, and existing conversations carry on as before.",
+                        "type": "boolean",
+                        "example": true
                     }
                 },
                 "type": "object"

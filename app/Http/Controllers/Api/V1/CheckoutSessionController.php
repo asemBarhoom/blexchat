@@ -15,8 +15,8 @@ use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 #[OA\Schema(schema: 'CheckoutSession', properties: [
-    new OA\Property(property: 'id', type: 'string', example: 'cs_test_a1B2c3', description: 'The payment session id (`cs_…` on Stripe, `fake_cs_…` on the fake driver); the success page gets it back as `session_id`'),
-    new OA\Property(property: 'url', type: 'string', example: 'https://checkout.stripe.com/c/pay/cs_test_a1B2c3', description: 'Send the browser here: the Stripe-hosted payment page, or the fake test page on development servers'),
+    new OA\Property(property: 'id', type: 'string', example: 'fake_cs_Kq3vX9mT2pLw8RbN4cYh7eFz', description: 'The payment session id (`cs_…` on Stripe, `fake_cs_…` on the fake driver); the success page gets it back as `session_id`'),
+    new OA\Property(property: 'url', type: 'string', example: 'https://blexchat-production-ewv0u6.laravel.cloud/payments/fake/fake_cs_Kq3vX9mT2pLw8RbN4cYh7eFz?expires=1793900000&signature=…', description: 'Send the browser here: the fake test page on development servers, or the Stripe-hosted page in production'),
     new OA\Property(property: 'status', type: 'string', enum: ['open', 'complete', 'expired'], description: '`complete` once paid: `subscription` then holds the plan in place'),
     new OA\Property(property: 'plan', type: 'string', example: 'pro'),
     new OA\Property(property: 'billing', type: 'string', enum: ['monthly', 'annual']),
@@ -35,20 +35,34 @@ class CheckoutSessionController extends Controller
 
     #[OA\Post(
         path: '/api/v1/checkout/session',
-        summary: 'Pay for a plan by card (Stripe Checkout, or the fake page in development)',
+        summary: 'Open the payment page for a plan ("Continue To Payment")',
         description: <<<'MD'
-            "Continue To Payment" in the checkout. Opens a Stripe Checkout Session and returns its `url`: send the
-            browser there. After paying, Stripe sends the visitor to `FRONTEND_URL/app?checkout=success&session_id=…`
-            (call GET /api/v1/checkout/session/{id} there); "Back" on the payment page returns to
-            `FRONTEND_URL/app?checkout=cancelled` with nothing charged.
+            Returns a payment session; send the browser to its `url`. Which page that is depends on the server's
+            `PAYMENT_DRIVER`, and the frontend handles both the same way.
 
-            The plan is in place once Stripe reports the payment. It renews every month or year until cancelled.
+            **Fake driver (`PAYMENT_DRIVER=fake`: the development server and local).** `url` is a test page on this
+            API (`/payments/fake/{id}?expires=…&signature=…`) showing the plan, the billing period, the coupon and
+            the total, with two buttons and no card:
 
-            With `PAYMENT_DRIVER=fake` (the default on local servers) `url` is a test page on this API with
-            "Pay (test)" and "Decline" buttons instead: no card, no Stripe, the same redirects and the same result.
-            A `coupon` (checked with POST /api/v1/coupons/check) comes off the first payment.
+            | Button | Effect | Browser goes to |
+            |---|---|---|
+            | Pay (test) | The plan is paid and in place at once | `FRONTEND_URL/app?checkout=success&session_id={id}` |
+            | Decline | Nothing is charged; the session stays `open` | `FRONTEND_URL/app?checkout=cancelled` |
 
-            Free trials never come here: they take no card (POST /api/v1/onboarding/plan).
+            Pay on a session that has expired also goes to `checkout=cancelled`. Add `&lang=ar` to `url` for the
+            Arabic page. The page answers 403 when its link is altered or older than 24 hours, and 404 wherever
+            the fake driver is off.
+
+            **Stripe (`PAYMENT_DRIVER=stripe`: production).** `url` is the Stripe-hosted page; it sends the browser
+            to the same two addresses. The plan is in place once Stripe reports the payment, a few seconds later.
+
+            **On `checkout=success`:** read `session_id` from the address and call
+            GET /api/v1/checkout/session/{session_id}. `status: complete` means paid, and `subscription` holds the
+            plan; poll every few seconds while it is `open`. **On `checkout=cancelled`:** show the plan unchanged;
+            the visitor may start again.
+
+            A `coupon` (checked with POST /api/v1/coupons/check) comes off the first payment. The plan renews every
+            month or year until cancelled. Free trials never come here: they take no card (POST /api/v1/onboarding/plan).
             MD,
         security: [['sanctum' => []]],
         tags: ['Checkout'],
@@ -98,11 +112,11 @@ class CheckoutSessionController extends Controller
     #[OA\Get(
         path: '/api/v1/checkout/session/{id}',
         summary: 'How a card payment ended',
-        description: 'For the success page: `session_id` from its address. While Stripe has not reported the payment yet, this asks Stripe, so the plan shows as soon as it is paid. Poll every few seconds while `status` is `open`.',
+        description: 'For `FRONTEND_URL/app?checkout=success&session_id={id}`: pass `session_id` from that address. `complete` means paid and `subscription` holds the plan. On the fake driver it is `complete` straight after "Pay (test)"; on Stripe it may still be `open` for a few seconds (this asks Stripe), so poll every few seconds while `status` is `open`. After "Decline" it stays `open`.',
         security: [['sanctum' => []]],
         tags: ['Checkout'],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'cs_test_a1B2c3'),
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'fake_cs_Kq3vX9mT2pLw8RbN4cYh7eFz'),
             new OA\Parameter(name: 'lang', in: 'query', required: false, description: 'Language of the plan texts. Defaults to en.', schema: new OA\Schema(type: 'string', default: 'en', enum: ['en', 'ar']), example: 'ar'),
         ],
         responses: [
