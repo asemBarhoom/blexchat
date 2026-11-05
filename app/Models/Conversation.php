@@ -20,6 +20,9 @@ class Conversation extends Model
      */
     public const STATES = ['open', 'automation', 'human'];
 
+    /** What the inbox list shows with each conversation. */
+    public const LIST_RELATIONS = ['channel', 'contact.sourceAutomation'];
+
     /** Why an automation hands a conversation over; each has a text in lang/{locale}/inbox.php. */
     public const HANDOVER_REASONS = ['unmatched'];
 
