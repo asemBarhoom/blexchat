@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -242,5 +243,61 @@ class Automation extends Model
     public function template(): BelongsTo
     {
         return $this->belongsTo(AutomationTemplate::class, 'automation_template_id');
+    }
+
+    /**
+     * The DMs it sent.
+     *
+     * @return HasMany<Message, $this>
+     */
+    public function sentMessages(): HasMany
+    {
+        return $this->hasMany(Message::class)->where('automated', true);
+    }
+
+    /**
+     * The comments it answered publicly.
+     *
+     * @return HasMany<Comment, $this>
+     */
+    public function publicReplies(): HasMany
+    {
+        return $this->hasMany(Comment::class)->where('automated_reply', true);
+    }
+
+    /**
+     * The list's Runs and CTR, counted in the same query as the automations.
+     *
+     * @param  Builder<Automation>  $query
+     */
+    public function scopeWithListFigures(Builder $query): void
+    {
+        $query->withCount([
+            'sentMessages as dm_sends',
+            'sentMessages as button_sends' => fn (Builder $messages) => $messages->whereNotNull('link_token'),
+            'sentMessages as button_clicks' => fn (Builder $messages) => $messages->whereNotNull('first_clicked_at'),
+            'publicReplies as public_replies',
+        ]);
+    }
+
+    public function hasListFigures(): bool
+    {
+        return array_key_exists('dm_sends', $this->getAttributes());
+    }
+
+    /**
+     * Everything it sent: DMs and public comment replies.
+     */
+    public function runs(): int
+    {
+        return (int) $this->dm_sends + (int) $this->public_replies;
+    }
+
+    /**
+     * Clicks as a share of the DMs that had a button; null while none had one.
+     */
+    public function clickThroughRate(): ?float
+    {
+        return $this->button_sends > 0 ? round($this->button_clicks / $this->button_sends, 4) : null;
     }
 }

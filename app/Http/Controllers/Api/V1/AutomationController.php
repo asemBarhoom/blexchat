@@ -44,6 +44,7 @@ class AutomationController extends Controller
     #[OA\Get(
         path: '/api/v1/automations',
         summary: 'List automations',
+        description: 'Each row carries `runs` (DMs and public replies it sent) and `ctr` (clicks ÷ DMs sent with a button; null while none had one), for the list’s Runs and CTR columns.',
         security: [['sanctum' => []]],
         tags: ['Automations'],
         parameters: [
@@ -58,7 +59,7 @@ class AutomationController extends Controller
     )]
     public function index(Request $request): AutomationCollection
     {
-        $query = $request->user()->automations()->with(['channel', 'template']);
+        $query = $request->user()->automations()->with(['channel', 'template'])->withListFigures();
 
         if ($request->boolean('trashed')) {
             $query->onlyTrashed()->latest('deleted_at')->orderByDesc('id');
@@ -104,6 +105,7 @@ class AutomationController extends Controller
     #[OA\Get(
         path: '/api/v1/automations/{id}',
         summary: 'Get automation detail',
+        description: 'Adds `runs`, `ctr` and the `post` it watches (null for DM and story automations, or when it watches every post), for the Preview tab.',
         security: [['sanctum' => []]],
         tags: ['Automations'],
         parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
@@ -112,6 +114,8 @@ class AutomationController extends Controller
     public function show(Request $request, Automation $automation): JsonResponse
     {
         abort_unless($automation->user_id === $request->user()->id, 403);
+
+        $automation = Automation::withListFigures()->with('post')->findOrFail($automation->id);
 
         return response()->json(['data' => new AutomationResource($automation)]);
     }
