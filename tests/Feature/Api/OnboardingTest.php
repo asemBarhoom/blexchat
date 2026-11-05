@@ -20,6 +20,7 @@ describe('GET /api/v1/plans', function () {
         $this->getJson('/api/v1/plans')
             ->assertOk()
             ->assertJsonPath('data.*.id', ['free', 'essential', 'pro', 'business', 'advanced'])
+            ->assertJsonPath('data.*.has_email_capture', [false, false, true, true, true])
             ->assertJsonPath('data.1', [
                 'id' => 'essential',
                 'name' => 'Essential',
@@ -30,6 +31,7 @@ describe('GET /api/v1/plans', function () {
                 'currency' => 'USD',
                 'contacts_limit' => 250,
                 'has_ai' => false,
+                'has_email_capture' => false,
                 'features' => ['All four channels', 'Unlimited automations', 'No Blexchat branding'],
                 'trial_days' => 14,
                 'is_free' => false,

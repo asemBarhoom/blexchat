@@ -26,6 +26,7 @@ class PlanResource extends JsonResource
             'currency' => 'USD',
             'contacts_limit' => $this->contacts_limit,
             'has_ai' => $this->has_ai,
+            'has_email_capture' => $this->has_email_capture,
             'features' => $this->features ?? [],
             'trial_days' => $this->trial_days,
             'is_free' => $this->isFree(),

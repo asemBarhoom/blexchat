@@ -27,6 +27,7 @@ class PlanFactory extends Factory
             'annual_price' => (int) round($monthly * 0.75),
             'contacts_limit' => fake()->randomElement([250, 2500, 7500]),
             'has_ai' => false,
+            'has_email_capture' => false,
             'features' => ['en' => [fake()->sentence(3), fake()->sentence(3)]],
             'trial_days' => 0,
             'is_recommended' => false,

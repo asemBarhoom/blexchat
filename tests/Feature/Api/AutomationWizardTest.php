@@ -48,9 +48,9 @@ function wizardAnswers(array $overrides = []): array
     ];
 }
 
-function onPaidPlan(User $owner): void
+function onPaidPlan(User $owner, bool $hasEmailCapture = true): void
 {
-    Subscription::factory()->create(['user_id' => $owner->id, 'plan_id' => Plan::factory()->create()->id, 'status' => 'active']);
+    Subscription::factory()->create(['user_id' => $owner->id, 'plan_id' => Plan::factory()->create(['has_email_capture' => $hasEmailCapture])->id, 'status' => 'active']);
     $owner->unsetRelation('subscription');
 }
 
@@ -177,7 +177,7 @@ describe('POST /api/v1/automations/wizard', function () {
             'post_mode' => 'next', 'ask_email' => true, 'email_ask' => 'عطينا إيميلك',
         ]))->assertUnprocessable()
             ->assertJsonValidationErrors(['post_mode', 'ask_email'])
-            ->assertJsonPath('errors.ask_email.0', __('automation.paid_extra', locale: 'ar'));
+            ->assertJsonPath('errors.ask_email.0', __('automation.email_capture_extra', locale: 'ar'));
 
         onPaidPlan($this->owner);
 
@@ -188,6 +188,16 @@ describe('POST /api/v1/automations/wizard', function () {
             ->assertJsonPath('data.post_id', null)
             ->assertJsonPath('data.wizard.email_ask', 'عطينا إيميلك')
             ->assertJsonPath('data.wizard.follow_up_after', '6h');
+    });
+
+    it('keeps the email question for plans with email capture', function () {
+        onPaidPlan($this->owner, hasEmailCapture: false);
+
+        $this->actingAs($this->owner, 'sanctum')->postJson('/api/v1/automations/wizard', wizardAnswers([
+            'post_mode' => 'next', 'ask_email' => true, 'email_ask' => 'Your email?', 'follow_up' => true, 'follow_up_after' => '1h', 'follow_up_text' => 'Still thinking?',
+        ]))->assertUnprocessable()
+            ->assertOnlyJsonValidationErrors(['ask_email'])
+            ->assertJsonPath('errors.ask_email.0', __('automation.email_capture_extra'));
     });
 });
 

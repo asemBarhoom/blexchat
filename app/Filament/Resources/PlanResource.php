@@ -74,8 +74,9 @@ class PlanResource extends Resource
                 config('app.supported_locales'),
             ))->columnSpanFull(),
 
-            Grid::make(3)->schema([
+            Grid::make(4)->schema([
                 Toggle::make('has_ai')->label('يشمل Blexchat AI'),
+                Toggle::make('has_email_capture')->label('يشمل جمع البريد الإلكتروني'),
                 Toggle::make('is_recommended')->label('"اختيارنا لك"'),
                 Toggle::make('active')->label('معروضة للبيع')->default(true),
             ])->columnSpanFull(),

@@ -2,8 +2,11 @@
 
 use App\Models\Automation;
 use App\Models\Channel;
+use App\Models\Contact;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\Plan;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -56,6 +59,24 @@ it('serves the home screen texts in the requested language', function () {
         ->assertJsonPath('data.start_here.templates.0.to', '/onboarding/automation/new?trigger=comment')
         ->assertJsonPath('data.last_seven.metrics.1.label', 'الوقت الموفَّر')
         ->assertJsonPath('data.last_seven.metrics.1.value', '8 د');
+});
+
+it('opens the leads card on a plan with email capture', function () {
+    $user = User::factory()->create();
+    $channel = Channel::factory()->for($user)->create();
+    Subscription::factory()->for($user)->for(Plan::factory()->create(['has_email_capture' => true]))->create(['status' => 'active']);
+    Message::factory()->for(Conversation::factory()->for($channel))->create(['automated' => true, 'sent_at' => now()->subDay()]);
+    Contact::factory()->for($user)->create(['email' => 'reem@example.com', 'first_seen_at' => now()->subDays(2)]);
+    Contact::factory()->for($user)->create(['phone' => '+966500000000', 'first_seen_at' => now()->subDay()]);
+    Contact::factory()->for($user)->create(['email' => 'old@example.com', 'first_seen_at' => now()->subDays(9)]);
+    Contact::factory()->for($user)->create(['email' => 'typed@example.com', 'added_manually' => true, 'first_seen_at' => now()]);
+    Contact::factory()->for($user)->create(['email' => null, 'phone' => null, 'first_seen_at' => now()]);
+
+    Sanctum::actingAs($user);
+
+    $this->getJson('/api/v1/dashboard')
+        ->assertJsonPath('data.last_seven.metrics.2.locked', false)
+        ->assertJsonPath('data.last_seven.metrics.2.value', '2 leads');
 });
 
 it('keeps platform avatar URLs as they are', function () {

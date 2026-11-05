@@ -62,18 +62,29 @@ abstract class WizardAutomationRequest extends FormRequest
     }
 
     /**
-     * Paid answers need a paid plan. One already saved on the automation stays, so an edit after a
-     * trial ends does not fail over an extra the owner did not touch.
+     * Paid answers need a paid plan, and the email question a plan with email capture (Pro up). One
+     * already saved on the automation stays, so an edit after a trial ends or a downgrade does not
+     * fail over an extra the owner did not touch.
      */
     public function after(): array
     {
         return [
             function (Validator $validator): void {
-                if ($validator->errors()->isNotEmpty() || $this->onPaidPlan()) {
+                if ($validator->errors()->isNotEmpty()) {
                     return;
                 }
 
+                $plan = $this->user()->subscription?->effectivePlan();
                 $saved = $this->current()?->wizardAnswers() ?? [];
+                $isNewlyOn = fn (string $switch): bool => $this->boolean($switch) && ! ($saved[$switch] ?? false);
+
+                if ($isNewlyOn('ask_email') && ! ($plan?->has_email_capture ?? false)) {
+                    $validator->errors()->add('ask_email', __('automation.email_capture_extra'));
+                }
+
+                if ($plan !== null && ! $plan->isFree()) {
+                    return;
+                }
 
                 if (in_array($this->input('post_mode'), Automation::PAID_POST_MODES, true)
                     && $this->input('kind') === 'comment'
@@ -82,7 +93,7 @@ abstract class WizardAutomationRequest extends FormRequest
                 }
 
                 foreach (array_keys(Automation::EXTRAS) as $switch) {
-                    if ($this->boolean($switch) && ! ($saved[$switch] ?? false)) {
+                    if ($isNewlyOn($switch) && ! $validator->errors()->has($switch)) {
                         $validator->errors()->add($switch, __('automation.paid_extra'));
                     }
                 }
@@ -98,12 +109,5 @@ abstract class WizardAutomationRequest extends FormRequest
     public function automationAttributes(): array
     {
         return Automation::fromWizard($this->validated());
-    }
-
-    private function onPaidPlan(): bool
-    {
-        $subscription = $this->user()->subscription;
-
-        return $subscription !== null && ! $subscription->effectivePlan()->isFree();
     }
 }

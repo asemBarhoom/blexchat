@@ -10,6 +10,7 @@ use App\Models\Plan;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use OpenApi\Attributes as OA;
 
@@ -123,7 +124,7 @@ class DashboardController extends Controller
             'automations' => $automations->values(),
             'checklist' => $this->checklist($channels->isNotEmpty(), $automations->isNotEmpty(), $this->hasAnswered($user)),
             'start_here' => $this->startHere(),
-            'last_seven' => $this->lastSeven($channelIds->all()),
+            'last_seven' => $this->lastSeven($user, $channelIds->all()),
         ]]);
     }
 
@@ -167,6 +168,18 @@ class DashboardController extends Controller
     }
 
     /**
+     * People who reached the owner this week, not added by hand, who left an email or a number.
+     */
+    private function leadsSince(User $user, Carbon $since): int
+    {
+        return $user->contacts()
+            ->where('added_manually', false)
+            ->where('first_seen_at', '>=', $since)
+            ->where(fn ($query) => $query->whereNotNull('email')->orWhereNotNull('phone'))
+            ->count();
+    }
+
+    /**
      * @return array{title: string, lead: string, templates: list<array<string, mixed>>}
      */
     private function startHere(): array
@@ -193,7 +206,7 @@ class DashboardController extends Controller
      * @param  list<int>  $channelIds
      * @return array{title: string, has_data: bool, metrics: list<array<string, mixed>>}
      */
-    private function lastSeven(array $channelIds): array
+    private function lastSeven(User $user, array $channelIds): array
     {
         $since = now()->subDays(7);
 
@@ -217,6 +230,9 @@ class DashboardController extends Controller
             ->orderByDesc('comments')
             ->with('post:id,caption')
             ->first();
+
+        $hasEmailCapture = (bool) $user->subscription?->effectivePlan()?->has_email_capture;
+        $leads = $hasEmailCapture ? $this->leadsSince($user, $since) : 0;
 
         $hasData = $autoReplies > 0 || $engagedPosts > 0;
         $minutesSaved = (int) round($autoReplies * 2.5);
@@ -250,9 +266,10 @@ class DashboardController extends Controller
                 [
                     'id' => 'leads',
                     ...__('dashboard.last_seven.leads'),
-                    'value' => null,
+                    'value' => $hasEmailCapture && $hasData ? trans_choice('dashboard.last_seven.lead_count', $leads, ['count' => $leads]) : null,
                     'note' => null,
-                    'locked' => true,
+                    // Email capture is a Pro feature; below Pro the card shows its upgrade badge.
+                    'locked' => ! $hasEmailCapture,
                 ],
             ],
         ];
