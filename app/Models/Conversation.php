@@ -62,6 +62,39 @@ class Conversation extends Model
         'starred' => false,
     ];
 
+    /**
+     * Every conversation has its contact: one is found or made from the platform id the moment the
+     * conversation is created, so the inbox can always open the contact's page.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Conversation $conversation): void {
+            if ($conversation->contact_id !== null || $conversation->channel_id === null) {
+                return;
+            }
+
+            $channel = Channel::find($conversation->channel_id);
+            $platformId = $conversation->contact_platform_id ?? $conversation->platform_conversation_id;
+
+            if ($channel === null || $platformId === null) {
+                return;
+            }
+
+            $conversation->contact_id = Contact::firstOrCreate(
+                ['channel_id' => $channel->id, 'platform_id' => $platformId],
+                [
+                    'user_id' => $channel->user_id,
+                    'platform' => $channel->platform,
+                    'name' => $conversation->contact_name ?? $platformId,
+                    'handle' => $conversation->contact_name,
+                    'avatar' => $conversation->contact_avatar,
+                    'first_seen_at' => now(),
+                    'last_active_at' => now(),
+                ],
+            )->id;
+        });
+    }
+
     protected function casts(): array
     {
         return [

@@ -29,7 +29,7 @@ class AutomationResource extends JsonResource
             'ai_enabled' => $this->ai_enabled,
             // The list's and the detail's Runs and CTR; absent from the other responses.
             'runs' => $this->when($this->hasListFigures(), fn (): int => $this->runs()),
-            'ctr' => $this->when($this->hasListFigures(), fn (): ?float => $this->clickThroughRate()),
+            'ctr' => $this->when($this->hasListFigures(), fn (): float => $this->clickThroughRate()),
             // The post it watches, for the detail's Preview; absent from the list.
             'post' => $this->whenLoaded('post', fn (): ?PostResource => $this->post ? new PostResource($this->post) : null),
             'wizard' => [...$this->wizardAnswers(), 'name' => $this->name, 'channel_id' => $this->channel_id],

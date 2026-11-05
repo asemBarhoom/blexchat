@@ -20,7 +20,7 @@ use OpenApi\Attributes as OA;
 #[OA\Schema(schema: 'Contact', properties: [
     new OA\Property(property: 'id', type: 'integer', example: 12),
     new OA\Property(property: 'name', type: 'string', example: 'Reem Khalid'),
-    new OA\Property(property: 'handle', type: 'string', nullable: true, example: 'reem.k', description: 'Username, or the phone number for someone added by hand'),
+    new OA\Property(property: 'handle', type: 'string', example: 'reem.k', description: 'Username, else the phone number, else the name'),
     new OA\Property(property: 'channel', type: 'string', enum: ['instagram', 'whatsapp', 'tiktok', 'messenger']),
     new OA\Property(property: 'channel_id', type: 'integer', nullable: true, description: 'Null for someone added by hand or whose channel was disconnected'),
     new OA\Property(property: 'avatar', type: 'string', nullable: true),

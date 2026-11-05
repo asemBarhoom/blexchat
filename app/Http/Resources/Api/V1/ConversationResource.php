@@ -19,7 +19,7 @@ class ConversationResource extends JsonResource
             'contact' => [
                 'id' => $this->contact_id,
                 'name' => $this->contact?->name ?? $this->contact_name,
-                'handle' => $this->contact?->handle,
+                'handle' => $this->contact?->displayHandle() ?? $this->contact_name ?? $this->contact_platform_id,
                 'avatar' => $this->contact?->avatar ?? $this->contact_avatar,
                 'tags' => $this->contact?->tags ?? [],
                 'city' => $this->contact?->city,

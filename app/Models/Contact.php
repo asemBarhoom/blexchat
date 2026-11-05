@@ -104,6 +104,15 @@ class Contact extends Model
     }
 
     /**
+     * What the lists show under the name: their username, else the phone number, else the name.
+     * Never empty, so a conversation always has something to match its contact by.
+     */
+    public function displayHandle(): string
+    {
+        return $this->handle ?? $this->phone ?? $this->name;
+    }
+
+    /**
      * Matches the name, handle, city, a tag, or the channel's name, ignoring case.
      *
      * @param  Builder<self>  $query
