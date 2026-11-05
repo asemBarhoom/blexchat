@@ -129,6 +129,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::patch('automations/{automation}', [AutomationController::class, 'update'])->name('automations.update');
     Route::delete('automations/{automation}', [AutomationController::class, 'destroy'])->name('automations.destroy');
     Route::patch('automations/{automation}/toggle', [AutomationController::class, 'toggle'])->name('automations.toggle');
+    Route::patch('automations/{automation}/ai', [AutomationController::class, 'ai'])->name('automations.ai'); // Blexchat AI, on plans that include it
 
     // Automation folders: the list's Create folder, rename and delete; automations move with PATCH automations/{id}
     Route::apiResource('automation-folders', AutomationFolderController::class)->except('show')->parameters(['automation-folders' => 'folder']);
