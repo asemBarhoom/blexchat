@@ -49,6 +49,7 @@ class AutomationController extends Controller
         parameters: [
             new OA\Parameter(name: 'channel_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['active', 'inactive'])),
+            new OA\Parameter(name: 'folder_id', in: 'query', required: false, description: 'Only the automations in this folder', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'trashed', in: 'query', required: false, description: 'true lists the Trash (S5.3) instead, last deleted first; each has `trashed_at` and `purges_at`', schema: new OA\Schema(type: 'boolean', default: false)),
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
@@ -69,6 +70,10 @@ class AutomationController extends Controller
 
         if ($request->filled('status')) {
             $query->where('active', $request->status === 'active');
+        }
+
+        if ($request->filled('folder_id')) {
+            $query->where('automation_folder_id', $request->integer('folder_id'));
         }
 
         return new AutomationCollection($query->paginate($request->integer('per_page', 20)));
@@ -114,9 +119,14 @@ class AutomationController extends Controller
     #[OA\Patch(
         path: '/api/v1/automations/{id}',
         summary: 'Update an automation',
+        description: 'Also moves it into a folder: send `automation_folder_id`, or null to take it out (drag and drop on the list).',
         security: [['sanctum' => []]],
         tags: ['Automations'],
         parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(content: new OA\JsonContent(properties: [
+            new OA\Property(property: 'name', type: 'string', maxLength: 255),
+            new OA\Property(property: 'automation_folder_id', type: 'integer', nullable: true, description: 'One of the owner’s folders, or null'),
+        ], example: ['automation_folder_id' => 3])),
         responses: [new OA\Response(response: 200, description: 'Updated')]
     )]
     public function update(UpdateAutomationRequest $request, Automation $automation): JsonResponse

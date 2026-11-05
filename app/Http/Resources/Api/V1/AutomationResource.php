@@ -17,6 +17,7 @@ class AutomationResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'channel_id' => $this->channel_id,
+            'automation_folder_id' => $this->automation_folder_id,
             'trigger_type' => $this->trigger_type,
             'kind' => $this->kind(),
             'post_mode' => $this->post_mode,
