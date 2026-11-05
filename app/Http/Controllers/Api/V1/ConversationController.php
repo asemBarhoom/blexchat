@@ -28,6 +28,9 @@ class ConversationController extends Controller
         parameters: [
             new OA\Parameter(name: 'channel_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['open', 'resolved', 'all'])),
+            new OA\Parameter(name: 'folder', in: 'query', required: false, description: 'favorites: starred conversations; labels: those with at least one label', schema: new OA\Schema(type: 'string', enum: ['favorites', 'labels'])),
+            new OA\Parameter(name: 'label', in: 'query', required: false, description: 'Only conversations with this label', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'sort', in: 'query', required: false, description: 'By the last message: newest (default) or oldest first', schema: new OA\Schema(type: 'string', enum: ['newest', 'oldest'])),
             new OA\Parameter(name: 'state', in: 'query', required: false, description: 'human: the Needs you folder; automation: an automation is answering; open: neither', schema: new OA\Schema(type: 'string', enum: ['open', 'automation', 'human'])),
             new OA\Parameter(name: 'unread', in: 'query', required: false, description: 'true: only conversations with unread messages', schema: new OA\Schema(type: 'boolean')),
             new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
@@ -38,10 +41,12 @@ class ConversationController extends Controller
     {
         $channelIds = $request->user()->channels()->pluck('id');
 
+        $direction = $request->query('sort') === 'oldest' ? 'asc' : 'desc';
+
         $query = Conversation::with(Conversation::LIST_RELATIONS)
             ->whereIn('channel_id', $channelIds)
-            ->orderByDesc('last_message_at')
-            ->orderByDesc('id');
+            ->orderBy('last_message_at', $direction)
+            ->orderBy('id', $direction);
 
         if ($request->filled('channel_id')) {
             $query->where('channel_id', $request->channel_id);
@@ -55,6 +60,16 @@ class ConversationController extends Controller
             $query->where('unread_count', '>', 0);
         }
 
+        match ($request->query('folder')) {
+            'favorites' => $query->where('starred', true),
+            'labels' => $query->whereJsonLength('labels', '>', 0),
+            default => null,
+        };
+
+        if ($request->filled('label')) {
+            $query->whereJsonContains('labels', (string) $request->query('label'));
+        }
+
         if (in_array($request->query('state'), Conversation::STATES, true)) {
             $query->where('state', $request->query('state'));
         }
@@ -66,14 +81,16 @@ class ConversationController extends Controller
 
     #[OA\Patch(
         path: '/api/v1/conversations/{id}',
-        summary: 'Mark a conversation done, reopen it, or mark it read',
+        summary: 'Mark a conversation done, reopen it, mark it read, star it or label it',
         description: '"Mark done" sends `status: resolved`, "Reopen" sends `status: open`, and opening the thread sends `read: true`, which sets `unread` to 0. A new message from the customer reopens a resolved conversation.',
         security: [['sanctum' => []]],
         tags: ['Conversations'],
         parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(properties: [
             new OA\Property(property: 'status', type: 'string', enum: ['open', 'resolved'], description: 'Required without read'),
-            new OA\Property(property: 'read', type: 'boolean', description: 'Required without status; true sets unread to 0'),
+            new OA\Property(property: 'read', type: 'boolean', description: 'true sets unread to 0'),
+            new OA\Property(property: 'starred', type: 'boolean', description: 'In or out of Favorites'),
+            new OA\Property(property: 'labels', type: 'array', maxItems: 10, items: new OA\Items(type: 'string', maxLength: 30), description: 'The whole list; [] removes every label'),
         ], example: ['status' => 'resolved'])),
         responses: [
             new OA\Response(response: 200, description: 'The conversation as the list shows it'),
@@ -87,6 +104,8 @@ class ConversationController extends Controller
         $conversation->update(array_filter([
             'status' => $request->validated('status'),
             'unread_count' => $request->boolean('read') ? 0 : null,
+            'starred' => $request->validated('starred'),
+            'labels' => $request->has('labels') ? $request->validated('labels') : null,
         ], fn (mixed $value): bool => $value !== null));
 
         // Marked done: it no longer waits on anyone.

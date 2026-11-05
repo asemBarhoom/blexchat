@@ -33,6 +33,8 @@ class ConversationResource extends JsonResource
             'unread' => $this->unread_count,
             'status' => $this->status,
             'state' => $this->state,
+            'starred' => $this->starred,
+            'labels' => $this->labels ?? [],
         ];
     }
 }
