@@ -138,6 +138,18 @@ it('keeps simulated events to the owner, to valid input, and to the fake client'
     $this->postJson("/api/v1/channels/{$channel->id}/test-events", $event)->assertNotFound();
 });
 
+it('names only the automation that answered this message, not an earlier reply in the thread', function () {
+    $channel = Channel::factory()->for($this->owner)->create(['platform' => 'instagram', 'account_id' => 'fake-'.$this->owner->id, 'status' => 'active']);
+    $automation = Automation::factory()->for($this->owner)->for($channel)->create(['trigger_type' => 'dm_keyword', 'keywords' => ['deliver'], 'actions' => [['type' => 'send_dm', 'message' => 'Yes, 2–4 days']]]);
+    $event = fn (string $text) => $this->actingAs($this->owner)->postJson("/api/v1/channels/{$channel->id}/test-events", ['type' => 'message', 'text' => $text, 'from' => 'faisal.a']);
+
+    $event('do you deliver?')->assertJsonPath('data.automation_id', $automation->id);
+    $event('thanks')->assertJsonPath('data.automation_id', null);
+
+    $automation->moveToTrash();
+    $event('deliver to Dubai?')->assertJsonPath('data.automation_id', null);
+});
+
 it('leaves someone new unanswered in DMs while new conversations are paused, but still records them', function () {
     $channel = Channel::factory()->for($this->owner)->create(['platform' => 'instagram', 'account_id' => 'fake-'.$this->owner->id, 'status' => 'active']);
     Automation::factory()->for($this->owner)->for($channel)->create(['trigger_type' => 'dm_keyword', 'keywords' => [], 'actions' => [['type' => 'send_dm', 'message' => 'Welcome!']]]);

@@ -82,12 +82,14 @@ class ChannelTestEventController extends Controller
         ]);
 
         $conversation = Conversation::where('channel_id', $channel->id)->where('platform_conversation_id', $customerId)->firstOrFail();
+        $inbound = $conversation->messages()->where('platform_message_id', $eventId)->firstOrFail();
 
         return response()->json(['data' => [
             'type' => 'message',
             'comment_id' => null,
             'conversation_id' => $conversation->id,
-            'automation_id' => $conversation->messages()->where('automated', true)->latest('id')->value('automation_id'),
+            // Only a reply to this message: earlier ones in the thread were answers to something else.
+            'automation_id' => $conversation->messages()->where('automated', true)->where('id', '>', $inbound->id)->value('automation_id'),
         ]], 201);
     }
 }
