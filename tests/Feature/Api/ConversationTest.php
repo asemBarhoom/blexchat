@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\Automation;
 use App\Models\Channel;
+use App\Models\Contact;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
@@ -150,5 +152,23 @@ describe('/api/v1/inbox/settings', function () {
         $this->getJson('/api/v1/inbox/settings')->assertJsonPath('data.accepting_new', false);
 
         $this->patchJson('/api/v1/inbox/settings', [])->assertUnprocessable()->assertJsonValidationErrors('accepting_new');
+    });
+});
+
+describe('the contact panel', function () {
+    it('gives each conversation its contact, and the automation that brought them in', function () {
+        $user = User::factory()->create();
+        $channel = Channel::factory()->for($user)->create();
+        $automation = Automation::factory()->for($user)->for($channel)->create(['name' => 'Comment to DM']);
+        $contact = Contact::factory()->for($user)->create(['channel_id' => $channel->id, 'tags' => ['Asked price'], 'city' => 'Cairo', 'source_automation_id' => $automation->id]);
+        $conversation = Conversation::factory()->for($channel)->create(['contact_id' => $contact->id]);
+        Conversation::factory()->for($channel)->create(['contact_name' => 'old.thread']);
+
+        $this->actingAs($user, 'sanctum')->getJson('/api/v1/conversations')
+            ->assertJsonFragment(['id' => $contact->id, 'name' => $contact->name, 'tags' => ['Asked price'], 'city' => 'Cairo', 'source' => 'Comment to DM', 'source_automation_id' => $automation->id])
+            ->assertJsonFragment(['id' => null, 'name' => 'old.thread', 'tags' => [], 'source' => null]);
+
+        $automation->moveToTrash();
+        $this->patchJson("/api/v1/conversations/{$conversation->id}", ['read' => true])->assertJsonPath('data.contact.source', 'Comment to DM');
     });
 });

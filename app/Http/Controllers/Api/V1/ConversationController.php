@@ -38,7 +38,7 @@ class ConversationController extends Controller
     {
         $channelIds = $request->user()->channels()->pluck('id');
 
-        $query = Conversation::with('channel')
+        $query = Conversation::with(Conversation::LIST_RELATIONS)
             ->whereIn('channel_id', $channelIds)
             ->orderByDesc('last_message_at')
             ->orderByDesc('id');
@@ -94,7 +94,7 @@ class ConversationController extends Controller
             $conversation->markHandledByOwner();
         }
 
-        return response()->json(['data' => new ConversationResource($conversation->load('channel'))]);
+        return response()->json(['data' => new ConversationResource($conversation->load(Conversation::LIST_RELATIONS))]);
     }
 
     #[OA\Get(
