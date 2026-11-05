@@ -35,6 +35,7 @@ it('returns the signed-in home screen with real counts', function () {
         ->assertJsonPath('data.automations.0.runs', 2)
         ->assertJsonPath('data.checklist.steps.0.done', true)
         ->assertJsonPath('data.checklist.steps.1.done', true)
+        ->assertJsonPath('data.checklist.steps.2.done', true)
         ->assertJsonPath('data.last_seven.has_data', true)
         ->assertJsonPath('data.last_seven.metrics.1.note', '2 replies went out without you.')
         ->assertJsonPath('data.last_seven.metrics.2.locked', true)
@@ -66,5 +67,6 @@ it('keeps platform avatar URLs as they are', function () {
     $this->getJson('/api/v1/dashboard')
         ->assertJsonPath('data.channels.0.profile_picture', 'https://cdn.example.com/a.jpg')
         ->assertJsonPath('data.last_seven.has_data', false)
-        ->assertJsonPath('data.checklist.steps.1.done', false);
+        ->assertJsonPath('data.checklist.steps.1.done', false)
+        ->assertJsonPath('data.checklist.steps.2.done', false);
 });

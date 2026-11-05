@@ -7,6 +7,7 @@ use App\Models\Comment;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Plan;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -120,7 +121,7 @@ class DashboardController extends Controller
                 'followers' => $channel->followers,
             ])->values(),
             'automations' => $automations->values(),
-            'checklist' => $this->checklist($channels->isNotEmpty(), $automations->isNotEmpty()),
+            'checklist' => $this->checklist($channels->isNotEmpty(), $automations->isNotEmpty(), $this->hasAnswered($user)),
             'start_here' => $this->startHere(),
             'last_seven' => $this->lastSeven($channelIds->all()),
         ]]);
@@ -141,17 +142,28 @@ class DashboardController extends Controller
     /**
      * @return array{title: string, steps: list<array{id: string, label: string, done: bool, to: string}>}
      */
-    private function checklist(bool $hasChannel, bool $hasAutomation): array
+    private function checklist(bool $hasChannel, bool $hasAutomation, bool $hasAnswered): array
     {
         return [
             'title' => __('dashboard.checklist.title'),
             'steps' => [
                 ['id' => 'connect', 'label' => __('dashboard.checklist.connect'), 'done' => $hasChannel, 'to' => '/onboarding/channel'],
                 ['id' => 'automation', 'label' => __('dashboard.checklist.automation'), 'done' => $hasAutomation, 'to' => '/onboarding/automation/new?trigger=comment'],
-                // Opening the preview is tracked client-side, so the server never marks it done.
-                ['id' => 'test', 'label' => __('dashboard.checklist.test'), 'done' => false, 'to' => '/app/automation'],
+                // Done once an automation has answered someone, a test comment from the test page included.
+                ['id' => 'test', 'label' => __('dashboard.checklist.test'), 'done' => $hasAnswered, 'to' => '/app/automation'],
             ],
         ];
+    }
+
+    /**
+     * Whether any of the owner's automations (the Trash's included) has ever sent a DM or a public reply.
+     */
+    private function hasAnswered(User $user): bool
+    {
+        $ids = $user->automations()->withTrashed()->select('id');
+
+        return Message::whereIn('automation_id', $ids)->where('automated', true)->exists()
+            || Comment::whereIn('automation_id', $ids)->where('automated_reply', true)->exists();
     }
 
     /**
