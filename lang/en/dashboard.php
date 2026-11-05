@@ -22,6 +22,7 @@ return [
         'time' => ['label' => 'Time saved', 'hint' => 'Hours you did not spend answering'],
         'leads' => ['label' => 'Leads collected', 'hint' => 'Emails and numbers captured'],
         'posts' => '{1} :count post|[2,*] :count posts',
+        'lead_count' => '{0} None yet|{1} :count lead|[2,*] :count leads',
         'top_post' => '«:caption» pulled :count of them.',
         'replies' => ':count replies went out without you.',
         'hours_minutes' => ':hoursh :minutesm',
