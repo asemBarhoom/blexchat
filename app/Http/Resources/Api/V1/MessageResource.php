@@ -24,6 +24,12 @@ class MessageResource extends JsonResource
                 $this->type === Message::TYPE_HANDOVER,
                 fn (): string => __("inbox.handover.{$this->content}")
             ),
+            // The comment that opened the thread: the frontend's "· commented on your post".
+            'via' => $this->when($this->type === Message::TYPE_COMMENT, 'comment'),
+            'post' => $this->when(
+                $this->type === Message::TYPE_COMMENT && $this->relationLoaded('comment'),
+                fn (): ?PostResource => $this->comment?->post ? new PostResource($this->comment->post) : null
+            ),
             'automated' => $this->automated,
             'automation_id' => $this->automation_id,
             'sent_at' => $this->sent_at?->toIso8601String(),

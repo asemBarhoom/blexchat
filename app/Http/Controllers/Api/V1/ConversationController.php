@@ -138,6 +138,7 @@ class ConversationController extends Controller
         );
 
         $messages = $conversation->messages()
+            ->with('comment.post')
             ->orderByDesc('sent_at')
             ->orderByDesc('id')
             ->limit($request->integer('limit', 30))

@@ -16,8 +16,12 @@ class Message extends Model
     /** "Handed over to you": `content` holds the reason code (Conversation::HANDOVER_REASONS). */
     public const TYPE_HANDOVER = 'handover';
 
+    /** The customer's comment that opened the conversation; `comment_id` names it. */
+    public const TYPE_COMMENT = 'comment';
+
     protected $fillable = [
         'conversation_id',
+        'comment_id',
         'platform_message_id',
         'direction',
         'type',
@@ -60,5 +64,13 @@ class Message extends Model
     public function conversation(): BelongsTo
     {
         return $this->belongsTo(Conversation::class);
+    }
+
+    /**
+     * @return BelongsTo<Comment, $this>
+     */
+    public function comment(): BelongsTo
+    {
+        return $this->belongsTo(Comment::class);
     }
 }
