@@ -120,6 +120,8 @@ class ManageMarketingHome extends Page
         'numbers' => 'الأرقام',
         'faq' => 'الأسئلة الشائعة',
         'demo_replies' => 'ردود التجربة',
+        'navigation' => 'القائمة العلوية',
+        'footer' => 'التذييل',
     ];
 
     /**
@@ -179,9 +181,12 @@ class ManageMarketingHome extends Page
                 'العنوان الدوّار' => $each(3, fn (int $i): array => [["headline_rotations.{$i}.0", 'الجزء الأول '.($i + 1)], ["headline_rotations.{$i}.1", 'الكلمة المميّزة '.($i + 1)]]),
                 'النصوص الرئيسية' => [['handwriting', 'الكلمة بخط اليد'], ['subtitle', 'العنوان الفرعي'], ['description', 'الوصف', 'long'], ['microcopy', 'نص تحت الزر'], ['cta.label', 'نص الزر']],
                 'قصة الواجهة المتحركة' => [
-                    ['story.pressure.counter', 'نص العدّاد'], ['story.pressure.more', 'نص "المزيد"'], ['story.working_badge', 'شارة "يعمل الآن"'], ['story.visitor_result', 'نتيجة تجربة الزائر'],
+                    ['story.pressure.counter', 'نص العدّاد'], ...$this->pluralTexts('story.pressure.counter', 'نص العدّاد'), ['story.pressure.more', 'نص "المزيد"'], ['story.working_badge', 'شارة "يعمل الآن"'], ['story.visitor_result', 'نتيجة تجربة الزائر'],
                     ...$each(3, fn (int $i): array => [["story.pressure.chips.{$i}.handle", 'حساب التعليق '.($i + 1)], ["story.pressure.chips.{$i}.text", 'التعليق '.($i + 1)]]),
-                    ...$each(3, fn (int $i): array => [["story.relief.stats.{$i}.label", 'وصف الرقم '.($i + 1)], ["story.relief.stats.{$i}.suffix", 'لاحقة الرقم '.($i + 1), 'optional']]),
+                    ...$each(3, fn (int $i): array => [
+                        ["story.relief.stats.{$i}.label", 'وصف الرقم '.($i + 1)], ["story.relief.stats.{$i}.suffix", 'لاحقة الرقم '.($i + 1), 'optional'],
+                        ...$this->pluralTexts("story.relief.stats.{$i}.label", 'وصف الرقم '.($i + 1)),
+                    ]),
                 ],
                 'مربع التجربة' => [
                     ['composer.label', 'العنوان'], ['composer.placeholder_prefix', 'بداية النص التوضيحي'], ['composer.placeholder', 'النص التوضيحي الثابت'], ['composer.sr_label', 'تسمية قارئ الشاشة'], ['composer.send_label', 'تسمية زر الإرسال'],
@@ -273,7 +278,61 @@ class ManageMarketingHome extends Page
                 'بطاقة الرد' => [['card.label', 'عنوان البطاقة'], ['card.timer', 'زمن الرد']],
                 'الرد الافتراضي (عندما لا تطابق أي قاعدة)' => [['fallback.reply', 'الرد'], ['fallback.action', 'زر الرد'], ['fallback.result', 'النتيجة']],
             ]],
+            'navigation' => [[
+                'الشريط' => [
+                    ...$each(4, fn (int $i): array => [["items.{$i}.label", 'الرابط '.($i + 1)]]),
+                    ['sign_in.label', 'زر تسجيل الدخول'], ['get_started.label', 'زر البدء'], ['get_started_mobile.label', 'زر البدء على الجوال'],
+                    ['aria.main', 'تسمية قارئ الشاشة للشريط'], ['aria.mobile', 'تسمية قارئ الشاشة على الجوال'], ['aria.open_menu', 'تسمية فتح القائمة'], ['aria.close_menu', 'تسمية إغلاق القائمة'],
+                ],
+                'قائمة المنتج' => [
+                    ['menus.product.heading', 'العنوان'],
+                    ...$each(5, fn (int $i): array => [["menus.product.items.{$i}.title", 'العنصر '.($i + 1)], ["menus.product.items.{$i}.desc", 'وصف العنصر '.($i + 1)]]),
+                    ['menus.product.items.4.cta', 'نص زر العنصر 5'],
+                ],
+                'قائمة الحلول' => [
+                    ['menus.solutions.heading', 'العنوان'],
+                    ...$each(8, fn (int $i): array => [["menus.solutions.items.{$i}.title", 'الحل '.($i + 1)], ["menus.solutions.items.{$i}.desc", 'وصف الحل '.($i + 1)]]),
+                ],
+            ], [
+                $url('items.2.url', 'رابط الرابط 3'), $url('items.3.url', 'رابط الرابط 4'),
+                $url('sign_in.url', 'رابط تسجيل الدخول'), $url('get_started.url', 'رابط زر البدء'), $url('get_started_mobile.url', 'رابط زر البدء على الجوال'),
+                ...array_map(fn (int $i): TextInput => $url("menus.product.items.{$i}.url", 'رابط عنصر المنتج '.($i + 1)), range(0, 4)),
+                ...array_map(fn (int $i): TextInput => $url("menus.solutions.items.{$i}.url", 'رابط الحل '.($i + 1)), range(0, 7)),
+            ]],
+            'footer' => [[
+                'عام' => [
+                    ['tagline', 'الشعار'], ['cta.label', 'نص الزر'], ['copyright', 'حقوق النشر'],
+                    ['made_for', 'عبارة "صُمّم من أجل"'], ['made_for_sr', 'العبارة كاملة لقارئ الشاشة'],
+                    ...$each(4, fn (int $i): array => [["giant_words.{$i}", 'الكلمة الكبيرة '.($i + 1)]]),
+                    ['legal.0.label', 'رابط الخصوصية'], ['legal.1.label', 'رابط الشروط'],
+                    ['aria.footer', 'تسمية قارئ الشاشة للتذييل'], ['aria.home', 'تسمية رابط الرئيسية'],
+                ],
+                ...collect([[0, 'عمود المنتج', 3], [1, 'عمود الحلول', 4], [2, 'عمود الحساب', 2]])->mapWithKeys(fn (array $column): array => [$column[1] => [
+                    ["columns.{$column[0]}.title", 'العنوان'],
+                    ...$each($column[2], fn (int $i): array => [["columns.{$column[0]}.links.{$i}.label", 'الرابط '.($i + 1)]]),
+                ]])->all(),
+            ], [
+                $url('cta.url', 'رابط الزر'), $url('legal.0.url', 'رابط صفحة الخصوصية'), $url('legal.1.url', 'رابط صفحة الشروط'),
+                ...collect([[0, 3], [1, 4], [2, 2]])->flatMap(fn (array $column): array => array_map(
+                    fn (int $i): TextInput => $url("columns.{$column[0]}.links.{$i}.url", 'رابط العمود '.($column[0] + 1).' — '.($i + 1)),
+                    range(0, $column[1] - 1),
+                ))->all(),
+            ]],
         };
+    }
+
+    /**
+     * The forms of a counted word, keyed as i18next reads them (counter_one, counter_few…).
+     * English needs one and other; Arabic also zero, two, few and many.
+     *
+     * @return list<array<int, string>>
+     */
+    private function pluralTexts(string $path, string $label): array
+    {
+        return array_map(
+            fn (string $form): array => ["{$path}_{$form}", "{$label} — {$form}", 'optional'],
+            ['zero', 'one', 'two', 'few', 'many', 'other'],
+        );
     }
 
     /**

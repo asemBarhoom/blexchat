@@ -51,7 +51,9 @@ it('has every homepage text in Arabic', function () {
 
     foreach (HomeBlock::all() as $block) {
         $texts = $block->getTranslations('texts');
-        expect(array_keys(Arr::dot($texts['ar'])))->toBe(array_keys(Arr::dot($texts['en'])), "Arabic texts of {$block->key}");
+        // Arabic counts in more plural forms than English (zero, two, few, many).
+        $arabicKeys = array_values(array_filter(array_keys(Arr::dot($texts['ar'])), fn (string $key): bool => ! preg_match('/_(zero|two|few|many)$/', $key)));
+        expect($arabicKeys)->toBe(array_keys(Arr::dot($texts['en'])), "Arabic texts of {$block->key}");
     }
 
     foreach ([Creator::class, UseCase::class, HomeStat::class, FaqItem::class, DemoReplyRule::class, ComparisonPoint::class] as $model) {
@@ -130,10 +132,36 @@ it('gives every link the frontend format and never a raw url', function () {
         ->assertJsonPath('data.sections.11.items.0.link', ['label' => 'Pricing', 'to' => '/pricing']);
 });
 
-it('serves no navbar or footer, which the frontend owns', function () {
+it('serves the top bar and the footer, with their links in the frontend format', function () {
     $this->seed(HomeContentSeeder::class);
 
-    expect($this->getJson('/api/v1/home')->json('data'))->toHaveKeys(['sections', 'demo_replies'])->not->toHaveKeys(['navigation', 'footer']);
+    $this->getJson('/api/v1/home?lang=ar')
+        ->assertJsonPath('data.navigation.items.0', ['id' => 'product', 'menu' => 'product', 'label' => 'المنتج'])
+        ->assertJsonPath('data.navigation.items.3', ['id' => 'pricing', 'label' => 'الأسعار', 'to' => '/pricing'])
+        ->assertJsonPath('data.navigation.menus.product.items.0.channel', 'instagram')
+        ->assertJsonPath('data.navigation.menus.product.items.4.section', 'try-it')
+        ->assertJsonCount(8, 'data.navigation.menus.solutions.items')
+        ->assertJsonPath('data.navigation.menus.solutions.items.7', ['id' => 'support', 'icon' => 'headset', 'title' => 'الدعم', 'desc' => 'أجب عن الأسئلة المتكررة تلقائيًا على مدار الساعة.', 'to' => '/solutions/support'])
+        ->assertJsonPath('data.footer.columns.0.links.0', ['label' => 'المزايا', 'section' => 'features'])
+        ->assertJsonPath('data.footer.legal.1', ['id' => 'terms', 'label' => 'الشروط', 'to' => '/legal/terms']);
+});
+
+it('leaves the top bar and the footer null until they are seeded', function () {
+    $this->seed(HomeContentSeeder::class);
+    HomeBlock::whereIn('key', ['navigation', 'footer'])->delete();
+
+    $this->getJson('/api/v1/home')->assertOk()->assertJsonPath('data.navigation', null)->assertJsonPath('data.footer', null);
+});
+
+it('sends every plural form of the hero counters for the language', function () {
+    $this->seed(HomeContentSeeder::class);
+
+    $english = $this->getJson('/api/v1/home')->json('data.sections.0.story');
+    $arabic = $this->getJson('/api/v1/home?lang=ar')->json('data.sections.0.story');
+
+    expect($english['relief']['stats'][0])->toMatchArray(['label_one' => 'reply', 'label_other' => 'replies'])->not->toHaveKey('label_few')
+        ->and($arabic['pressure'])->toMatchArray(['counter_two' => 'رسالتان جديدتان', 'counter_few' => 'رسائل جديدة', 'counter_many' => 'رسالة جديدة'])
+        ->and($arabic['relief']['stats'][1])->toHaveKeys(['label_zero', 'label_one', 'label_two', 'label_few', 'label_many', 'label_other']);
 });
 
 it('gives hero channels and partners their brand mark', function () {

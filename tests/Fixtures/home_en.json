@@ -28,7 +28,9 @@
                         }
                     ],
                     "counter": "new messages",
-                    "more": "+44 more"
+                    "more": "+44 more",
+                    "counter_one": "new message",
+                    "counter_other": "new messages"
                 },
                 "relief": {
                     "stats": [
@@ -36,19 +38,25 @@
                             "id": "replies",
                             "to": 47,
                             "suffix": "",
-                            "label": "replies"
+                            "label": "replies",
+                            "label_one": "reply",
+                            "label_other": "replies"
                         },
                         {
                             "id": "orders",
                             "to": 12,
                             "suffix": "",
-                            "label": "orders"
+                            "label": "orders",
+                            "label_one": "order",
+                            "label_other": "orders"
                         },
                         {
                             "id": "saved",
                             "to": 3,
                             "suffix": "h",
-                            "label": "saved"
+                            "label": "saved",
+                            "label_one": "saved",
+                            "label_other": "saved"
                         }
                     ]
                 },
@@ -734,5 +742,237 @@
                 "result": "✓ Replied in 0.4s"
             }
         ]
+    },
+    "navigation": {
+        "items": [
+            {
+                "id": "product",
+                "menu": "product",
+                "label": "Product"
+            },
+            {
+                "id": "solutions",
+                "menu": "solutions",
+                "label": "Solutions"
+            },
+            {
+                "id": "agencies",
+                "label": "Agencies",
+                "to": "/solutions/agencies"
+            },
+            {
+                "id": "pricing",
+                "label": "Pricing",
+                "to": "/pricing"
+            }
+        ],
+        "menus": {
+            "product": {
+                "items": [
+                    {
+                        "id": "instagram",
+                        "channel": "instagram",
+                        "title": "Instagram",
+                        "desc": "Turn comments and DMs into customers",
+                        "to": "/signup"
+                    },
+                    {
+                        "id": "whatsapp",
+                        "channel": "whatsapp",
+                        "title": "WhatsApp",
+                        "desc": "Answer every chat, day and night",
+                        "to": "/signup"
+                    },
+                    {
+                        "id": "messenger",
+                        "channel": "messenger",
+                        "title": "Messenger",
+                        "desc": "Automate your Facebook Page inbox",
+                        "to": "/signup"
+                    },
+                    {
+                        "id": "tiktok",
+                        "channel": "tiktok",
+                        "title": "TikTok",
+                        "desc": "Turn comments on your videos into orders",
+                        "to": "/signup"
+                    },
+                    {
+                        "id": "ai",
+                        "icon": "spark",
+                        "title": "Blexchat AI",
+                        "desc": "Replies that know your catalogue",
+                        "cta": "Try it live",
+                        "section": "try-it"
+                    }
+                ],
+                "heading": "Automate every conversation"
+            },
+            "solutions": {
+                "columns": true,
+                "items": [
+                    {
+                        "id": "creators",
+                        "icon": "camera",
+                        "title": "Creators",
+                        "desc": "Turn followers into a subscriber list.",
+                        "to": "/solutions/creators"
+                    },
+                    {
+                        "id": "e-commerce",
+                        "icon": "bag",
+                        "title": "E-commerce",
+                        "desc": "Recover carts and confirm orders in DM.",
+                        "to": "/solutions/e-commerce"
+                    },
+                    {
+                        "id": "restaurants",
+                        "icon": "cup",
+                        "title": "Restaurants",
+                        "desc": "Bookings and orders from DMs.",
+                        "to": "/solutions/restaurants"
+                    },
+                    {
+                        "id": "clinics",
+                        "icon": "tooth",
+                        "title": "Clinics",
+                        "desc": "Appointments booked while you work.",
+                        "to": "/solutions/clinics"
+                    },
+                    {
+                        "id": "agencies",
+                        "icon": "briefcase",
+                        "title": "Agencies",
+                        "desc": "Run many client accounts from one seat.",
+                        "to": "/solutions/agencies"
+                    },
+                    {
+                        "id": "real-estate",
+                        "icon": "house",
+                        "title": "Real estate",
+                        "desc": "Qualify buyers before the first call.",
+                        "to": "/solutions/real-estate"
+                    },
+                    {
+                        "id": "education",
+                        "icon": "cap",
+                        "title": "Education",
+                        "desc": "Enrol students without a landing page.",
+                        "to": "/solutions/education"
+                    },
+                    {
+                        "id": "support",
+                        "icon": "headset",
+                        "title": "Support",
+                        "desc": "Deflect repeat questions around the clock.",
+                        "to": "/solutions/support"
+                    }
+                ],
+                "heading": "Built for how you sell"
+            }
+        },
+        "sign_in": {
+            "label": "Sign in",
+            "to": "/signin"
+        },
+        "get_started": {
+            "label": "Get started",
+            "to": "/signup"
+        },
+        "get_started_mobile": {
+            "label": "Get started free",
+            "to": "/signup"
+        },
+        "aria": {
+            "main": "Main",
+            "mobile": "Mobile",
+            "open_menu": "Open menu",
+            "close_menu": "Close menu"
+        }
+    },
+    "footer": {
+        "cta": {
+            "label": "Get started free",
+            "to": "/signup"
+        },
+        "columns": [
+            {
+                "links": [
+                    {
+                        "label": "Features",
+                        "section": "features"
+                    },
+                    {
+                        "label": "Pricing",
+                        "to": "/pricing"
+                    },
+                    {
+                        "label": "Blexchat AI",
+                        "section": "try-it"
+                    }
+                ],
+                "title": "Product"
+            },
+            {
+                "links": [
+                    {
+                        "label": "Creators",
+                        "to": "/solutions/creators"
+                    },
+                    {
+                        "label": "E-commerce",
+                        "to": "/solutions/e-commerce"
+                    },
+                    {
+                        "label": "Restaurants",
+                        "to": "/solutions/restaurants"
+                    },
+                    {
+                        "label": "Agencies",
+                        "to": "/solutions/agencies"
+                    }
+                ],
+                "title": "Solutions"
+            },
+            {
+                "links": [
+                    {
+                        "label": "Sign up",
+                        "to": "/signup"
+                    },
+                    {
+                        "label": "Sign in",
+                        "to": "/signin"
+                    }
+                ],
+                "title": "Account"
+            }
+        ],
+        "legal": [
+            {
+                "id": "privacy",
+                "label": "Privacy",
+                "to": "/legal/privacy"
+            },
+            {
+                "id": "terms",
+                "label": "Terms",
+                "to": "/legal/terms"
+            }
+        ],
+        "tagline": "Turn comments and DMs into customers.",
+        "made_for": "Made for",
+        "made_for_sr": "Made for creators, brands, sellers and agencies",
+        "giant_words": [
+            "Creators",
+            "Brands",
+            "Sellers",
+            "Agencies"
+        ],
+        "copyright": "© 2026 BLEXCHAT",
+        "aria": {
+            "footer": "Footer",
+            "home": "Blexchat home"
+        }
     }
 }

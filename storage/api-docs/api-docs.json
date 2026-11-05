@@ -3238,7 +3238,7 @@
                     "Home"
                 ],
                 "summary": "Get the complete public marketing homepage",
-                "description": "Every homepage section in display order and the live-demo reply rules. No authentication.\n\n**Language**\n- Send `?lang=ar` for Arabic or `?lang=en` for English.\n- Without `lang`, the `Accept-Language` header is used (`ar`, `ar-SA`, `en-US`…).\n- A missing or unsupported language returns English.\n- The response states the language it was served in: `meta.locale` and the `Content-Language` header.\n- Any text not yet translated is served in English, field by field, and `meta.fallback` is then `true`.",
+                "description": "Every homepage section in display order, the live-demo reply rules, and the top bar and footer every marketing page shares. No authentication.\n\n**Language**\n- Send `?lang=ar` for Arabic or `?lang=en` for English.\n- Without `lang`, the `Accept-Language` header is used (`ar`, `ar-SA`, `en-US`…).\n- A missing or unsupported language returns English.\n- The response states the language it was served in: `meta.locale` and the `Content-Language` header.\n- Any text not yet translated is served in English, field by field, and `meta.fallback` is then `true`.",
                 "operationId": "9578f64b5c6ee0a342418701420a15fc",
                 "parameters": [
                     {
@@ -3625,6 +3625,100 @@
                     },
                     "403": {
                         "description": "Missing or invalid signature"
+                    }
+                }
+            }
+        },
+        "/api/v1/legal/{slug}": {
+            "get": {
+                "tags": [
+                    "Home"
+                ],
+                "summary": "The Privacy Policy or the Terms of Service",
+                "description": "The page the footer’s and the sign-up screen’s Privacy and Terms links open, as edited in the admin panel. No authentication.\n\n- Send `?lang=ar` for Arabic or `?lang=en` for English; without it, `Accept-Language` is used, and anything else returns English.\n- A page not yet translated is served in English, and `meta.fallback` is then `true`.",
+                "operationId": "20144a4681049706b24607f3cee28ddb",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "privacy",
+                                "terms"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "Language of the page. Takes precedence over Accept-Language. Defaults to en.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The page",
+                        "headers": {
+                            "Content-Language": {
+                                "description": "Language of the returned page",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LegalPage"
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "locale": {
+                                                    "type": "string",
+                                                    "example": "ar",
+                                                    "enum": [
+                                                        "en",
+                                                        "ar"
+                                                    ]
+                                                },
+                                                "fallback": {
+                                                    "description": "True when the page is not translated yet and is served in English",
+                                                    "type": "boolean"
+                                                },
+                                                "available_locales": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "en",
+                                                        "ar"
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not privacy or terms, or the page has not been seeded"
                     }
                 }
             }
@@ -5949,6 +6043,16 @@
                             "pressure": {
                                 "properties": {
                                     "counter": {
+                                        "description": "Kept for older clients; use the plural forms",
+                                        "type": "string",
+                                        "example": "new messages"
+                                    },
+                                    "counter_one": {
+                                        "description": "Plural forms, keyed as i18next reads them: pick by `count` with Intl.PluralRules. English sends one and other; Arabic also counter_zero, counter_two, counter_few and counter_many",
+                                        "type": "string",
+                                        "example": "new message"
+                                    },
+                                    "counter_other": {
                                         "type": "string",
                                         "example": "new messages"
                                     },
@@ -6002,7 +6106,17 @@
                                                     "type": "string"
                                                 },
                                                 "label": {
+                                                    "description": "Kept for older clients; use the plural forms",
                                                     "type": "string"
+                                                },
+                                                "label_one": {
+                                                    "description": "Plural forms by `to`, like counter_one…: label_one and label_other, plus label_zero, label_two, label_few and label_many in Arabic",
+                                                    "type": "string",
+                                                    "example": "reply"
+                                                },
+                                                "label_other": {
+                                                    "type": "string",
+                                                    "example": "replies"
                                                 }
                                             },
                                             "type": "object"
@@ -6745,6 +6859,279 @@
                             }
                         },
                         "type": "object"
+                    },
+                    "navigation": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/SiteNavigation"
+                            },
+                            {
+                                "type": "object",
+                                "nullable": true,
+                                "enum": [
+                                    null
+                                ]
+                            }
+                        ]
+                    },
+                    "footer": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/SiteFooter"
+                            },
+                            {
+                                "type": "object",
+                                "nullable": true,
+                                "enum": [
+                                    null
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "MegaMenuItem": {
+                "description": "One entry of a mega menu, with its link fields (`to`, or `section`).",
+                "allOf": [
+                    {
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "example": "instagram"
+                            },
+                            "title": {
+                                "type": "string",
+                                "example": "Instagram"
+                            },
+                            "desc": {
+                                "type": "string",
+                                "example": "Turn comments and DMs into customers"
+                            },
+                            "channel": {
+                                "description": "Shows the channel’s brand mark; absent on the others",
+                                "type": "string",
+                                "enum": [
+                                    "instagram",
+                                    "whatsapp",
+                                    "tiktok",
+                                    "messenger"
+                                ]
+                            },
+                            "icon": {
+                                "description": "One of our line icons; absent on channels",
+                                "type": "string",
+                                "enum": [
+                                    "spark",
+                                    "camera",
+                                    "bag",
+                                    "cup",
+                                    "tooth",
+                                    "briefcase",
+                                    "cap",
+                                    "house",
+                                    "headset"
+                                ]
+                            },
+                            "cta": {
+                                "description": "Only on an entry set apart on its own row (Blexchat AI)",
+                                "type": "string",
+                                "example": "Try it live"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    {
+                        "$ref": "#/components/schemas/Link"
+                    }
+                ]
+            },
+            "SiteNavigation": {
+                "description": "The marketing sites’ top bar and its two mega menus, the same on every marketing page.",
+                "properties": {
+                    "items": {
+                        "description": "Bar entries in order; each either opens a menu (`menu`) or is a link (`to`)",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "string",
+                                    "example": "product"
+                                },
+                                "label": {
+                                    "type": "string",
+                                    "example": "Product"
+                                },
+                                "menu": {
+                                    "description": "The key in `menus` it opens",
+                                    "type": "string",
+                                    "enum": [
+                                        "product",
+                                        "solutions"
+                                    ]
+                                },
+                                "to": {
+                                    "type": "string",
+                                    "example": "/pricing"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "menus": {
+                        "properties": {
+                            "product": {
+                                "properties": {
+                                    "heading": {
+                                        "type": "string"
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/MegaMenuItem"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "solutions": {
+                                "properties": {
+                                    "heading": {
+                                        "type": "string"
+                                    },
+                                    "columns": {
+                                        "description": "Laid out in two columns, read down",
+                                        "type": "boolean"
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/MegaMenuItem"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "sign_in": {
+                        "$ref": "#/components/schemas/Cta"
+                    },
+                    "get_started": {
+                        "$ref": "#/components/schemas/Cta"
+                    },
+                    "get_started_mobile": {
+                        "$ref": "#/components/schemas/Cta"
+                    },
+                    "aria": {
+                        "description": "Screen-reader names",
+                        "properties": {
+                            "main": {
+                                "type": "string"
+                            },
+                            "mobile": {
+                                "type": "string"
+                            },
+                            "open_menu": {
+                                "type": "string"
+                            },
+                            "close_menu": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "SiteFooter": {
+                "description": "The marketing sites’ footer, the same on every marketing page.",
+                "properties": {
+                    "tagline": {
+                        "type": "string",
+                        "example": "Turn comments and DMs into customers."
+                    },
+                    "cta": {
+                        "$ref": "#/components/schemas/Cta"
+                    },
+                    "columns": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "title": {
+                                    "type": "string",
+                                    "example": "Product"
+                                },
+                                "links": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Cta"
+                                    }
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "made_for": {
+                        "description": "Shown before the rotating giant words",
+                        "type": "string",
+                        "example": "Made for"
+                    },
+                    "made_for_sr": {
+                        "description": "The whole sentence, for screen readers",
+                        "type": "string"
+                    },
+                    "giant_words": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "Creators",
+                            "Brands",
+                            "Sellers",
+                            "Agencies"
+                        ]
+                    },
+                    "copyright": {
+                        "type": "string",
+                        "example": "© 2026 BLEXCHAT"
+                    },
+                    "legal": {
+                        "description": "Privacy and Terms; their pages come from GET /api/v1/legal/{id}",
+                        "type": "array",
+                        "items": {
+                            "allOf": [
+                                {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "enum": [
+                                                "privacy",
+                                                "terms"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/Cta"
+                                }
+                            ]
+                        }
+                    },
+                    "aria": {
+                        "description": "Screen-reader names",
+                        "properties": {
+                            "footer": {
+                                "type": "string"
+                            },
+                            "home": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
                     }
                 },
                 "type": "object"
@@ -6808,6 +7195,40 @@
                     "error": {
                         "description": "provider_error only: the provider’s own reason",
                         "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "LegalPage": {
+                "properties": {
+                    "slug": {
+                        "type": "string",
+                        "enum": [
+                            "privacy",
+                            "terms"
+                        ]
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Privacy Policy"
+                    },
+                    "body": {
+                        "description": "Markdown: `##` headings, paragraphs, `-` lists, **bold** and [links](https://…). Render it as Markdown, never as HTML.",
+                        "type": "string",
+                        "example": "## What we collect\n\nYour email address and the messages your automations answer."
+                    },
+                    "format": {
+                        "type": "string",
+                        "enum": [
+                            "markdown"
+                        ]
+                    },
+                    "effective_on": {
+                        "description": "\"Last updated\": the day this version took effect",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-11-01",
                         "nullable": true
                     }
                 },

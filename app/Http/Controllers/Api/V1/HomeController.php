@@ -12,6 +12,7 @@ use App\Models\HomeStat;
 use App\Models\UseCase;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
 use OpenApi\Attributes as OA;
 
@@ -56,7 +57,9 @@ use OpenApi\Attributes as OA;
     new OA\Property(property: 'cutout', type: 'string', format: 'uri', description: 'The person cut out of the main photo'),
     new OA\Property(property: 'story', type: 'object', description: 'Copy of the pressure → working → relief loop', properties: [
         new OA\Property(property: 'pressure', type: 'object', properties: [
-            new OA\Property(property: 'counter', type: 'string', example: 'new messages'),
+            new OA\Property(property: 'counter', type: 'string', example: 'new messages', description: 'Kept for older clients; use the plural forms'),
+            new OA\Property(property: 'counter_one', type: 'string', example: 'new message', description: 'Plural forms, keyed as i18next reads them: pick by `count` with Intl.PluralRules. English sends one and other; Arabic also counter_zero, counter_two, counter_few and counter_many'),
+            new OA\Property(property: 'counter_other', type: 'string', example: 'new messages'),
             new OA\Property(property: 'count', type: 'integer', example: 47, description: 'Counted up to; the relief scene clears this many'),
             new OA\Property(property: 'more', type: 'string', example: '+44 more'),
             new OA\Property(property: 'chips', type: 'array', items: new OA\Items(properties: [
@@ -71,7 +74,9 @@ use OpenApi\Attributes as OA;
                 new OA\Property(property: 'id', type: 'string'),
                 new OA\Property(property: 'to', type: 'integer', description: 'Counted up to'),
                 new OA\Property(property: 'suffix', type: 'string', description: 'Shown after the number; may be empty'),
-                new OA\Property(property: 'label', type: 'string'),
+                new OA\Property(property: 'label', type: 'string', description: 'Kept for older clients; use the plural forms'),
+                new OA\Property(property: 'label_one', type: 'string', example: 'reply', description: 'Plural forms by `to`, like counter_one…: label_one and label_other, plus label_zero, label_two, label_few and label_many in Arabic'),
+                new OA\Property(property: 'label_other', type: 'string', example: 'replies'),
             ])),
         ]),
         new OA\Property(property: 'visitor_result', type: 'string'),
@@ -258,6 +263,67 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'rules', type: 'array', items: new OA\Items(ref: '#/components/schemas/DemoReply')),
         new OA\Property(property: 'fallback', ref: '#/components/schemas/DemoReply'),
     ]),
+    new OA\Property(property: 'navigation', ref: '#/components/schemas/SiteNavigation', nullable: true),
+    new OA\Property(property: 'footer', ref: '#/components/schemas/SiteFooter', nullable: true),
+])]
+#[OA\Schema(schema: 'MegaMenuItem', description: 'One entry of a mega menu, with its link fields (`to`, or `section`).', allOf: [
+    new OA\Schema(properties: [
+        new OA\Property(property: 'id', type: 'string', example: 'instagram'),
+        new OA\Property(property: 'title', type: 'string', example: 'Instagram'),
+        new OA\Property(property: 'desc', type: 'string', example: 'Turn comments and DMs into customers'),
+        new OA\Property(property: 'channel', type: 'string', enum: ['instagram', 'whatsapp', 'tiktok', 'messenger'], description: 'Shows the channel’s brand mark; absent on the others'),
+        new OA\Property(property: 'icon', type: 'string', enum: ['spark', 'camera', 'bag', 'cup', 'tooth', 'briefcase', 'cap', 'house', 'headset'], description: 'One of our line icons; absent on channels'),
+        new OA\Property(property: 'cta', type: 'string', description: 'Only on an entry set apart on its own row (Blexchat AI)', example: 'Try it live'),
+    ]),
+    new OA\Schema(ref: '#/components/schemas/Link'),
+])]
+#[OA\Schema(schema: 'SiteNavigation', description: 'The marketing sites’ top bar and its two mega menus, the same on every marketing page.', properties: [
+    new OA\Property(property: 'items', type: 'array', description: 'Bar entries in order; each either opens a menu (`menu`) or is a link (`to`)', items: new OA\Items(properties: [
+        new OA\Property(property: 'id', type: 'string', example: 'product'),
+        new OA\Property(property: 'label', type: 'string', example: 'Product'),
+        new OA\Property(property: 'menu', type: 'string', enum: ['product', 'solutions'], description: 'The key in `menus` it opens'),
+        new OA\Property(property: 'to', type: 'string', example: '/pricing'),
+    ])),
+    new OA\Property(property: 'menus', type: 'object', properties: [
+        new OA\Property(property: 'product', type: 'object', properties: [
+            new OA\Property(property: 'heading', type: 'string'),
+            new OA\Property(property: 'items', type: 'array', items: new OA\Items(ref: '#/components/schemas/MegaMenuItem')),
+        ]),
+        new OA\Property(property: 'solutions', type: 'object', properties: [
+            new OA\Property(property: 'heading', type: 'string'),
+            new OA\Property(property: 'columns', type: 'boolean', description: 'Laid out in two columns, read down'),
+            new OA\Property(property: 'items', type: 'array', items: new OA\Items(ref: '#/components/schemas/MegaMenuItem')),
+        ]),
+    ]),
+    new OA\Property(property: 'sign_in', ref: '#/components/schemas/Cta'),
+    new OA\Property(property: 'get_started', ref: '#/components/schemas/Cta'),
+    new OA\Property(property: 'get_started_mobile', ref: '#/components/schemas/Cta', description: 'The button at the foot of the mobile menu'),
+    new OA\Property(property: 'aria', type: 'object', description: 'Screen-reader names', properties: [
+        new OA\Property(property: 'main', type: 'string'),
+        new OA\Property(property: 'mobile', type: 'string'),
+        new OA\Property(property: 'open_menu', type: 'string'),
+        new OA\Property(property: 'close_menu', type: 'string'),
+    ]),
+])]
+#[OA\Schema(schema: 'SiteFooter', description: 'The marketing sites’ footer, the same on every marketing page.', properties: [
+    new OA\Property(property: 'tagline', type: 'string', example: 'Turn comments and DMs into customers.'),
+    new OA\Property(property: 'cta', ref: '#/components/schemas/Cta'),
+    new OA\Property(property: 'columns', type: 'array', items: new OA\Items(properties: [
+        new OA\Property(property: 'title', type: 'string', example: 'Product'),
+        new OA\Property(property: 'links', type: 'array', items: new OA\Items(ref: '#/components/schemas/Cta')),
+    ])),
+    new OA\Property(property: 'made_for', type: 'string', example: 'Made for', description: 'Shown before the rotating giant words'),
+    new OA\Property(property: 'made_for_sr', type: 'string', description: 'The whole sentence, for screen readers'),
+    new OA\Property(property: 'giant_words', type: 'array', items: new OA\Items(type: 'string'), example: ['Creators', 'Brands', 'Sellers', 'Agencies']),
+    new OA\Property(property: 'copyright', type: 'string', example: '© 2026 BLEXCHAT'),
+    new OA\Property(property: 'legal', type: 'array', description: 'Privacy and Terms; their pages come from GET /api/v1/legal/{id}', items: new OA\Items(allOf: [
+        new OA\Schema(properties: [new OA\Property(property: 'id', type: 'string', enum: ['privacy', 'terms'])]),
+        new OA\Schema(ref: '#/components/schemas/Cta'),
+    ])),
+    new OA\Property(property: 'aria', type: 'object', description: 'Screen-reader names', properties: [
+        new OA\Property(property: 'footer', type: 'string'),
+        new OA\Property(property: 'home', type: 'string'),
+    ]),
 ])]
 class HomeController extends Controller
 {
@@ -271,7 +337,7 @@ class HomeController extends Controller
         path: '/api/v1/home',
         summary: 'Get the complete public marketing homepage',
         description: <<<'MD'
-            Every homepage section in display order and the live-demo reply rules. No authentication.
+            Every homepage section in display order, the live-demo reply rules, and the top bar and footer every marketing page shares. No authentication.
 
             **Language**
             - Send `?lang=ar` for Arabic or `?lang=en` for English.
@@ -320,6 +386,9 @@ class HomeController extends Controller
                 'action' => $this->translate($rule, 'action'),
                 'result' => $this->translate($rule, 'result'),
             ])->all()],
+            // Null until their blocks are seeded, so an older database still serves the page.
+            'navigation' => $blocks->has('navigation') ? $this->block($blocks['navigation']) : null,
+            'footer' => $blocks->has('footer') ? $this->block($blocks['footer']) : null,
         ];
 
         return response()
@@ -433,7 +502,7 @@ class HomeController extends Controller
         $fallback = $texts[$this->fallbackLocale] ?? [];
         $translated = $this->locale === $this->fallbackLocale ? [] : ($texts[$this->locale] ?? []);
 
-        if ($this->locale !== $this->fallbackLocale && $this->countTexts($translated) < $this->countTexts($fallback)) {
+        if ($this->locale !== $this->fallbackLocale && array_diff_key($this->textPaths($fallback), $this->textPaths($translated)) !== []) {
             $this->usedFallback = true;
         }
 
@@ -456,17 +525,15 @@ class HomeController extends Controller
     }
 
     /**
+     * Where each non-empty text sits ("story.pressure.counter"), compared by place rather than
+     * counted, since a language may have texts another lacks (Arabic's extra plural forms).
+     *
      * @param  array<array-key, mixed>  $texts
+     * @return array<string, true>
      */
-    private function countTexts(array $texts): int
+    private function textPaths(array $texts): array
     {
-        $count = 0;
-
-        array_walk_recursive($texts, function (mixed $value) use (&$count): void {
-            $count += is_string($value) && $value !== '' ? 1 : 0;
-        });
-
-        return $count;
+        return array_map(fn (): bool => true, array_filter(Arr::dot($texts), fn (mixed $value): bool => is_string($value) && $value !== ''));
     }
 
     /**
