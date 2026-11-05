@@ -37,6 +37,8 @@ class ContactResource extends JsonResource
             'conversation' => $this->whenLoaded('conversation', fn (): ?array => $this->conversation === null ? null : [
                 'id' => $this->conversation->id,
                 'status' => $this->conversation->status,
+                // human is the contact page's "Needs you".
+                'state' => $this->conversation->state,
                 'messages_count' => $this->conversation->messages_count,
             ]),
             'first_seen_at' => $this->first_seen_at->toIso8601String(),
