@@ -9,6 +9,8 @@ use App\Http\Requests\Api\Contact\UpdateContactRequest;
 use App\Http\Resources\Api\V1\ContactCollection;
 use App\Http\Resources\Api\V1\ContactResource;
 use App\Models\Contact;
+use App\Models\Message;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -169,7 +171,7 @@ class ContactController extends Controller
     {
         abort_unless($contact->user_id === $request->user()->id, 404);
 
-        $contact->load(['sourceAutomation', 'conversation' => fn (HasOne $query) => $query->withCount('messages')]);
+        $contact->load(['sourceAutomation', 'conversation' => fn (HasOne $query) => $query->withCount(['messages' => fn (Builder $messages) => $messages->where('direction', '!=', Message::DIRECTION_SYSTEM)])]);
 
         return response()->json(['data' => new ContactResource($contact)]);
     }

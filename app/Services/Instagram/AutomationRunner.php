@@ -81,6 +81,11 @@ class AutomationRunner
         $automation = $this->firstMatch($channel, $isStoryReply ? 'story_mention' : 'dm_keyword', $message->content, answerAny: $isStoryReply || $isFirstMessage);
 
         if ($automation === null) {
+            // Nothing answers this, and an automation had been: the owner takes it from here.
+            if ($conversation->state === 'automation') {
+                $conversation->handOver('unmatched');
+            }
+
             return;
         }
 
@@ -202,5 +207,6 @@ class AutomationRunner
         ]);
 
         $conversation->update(['last_message' => $action['message'], 'last_message_at' => now()]);
+        $conversation->markAnsweredByAutomation();
     }
 }
