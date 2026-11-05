@@ -28,6 +28,13 @@ class Conversation extends Model
     /** What the inbox list shows with each conversation. */
     public const LIST_RELATIONS = ['channel', 'contact.sourceAutomation'];
 
+    /**
+     * What an automation's extras wait on: a reply to "Follow us first" before the DM goes out, a
+     * first reply before the email question can be sent (after a comment's one private reply), or
+     * the email address itself.
+     */
+    public const AWAITING = ['follow', 'email_question', 'email'];
+
     /** Why an automation hands a conversation over; each has a text in lang/{locale}/inbox.php. */
     public const HANDOVER_REASONS = ['unmatched'];
 
@@ -40,6 +47,8 @@ class Conversation extends Model
         'contact_platform_id',
         'status',
         'state',
+        'awaiting',
+        'awaiting_automation_id',
         'starred',
         'labels',
         'unread_count',
@@ -71,6 +80,14 @@ class Conversation extends Model
     public function contact(): BelongsTo
     {
         return $this->belongsTo(Contact::class);
+    }
+
+    /**
+     * @return BelongsTo<Automation, $this>
+     */
+    public function awaitingAutomation(): BelongsTo
+    {
+        return $this->belongsTo(Automation::class, 'awaiting_automation_id');
     }
 
     public function messages(): HasMany
@@ -114,6 +131,19 @@ class Conversation extends Model
      */
     public function markHandledByOwner(): void
     {
-        $this->update(['state' => 'open']);
+        $this->update(['state' => 'open', 'awaiting' => null, 'awaiting_automation_id' => null]);
+    }
+
+    /**
+     * The automation's next step waits on the customer's next message.
+     */
+    public function awaitReply(string $step, Automation $automation): void
+    {
+        $this->update(['awaiting' => $step, 'awaiting_automation_id' => $automation->id]);
+    }
+
+    public function stopAwaiting(): void
+    {
+        $this->update(['awaiting' => null, 'awaiting_automation_id' => null]);
     }
 }

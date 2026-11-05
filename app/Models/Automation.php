@@ -46,6 +46,9 @@ class Automation extends Model
 
     public const FOLLOW_UP_AFTER = ['1h', '6h', '24h'];
 
+    /** How long each follow-up choice waits, in minutes. */
+    private const FOLLOW_UP_MINUTES = ['1h' => 60, '6h' => 360, '24h' => 1440];
+
     protected $attributes = [
         'active' => true,
     ];
@@ -159,6 +162,25 @@ class Automation extends Model
         }
 
         return $answers;
+    }
+
+    /**
+     * Whether a paid extra is on, with every answer it needs.
+     */
+    public function hasExtra(string $switch): bool
+    {
+        $extras = $this->extras ?? [];
+
+        return ($extras[$switch] ?? false) === true
+            && collect(self::EXTRAS[$switch] ?? [])->every(fn (string $field): bool => filled($extras[$field] ?? null));
+    }
+
+    /**
+     * How long the follow-up waits after the DM, when it is on.
+     */
+    public function followUpDelayMinutes(): ?int
+    {
+        return $this->hasExtra('follow_up') ? (self::FOLLOW_UP_MINUTES[$this->extras['follow_up_after']] ?? null) : null;
     }
 
     /**
