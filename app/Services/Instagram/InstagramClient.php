@@ -175,6 +175,16 @@ class InstagramClient
     }
 
     /**
+     * A text DM with one quick-reply chip; tapping it sends the chip's title back as their message.
+     *
+     * @return array<string, mixed>
+     */
+    public static function withQuickReply(string $text, string $title, string $payload): array
+    {
+        return ['text' => $text, 'quick_replies' => [['content_type' => 'text', 'title' => $title, 'payload' => $payload]]];
+    }
+
+    /**
      * @param  array<string, string>  $recipient
      * @param  array<string, mixed>  $message
      */

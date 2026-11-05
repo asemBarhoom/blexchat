@@ -61,6 +61,14 @@ class Message extends Model
         $this->increment('link_clicks', 1, ['first_clicked_at' => $this->first_clicked_at ?? now()]);
     }
 
+    /**
+     * @return BelongsTo<Automation, $this>
+     */
+    public function automation(): BelongsTo
+    {
+        return $this->belongsTo(Automation::class);
+    }
+
     public function conversation(): BelongsTo
     {
         return $this->belongsTo(Conversation::class);

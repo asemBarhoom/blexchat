@@ -2,6 +2,7 @@
 
 namespace App\Services\Instagram;
 
+use App\Jobs\SendAutomationFollowUp;
 use App\Models\Automation;
 use App\Models\Channel;
 use App\Models\Comment;
@@ -14,13 +15,17 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
- * Runs the first matching automation for an incoming comment or message and sends its replies.
- * A failed send is logged and not retried: Instagram has no idempotency key, so a retry could reach
- * the customer twice.
+ * Runs the first matching automation for an incoming comment or message and sends its replies,
+ * with its paid extras: "Follow us first" before the DM, the email question after it, and a
+ * follow-up for someone who did not act on it. A failed send is logged and not retried:
+ * Instagram has no idempotency key, so a retry could reach the customer twice.
  */
 class AutomationRunner
 {
     private const DM_ACTIONS = ['send_dm', 'send_dm_with_button'];
+
+    /** The quick reply under "Follow us first". Any reply carries on; the chip makes it one tap. */
+    private const FOLLOWED_PAYLOAD = 'BLEXCHAT_FOLLOWED';
 
     public function __construct(private InstagramClient $instagram) {}
 
@@ -36,29 +41,44 @@ class AutomationRunner
         }
 
         $sent = false;
+        $asksToFollow = $automation->hasExtra('ask_follow');
+        $askedToFollow = false;
         $mayOpenConversation = $this->acceptsNewConversations($channel)
             || Conversation::where('channel_id', $channel->id)->where('platform_conversation_id', $comment->author_platform_id)->exists();
 
         foreach ($automation->actions as $action) {
-            if (! $mayOpenConversation && in_array($action['type'], self::DM_ACTIONS, true)) {
+            $isDm = in_array($action['type'], self::DM_ACTIONS, true);
+
+            // "Follow us first" takes the DMs' place; they wait for the reply to it.
+            if ($isDm && (! $mayOpenConversation || $askedToFollow)) {
                 continue;
             }
 
-            $sent = $this->attempt($automation, $action, function () use ($channel, $comment, $automation, $action): void {
+            $sent = $this->attempt($automation, $action, function () use ($channel, $comment, $automation, $action, $asksToFollow, &$askedToFollow): void {
                 if ($action['type'] === 'reply_comment') {
                     $this->instagram->replyToComment($channel, $comment->platform_comment_id, $action['message']);
 
                     return;
                 }
 
-                $action = $this->withLinkToken($action);
+                $action = $asksToFollow ? $this->followAsk($automation) : $this->withLinkToken($action);
                 $messageId = $this->instagram->sendPrivateReply($channel, $comment->platform_comment_id, $this->payload($action));
                 $conversation = Conversation::firstOrCreate(
                     ['channel_id' => $channel->id, 'platform_conversation_id' => $comment->author_platform_id],
                     ['contact_platform_id' => $comment->author_platform_id, 'contact_name' => $comment->author_name, 'status' => 'open'],
                 );
                 $this->recordComment($conversation, $comment);
-                $this->record($conversation, $automation, $action, $messageId);
+                $dm = $this->record($conversation, $automation, $action, $messageId);
+
+                if ($asksToFollow) {
+                    $askedToFollow = true;
+                    $conversation->awaitReply('follow', $automation);
+
+                    return;
+                }
+
+                // After a private reply, Instagram allows nothing more until they write back.
+                $this->afterDm($conversation, $automation, $dm, canMessageNow: false);
             }) || $sent;
         }
 
@@ -70,9 +90,14 @@ class AutomationRunner
     /**
      * DM and story-reply automations answer in the conversation. One without keywords answers
      * only the first message of a conversation, so it greets people instead of repeating itself.
+     * A step an automation is waiting on comes first.
      */
     public function forMessage(Channel $channel, Conversation $conversation, Message $message, bool $isStoryReply): void
     {
+        if ($this->carryOnAwaited($channel, $conversation, $message)) {
+            return;
+        }
+
         $isFirstMessage = $conversation->messages()->where('direction', 'inbound')->count() === 1;
 
         if ($isFirstMessage && $conversation->wasRecentlyCreated && ! $this->acceptsNewConversations($channel)) {
@@ -90,17 +115,30 @@ class AutomationRunner
             return;
         }
 
-        foreach ($automation->actions as $action) {
-            if (! in_array($action['type'], self::DM_ACTIONS, true)) {
-                continue;
-            }
+        $this->sendDms($channel, $conversation, $automation, mayAskToFollow: true);
+    }
 
-            $this->attempt($automation, $action, function () use ($channel, $conversation, $automation, $action): void {
-                $action = $this->withLinkToken($action);
-                $messageId = $this->instagram->sendMessage($channel, $conversation->contact_platform_id, $this->payload($action));
-                $this->record($conversation, $automation, $action, $messageId);
-            });
+    /**
+     * The automation's follow-up, sent by SendAutomationFollowUp once its wait is over: only to
+     * someone who neither tapped the DM's button nor wrote back, while the automation still runs.
+     */
+    public function followUp(Message $dm): void
+    {
+        $automation = $dm->automation;
+        $conversation = $dm->conversation;
+
+        if ($automation === null || ! $automation->active || ! $automation->hasExtra('follow_up') || $dm->first_clicked_at !== null) {
+            return;
         }
+
+        $text = $automation->extras['follow_up_text'];
+        $since = $conversation->messages()->where('id', '>', $dm->id);
+
+        if ((clone $since)->where('direction', 'inbound')->exists() || (clone $since)->where('automated', true)->where('content', $text)->exists()) {
+            return;
+        }
+
+        $this->sendText($conversation, $automation, ['type' => 'send_dm', 'message' => $text]);
     }
 
     /**
@@ -142,6 +180,150 @@ class AutomationRunner
     }
 
     /**
+     * The DM actions in a conversation they wrote in, after "Follow us first" when that is on.
+     */
+    private function sendDms(Channel $channel, Conversation $conversation, Automation $automation, bool $mayAskToFollow): void
+    {
+        if ($mayAskToFollow && $automation->hasExtra('ask_follow')) {
+            if ($this->sendText($conversation, $automation, $this->followAsk($automation))) {
+                $conversation->awaitReply('follow', $automation);
+            }
+
+            return;
+        }
+
+        $dm = null;
+
+        foreach ($automation->actions as $action) {
+            if (! in_array($action['type'], self::DM_ACTIONS, true)) {
+                continue;
+            }
+
+            $this->attempt($automation, $action, function () use ($channel, $conversation, $automation, $action, &$dm): void {
+                $action = $this->withLinkToken($action);
+                $messageId = $this->instagram->sendMessage($channel, $conversation->contact_platform_id, $this->payload($action));
+                $dm = $this->record($conversation, $automation, $action, $messageId);
+            });
+        }
+
+        if ($dm !== null) {
+            $this->afterDm($conversation, $automation, $dm, canMessageNow: true);
+        }
+    }
+
+    /**
+     * What follows the DM: the follow-up's wait starts, and the email question goes out now, or
+     * with their first reply when Instagram does not allow another message yet.
+     */
+    private function afterDm(Conversation $conversation, Automation $automation, Message $dm, bool $canMessageNow): void
+    {
+        $followUpMinutes = $automation->followUpDelayMinutes();
+
+        if ($followUpMinutes !== null) {
+            SendAutomationFollowUp::dispatch($dm)->delay(now()->addMinutes($followUpMinutes));
+        }
+
+        if (! $automation->hasExtra('ask_email')) {
+            return;
+        }
+
+        if (! $canMessageNow) {
+            $conversation->awaitReply('email_question', $automation);
+
+            return;
+        }
+
+        $this->askForEmail($conversation, $automation);
+    }
+
+    private function askForEmail(Conversation $conversation, Automation $automation): void
+    {
+        if ($this->sendText($conversation, $automation, ['type' => 'send_dm', 'message' => $automation->extras['email_ask']])) {
+            $conversation->awaitReply('email', $automation);
+        }
+    }
+
+    /**
+     * Their message carries on the step an automation was waiting on: a reply to "Follow us first"
+     * gets the DM, a first reply after a comment gets the email question, and an email address is
+     * saved on the contact. Anything else, or a stopped automation, goes to the usual matching.
+     */
+    private function carryOnAwaited(Channel $channel, Conversation $conversation, Message $message): bool
+    {
+        $step = $conversation->awaiting;
+
+        if ($step === null) {
+            return false;
+        }
+
+        $automation = $conversation->awaitingAutomation;
+        $conversation->stopAwaiting();
+
+        if ($automation === null || ! $automation->active) {
+            return false;
+        }
+
+        if ($step === 'follow') {
+            $this->sendDms($channel, $conversation, $automation, mayAskToFollow: false);
+
+            return true;
+        }
+
+        if ($step === 'email_question') {
+            $this->askForEmail($conversation, $automation);
+
+            return true;
+        }
+
+        $email = $this->emailIn($message->content);
+
+        if ($email === null) {
+            return false;
+        }
+
+        $conversation->contact?->update(['email' => $email]);
+
+        return true;
+    }
+
+    /**
+     * The first email address in what they wrote, lower-cased.
+     */
+    private function emailIn(string $text): ?string
+    {
+        if (preg_match('/[^\s@<>()",;:]+@[^\s@<>()",;:]+\.[^\s@<>()",;:]+/u', $text, $match) !== 1) {
+            return null;
+        }
+
+        $email = mb_strtolower(rtrim($match[0], '.'));
+
+        return filter_var($email, FILTER_VALIDATE_EMAIL) !== false ? $email : null;
+    }
+
+    /**
+     * "Follow us first", with the owner's button as a quick reply.
+     *
+     * @return array<string, mixed>
+     */
+    private function followAsk(Automation $automation): array
+    {
+        return ['type' => 'send_dm', 'message' => $automation->extras['follow_text'], 'quick_reply' => $automation->extras['follow_button']];
+    }
+
+    /**
+     * One of the automation's messages in a conversation they wrote in, recorded once it went out.
+     *
+     * @param  array<string, mixed>  $action
+     */
+    private function sendText(Conversation $conversation, Automation $automation, array $action): bool
+    {
+        return $this->attempt($automation, $action, function () use ($conversation, $automation, $action): void {
+            $messageId = $this->instagram->sendMessage($conversation->channel, $conversation->contact_platform_id, $this->payload($action));
+            $this->record($conversation, $automation, $action, $messageId);
+        });
+    }
+
+    /**
      * @param  array<string, mixed>  $action
      */
     private function attempt(Automation $automation, array $action, \Closure $send): bool
@@ -167,6 +349,10 @@ class AutomationRunner
      */
     private function payload(array $action): array
     {
+        if (filled($action['quick_reply'] ?? null)) {
+            return InstagramClient::withQuickReply($action['message'], $action['quick_reply'], self::FOLLOWED_PAYLOAD);
+        }
+
         $url = isset($action['link_token']) ? Message::trackedUrl($action['link_token']) : ($action['button_url'] ?? null);
 
         return InstagramClient::message($action['message'], $action['button_label'] ?? null, $url);
@@ -205,11 +391,11 @@ class AutomationRunner
     /**
      * @param  array<string, mixed>  $action
      */
-    private function record(Conversation $conversation, Automation $automation, array $action, ?string $messageId): void
+    private function record(Conversation $conversation, Automation $automation, array $action, ?string $messageId): Message
     {
         $withButton = filled($action['button_label'] ?? null) && filled($action['button_url'] ?? null);
 
-        $conversation->messages()->create([
+        $message = $conversation->messages()->create([
             'platform_message_id' => $messageId,
             'direction' => 'outbound',
             'type' => $withButton ? 'text_with_button' : 'text',
@@ -224,5 +410,7 @@ class AutomationRunner
 
         $conversation->update(['last_message' => $action['message'], 'last_message_at' => now()]);
         $conversation->markAnsweredByAutomation();
+
+        return $message;
     }
 }
