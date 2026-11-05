@@ -79,6 +79,17 @@ describe('POST /api/v1/auth/email-link', function () {
         $this->postJson('/api/v1/auth/email-link/verify', ['token' => $response->json('data.dev_token')])->assertOk();
     });
 
+    it('keeps the login link private in production even if development links are enabled', function () {
+        app()->instance('env', 'production');
+        config(['auth.expose_login_links' => true]);
+
+        $this->postJson('/api/v1/auth/email-link', ['email' => 'sara@nourboutique.com'])
+            ->assertAccepted()
+            ->assertJsonMissingPaths(['data.dev_link', 'data.dev_token']);
+
+        Mail::assertSent(LoginLinkMail::class);
+    });
+
     it('refuses an invalid email or mode', function () {
         $this->postJson('/api/v1/auth/email-link', ['email' => 'sara@nourboutique', 'mode' => 'admin'])
             ->assertUnprocessable()
@@ -88,6 +99,7 @@ describe('POST /api/v1/auth/email-link', function () {
     });
 
     it('makes the visitor wait 59 seconds before resending', function () {
+        $this->freezeSecond();
         emailedToken('sara@nourboutique.com');
 
         $this->travel(30)->seconds();

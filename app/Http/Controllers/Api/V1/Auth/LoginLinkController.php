@@ -88,7 +88,7 @@ class LoginLinkController extends Controller
                 'mode' => $link->mode,
                 'expires_in' => LoginLink::LIFETIME_MINUTES * 60,
                 'resend_after' => LoginLink::RESEND_AFTER_SECONDS,
-                ...config('auth.expose_login_links') ? ['dev_link' => $link->url($token), 'dev_token' => $token] : [],
+                ...(! App::isProduction() && config('auth.expose_login_links')) ? ['dev_link' => $link->url($token), 'dev_token' => $token] : [],
             ],
         ], 202);
     }
