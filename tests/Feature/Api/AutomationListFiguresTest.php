@@ -37,7 +37,8 @@ it('gives each row of the list its runs and click rate', function () {
     $rows = collect($this->actingAs($this->owner)->getJson('/api/v1/automations')->assertOk()->json('data'))->keyBy('id');
 
     expect($rows[$this->automation->id])->toMatchArray(['runs' => 4, 'ctr' => 0.5])->not->toHaveKey('post')
-        ->and($rows[$quiet->id])->toMatchArray(['runs' => 0, 'ctr' => null]);
+        ->and($rows[$quiet->id]['runs'])->toBe(0)
+        ->and($rows[$quiet->id]['ctr'])->toBe(0);
 });
 
 it('counts every row in one query, however long the list', function () {

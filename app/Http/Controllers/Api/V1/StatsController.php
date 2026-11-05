@@ -19,7 +19,7 @@ use OpenApi\Attributes as OA;
     new OA\Property(property: 'sends', type: 'integer', nullable: true, example: 148, description: 'DMs it has sent'),
     new OA\Property(property: 'public_replies', type: 'integer', nullable: true, example: 120, description: 'Comments it answered publicly'),
     new OA\Property(property: 'clicks', type: 'integer', nullable: true, example: 37, description: 'DMs whose button was clicked, each counted once'),
-    new OA\Property(property: 'ctr', type: 'number', nullable: true, minimum: 0, maximum: 1, example: 0.25, description: 'clicks ÷ DMs sent with a button; null while none had a button'),
+    new OA\Property(property: 'ctr', type: 'number', nullable: true, minimum: 0, maximum: 1, example: 0.25, description: 'clicks ÷ DMs sent with a button; 0 while none had a button, null only before it has answered anyone'),
     new OA\Property(property: 'emails', type: 'integer', nullable: true, example: 9, description: 'Addresses collected from the people it brought in; null unless its email question (ask_email) is on'),
     new OA\Property(property: 'last_run_at', type: 'string', format: 'date-time', nullable: true),
 ])]
@@ -90,7 +90,7 @@ class StatsController extends Controller
             'sends' => $sends,
             'public_replies' => $publicReplies,
             'clicks' => $clicks,
-            'ctr' => $withButton > 0 ? round($clicks / $withButton, 4) : null,
+            'ctr' => $withButton > 0 ? round($clicks / $withButton, 4) : 0.0,
             'emails' => ($automation->extras['ask_email'] ?? false)
                 ? Contact::where('source_automation_id', $automation->id)->whereNotNull('email')->count()
                 : null,

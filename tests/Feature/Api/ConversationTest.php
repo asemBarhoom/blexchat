@@ -162,11 +162,13 @@ describe('the contact panel', function () {
         $automation = Automation::factory()->for($user)->for($channel)->create(['name' => 'Comment to DM']);
         $contact = Contact::factory()->for($user)->create(['channel_id' => $channel->id, 'tags' => ['Asked price'], 'city' => 'Cairo', 'source_automation_id' => $automation->id]);
         $conversation = Conversation::factory()->for($channel)->create(['contact_id' => $contact->id]);
-        Conversation::factory()->for($channel)->create(['contact_name' => 'old.thread']);
+        $unlinked = Conversation::factory()->for($channel)->create(['contact_name' => 'old.thread', 'contact_platform_id' => 'ig_old_thread']);
 
         $this->actingAs($user, 'sanctum')->getJson('/api/v1/conversations')
             ->assertJsonFragment(['id' => $contact->id, 'name' => $contact->name, 'tags' => ['Asked price'], 'city' => 'Cairo', 'source' => 'Comment to DM', 'source_automation_id' => $automation->id])
-            ->assertJsonFragment(['id' => null, 'name' => 'old.thread', 'tags' => [], 'source' => null]);
+            ->assertJsonFragment(['id' => $unlinked->contact_id, 'name' => 'old.thread', 'handle' => 'old.thread', 'tags' => [], 'source' => null]);
+
+        expect($unlinked->contact)->platform_id->toBe('ig_old_thread')->user_id->toBe($user->id);
 
         $automation->moveToTrash();
         $this->patchJson("/api/v1/conversations/{$conversation->id}", ['read' => true])->assertJsonPath('data.contact.source', 'Comment to DM');

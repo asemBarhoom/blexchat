@@ -19,7 +19,7 @@ class ContactResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'handle' => $this->handle,
+            'handle' => $this->displayHandle(),
             'channel' => $this->platform,
             'channel_id' => $this->channel_id,
             'avatar' => $this->avatar,

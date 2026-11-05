@@ -318,10 +318,10 @@ class Automation extends Model
     }
 
     /**
-     * Clicks as a share of the DMs that had a button; null while none had one.
+     * Clicks as a share of the DMs that had a button; 0 while none had one.
      */
-    public function clickThroughRate(): ?float
+    public function clickThroughRate(): float
     {
-        return $this->button_sends > 0 ? round($this->button_clicks / $this->button_sends, 4) : null;
+        return $this->button_sends > 0 ? round($this->button_clicks / $this->button_sends, 4) : 0.0;
     }
 }
