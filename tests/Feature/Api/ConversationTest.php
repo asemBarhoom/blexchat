@@ -172,3 +172,46 @@ describe('the contact panel', function () {
         $this->patchJson("/api/v1/conversations/{$conversation->id}", ['read' => true])->assertJsonPath('data.contact.source', 'Comment to DM');
     });
 });
+
+describe('the inbox folders', function () {
+    it('stars and labels a conversation, and files it in Favorites and Labels', function () {
+        $user = User::factory()->create();
+        $channel = Channel::factory()->for($user)->create();
+        $vip = Conversation::factory()->for($channel)->create();
+        $plain = Conversation::factory()->for($channel)->create();
+
+        $this->actingAs($user, 'sanctum')->patchJson("/api/v1/conversations/{$vip->id}", ['starred' => true, 'labels' => [' VIP ', 'Wholesale']])
+            ->assertOk()
+            ->assertJsonPath('data.starred', true)
+            ->assertJsonPath('data.labels', ['VIP', 'Wholesale']);
+
+        $this->getJson('/api/v1/conversations?folder=favorites')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $vip->id);
+        $this->getJson('/api/v1/conversations?folder=labels')->assertJsonCount(1, 'data');
+        $this->getJson('/api/v1/conversations?label=Wholesale')->assertJsonCount(1, 'data');
+
+        $this->patchJson("/api/v1/conversations/{$vip->id}", ['labels' => []])->assertJsonPath('data.labels', []);
+        $this->patchJson("/api/v1/conversations/{$vip->id}", ['starred' => false])->assertJsonPath('data.starred', false);
+        $this->getJson('/api/v1/conversations?folder=labels')->assertJsonCount(0, 'data');
+        $this->getJson('/api/v1/conversations?folder=favorites')->assertJsonCount(0, 'data');
+        expect($plain->refresh()->starred)->toBeFalse();
+    });
+
+    it('refuses a repeated label, a long one, or too many', function () {
+        $user = User::factory()->create();
+        $conversation = Conversation::factory()->for(Channel::factory()->for($user))->create();
+
+        $this->actingAs($user, 'sanctum')->patchJson("/api/v1/conversations/{$conversation->id}", ['labels' => ['VIP', 'vip']])->assertJsonValidationErrors('labels.1');
+        $this->patchJson("/api/v1/conversations/{$conversation->id}", ['labels' => [str_repeat('a', 31)]])->assertJsonValidationErrors('labels.0');
+        $this->patchJson("/api/v1/conversations/{$conversation->id}", ['labels' => range(1, 11)])->assertJsonValidationErrors('labels');
+    });
+
+    it('lists the oldest conversations first on request', function () {
+        $user = User::factory()->create();
+        $channel = Channel::factory()->for($user)->create();
+        $old = Conversation::factory()->for($channel)->create(['last_message_at' => now()->subDays(3)]);
+        $new = Conversation::factory()->for($channel)->create(['last_message_at' => now()]);
+
+        $this->actingAs($user, 'sanctum')->getJson('/api/v1/conversations')->assertJsonPath('data.0.id', $new->id);
+        $this->getJson('/api/v1/conversations?sort=oldest')->assertJsonPath('data.0.id', $old->id);
+    });
+});

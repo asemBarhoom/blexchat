@@ -20,6 +20,11 @@ class Conversation extends Model
      */
     public const STATES = ['open', 'automation', 'human'];
 
+    /** The inbox's folders besides All chats: starred conversations, and those with any label. */
+    public const FOLDERS = ['favorites', 'labels'];
+
+    public const MAX_LABELS = 10;
+
     /** What the inbox list shows with each conversation. */
     public const LIST_RELATIONS = ['channel', 'contact.sourceAutomation'];
 
@@ -35,6 +40,8 @@ class Conversation extends Model
         'contact_platform_id',
         'status',
         'state',
+        'starred',
+        'labels',
         'unread_count',
         'last_message',
         'last_message_at',
@@ -43,12 +50,15 @@ class Conversation extends Model
     /** The column's default, so a conversation created a moment ago reads it too. */
     protected $attributes = [
         'state' => 'open',
+        'starred' => false,
     ];
 
     protected function casts(): array
     {
         return [
             'unread_count' => 'integer',
+            'starred' => 'boolean',
+            'labels' => 'array',
             'last_message_at' => 'datetime',
         ];
     }
