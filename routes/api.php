@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\AutomationTemplateController;
 use App\Http\Controllers\Api\V1\ChannelAccessRequestController;
 use App\Http\Controllers\Api\V1\ChannelConnectScreenController;
 use App\Http\Controllers\Api\V1\ChannelController;
+use App\Http\Controllers\Api\V1\ChannelOAuthController;
 use App\Http\Controllers\Api\V1\ChannelOptionController;
 use App\Http\Controllers\Api\V1\ChannelPostController;
 use App\Http\Controllers\Api\V1\ChannelTestEventController;
@@ -116,6 +117,8 @@ Route::middleware(['auth:sanctum', EnsureAccountOwner::class])->prefix('v1')->na
     Route::get('channels/instagram/authorize', [InstagramConnectionController::class, 'authorize'])->name('channels.instagram.authorize');
     Route::post('channels/instagram', [InstagramConnectionController::class, 'store'])->name('channels.instagram.store');
     Route::post('channels/connect', [ChannelController::class, 'connect'])->name('channels.connect');
+    Route::get('channels/oauth/{platform}/start', [ChannelOAuthController::class, 'start'])->name('channels.oauth.start');
+    Route::get('channels/oauth/{platform}/callback', [ChannelOAuthController::class, 'callback'])->withoutMiddleware('auth:sanctum')->name('channels.oauth.callback');
 
     // Connect a channel (W06): the screen per channel, and Request access for an account another workspace has
     Route::get('onboarding/channels/{platform}/connect', ChannelConnectScreenController::class)->name('onboarding.channels.connect');
