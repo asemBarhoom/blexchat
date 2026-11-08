@@ -14,10 +14,37 @@ use Illuminate\Database\Seeder;
  */
 class AlignmentItemSeeder extends Seeder
 {
+    /** @var array<string, array{from: string, to: string}> */
+    private const DEPLOY_STATUS_SYNC = [
+        'BE-06' => ['from' => 'open', 'to' => 'done'], 'BE-07' => ['from' => 'open', 'to' => 'done'],
+        'BE-08' => ['from' => 'open', 'to' => 'done'], 'BE-09' => ['from' => 'open', 'to' => 'done'],
+        'BE-10' => ['from' => 'open', 'to' => 'done'], 'BE-12' => ['from' => 'open', 'to' => 'done'],
+        'BE-13' => ['from' => 'open', 'to' => 'done'], 'BE-14' => ['from' => 'open', 'to' => 'done'],
+        'BE-15' => ['from' => 'open', 'to' => 'done'], 'BE-16' => ['from' => 'open', 'to' => 'done'],
+        'BE-17' => ['from' => 'open', 'to' => 'done'], 'BE-18' => ['from' => 'open', 'to' => 'done'],
+        'FE-06' => ['from' => 'partial', 'to' => 'done'], 'FE-07' => ['from' => 'open', 'to' => 'done'],
+        'FE-11' => ['from' => 'partial', 'to' => 'done'], 'FE-13' => ['from' => 'partial', 'to' => 'done'],
+        'FE-14' => ['from' => 'open', 'to' => 'done'], 'FE-15' => ['from' => 'open', 'to' => 'done'],
+        'FE-16' => ['from' => 'partial', 'to' => 'done'], 'FE-18' => ['from' => 'open', 'to' => 'done'],
+        'FE-19' => ['from' => 'partial', 'to' => 'done'], 'FE-20' => ['from' => 'open', 'to' => 'done'],
+        'FE-24' => ['from' => 'open', 'to' => 'done'], 'FE-25' => ['from' => 'open', 'to' => 'done'],
+        'DS-01' => ['from' => 'open', 'to' => 'done'], 'DS-02' => ['from' => 'open', 'to' => 'done'],
+        'DS-03' => ['from' => 'open', 'to' => 'done'], 'DS-04' => ['from' => 'open', 'to' => 'done'],
+        'DS-05' => ['from' => 'open', 'to' => 'done'], 'DS-06' => ['from' => 'open', 'to' => 'done'],
+        'DS-07' => ['from' => 'open', 'to' => 'done'], 'DS-08' => ['from' => 'open', 'to' => 'done'],
+        'DS-09' => ['from' => 'open', 'to' => 'done'], 'DS-10' => ['from' => 'open', 'to' => 'done'],
+        'DS-11' => ['from' => 'open', 'to' => 'done'], 'DS-12' => ['from' => 'open', 'to' => 'done'],
+    ];
+
     public function run(): void
     {
         foreach ($this->items() as $item) {
-            AlignmentItem::firstOrCreate(['code' => $item['code']], $item);
+            $record = AlignmentItem::firstOrCreate(['code' => $item['code']], $item);
+            $sync = self::DEPLOY_STATUS_SYNC[$record->code] ?? null;
+
+            if ($sync !== null && $record->status === $sync['from']) {
+                $record->update(['status' => $sync['to']]);
+            }
         }
     }
 
