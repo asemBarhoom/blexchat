@@ -12,11 +12,18 @@ use App\Http\Requests\Api\Automation\UpdateWizardAutomationRequest;
 use App\Http\Resources\Api\V1\AutomationCollection;
 use App\Http\Resources\Api\V1\AutomationResource;
 use App\Models\Automation;
+use App\Models\Channel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'Automations', description: 'Create and manage keyword-triggered automation rules')]
+#[OA\Schema(schema: 'GoLiveRefusal', required: ['message', 'code'], properties: [
+    new OA\Property(property: 'message', type: 'string', example: 'Couldn’t go live: your plan allows 3 live automations. Stop one, or upgrade.'),
+    new OA\Property(property: 'code', type: 'string', enum: ['channel_disconnected', 'live_limit']),
+    new OA\Property(property: 'channel', type: 'string', example: 'instagram', description: 'channel_disconnected only: the platform to reconnect'),
+    new OA\Property(property: 'limit', type: 'integer', example: 3, description: 'live_limit only: how many may be live on the plan'),
+])]
 #[OA\Schema(schema: 'WizardAnswers', required: ['name', 'channel_id', 'kind', 'trigger', 'dm_text'], properties: [
     new OA\Property(property: 'name', type: 'string', maxLength: 255, example: 'Comment a word → send the catalogue', description: 'The automation’s name in the list: the template’s or the starter’s name'),
     new OA\Property(property: 'channel_id', type: 'integer', description: 'One of the owner’s channels. Fixed once saved: ignored on an edit'),
@@ -201,11 +208,22 @@ class AutomationController extends Controller
                 properties: [new OA\Property(property: 'active', type: 'boolean')]
             )
         ),
-        responses: [new OA\Response(response: 200, description: 'Status updated')]
+        responses: [
+            new OA\Response(response: 200, description: 'Status updated'),
+            new OA\Response(response: 422, description: 'Starting it was refused: the channel is disconnected or the plan’s live automations are all in use', content: new OA\JsonContent(ref: '#/components/schemas/GoLiveRefusal')),
+        ]
     )]
     public function toggle(ToggleAutomationRequest $request, Automation $automation): JsonResponse
     {
         abort_unless($automation->user_id === $request->user()->id, 403);
+
+        if ($request->boolean('active') && ! $automation->active) {
+            $refusal = $request->user()->goLiveRefusal($automation->channel, $automation);
+
+            if ($refusal !== null) {
+                return response()->json($refusal, 422);
+            }
+        }
 
         $automation->update(['active' => $request->boolean('active')]);
 
@@ -266,11 +284,17 @@ class AutomationController extends Controller
         responses: [
             new OA\Response(response: 201, description: 'Saved and live; `data.wizard` holds the answers back'),
             new OA\Response(response: 401, description: 'Missing, revoked or unknown token'),
-            new OA\Response(response: 422, description: 'A missing or invalid answer, another account’s channel or post, or a paid answer on Free', content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')),
+            new OA\Response(response: 422, description: 'A missing or invalid answer, another account’s channel or post, or a paid answer on Free (ValidationError); or, with `code`, the channel is disconnected or the plan’s live automations are all in use (the wizard’s "Couldn’t go live")', content: new OA\JsonContent(oneOf: [new OA\Schema(ref: '#/components/schemas/ValidationError'), new OA\Schema(ref: '#/components/schemas/GoLiveRefusal')])),
         ]
     )]
     public function storeFromWizard(StoreWizardAutomationRequest $request): JsonResponse
     {
+        $refusal = $request->user()->goLiveRefusal(Channel::findOrFail($request->integer('channel_id')));
+
+        if ($refusal !== null) {
+            return response()->json($refusal, 422);
+        }
+
         $automation = $request->user()->automations()->create([
             ...$request->automationAttributes(),
             'channel_id' => $request->integer('channel_id'),

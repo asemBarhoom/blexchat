@@ -84,11 +84,11 @@ class ConversationSeeder extends Seeder
                     $customer('وصلني الطلب اليوم، شكرًا لكم! 🙏', now()->subHour()),
                 ],
             ],
-            // Noor A.: a fan (unread).
+            // Noor A.: a fan (unread), with a reminder to tell her when the mocha colour is back.
             [
                 'channel_id' => $ig->id, 'platform_conversation_id' => 'ig_conv_noor_a', 'contact_platform_id' => 'noor_a',
                 'contact_name' => 'Noor A.', 'contact_avatar' => 'avatars/omar.webp',
-                'state' => 'open', 'unread_count' => 1,
+                'state' => 'open', 'unread_count' => 1, 'remind_at' => now()->addDay()->setTime(10, 0),
                 'last_message' => 'رائعة ما شاء الله 💜 متى يتوفر لون الموكا؟', 'last_message_at' => now()->subHours(3),
                 'messages' => [$customer('رائعة ما شاء الله 💜 متى يتوفر لون الموكا؟', now()->subHours(3))],
             ],
@@ -111,7 +111,7 @@ class ConversationSeeder extends Seeder
 
             $conversation = Conversation::updateOrCreate(
                 ['channel_id' => $data['channel_id'], 'platform_conversation_id' => $data['platform_conversation_id']],
-                ['status' => 'open', 'starred' => false, 'labels' => [], ...$data],
+                ['status' => 'open', 'starred' => false, 'labels' => [], 'remind_at' => null, ...$data],
             );
 
             // The sample thread is replaced whole, so a second run brings it up to date.

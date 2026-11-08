@@ -24,6 +24,7 @@ class PostSeeder extends Seeder
                 'thumbnail_url' => 'posts/huda.webp',
                 'media_type' => 'image',
                 'like_count' => 1204,
+                'comment_count' => 4,
                 'posted_at' => now()->subDays(1),
             ],
             [
@@ -32,6 +33,7 @@ class PostSeeder extends Seeder
                 'thumbnail_url' => null,
                 'media_type' => 'reel',
                 'like_count' => 863,
+                'comment_count' => 57,
                 'posted_at' => now()->subDays(4),
             ],
             [
@@ -40,6 +42,7 @@ class PostSeeder extends Seeder
                 'thumbnail_url' => 'posts/nora.webp',
                 'media_type' => 'carousel',
                 'like_count' => 940,
+                'comment_count' => 61,
                 'posted_at' => now()->subDays(7),
             ],
             [
@@ -48,6 +51,7 @@ class PostSeeder extends Seeder
                 'thumbnail_url' => null,
                 'media_type' => 'image',
                 'like_count' => 2315,
+                'comment_count' => 143,
                 'posted_at' => now()->subDays(10),
             ],
             [
@@ -56,6 +60,7 @@ class PostSeeder extends Seeder
                 'thumbnail_url' => 'posts/lina.webp',
                 'media_type' => 'image',
                 'like_count' => 712,
+                'comment_count' => 22,
                 'posted_at' => now()->subDays(14),
             ],
             [
@@ -64,6 +69,7 @@ class PostSeeder extends Seeder
                 'thumbnail_url' => null,
                 'media_type' => 'image',
                 'like_count' => 598,
+                'comment_count' => 18,
                 'posted_at' => now()->subDays(18),
             ],
             [
@@ -72,6 +78,7 @@ class PostSeeder extends Seeder
                 'thumbnail_url' => null,
                 'media_type' => 'image',
                 'like_count' => 1047,
+                'comment_count' => 89,
                 'posted_at' => now()->subMonths(2),
             ],
             [
@@ -80,6 +87,7 @@ class PostSeeder extends Seeder
                 'thumbnail_url' => null,
                 'media_type' => 'image',
                 'like_count' => 430,
+                'comment_count' => 12,
                 'posted_at' => now()->subMonths(3),
             ],
         ];

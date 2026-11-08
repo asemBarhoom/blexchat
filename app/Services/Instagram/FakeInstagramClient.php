@@ -79,16 +79,16 @@ class FakeInstagramClient extends InstagramClient
     public function media(Channel $channel, string $mediaId): array
     {
         return collect($this->recentMedia($channel))->firstWhere('id', $mediaId)
-            ?? ['caption' => 'Test post', 'media_type' => 'IMAGE', 'media_product_type' => 'FEED', 'timestamp' => now()->toIso8601String(), 'like_count' => 0];
+            ?? ['caption' => 'Test post', 'media_type' => 'IMAGE', 'media_product_type' => 'FEED', 'timestamp' => now()->toIso8601String(), 'like_count' => 0, 'comments_count' => 0];
     }
 
     public function recentMedia(Channel $channel, int $limit = 50): array
     {
         $posts = [
-            ['caption' => 'New abayas just landed. Comment "price" for the list.', 'media_type' => 'IMAGE', 'media_product_type' => 'FEED', 'like_count' => 214],
-            ['caption' => 'How we style the black kaftan, in 30 seconds.', 'media_type' => 'VIDEO', 'media_product_type' => 'REELS', 'like_count' => 1320],
-            ['caption' => 'Eid collection: 20% off this week only.', 'media_type' => 'CAROUSEL_ALBUM', 'media_product_type' => 'FEED', 'like_count' => 487],
-            ['caption' => 'Behind the scenes at the workshop.', 'media_type' => 'VIDEO', 'media_product_type' => 'REELS', 'like_count' => 96],
+            ['caption' => 'New abayas just landed. Comment "price" for the list.', 'media_type' => 'IMAGE', 'media_product_type' => 'FEED', 'like_count' => 214, 'comments_count' => 38],
+            ['caption' => 'How we style the black kaftan, in 30 seconds.', 'media_type' => 'VIDEO', 'media_product_type' => 'REELS', 'like_count' => 1320, 'comments_count' => 95],
+            ['caption' => 'Eid collection: 20% off this week only.', 'media_type' => 'CAROUSEL_ALBUM', 'media_product_type' => 'FEED', 'like_count' => 487, 'comments_count' => 61],
+            ['caption' => 'Behind the scenes at the workshop.', 'media_type' => 'VIDEO', 'media_product_type' => 'REELS', 'like_count' => 96, 'comments_count' => 7],
         ];
 
         return collect($posts)->take($limit)->map(fn (array $post, int $index): array => [

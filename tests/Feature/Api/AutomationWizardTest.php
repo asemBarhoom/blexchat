@@ -97,7 +97,7 @@ describe('GET /api/v1/channels/{channel}/posts', function () {
     it('brings in the latest posts from Instagram, and still answers when Instagram fails', function () {
         $instagram = Channel::factory()->create(['user_id' => $this->owner->id, 'platform' => 'instagram', 'status' => 'active', 'access_token' => 'IGAA']);
         Http::fake(['graph.instagram.com/v21.0/me/media*' => Http::sequence()
-            ->push(['data' => [['id' => 'm1', 'caption' => 'ريل جديد', 'media_type' => 'VIDEO', 'media_product_type' => 'REELS', 'thumbnail_url' => 'https://cdn.example.com/m1.jpg', 'like_count' => 1204, 'timestamp' => '2026-11-01T10:00:00+0000']]])
+            ->push(['data' => [['id' => 'm1', 'caption' => 'ريل جديد', 'media_type' => 'VIDEO', 'media_product_type' => 'REELS', 'thumbnail_url' => 'https://cdn.example.com/m1.jpg', 'like_count' => 1204, 'comments_count' => 4, 'timestamp' => '2026-11-01T10:00:00+0000']]])
             ->push(['error' => ['message' => 'Expired']], 400)]);
 
         $this->actingAs($this->owner, 'sanctum')->getJson("/api/v1/channels/{$instagram->id}/posts")
@@ -105,7 +105,8 @@ describe('GET /api/v1/channels/{channel}/posts', function () {
             ->assertJsonPath('meta.synced', true)
             ->assertJsonPath('data.0.platform_post_id', 'm1')
             ->assertJsonPath('data.0.media_type', 'reel')
-            ->assertJsonPath('data.0.likes', 1204);
+            ->assertJsonPath('data.0.likes', 1204)
+            ->assertJsonPath('data.0.comments', 4);
 
         $this->getJson("/api/v1/channels/{$instagram->id}/posts")->assertOk()->assertJsonPath('meta.synced', false)->assertJsonPath('meta.total', 1);
         Http::assertSent(fn (Request $request): bool => $request->hasHeader('Authorization', 'Bearer IGAA'));
@@ -231,5 +232,42 @@ describe('PUT /api/v1/automations/{id}/wizard', function () {
     it('refuses another account’s automation', function () {
         $this->actingAs($this->owner, 'sanctum')->putJson('/api/v1/automations/'.Automation::factory()->create()->id.'/wizard', wizardAnswers())
             ->assertForbidden();
+    });
+});
+
+describe('going live (W15 "Couldn’t go live")', function () {
+    it('refuses an automation on a disconnected channel, and starts it once the channel is back', function () {
+        $this->channel->update(['status' => 'expired']);
+
+        $this->actingAs($this->owner, 'sanctum')->postJson('/api/v1/automations/wizard', wizardAnswers())
+            ->assertUnprocessable()
+            ->assertJsonPath('code', 'channel_disconnected')
+            ->assertJsonPath('channel', 'whatsapp');
+        expect(Automation::count())->toBe(0);
+
+        $this->channel->update(['status' => 'active']);
+        $this->postJson('/api/v1/automations/wizard', wizardAnswers())->assertCreated();
+    });
+
+    it('keeps Free to its live automations, counting only the live ones', function () {
+        Plan::factory()->free()->create();
+        Automation::factory()->count(3)->create(['user_id' => $this->owner->id, 'channel_id' => $this->channel->id, 'active' => true]);
+        $stopped = Automation::factory()->create(['user_id' => $this->owner->id, 'channel_id' => $this->channel->id, 'active' => false]);
+
+        $this->actingAs($this->owner, 'sanctum')->postJson('/api/v1/automations/wizard', wizardAnswers())
+            ->assertUnprocessable()
+            ->assertJsonPath('code', 'live_limit')
+            ->assertJsonPath('limit', 3);
+        $this->patchJson("/api/v1/automations/{$stopped->id}/toggle", ['active' => true])->assertUnprocessable()->assertJsonPath('code', 'live_limit');
+
+        Automation::where('active', true)->first()->update(['active' => false]);
+        $this->patchJson("/api/v1/automations/{$stopped->id}/toggle", ['active' => true])->assertOk()->assertJsonPath('data.active', true);
+    });
+
+    it('puts no limit on a plan without one', function () {
+        onPaidPlan($this->owner);
+        Automation::factory()->count(5)->create(['user_id' => $this->owner->id, 'channel_id' => $this->channel->id, 'active' => true]);
+
+        $this->actingAs($this->owner, 'sanctum')->postJson('/api/v1/automations/wizard', wizardAnswers())->assertCreated();
     });
 });

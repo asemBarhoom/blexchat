@@ -5,6 +5,8 @@ use App\Models\Channel;
 use App\Models\Contact;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\Plan;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -215,5 +217,55 @@ describe('the inbox folders', function () {
 
         $this->actingAs($user, 'sanctum')->getJson('/api/v1/conversations')->assertJsonPath('data.0.id', $new->id);
         $this->getJson('/api/v1/conversations?sort=oldest')->assertJsonPath('data.0.id', $old->id);
+    });
+});
+
+describe('the Reminders folder and the folder count', function () {
+    it('sets a reminder on a paid plan, lists Reminders soonest first, and clears it', function () {
+        $user = User::factory()->create();
+        Subscription::factory()->for($user)->for(Plan::factory()->create())->create(['status' => 'active']);
+        $channel = Channel::factory()->for($user)->create();
+        [$later, $sooner] = Conversation::factory()->for($channel)->count(2)->create();
+        Conversation::factory()->for($channel)->create();
+
+        $this->actingAs($user, 'sanctum')
+            ->patchJson("/api/v1/conversations/{$later->id}", ['remind_at' => now()->addDays(2)->toIso8601String()])
+            ->assertOk()
+            ->assertJsonPath('data.remind_at', fn (?string $at): bool => $at !== null);
+        $this->patchJson("/api/v1/conversations/{$sooner->id}", ['remind_at' => now()->addHour()->toIso8601String()])->assertOk();
+
+        $this->getJson('/api/v1/conversations?folder=reminders')
+            ->assertJsonPath('data.*.id', [$sooner->id, $later->id])
+            ->assertJsonPath('meta.total', 2);
+
+        $this->patchJson("/api/v1/conversations/{$later->id}", ['remind_at' => null])->assertOk()->assertJsonPath('data.remind_at', null);
+        $this->getJson('/api/v1/conversations?folder=reminders')->assertJsonPath('meta.total', 1);
+    });
+
+    it('keeps reminders to paid plans and to the future', function () {
+        $user = User::factory()->create();
+        $conversation = Conversation::factory()->for(Channel::factory()->for($user))->create();
+
+        $this->actingAs($user, 'sanctum')
+            ->patchJson("/api/v1/conversations/{$conversation->id}", ['remind_at' => now()->addDay()->toIso8601String()])
+            ->assertForbidden()
+            ->assertJsonPath('code', 'plan_required');
+
+        $this->patchJson("/api/v1/conversations/{$conversation->id}", ['remind_at' => now()->subDay()->toIso8601String()])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('remind_at');
+        expect($conversation->fresh()->remind_at)->toBeNull();
+    });
+
+    it('counts every conversation the filters match, beyond the page', function () {
+        $user = User::factory()->create();
+        $channel = Channel::factory()->for($user)->create();
+        Conversation::factory()->for($channel)->count(3)->create(['unread_count' => 1]);
+        Conversation::factory()->for($channel)->count(2)->create(['unread_count' => 0]);
+
+        $this->actingAs($user, 'sanctum')->getJson('/api/v1/conversations?limit=2')
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('meta.total', 5);
+        $this->getJson('/api/v1/conversations?unread=1')->assertJsonPath('meta.total', 3);
     });
 });

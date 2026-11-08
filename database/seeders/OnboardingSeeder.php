@@ -51,6 +51,7 @@ class OnboardingSeeder extends Seeder
                 'monthly_price' => 0,
                 'annual_price' => 0,
                 'contacts_limit' => 25,
+                'live_automations_limit' => 3,
                 'has_ai' => false,
                 'has_email_capture' => false,
                 'features' => [

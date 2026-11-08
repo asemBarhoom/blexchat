@@ -54,6 +54,7 @@ class PlanResource extends Resource
                     ->helperText('0 = خطة مجانية.'),
                 TextInput::make('annual_price')->label('السعر الشهري بالدفع السنوي ($)')->numeric()->integer()->minValue(0)->required(),
                 TextInput::make('contacts_limit')->label('حد جهات الاتصال')->numeric()->integer()->minValue(1)->required(),
+                TextInput::make('live_automations_limit')->label('حد الأتمتات الشغالة')->numeric()->integer()->minValue(1)->helperText('اتركه فارغاً بلا حد.'),
                 TextInput::make('trial_days')->label('أيام التجربة المجانية')->numeric()->integer()->minValue(0)->maxValue(365)->default(0)
                     ->helperText('0 = بدون تجربة: تُدفع الخطة من اليوم.')
                     // A trial has to outlast the reminder email (إعدادات الدفع).

@@ -25,6 +25,7 @@ class PostFactory extends Factory
             'thumbnail_url' => fake()->imageUrl(),
             'media_type' => fake()->randomElement(['image', 'video', 'carousel', 'reel']),
             'like_count' => fake()->numberBetween(0, 5000),
+            'comment_count' => fake()->numberBetween(0, 300),
             'posted_at' => fake()->dateTimeBetween('-1 month'),
         ];
     }
