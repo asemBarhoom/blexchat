@@ -52,6 +52,7 @@ class Conversation extends Model
         'starred',
         'labels',
         'remind_at',
+        'reminded_at',
         'unread_count',
         'last_message',
         'last_message_at',
@@ -103,6 +104,7 @@ class Conversation extends Model
             'starred' => 'boolean',
             'labels' => 'array',
             'remind_at' => 'datetime',
+            'reminded_at' => 'datetime',
             'last_message_at' => 'datetime',
         ];
     }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Mail\ReminderDueMail;
 use App\Models\Automation;
 use App\Models\Channel;
 use App\Models\Contact;
@@ -9,6 +10,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 
 uses(RefreshDatabase::class);
 
@@ -240,6 +242,32 @@ describe('the Reminders folder and the folder count', function () {
 
         $this->patchJson("/api/v1/conversations/{$later->id}", ['remind_at' => null])->assertOk()->assertJsonPath('data.remind_at', null);
         $this->getJson('/api/v1/conversations?folder=reminders')->assertJsonPath('meta.total', 1);
+    });
+
+    it('emails the owner once when a reminder comes, marks it due, and emails again for a new one', function () {
+        Mail::fake();
+        $user = User::factory()->create(['email' => 'nour@nourboutique.com']);
+        Subscription::factory()->for($user)->for(Plan::factory()->create())->create(['status' => 'active']);
+        $channel = Channel::factory()->for($user)->create();
+        $due = Conversation::factory()->for($channel)->create(['contact_name' => 'Reem K.', 'remind_at' => now()->addHour()]);
+        $later = Conversation::factory()->for($channel)->create(['remind_at' => now()->addDays(2)]);
+
+        $this->travel(61)->minutes();
+        $this->artisan('conversations:send-reminders')->assertSuccessful();
+        $this->artisan('conversations:send-reminders')->assertSuccessful();
+
+        Mail::assertSentCount(1);
+        Mail::assertSent(ReminderDueMail::class, fn (ReminderDueMail $mail): bool => $mail->hasTo('nour@nourboutique.com') && $mail->conversation->is($due));
+        $this->actingAs($user, 'sanctum')->getJson('/api/v1/conversations?folder=reminders')
+            ->assertJsonPath('data.0.remind_due', true)
+            ->assertJsonPath('data.1.remind_due', false);
+
+        $this->patchJson("/api/v1/conversations/{$due->id}", ['remind_at' => now()->addMinutes(5)->toIso8601String()])->assertOk()->assertJsonPath('data.remind_due', false);
+        $this->travel(6)->minutes();
+        $this->artisan('conversations:send-reminders')->assertSuccessful();
+
+        Mail::assertSentCount(2);
+        expect($later->fresh()->reminded_at)->toBeNull();
     });
 
     it('keeps reminders to paid plans and to the future', function () {

@@ -41,6 +41,11 @@ class EmailTemplate extends Model
             'expiry' => 'auth.link.expiry',
             'ignore' => 'auth.link.ignore',
         ],
+        'reminder.due' => [
+            'subject' => 'inbox.reminder_due.subject',
+            'line' => 'inbox.reminder_due.line',
+            'button' => 'inbox.reminder_due.button',
+        ],
     ];
 
     /** @var list<string> */

@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('instagram:refresh-tokens')->daily()->onOneServer();
         // Empties the Trash of automations past Automation::TRASH_DAYS
         $schedule->command('model:prune')->daily()->onOneServer();
+        $schedule->command('conversations:send-reminders')->everyMinute()->onOneServer()->withoutOverlapping();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
