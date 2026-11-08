@@ -18,6 +18,104 @@
         }
     ],
     "paths": {
+        "/api/v1/ai/settings": {
+            "get": {
+                "tags": [
+                    "Automations"
+                ],
+                "summary": "Blexchat AI settings",
+                "description": "Blexchat AI answers DMs that no keyword of the automation handling the conversation matches, for automations with AI on (`PATCH /automations/{id}/ai`). When the business info does not answer the question it hands over to the inbox with a one-line reason (the handover message’s `reason`). Its replies have `by_ai: true`.",
+                "operationId": "0fd0899d475f2b217d88eb5e654fee5d",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AiSettings"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Automations"
+                ],
+                "summary": "Save the business info Blexchat AI answers from",
+                "description": "Works on every plan, so the owner can write it before upgrading.",
+                "operationId": "1931f7563a968ee618705d03c81e7ed1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "business_info"
+                                ],
+                                "properties": {
+                                    "business_info": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "maxLength": 5000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Saved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AiSettings"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/auth/me": {
             "get": {
                 "tags": [
@@ -676,7 +774,7 @@
                     "Automations"
                 ],
                 "summary": "List automations",
-                "description": "Each row carries `runs` (DMs and public replies it sent) and `ctr` (clicks ÷ DMs sent with a button; 0 while none had one), for the list’s Runs and CTR columns.",
+                "description": "Each row carries `runs` (DMs and public replies it sent) and `ctr` (clicks ÷ DMs sent with a button; 0 while none had one), for the list’s Runs and CTR columns. `meta.total` counts every automation the filters match; `meta.live` counts how many of those are live, whatever `status` asks for (\"3 live of 5\").",
                 "operationId": "c72fb0b8dc11d136aa13f458b1e172ab",
                 "parameters": [
                     {
@@ -706,6 +804,16 @@
                         "required": false,
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Automations whose name contains this text, ignoring case",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 100
                         }
                     },
                     {
@@ -956,6 +1064,16 @@
                 "responses": {
                     "200": {
                         "description": "Status updated"
+                    },
+                    "422": {
+                        "description": "Starting it was refused: the channel is disconnected or the plan’s live automations are all in use",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GoLiveRefusal"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -971,7 +1089,7 @@
                     "Automations"
                 ],
                 "summary": "Turn Blexchat AI on or off for one automation",
-                "description": "On plans that include Blexchat AI (`has_ai` on the plan). Turning it off always works, so a downgraded account can still switch it off. The switch is stored now; AI-written replies start once the AI engine is live.",
+                "description": "On plans that include Blexchat AI (`has_ai` on the plan). Turning it off always works, so a downgraded account can still switch it off. With it on, Blexchat AI answers what no keyword of this automation matches, from the business info in `/ai/settings`, and hands over when unsure.",
                 "operationId": "d7ed251755407b594f29677e46c0012d",
                 "parameters": [
                     {
@@ -1123,11 +1241,18 @@
                         "description": "Missing, revoked or unknown token"
                     },
                     "422": {
-                        "description": "A missing or invalid answer, another account’s channel or post, or a paid answer on Free",
+                        "description": "A missing or invalid answer, another account’s channel or post, or a paid answer on Free (ValidationError); or, with `code`, the channel is disconnected or the plan’s live automations are all in use (the wizard’s \"Couldn’t go live\")",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ValidationError"
+                                    "oneOf": [
+                                        {
+                                            "$ref": "#/components/schemas/ValidationError"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/GoLiveRefusal"
+                                        }
+                                    ]
                                 }
                             }
                         }
@@ -2750,6 +2875,92 @@
                 ]
             }
         },
+        "/api/v1/contacts/import": {
+            "post": {
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Import contacts from a CSV",
+                "description": "Contacts · Import. A CSV (comma or semicolon, UTF-8) whose first row names the columns, in English or Arabic:\n`name` (or `first name` and `last name`) and `phone` are required; `email`, `city`, `gender` (female/male) and `tags` (separated by `;`) are optional.\nEach row becomes a WhatsApp contact reached by phone, like Create New Contact. A row with a problem, a phone already in the contacts, or past the plan's contacts limit is skipped and listed with its line number; the others are added. At most 1,000 rows.",
+                "operationId": "db34a8f2ca6d65b59240fc5ab5962b42",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file",
+                                    "consent"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "description": "CSV, up to 1 MB",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "consent": {
+                                        "description": "Must be true: everyone in the file agreed to receive messages",
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Imported",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "imported": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "skipped": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "row": {
+                                                                "description": "Line in the file, the header being 1",
+                                                                "type": "integer",
+                                                                "example": 7
+                                                            },
+                                                            "reason": {
+                                                                "type": "string",
+                                                                "example": "Already in your contacts (same phone)."
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "usage": {
+                                                    "$ref": "#/components/schemas/ContactsUsage"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error, or `code: missing_columns` with `columns` when the first row has no name or phone column"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/contacts/{id}": {
             "get": {
                 "tags": [
@@ -2960,13 +3171,14 @@
                     {
                         "name": "folder",
                         "in": "query",
-                        "description": "favorites: starred conversations; labels: those with at least one label",
+                        "description": "favorites: starred conversations; labels: those with at least one label; reminders: those with a reminder, soonest first",
                         "required": false,
                         "schema": {
                             "type": "string",
                             "enum": [
                                 "favorites",
-                                "labels"
+                                "labels",
+                                "reminders"
                             ]
                         }
                     },
@@ -3007,6 +3219,19 @@
                         }
                     },
                     {
+                        "name": "assigned",
+                        "in": "query",
+                        "description": "me: assigned to the signed-in user; unassigned: to no one",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "me",
+                                "unassigned"
+                            ]
+                        }
+                    },
+                    {
                         "name": "unread",
                         "in": "query",
                         "description": "true: only conversations with unread messages",
@@ -3026,7 +3251,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Conversation list"
+                        "description": "Conversation list; `meta.total` counts every conversation the filters match (the folder’s number, \"All chats 6\")"
                     }
                 },
                 "security": [
@@ -3084,6 +3309,17 @@
                                             "maxLength": 30
                                         },
                                         "maxItems": 10
+                                    },
+                                    "assigned_to": {
+                                        "description": "Assign to the owner or a teammate (ids from `GET /team`); null unassigns. Assigning needs a plan with team roles and assignment (`has_assignment`)",
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "remind_at": {
+                                        "description": "A reminder (the Reminders folder), in the future; null clears it. Setting one needs a paid plan. When it comes, the owner is emailed and `remind_due` turns true",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -3102,7 +3338,7 @@
                         "description": "Missing, revoked or unknown token"
                     },
                     "403": {
-                        "description": "Another owner’s conversation"
+                        "description": "Another owner’s conversation; or `code: plan_required` when a reminder is set on Free (show Upgrade)"
                     },
                     "422": {
                         "description": "Validation error",
@@ -3218,7 +3454,7 @@
                         "description": "Validation error"
                     },
                     "502": {
-                        "description": "Instagram refused the message (e.g. the 24-hour messaging window has closed)"
+                        "description": "The platform refused the message (e.g. the 24-hour messaging window has closed), or replies on it are not available yet (TikTok)"
                     }
                 },
                 "security": [
@@ -4116,6 +4352,67 @@
                     },
                     "404": {
                         "description": "Not privacy or terms, or the page has not been seeded"
+                    }
+                }
+            }
+        },
+        "/api/v1/webhooks/{platform}": {
+            "get": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Meta’s webhook verification for WhatsApp or Messenger",
+                "operationId": "697f1887f63326d46556b92bbf17f765",
+                "parameters": [
+                    {
+                        "name": "platform",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "whatsapp",
+                                "messenger"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The hub.challenge, as plain text"
+                    },
+                    "403": {
+                        "description": "Wrong verify token"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Receive WhatsApp or Messenger messages",
+                "description": "Requires a valid X-Hub-Signature-256 header. Messages land in the inbox in the background.",
+                "operationId": "b19cc89d82b6a5b7ca4a1ecc0165dfc1",
+                "parameters": [
+                    {
+                        "name": "platform",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "whatsapp",
+                                "messenger"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Received"
+                    },
+                    "403": {
+                        "description": "Missing or wrong signature"
                     }
                 }
             }
@@ -5123,10 +5420,262 @@
                     }
                 ]
             }
+        },
+        "/api/v1/team": {
+            "get": {
+                "tags": [
+                    "Team"
+                ],
+                "summary": "Settings · Team: the team, open invitations and seats",
+                "description": "A teammate (`role: agent`) signs in with their own account and works in the owner’s inbox and contacts; every other page answers 403 `code: owner_only` for them.",
+                "operationId": "ee2e4da8c994ddfbae7e64ca831de960",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Team"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/team/invitations": {
+            "post": {
+                "tags": [
+                    "Team"
+                ],
+                "summary": "Invite a teammate by email",
+                "description": "Emails a link to the frontend’s `/team/join?token=…`, valid 7 days. Inviting the same email again sends a fresh link.",
+                "operationId": "783a799c4640adc5291fc6ecb5e8a5ca",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Invited; the team as `GET /team`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Team"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "`code: seat_limit` when every seat is in use (show Upgrade)"
+                    },
+                    "422": {
+                        "description": "Validation error: not an email, your own, or already on the team",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/team/invitations/{id}": {
+            "delete": {
+                "tags": [
+                    "Team"
+                ],
+                "summary": "Withdraw an invitation",
+                "operationId": "693a1a46828a3856ec6176eb5fb11565",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Withdrawn; the team as `GET /team`"
+                    },
+                    "404": {
+                        "description": "Not one of your invitations"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/team/invitations/accept": {
+            "post": {
+                "tags": [
+                    "Team"
+                ],
+                "summary": "Join a team from the invitation link",
+                "description": "The join page signs the person in (the usual email link or Google), then sends the token. They must be signed in with the invited email, and their account must have no channels or team of its own.",
+                "operationId": "169c16ea9158f164b87da05a3923cbf9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "token"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Joined; the team as `GET /team`"
+                    },
+                    "403": {
+                        "description": "`code`: `other_email` (signed in with another email; `email` names the invited one) or `has_own_account`"
+                    },
+                    "404": {
+                        "description": "`code: invitation_invalid`: expired, withdrawn or unknown"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/team/members/{id}": {
+            "delete": {
+                "tags": [
+                    "Team"
+                ],
+                "summary": "Remove a teammate",
+                "description": "They keep their sign-in but lose the inbox; the conversations assigned to them are unassigned.",
+                "operationId": "7a443740202067dfb80b2e38cef41f64",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Removed; the team as `GET /team`"
+                    },
+                    "404": {
+                        "description": "Not on your team"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/team/leave": {
+            "post": {
+                "tags": [
+                    "Team"
+                ],
+                "summary": "Leave the team (a teammate)",
+                "operationId": "e0c269cc650603a4fa4717cec76f66cb",
+                "responses": {
+                    "204": {
+                        "description": "Left"
+                    },
+                    "404": {
+                        "description": "Not on a team"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
         "schemas": {
+            "AiSettings": {
+                "properties": {
+                    "business_info": {
+                        "description": "What Blexchat AI answers from: products, sizes, prices, delivery, policies, hours. It answers nothing this does not say; it hands the conversation over instead.",
+                        "type": "string",
+                        "example": "We sell abayas in sizes 36–48. Delivery in Riyadh takes 2–4 days, 25 SAR. Exchanges within 7 days, unworn.",
+                        "nullable": true,
+                        "maxLength": 5000
+                    },
+                    "included": {
+                        "description": "The plan includes Blexchat AI (`has_ai`); otherwise show Upgrade",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "live": {
+                        "description": "The AI engine is set up on the server; while false nothing is answered and conversations are handed over as before",
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            },
             "AuthSession": {
                 "properties": {
                     "user": {
@@ -5169,6 +5718,14 @@
                     "business_name": {
                         "type": "string",
                         "nullable": true
+                    },
+                    "role": {
+                        "description": "agent: a teammate, who sees only the inbox and contacts of the owner who invited them (`GET /team`)",
+                        "type": "string",
+                        "enum": [
+                            "owner",
+                            "agent"
+                        ]
                     },
                     "email_verified_at": {
                         "type": "string",
@@ -5349,6 +5906,36 @@
                         "additionalProperties": {
                             "type": "string"
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "GoLiveRefusal": {
+                "required": [
+                    "message",
+                    "code"
+                ],
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Couldn’t go live: your plan allows 3 live automations. Stop one, or upgrade."
+                    },
+                    "code": {
+                        "type": "string",
+                        "enum": [
+                            "channel_disconnected",
+                            "live_limit"
+                        ]
+                    },
+                    "channel": {
+                        "description": "channel_disconnected only: the platform to reconnect",
+                        "type": "string",
+                        "example": "instagram"
+                    },
+                    "limit": {
+                        "description": "live_limit only: how many may be live on the plan",
+                        "type": "integer",
+                        "example": 3
                     }
                 },
                 "type": "object"
@@ -7310,6 +7897,53 @@
                                 ]
                             }
                         ]
+                    },
+                    "not_found": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/NotFoundPage"
+                            },
+                            {
+                                "type": "object",
+                                "nullable": true,
+                                "enum": [
+                                    null
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "NotFoundPage": {
+                "description": "The marketing 404 page (Figma \"Marketing 404\"): a comment asking, the auto-reply answering, then the page itself.",
+                "properties": {
+                    "question": {
+                        "type": "string",
+                        "example": "Is this page still here?"
+                    },
+                    "replied": {
+                        "type": "string",
+                        "example": "Replied in 0.4s"
+                    },
+                    "answer": {
+                        "type": "string",
+                        "example": "It isn’t, but the rest of the site is. The way home is below."
+                    },
+                    "code": {
+                        "type": "string",
+                        "example": "404"
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "This page doesn’t exist."
+                    },
+                    "body": {
+                        "type": "string",
+                        "example": "The link may be old, or the address has a typo."
+                    },
+                    "cta": {
+                        "$ref": "#/components/schemas/Cta"
                     }
                 },
                 "type": "object"
@@ -7739,6 +8373,12 @@
                         "description": "Never unlimited",
                         "type": "integer",
                         "example": 250
+                    },
+                    "live_automations_limit": {
+                        "description": "How many automations may be live at once; null for no limit",
+                        "type": "integer",
+                        "example": 3,
+                        "nullable": true
                     },
                     "has_ai": {
                         "description": "Shows the \"+ Blexchat AI\" row",
@@ -8542,6 +9182,84 @@
                     }
                 },
                 "type": "object"
+            },
+            "Team": {
+                "properties": {
+                    "members": {
+                        "description": "The owner first, then the teammates: who a conversation can be assigned to",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "name": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "email": {
+                                    "type": "string"
+                                },
+                                "role": {
+                                    "description": "agent: the inbox and contacts only",
+                                    "type": "string",
+                                    "enum": [
+                                        "owner",
+                                        "agent"
+                                    ]
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "invitations": {
+                        "description": "Open invitations; the owner only, [] for a teammate",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "email": {
+                                    "type": "string"
+                                },
+                                "expires_at": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "seats": {
+                        "properties": {
+                            "used": {
+                                "description": "The owner, the teammates and the open invitations",
+                                "type": "integer",
+                                "example": 2
+                            },
+                            "limit": {
+                                "description": "The plan’s inbox teammates, the owner included",
+                                "type": "integer",
+                                "example": 3
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "assignment": {
+                        "description": "The plan includes team roles and assignment, so conversations can be assigned",
+                        "type": "boolean"
+                    },
+                    "role": {
+                        "description": "The signed-in user’s role",
+                        "type": "string",
+                        "enum": [
+                            "owner",
+                            "agent"
+                        ]
+                    }
+                },
+                "type": "object"
             }
         },
         "securitySchemes": {
@@ -8613,6 +9331,10 @@
         {
             "name": "Subscription",
             "description": "The plan after onboarding: read it, change it, cancel back to Free"
+        },
+        {
+            "name": "Team",
+            "description": "Team"
         }
     ]
 }
