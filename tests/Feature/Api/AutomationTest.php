@@ -32,6 +32,27 @@ describe('GET /api/v1/automations', function () {
             ->assertStatus(200)
             ->assertJsonPath('meta.total', 2);
     });
+
+    it('searches names ignoring case, and counts the live ones whatever the status filter', function () {
+        $user = User::factory()->create();
+        $channel = Channel::factory()->create(['user_id' => $user->id]);
+        $make = fn (string $name, bool $active) => Automation::factory()->create(['user_id' => $user->id, 'channel_id' => $channel->id, 'name' => $name, 'active' => $active]);
+        $make('Comment PRICE', true);
+        $make('Price list DM', false);
+        $make('Story reply', true);
+        Automation::factory()->create(['name' => 'Price elsewhere', 'active' => true]); // another user
+
+        $this->actingAs($user, 'sanctum')->getJson('/api/v1/automations?search=price')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 2)
+            ->assertJsonPath('meta.live', 1)
+            ->assertJsonCount(2, 'data');
+
+        $this->actingAs($user, 'sanctum')->getJson('/api/v1/automations?status=inactive')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('meta.live', 2);
+    });
 });
 
 describe('POST /api/v1/automations', function () {

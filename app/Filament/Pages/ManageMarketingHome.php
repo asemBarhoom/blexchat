@@ -59,9 +59,10 @@ class ManageMarketingHome extends Page
         return $schema
             ->statePath('data')
             ->components([
+                // Only the blocks that are seeded: a block added later has no tab until its seeder runs.
                 Tabs::make('blocks')->persistTabInQueryString()->tabs(array_map(
                     fn (string $key): Tab => $this->blockTab($key, ...$this->definition($key)),
-                    array_keys(self::BLOCK_LABELS),
+                    array_values(array_intersect(array_keys(self::BLOCK_LABELS), $this->blocks()->pluck('key')->all())),
                 )),
             ]);
     }
@@ -122,6 +123,7 @@ class ManageMarketingHome extends Page
         'demo_replies' => 'ردود التجربة',
         'navigation' => 'القائمة العلوية',
         'footer' => 'التذييل',
+        'not_found' => 'صفحة 404',
     ];
 
     /**
@@ -317,6 +319,13 @@ class ManageMarketingHome extends Page
                     fn (int $i): TextInput => $url("columns.{$column[0]}.links.{$i}.url", 'رابط العمود '.($column[0] + 1).' — '.($i + 1)),
                     range(0, $column[1] - 1),
                 ))->all(),
+            ]],
+            'not_found' => [[
+                'التعليق والرد' => [['question', 'التعليق'], ['replied', 'زمن الرد'], ['answer', 'الرد', 'long']],
+                'الصفحة' => [['title', 'العنوان'], ['body', 'النص', 'long'], ['cta.label', 'نص الزر']],
+            ], [
+                TextInput::make($at('code'))->label('الرمز')->required()->maxLength(10),
+                $url('cta.url', 'رابط الزر'),
             ]],
         };
     }

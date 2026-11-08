@@ -265,6 +265,16 @@ use OpenApi\Attributes as OA;
     ]),
     new OA\Property(property: 'navigation', ref: '#/components/schemas/SiteNavigation', nullable: true),
     new OA\Property(property: 'footer', ref: '#/components/schemas/SiteFooter', nullable: true),
+    new OA\Property(property: 'not_found', ref: '#/components/schemas/NotFoundPage', nullable: true),
+])]
+#[OA\Schema(schema: 'NotFoundPage', description: 'The marketing 404 page (Figma "Marketing 404"): a comment asking, the auto-reply answering, then the page itself.', properties: [
+    new OA\Property(property: 'question', type: 'string', example: 'Is this page still here?'),
+    new OA\Property(property: 'replied', type: 'string', example: 'Replied in 0.4s'),
+    new OA\Property(property: 'answer', type: 'string', example: 'It isn’t, but the rest of the site is. The way home is below.'),
+    new OA\Property(property: 'code', type: 'string', example: '404'),
+    new OA\Property(property: 'title', type: 'string', example: 'This page doesn’t exist.'),
+    new OA\Property(property: 'body', type: 'string', example: 'The link may be old, or the address has a typo.'),
+    new OA\Property(property: 'cta', ref: '#/components/schemas/Cta'),
 ])]
 #[OA\Schema(schema: 'MegaMenuItem', description: 'One entry of a mega menu, with its link fields (`to`, or `section`).', allOf: [
     new OA\Schema(properties: [
@@ -389,6 +399,7 @@ class HomeController extends Controller
             // Null until their blocks are seeded, so an older database still serves the page.
             'navigation' => $blocks->has('navigation') ? $this->block($blocks['navigation']) : null,
             'footer' => $blocks->has('footer') ? $this->block($blocks['footer']) : null,
+            'not_found' => $blocks->has('not_found') ? $this->block($blocks['not_found']) : null,
         ];
 
         return response()
