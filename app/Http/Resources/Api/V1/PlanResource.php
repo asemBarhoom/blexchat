@@ -25,6 +25,7 @@ class PlanResource extends JsonResource
             'annual_total' => $this->annual_price * 12,
             'currency' => 'USD',
             'contacts_limit' => $this->contacts_limit,
+            'live_automations_limit' => $this->live_automations_limit,
             'has_ai' => $this->has_ai,
             'has_email_capture' => $this->has_email_capture,
             'features' => $this->features ?? [],

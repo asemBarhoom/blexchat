@@ -10,7 +10,7 @@ use Illuminate\Validation\Validator;
 class UpdateConversationRequest extends FormRequest
 {
     /** @var list<string> */
-    private const FIELDS = ['status', 'read', 'starred', 'labels'];
+    private const FIELDS = ['status', 'read', 'starred', 'labels', 'remind_at'];
 
     /**
      * Only the owner of the conversation's channel may change it.
@@ -22,7 +22,8 @@ class UpdateConversationRequest extends FormRequest
 
     /**
      * "Mark done" and "Reopen" send `status`; opening a thread sends `read: true` (false changes nothing);
-     * the star sends `starred`; labels are sent whole. Any one may be sent alone.
+     * the star sends `starred`; labels are sent whole; `remind_at` sets a reminder (null clears it).
+     * Any one may be sent alone.
      *
      * @return array<string, array<int, mixed>>
      */
@@ -35,6 +36,7 @@ class UpdateConversationRequest extends FormRequest
             // Sent whole; [] removes every label.
             'labels' => ['sometimes', 'array', 'max:'.Conversation::MAX_LABELS],
             'labels.*' => ['required', 'string', 'max:30', 'distinct:ignore_case'],
+            'remind_at' => ['sometimes', 'nullable', 'date', 'after:now'],
         ];
     }
 
@@ -47,7 +49,7 @@ class UpdateConversationRequest extends FormRequest
     {
         return [function (Validator $validator): void {
             if (! $this->hasAny(self::FIELDS)) {
-                $message = 'Send status, read, starred or labels.';
+                $message = 'Send status, read, starred, labels or remind_at.';
                 $validator->errors()->add('status', $message)->add('read', $message);
             }
         }];

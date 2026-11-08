@@ -78,24 +78,24 @@ class InstagramClient
     }
 
     /**
-     * @return array{caption?: string, media_product_type?: string, media_type?: string, timestamp?: string, thumbnail_url?: string, media_url?: string, like_count?: int}
+     * @return array{caption?: string, media_product_type?: string, media_type?: string, timestamp?: string, thumbnail_url?: string, media_url?: string, like_count?: int, comments_count?: int}
      */
     public function media(Channel $channel, string $mediaId): array
     {
         return $this->read($channel->access_token)->get("/{$mediaId}", [
-            'fields' => 'caption,media_type,media_product_type,timestamp,thumbnail_url,media_url,like_count',
+            'fields' => 'caption,media_type,media_product_type,timestamp,thumbnail_url,media_url,like_count,comments_count',
         ])->throw()->json();
     }
 
     /**
      * The account's latest posts and reels, newest first.
      *
-     * @return list<array{id: string, caption?: string, media_product_type?: string, media_type?: string, timestamp?: string, thumbnail_url?: string, media_url?: string, like_count?: int}>
+     * @return list<array{id: string, caption?: string, media_product_type?: string, media_type?: string, timestamp?: string, thumbnail_url?: string, media_url?: string, like_count?: int, comments_count?: int}>
      */
     public function recentMedia(Channel $channel, int $limit = 50): array
     {
         return $this->read($channel->access_token)->get('/me/media', [
-            'fields' => 'id,caption,media_type,media_product_type,timestamp,thumbnail_url,media_url,like_count',
+            'fields' => 'id,caption,media_type,media_product_type,timestamp,thumbnail_url,media_url,like_count,comments_count',
             'limit' => $limit,
         ])->throw()->json('data') ?? [];
     }

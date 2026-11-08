@@ -28,14 +28,14 @@ class ConversationController extends Controller
         parameters: [
             new OA\Parameter(name: 'channel_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['open', 'resolved', 'all'])),
-            new OA\Parameter(name: 'folder', in: 'query', required: false, description: 'favorites: starred conversations; labels: those with at least one label', schema: new OA\Schema(type: 'string', enum: ['favorites', 'labels'])),
+            new OA\Parameter(name: 'folder', in: 'query', required: false, description: 'favorites: starred conversations; labels: those with at least one label; reminders: those with a reminder, soonest first', schema: new OA\Schema(type: 'string', enum: ['favorites', 'labels', 'reminders'])),
             new OA\Parameter(name: 'label', in: 'query', required: false, description: 'Only conversations with this label', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'sort', in: 'query', required: false, description: 'By the last message: newest (default) or oldest first', schema: new OA\Schema(type: 'string', enum: ['newest', 'oldest'])),
             new OA\Parameter(name: 'state', in: 'query', required: false, description: 'human: the Needs you folder; automation: an automation is answering; open: neither', schema: new OA\Schema(type: 'string', enum: ['open', 'automation', 'human'])),
             new OA\Parameter(name: 'unread', in: 'query', required: false, description: 'true: only conversations with unread messages', schema: new OA\Schema(type: 'boolean')),
             new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
         ],
-        responses: [new OA\Response(response: 200, description: 'Conversation list')]
+        responses: [new OA\Response(response: 200, description: 'Conversation list; `meta.total` counts every conversation the filters match (the folder’s number, "All chats 6")')]
     )]
     public function index(Request $request): ConversationCollection
     {
@@ -44,9 +44,7 @@ class ConversationController extends Controller
         $direction = $request->query('sort') === 'oldest' ? 'asc' : 'desc';
 
         $query = Conversation::with(Conversation::LIST_RELATIONS)
-            ->whereIn('channel_id', $channelIds)
-            ->orderBy('last_message_at', $direction)
-            ->orderBy('id', $direction);
+            ->whereIn('channel_id', $channelIds);
 
         if ($request->filled('channel_id')) {
             $query->where('channel_id', $request->channel_id);
@@ -63,6 +61,7 @@ class ConversationController extends Controller
         match ($request->query('folder')) {
             'favorites' => $query->where('starred', true),
             'labels' => $query->whereJsonLength('labels', '>', 0),
+            'reminders' => $query->whereNotNull('remind_at'),
             default => null,
         };
 
@@ -74,9 +73,17 @@ class ConversationController extends Controller
             $query->where('state', $request->query('state'));
         }
 
-        return new ConversationCollection(
-            $query->cursorPaginate($request->integer('limit', 20))
-        );
+        $total = (clone $query)->count();
+
+        // Reminders come soonest first; every other folder by its last message.
+        if ($request->query('folder') === 'reminders') {
+            $query->orderBy('remind_at')->orderBy('id');
+        } else {
+            $query->orderBy('last_message_at', $direction)->orderBy('id', $direction);
+        }
+
+        return (new ConversationCollection($query->cursorPaginate($request->integer('limit', 20))))
+            ->additional(['meta' => ['total' => $total]]);
     }
 
     #[OA\Patch(
@@ -91,22 +98,33 @@ class ConversationController extends Controller
             new OA\Property(property: 'read', type: 'boolean', description: 'true sets unread to 0'),
             new OA\Property(property: 'starred', type: 'boolean', description: 'In or out of Favorites'),
             new OA\Property(property: 'labels', type: 'array', maxItems: 10, items: new OA\Items(type: 'string', maxLength: 30), description: 'The whole list; [] removes every label'),
+            new OA\Property(property: 'remind_at', type: 'string', format: 'date-time', nullable: true, description: 'A reminder (the Reminders folder), in the future; null clears it. Setting one needs a paid plan'),
         ], example: ['status' => 'resolved'])),
         responses: [
             new OA\Response(response: 200, description: 'The conversation as the list shows it'),
             new OA\Response(response: 401, description: 'Missing, revoked or unknown token'),
-            new OA\Response(response: 403, description: 'Another owner’s conversation'),
+            new OA\Response(response: 403, description: 'Another owner’s conversation; or `code: plan_required` when a reminder is set on Free (show Upgrade)'),
             new OA\Response(response: 422, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')),
         ]
     )]
     public function update(UpdateConversationRequest $request, Conversation $conversation): JsonResponse
     {
+        $plan = $request->user()->subscription?->effectivePlan();
+
+        if ($request->filled('remind_at') && ($plan === null || $plan->isFree())) {
+            return response()->json(['message' => __('inbox.reminders_plan'), 'code' => 'plan_required'], 403);
+        }
+
         $conversation->update(array_filter([
             'status' => $request->validated('status'),
             'unread_count' => $request->boolean('read') ? 0 : null,
             'starred' => $request->validated('starred'),
             'labels' => $request->has('labels') ? $request->validated('labels') : null,
         ], fn (mixed $value): bool => $value !== null));
+
+        if ($request->has('remind_at')) {
+            $conversation->update(['remind_at' => $request->validated('remind_at')]);
+        }
 
         // Marked done: it no longer waits on anyone.
         if ($request->validated('status') === 'resolved') {

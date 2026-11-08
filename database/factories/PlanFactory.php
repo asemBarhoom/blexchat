@@ -42,6 +42,7 @@ class PlanFactory extends Factory
             'monthly_price' => 0,
             'annual_price' => 0,
             'contacts_limit' => 25,
+            'live_automations_limit' => 3,
         ]);
     }
 

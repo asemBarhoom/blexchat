@@ -23,6 +23,7 @@ class Post extends Model
         'thumbnail_url',
         'media_type',
         'like_count',
+        'comment_count',
         'posted_at',
     ];
 
@@ -36,7 +37,7 @@ class Post extends Model
     /**
      * Columns for a post as Instagram's media endpoint describes it.
      *
-     * @param  array{caption?: string, media_product_type?: string|null, media_type?: string, timestamp?: string, thumbnail_url?: string, media_url?: string, like_count?: int}  $media
+     * @param  array{caption?: string, media_product_type?: string|null, media_type?: string, timestamp?: string, thumbnail_url?: string, media_url?: string, like_count?: int, comments_count?: int}  $media
      * @return array<string, mixed>
      */
     public static function attributesFromInstagram(array $media): array
@@ -46,6 +47,7 @@ class Post extends Model
             'media_type' => ($media['media_product_type'] ?? null) === 'REELS' ? 'reel' : (self::MEDIA_TYPES[$media['media_type'] ?? ''] ?? null),
             'thumbnail_url' => $media['thumbnail_url'] ?? $media['media_url'] ?? null,
             'like_count' => $media['like_count'] ?? null,
+            'comment_count' => $media['comments_count'] ?? null,
             'posted_at' => isset($media['timestamp']) ? Carbon::parse($media['timestamp']) : null,
         ];
     }

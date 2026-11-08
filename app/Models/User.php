@@ -95,6 +95,31 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Why an automation on this channel cannot go live now, as the wizard's "Couldn't go live" notice
+     * names it: the channel is no longer connected, or the plan's live automations are all in use.
+     * Null when it can. `$automation` is the one going live, left out of the count.
+     *
+     * @return array{code: 'channel_disconnected'|'live_limit', message: string, channel?: string, limit?: int}|null
+     */
+    public function goLiveRefusal(Channel $channel, ?Automation $automation = null): ?array
+    {
+        if ($channel->status !== 'active') {
+            $name = Contact::PLATFORMS[$channel->platform] ?? ucfirst($channel->platform);
+
+            return ['code' => 'channel_disconnected', 'message' => __('automation.channel_disconnected', ['channel' => $name]), 'channel' => $channel->platform];
+        }
+
+        $limit = ($this->subscription?->effectivePlan() ?? Plan::firstWhere('slug', Plan::FREE_SLUG))?->live_automations_limit;
+        $live = $this->automations()->where('active', true)->when($automation, fn ($query) => $query->whereKeyNot($automation->id))->count();
+
+        if ($limit !== null && $live >= $limit) {
+            return ['code' => 'live_limit', 'message' => trans_choice('automation.live_limit', $limit, ['count' => $limit]), 'limit' => $limit];
+        }
+
+        return null;
+    }
+
+    /**
      * The sidebar's contacts meter: everyone saved against the plan's limit. People who message
      * are always saved, so an account can be over its limit, for instance after a trial ends.
      *

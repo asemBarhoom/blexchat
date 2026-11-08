@@ -35,6 +35,7 @@ class ConversationResource extends JsonResource
             'state' => $this->state,
             'starred' => $this->starred,
             'labels' => $this->labels ?? [],
+            'remind_at' => $this->remind_at?->toIso8601String(),
         ];
     }
 }

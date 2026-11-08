@@ -18,10 +18,11 @@ use Spatie\Translatable\HasTranslations;
  * @property int $monthly_price
  * @property int $annual_price
  * @property int $contacts_limit
+ * @property int|null $live_automations_limit
  * @property int $trial_days
  * @property bool $in_checkout
  */
-#[Fillable(['slug', 'name', 'tagline', 'monthly_price', 'annual_price', 'contacts_limit', 'has_ai', 'has_email_capture', 'features', 'trial_days', 'is_recommended', 'in_checkout', 'sort', 'active'])]
+#[Fillable(['slug', 'name', 'tagline', 'monthly_price', 'annual_price', 'contacts_limit', 'live_automations_limit', 'has_ai', 'has_email_capture', 'features', 'trial_days', 'is_recommended', 'in_checkout', 'sort', 'active'])]
 class Plan extends Model
 {
     /** @use HasFactory<PlanFactory> */
@@ -41,6 +42,7 @@ class Plan extends Model
             'monthly_price' => 'integer',
             'annual_price' => 'integer',
             'contacts_limit' => 'integer',
+            'live_automations_limit' => 'integer',
             'has_ai' => 'boolean',
             'has_email_capture' => 'boolean',
             'trial_days' => 'integer',

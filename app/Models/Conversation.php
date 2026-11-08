@@ -51,6 +51,7 @@ class Conversation extends Model
         'awaiting_automation_id',
         'starred',
         'labels',
+        'remind_at',
         'unread_count',
         'last_message',
         'last_message_at',
@@ -101,6 +102,7 @@ class Conversation extends Model
             'unread_count' => 'integer',
             'starred' => 'boolean',
             'labels' => 'array',
+            'remind_at' => 'datetime',
             'last_message_at' => 'datetime',
         ];
     }
