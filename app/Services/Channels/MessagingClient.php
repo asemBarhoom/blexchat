@@ -48,6 +48,11 @@ class MessagingClient
         };
     }
 
+    public function replyToComment(Channel $channel, string $commentId, string $text): ?string
+    {
+        throw new ChannelNotLive($channel->platform);
+    }
+
     /**
      * A reply with a button: WhatsApp and Messenger text replies carry the link after the text.
      */

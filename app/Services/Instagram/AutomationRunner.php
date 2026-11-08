@@ -58,7 +58,11 @@ class AutomationRunner
 
             $sent = $this->attempt($automation, $action, function () use ($channel, $comment, $automation, $action, $asksToFollow, &$askedToFollow): void {
                 if ($action['type'] === 'reply_comment') {
-                    $this->instagram->replyToComment($channel, $comment->platform_comment_id, $action['message']);
+                    if ($channel->platform === 'instagram') {
+                        $this->instagram->replyToComment($channel, $comment->platform_comment_id, $action['message']);
+                    } else {
+                        $this->messaging->replyToComment($channel, $comment->platform_comment_id, $action['message']);
+                    }
 
                     return;
                 }
