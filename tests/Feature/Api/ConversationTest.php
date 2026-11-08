@@ -26,6 +26,24 @@ describe('GET /api/v1/conversations', function () {
             ->assertStatus(200)
             ->assertJsonCount(3, 'data');
     });
+
+    it('continues beyond the first cursor page without repeating conversations', function () {
+        $user = User::factory()->create();
+        $channel = Channel::factory()->create(['user_id' => $user->id]);
+        Conversation::factory()->count(3)->create(['channel_id' => $channel->id, 'last_message_at' => now()]);
+
+        $first = $this->actingAs($user, 'sanctum')
+            ->getJson('/api/v1/conversations?limit=2')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 3);
+        $cursor = $first->json('meta.next_cursor');
+
+        $second = $this->getJson('/api/v1/conversations?limit=2&cursor='.urlencode($cursor))
+            ->assertOk()
+            ->assertJsonPath('meta.total', 3);
+
+        expect(collect($first->json('data'))->pluck('id')->intersect(collect($second->json('data'))->pluck('id'))->all())->toBe([]);
+    });
 });
 
 describe('GET /api/v1/conversations/{id}/messages', function () {
