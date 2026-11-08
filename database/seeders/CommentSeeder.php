@@ -31,7 +31,7 @@ class CommentSeeder extends Seeder
                 'text' => 'السعر من فضلك؟ 😍',
                 'automated_reply' => true,
                 'automation_id' => $automation->id,
-                'posted_at' => now()->subMinutes(2),
+                'posted_at' => now()->subMinutes(5),
             ],
             [
                 'platform_comment_id' => 'igc_sara_001',
@@ -40,7 +40,7 @@ class CommentSeeder extends Seeder
                 'text' => 'بكم هذه؟',
                 'automated_reply' => true,
                 'automation_id' => $automation->id,
-                'posted_at' => now()->subMinutes(5),
+                'posted_at' => now()->subMinutes(14),
             ],
             // An organic comment that did not trigger the automation
             [
@@ -50,7 +50,7 @@ class CommentSeeder extends Seeder
                 'text' => 'رائعة ما شاء الله 💜',
                 'automated_reply' => false,
                 'automation_id' => null,
-                'posted_at' => now()->subMinutes(9),
+                'posted_at' => now()->subHours(3)->subMinutes(10),
             ],
             [
                 'platform_comment_id' => 'igc_hessa_001',
@@ -59,7 +59,7 @@ class CommentSeeder extends Seeder
                 'text' => 'أريد أن أطلب، أين الرابط؟',
                 'automated_reply' => true,
                 'automation_id' => $automation->id,
-                'posted_at' => now()->subMinutes(12),
+                'posted_at' => now()->subMinutes(41),
             ],
         ];
 
