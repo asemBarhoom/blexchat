@@ -25,7 +25,7 @@ describe('GET /api/v1/onboarding/first-moves', function () {
                 'title' => 'Auto-DM links from comments',
                 'line' => 'Someone comments a keyword on your post — they get your link in a DM, instantly.',
                 'incoming' => ['who' => 'reem.k', 'text' => 'LINK 😍 how much?', 'kind' => 'Comment'],
-                'reply' => 'Here’s the link 👉 nourboutique.com/winter-jacket',
+                'reply' => 'Here’s the link 👉 nourboutique.com/abaya',
             ]);
     });
 

@@ -10,7 +10,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 
 /**
- * Comments on the winter-jacket post, as the frontend's phone preview shows them. Safe to run again.
+ * Comments on the winter-abaya post, as the frontend's phone preview shows them. Safe to run again.
  */
 class CommentSeeder extends Seeder
 {
@@ -28,7 +28,7 @@ class CommentSeeder extends Seeder
                 'platform_comment_id' => 'igc_reem_001',
                 'author_name' => 'Reem Khalid',
                 'author_platform_id' => 'reem.k',
-                'text' => 'السعر من فضلك؟ 😍',
+                'text' => 'السعر لو سمحتي؟ 😍',
                 'automated_reply' => true,
                 'automation_id' => $automation->id,
                 'posted_at' => now()->subMinutes(5),
@@ -37,7 +37,7 @@ class CommentSeeder extends Seeder
                 'platform_comment_id' => 'igc_sara_001',
                 'author_name' => 'Sara M.',
                 'author_platform_id' => 'sara.m',
-                'text' => 'بكم هذه؟',
+                'text' => 'بكم هذي؟',
                 'automated_reply' => true,
                 'automation_id' => $automation->id,
                 'posted_at' => now()->subMinutes(14),
@@ -47,16 +47,16 @@ class CommentSeeder extends Seeder
                 'platform_comment_id' => 'igc_noor_001',
                 'author_name' => 'Noor A.',
                 'author_platform_id' => 'noor_a',
-                'text' => 'رائعة ما شاء الله 💜',
+                'text' => 'تجنن ما شاء الله 💜',
                 'automated_reply' => false,
                 'automation_id' => null,
                 'posted_at' => now()->subHours(3)->subMinutes(10),
             ],
             [
                 'platform_comment_id' => 'igc_hessa_001',
-                'author_name' => 'Hala Q.',
-                'author_platform_id' => 'hala.q',
-                'text' => 'أريد أن أطلب، أين الرابط؟',
+                'author_name' => 'Hessa Q.',
+                'author_platform_id' => 'hessa.q',
+                'text' => 'أبي أطلب، وين الرابط؟',
                 'automated_reply' => true,
                 'automation_id' => $automation->id,
                 'posted_at' => now()->subMinutes(41),

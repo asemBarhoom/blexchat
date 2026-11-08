@@ -37,7 +37,7 @@ class FirstMoveSeeder extends Seeder
                 'incoming_who' => 'reem.k',
                 'incoming_text' => ['en' => 'LINK 😍 how much?', 'ar' => 'رابط 😍 بكم؟'],
                 'incoming_kind' => ['en' => 'Comment', 'ar' => 'تعليق'],
-                'reply' => ['en' => 'Here’s the link 👉 nourboutique.com/winter-jacket', 'ar' => 'تفضّل الرابط 👉 nourboutique.com/winter-jacket'],
+                'reply' => ['en' => 'Here’s the link 👉 nourboutique.com/abaya', 'ar' => 'تفضّلي الرابط 👉 nourboutique.com/abaya'],
             ],
             [
                 'key' => 'dm-replies',
@@ -49,9 +49,9 @@ class FirstMoveSeeder extends Seeder
                     'ar' => 'رحّب بكل رسالة جديدة وأجب عن الأسئلة الشائعة، ليلًا ونهارًا.',
                 ],
                 'incoming_who' => 'faisal.a',
-                'incoming_text' => ['en' => 'Do you deliver to my city?', 'ar' => 'هل توصلون لمدينتي؟'],
+                'incoming_text' => ['en' => 'Do you deliver to Riyadh?', 'ar' => 'توصلون الرياض؟'],
                 'incoming_kind' => ['en' => 'DM', 'ar' => 'رسالة خاصة'],
-                'reply' => ['en' => 'Yes! To your city in 1–2 days, free over $50 ✓', 'ar' => 'أكيد! التوصيل لمدينتك خلال 1–2 يوم، ومجاني للطلبات فوق 50 دولار ✓'],
+                'reply' => ['en' => 'Yes! Riyadh in 1–2 days, free over 200 SAR ✓', 'ar' => 'أكيد! الرياض خلال يوم إلى يومين، ومجاني فوق ٢٠٠ ريال ✓'],
             ],
         ];
     }

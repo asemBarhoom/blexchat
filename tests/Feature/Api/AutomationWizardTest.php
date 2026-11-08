@@ -71,7 +71,7 @@ describe('GET /api/v1/automation-templates', function () {
             ->assertJsonPath('data.3.draft', null)
             ->assertJsonPath('data.3.locked', true)
             ->assertJsonPath('starters.dm.name', 'الرد على كل رسائلك الخاصة')
-            ->assertJsonPath('starters.comment.draft.dm_button', 'شاهدي المنتج');
+            ->assertJsonPath('starters.comment.draft.dm_button', 'شوفي المنتج');
 
         $this->getJson('/api/v1/automation-templates')->assertJsonPath('data.0.name', 'Comment a word → send the catalogue');
     });
