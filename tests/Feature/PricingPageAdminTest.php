@@ -125,7 +125,7 @@ it('creates and deletes a pricing question', function () {
 
 it('saves the page copy, a cleared Arabic text falling back to English', function () {
     Livewire::test(ManagePricingPage::class)
-        ->assertFormSet(['texts.ar.hero.title' => 'ابدأ مجاناً، وادفع حين يكبر جمهورك.'])
+        ->assertFormSet(['texts.ar.hero.title' => 'ابدأ مجانًا. وادفع حين يكبر جمهورك.'])
         ->fillForm([
             'texts.en.hero.title' => 'Free to start.',
             'texts.ar.hero.title' => '',
