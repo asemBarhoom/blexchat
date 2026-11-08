@@ -20,7 +20,7 @@ class PostSeeder extends Seeder
         $posts = [
             [
                 'platform_post_id' => 'CwinterAbaya001',
-                'caption' => 'جاكيت الشتاء وصل ✨ اكتبي «السعر» في التعليقات ونرسل لكِ التفاصيل في الخاص',
+                'caption' => 'عباية الشتاء وصلت ✨ اكتبي «السعر» بالتعليقات ونرسل لك التفاصيل بالخاص',
                 'thumbnail_url' => 'posts/huda.webp',
                 'media_type' => 'image',
                 'like_count' => 1204,

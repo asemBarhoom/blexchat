@@ -12,13 +12,13 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
 /**
- * The six threads of the frontend's inbox (src/pages/app/inbox/inboxContent.ts), newest first:
+ * The six threads of the Figma inbox (App page, "Inbox" and "Contacts"), newest first:
  * who has each one (state), the comment that opened the comment-to-DM ones, and the handover
  * on Reem's. Run after CommentSeeder; ContactSeeder fills in the people afterwards.
  */
 class ConversationSeeder extends Seeder
 {
-    private const DM = 'أهلًا وسهلًا! 👋 هذا جاكيت الشتاء الذي سألتِ عنه — 65 دولار. المقاسات والطلب من هنا:';
+    private const DM = 'هلا والله! 👋 هذي عباية الشتاء اللي سألتِ عنها — ٢٤٩ ريال. المقاسات والطلب من هنا:';
 
     public function run(): void
     {
@@ -32,7 +32,7 @@ class ConversationSeeder extends Seeder
         $fromComment = fn (Comment $comment): array => ['direction' => 'inbound', 'type' => Message::TYPE_COMMENT, 'comment_id' => $comment->id, 'content' => $comment->text, 'automated' => false, 'sent_at' => $comment->posted_at];
         $bot = fn (Carbon $sentAt, string $token, bool $clicked = false): array => [
             'direction' => 'outbound', 'type' => 'text_with_button', 'content' => self::DM,
-            'button_label' => 'شاهدي المنتج', 'button_url' => 'https://nourboutique.com/winter-jacket', 'link_token' => $token,
+            'button_label' => 'شوفي المنتج', 'button_url' => 'https://nourboutique.com/abaya-winter', 'link_token' => $token,
             'link_clicks' => $clicked ? 1 : 0, 'first_clicked_at' => $clicked ? $sentAt->copy()->addMinute() : null,
             'automated' => true, 'automation_id' => $automation->id, 'sent_at' => $sentAt,
         ];
@@ -40,8 +40,8 @@ class ConversationSeeder extends Seeder
 
         $reem = $comment('igc_reem_001');
         $sara = $comment('igc_sara_001');
-        $hala = $comment('igc_hessa_001');
-        $sizeQuestion = 'طيب، هل يتوفر مقاس L؟ وأريد التوصيل إلى القاهرة قبل الخميس 🙏';
+        $hessa = $comment('igc_hessa_001');
+        $sizeQuestion = 'طيب عندكم مقاس ٥٨؟ وأبي التوصيل لجدة قبل الخميس 🙏';
 
         $conversations = [
             // Reem: the automation answered her comment, then she asked what it cannot answer: Needs you.
@@ -52,7 +52,7 @@ class ConversationSeeder extends Seeder
                 'last_message' => $sizeQuestion, 'last_message_at' => now()->subMinutes(2),
                 'messages' => [
                     $fromComment($reem),
-                    $bot($reem->posted_at, 'seedReemWinterJacket000000000001'),
+                    $bot($reem->posted_at, 'seedReemWinterAbaya0000000000001'),
                     $customer($sizeQuestion, now()->subMinutes(2)),
                     ['direction' => Message::DIRECTION_SYSTEM, 'type' => Message::TYPE_HANDOVER, 'content' => 'unmatched', 'automated' => false, 'sent_at' => now()->subMinutes(2)],
                 ],
@@ -63,42 +63,42 @@ class ConversationSeeder extends Seeder
                 'contact_name' => 'Sara M.', 'contact_avatar' => 'avatars/sara.webp',
                 'state' => 'automation', 'unread_count' => 0,
                 'last_message' => self::DM, 'last_message_at' => $sara->posted_at,
-                'messages' => [$fromComment($sara), $bot($sara->posted_at, 'seedSaraWinterJacket000000000001', clicked: true)],
+                'messages' => [$fromComment($sara), $bot($sara->posted_at, 'seedSaraWinterAbaya0000000000001', clicked: true)],
             ],
-            // Hala: answered by the automation (unread).
+            // Hessa: the automation sent her the link, and she asked for it again under the post (unread).
             [
-                'channel_id' => $ig->id, 'platform_conversation_id' => 'ig_conv_hessa_q', 'contact_platform_id' => 'hala.q',
-                'contact_name' => 'Hala Q.', 'contact_avatar' => 'avatars/lina.webp',
+                'channel_id' => $ig->id, 'platform_conversation_id' => 'ig_conv_hessa_q', 'contact_platform_id' => 'hessa.q',
+                'contact_name' => 'Hessa Q.', 'contact_avatar' => 'avatars/lina.webp',
                 'state' => 'automation', 'unread_count' => 1,
-                'last_message' => self::DM, 'last_message_at' => $hala->posted_at,
-                'messages' => [$fromComment($hala), $bot($hala->posted_at, 'seedHalaWinterJacket000000000001')],
+                'last_message' => $hessa->text, 'last_message_at' => $hessa->posted_at,
+                'messages' => [$bot($hessa->posted_at->copy()->subMinute(), 'seedHessaWinterAbaya000000000001'), $fromComment($hessa)],
             ],
-            // Mona: WhatsApp, a repeat buyer the owner looks after (starred).
+            // Um Faisal: WhatsApp, a repeat buyer the owner looks after (starred).
             [
-                'channel_id' => $wa->id, 'platform_conversation_id' => 'wa_conv_um_faisal', 'contact_platform_id' => '+962790002210',
-                'contact_name' => 'Mona F.', 'contact_avatar' => 'avatars/faisal.webp',
+                'channel_id' => $wa->id, 'platform_conversation_id' => 'wa_conv_um_faisal', 'contact_platform_id' => '+966502102210',
+                'contact_name' => 'أم فيصل', 'contact_avatar' => 'avatars/faisal.webp',
                 'state' => 'open', 'starred' => true, 'labels' => ['Repeat buyer'], 'unread_count' => 0,
-                'last_message' => 'وصلني الطلب اليوم، شكرًا لكم! 🙏', 'last_message_at' => now()->subHour(),
+                'last_message' => 'وصلني الطلب اليوم، تسلمون! 🙏', 'last_message_at' => now()->subHour(),
                 'messages' => [
-                    ['direction' => 'outbound', 'type' => 'text', 'content' => 'طلبك خرج مع المندوب، ويصلك اليوم إن شاء الله 🚚', 'automated' => false, 'sent_at' => now()->subHours(3)],
-                    $customer('وصلني الطلب اليوم، شكرًا لكم! 🙏', now()->subHour()),
+                    ['direction' => 'outbound', 'type' => 'text', 'content' => 'طلبك طلع مع المندوب، ويوصلك اليوم إن شاء الله 🚚', 'automated' => false, 'sent_at' => now()->subHours(3)],
+                    $customer('وصلني الطلب اليوم، تسلمون! 🙏', now()->subHour()),
                 ],
             ],
-            // Noor A.: a fan (unread), with a reminder to tell her when the mocha colour is back.
+            // Noor A.: a fan (unread), with a reminder to answer her tomorrow morning.
             [
                 'channel_id' => $ig->id, 'platform_conversation_id' => 'ig_conv_noor_a', 'contact_platform_id' => 'noor_a',
                 'contact_name' => 'Noor A.', 'contact_avatar' => 'avatars/omar.webp',
                 'state' => 'open', 'unread_count' => 1, 'remind_at' => now()->addDay()->setTime(10, 0),
-                'last_message' => 'رائعة ما شاء الله 💜 متى يتوفر لون الموكا؟', 'last_message_at' => now()->subHours(3),
-                'messages' => [$customer('رائعة ما شاء الله 💜 متى يتوفر لون الموكا؟', now()->subHours(3))],
+                'last_message' => 'تجنن ما شاء الله 💜', 'last_message_at' => now()->subHours(3),
+                'messages' => [$customer('تجنن ما شاء الله 💜', now()->subHours(3))],
             ],
             // Lulu: TikTok, yesterday.
             [
                 'channel_id' => $tiktok->id, 'platform_conversation_id' => 'tt_conv_lulu_style', 'contact_platform_id' => 'lulu.style',
                 'contact_name' => 'Lulu', 'contact_avatar' => null,
                 'state' => 'open', 'unread_count' => 0,
-                'last_message' => 'كم سعر الطرحة الشيفون؟ وهل يوجد شحن إلى بيروت؟', 'last_message_at' => now()->subDay(),
-                'messages' => [$customer('كم سعر الطرحة الشيفون؟ وهل يوجد شحن إلى بيروت؟', now()->subDay())],
+                'last_message' => 'كم سعر الطرحة الشيفون؟', 'last_message_at' => now()->subDay(),
+                'messages' => [$customer('كم سعر الطرحة الشيفون؟', now()->subDay())],
             ],
         ];
 

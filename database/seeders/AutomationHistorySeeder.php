@@ -48,7 +48,7 @@ class AutomationHistorySeeder extends Seeder
     private const FIRST_MESSAGES = [
         'مرحبا، عندكم شحن لعمّان؟',
         'السلام عليكم، كيف أطلب؟',
-        'هل يوجد مقاس S من الجاكيت؟',
+        'فيه مقاس S من العباية؟',
         'مرحبا 👋 عندكم ألوان جديدة؟',
         'كم مدة التوصيل إلى تونس؟',
         'أهلًا، هل الدفع عند الاستلام متاح؟',
@@ -111,7 +111,7 @@ class AutomationHistorySeeder extends Seeder
                 for ($reply = 0; $reply < $replies; $reply++) {
                     $at = $startedAt->copy()->addDays(30 + $reply * 17);
                     $this->line($conversation, ['direction' => 'inbound', 'content' => self::STORY_REPLIES[($index + $reply) % count(self::STORY_REPLIES)]], $at);
-                    $this->dm($conversation, $story, self::STORY_THANKS, 'شاهدي القطعة', 'https://nourboutique.com/winter-jacket', $at, clicked: $storySends++ < 5);
+                    $this->dm($conversation, $story, self::STORY_THANKS, 'شاهدي القطعة', 'https://nourboutique.com/abaya-winter', $at, clicked: $storySends++ < 5);
                 }
             } else {
                 // Commented "رمضان" under the Ramadan post in March; all but the last commented twice.

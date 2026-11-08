@@ -13,7 +13,7 @@ use Illuminate\Database\Seeder;
  */
 class AutomationTemplateSeeder extends Seeder
 {
-    private const SAMPLE_LINK = 'https://nourboutique.com/winter-jacket';
+    private const SAMPLE_LINK = 'https://nourboutique.com/abaya-winter';
 
     private const SHOP_LINK = 'https://nourboutique.com/shop';
 
@@ -45,10 +45,10 @@ class AutomationTemplateSeeder extends Seeder
                 'keywords' => ['en' => ['price'], 'ar' => ['السعر']],
                 'public_reply' => self::PUBLIC_REPLY,
                 'dm_text' => [
-                    'en' => 'Hi there! 👋 Here is the winter jacket you asked about — $65. Sizes and ordering here:',
-                    'ar' => 'أهلًا وسهلًا! 👋 هذا جاكيت الشتاء الذي سألتِ عنه — 65 دولار. المقاسات والطلب من هنا:',
+                    'en' => 'Hi there! 👋 Here is the winter abaya you asked about — 249 SAR. Sizes and ordering here:',
+                    'ar' => 'هلا والله! 👋 هذي عباية الشتاء اللي سألتِ عنها — ٢٤٩ ريال. المقاسات والطلب من هنا:',
                 ],
-                'dm_button' => ['en' => 'See the product', 'ar' => 'شاهدي المنتج'],
+                'dm_button' => ['en' => 'See the product', 'ar' => 'شوفي المنتج'],
                 'link_url' => self::SAMPLE_LINK,
             ],
             [

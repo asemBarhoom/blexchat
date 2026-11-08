@@ -17,9 +17,9 @@ use Illuminate\Database\Seeder;
  */
 class AutomationSeeder extends Seeder
 {
-    private const DM_TEXT = 'أهلًا وسهلًا! 👋 هذا جاكيت الشتاء الذي سألتِ عنه — 65 دولار. المقاسات والطلب من هنا:';
+    private const DM_TEXT = 'هلا والله! 👋 هذي عباية الشتاء اللي سألتِ عنها — ٢٤٩ ريال. المقاسات والطلب من هنا:';
 
-    private const DM_BUTTON = 'شاهدي المنتج';
+    private const DM_BUTTON = 'شوفي المنتج';
 
     private const PUBLIC_REPLY = 'أرسلنا لك التفاصيل بالخاص 💌';
 
@@ -39,7 +39,7 @@ class AutomationSeeder extends Seeder
                 'name' => 'Comment "PRICE" → send the catalogue',
                 'trigger_type' => 'comment_keyword',
                 'keywords' => ['السعر'],
-                'link' => 'https://nourboutique.com/winter-jacket',
+                'link' => 'https://nourboutique.com/abaya-winter',
                 'active' => true,
                 'folder' => $instagram,
                 'post' => $winterPost,
@@ -51,7 +51,7 @@ class AutomationSeeder extends Seeder
                 'name' => 'Story reply → thank you + link',
                 'trigger_type' => 'story_mention',
                 'keywords' => [],
-                'link' => 'https://nourboutique.com/winter-jacket',
+                'link' => 'https://nourboutique.com/abaya-winter',
                 'active' => true,
                 'folder' => $instagram,
                 'created_at' => now()->subMonths(4),

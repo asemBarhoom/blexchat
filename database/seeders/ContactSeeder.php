@@ -22,16 +22,17 @@ class ContactSeeder extends Seeder
         $automation = Automation::where('user_id', $user->id)->where('name', 'Comment "PRICE" → send the catalogue')->firstOrFail();
 
         $contacts = [
-            'reem.k' => ['handle' => 'reem.k', 'tags' => ['Winter jacket', 'Asked price', 'Cairo'], 'city' => 'Cairo', 'phone' => '+20 10 2385 4821', 'email' => 'reem.khalid@gmail.com', 'from_automation' => true, 'first_seen_at' => now()->subMinutes(5)],
-            'sara.m' => ['handle' => 'sara.m', 'tags' => ['Winter jacket', 'Asked price'], 'city' => 'Amman', 'phone' => '+962 79 314 5567', 'email' => 'sara.m@outlook.com', 'from_automation' => true, 'first_seen_at' => now()->subMinutes(14)],
-            'hala.q' => ['handle' => 'hala.q', 'tags' => ['Ready to order'], 'city' => 'Tunis', 'phone' => '+216 22 418 903', 'email' => 'hala.q@gmail.com', 'from_automation' => true, 'first_seen_at' => now()->subMinutes(41)],
-            '+962790002210' => ['handle' => '+962 79 000 2210', 'tags' => ['Customer', 'Repeat buyer'], 'city' => 'Amman', 'phone' => '+962 79 000 2210', 'email' => 'mona.f@gmail.com', 'first_seen_at' => Carbon::create(now()->year, 8, 12, 18, 20)],
-            'noor_a' => ['handle' => 'noor_a', 'tags' => ['Fan'], 'city' => 'Casablanca', 'phone' => '+212 661 234 578', 'email' => 'noor.a@hotmail.com', 'first_seen_at' => Carbon::create(now()->year, 9, 3, 16, 5)],
-            'lulu.style' => ['handle' => 'lulu.style', 'tags' => ['Asked price'], 'city' => 'Beirut', 'phone' => '+961 71 245 330', 'email' => 'lulu.style@gmail.com', 'first_seen_at' => now()->subDay()],
+            // Figma shows "Not collected" for Reem's email: the automation has not asked her yet.
+            'reem.k' => ['handle' => 'reem.k', 'tags' => ['Winter abaya', 'Asked price'], 'city' => 'Jeddah', 'phone' => '+966 55 238 4821', 'email' => null, 'from_automation' => true, 'first_seen_at' => now()->subMinutes(5)],
+            'sara.m' => ['handle' => 'sara.m', 'tags' => ['Winter abaya'], 'city' => 'Riyadh', 'phone' => '+966 54 731 5567', 'email' => 'sara.m@outlook.com', 'from_automation' => true, 'first_seen_at' => now()->subMinutes(14)],
+            'hessa.q' => ['handle' => 'hessa.q', 'tags' => ['Ready to order'], 'city' => 'Dammam', 'phone' => '+966 56 418 9031', 'email' => 'hessa.q@gmail.com', 'from_automation' => true, 'first_seen_at' => now()->subMinutes(42)],
+            '+966502102210' => ['handle' => '+966 50 210 2210', 'tags' => ['Customer', 'Repeat buyer'], 'city' => 'Riyadh', 'phone' => '+966 50 210 2210', 'email' => 'um.faisal@gmail.com', 'first_seen_at' => Carbon::create(now()->year, 8, 12, 18, 20)],
+            'noor_a' => ['handle' => 'noor_a', 'tags' => ['Fan'], 'city' => 'Kuwait City', 'phone' => '+965 6623 4578', 'email' => 'noor.a@hotmail.com', 'first_seen_at' => Carbon::create(now()->year, 9, 3, 16, 5)],
+            'lulu.style' => ['handle' => 'lulu.style', 'tags' => ['Asked price'], 'city' => 'Dubai', 'phone' => '+971 50 245 3307', 'email' => 'lulu.style@gmail.com', 'first_seen_at' => now()->subDay()],
         ];
 
-        // The old seed's keys for Hala and Mona, before their threads matched the frontend.
-        Contact::where('user_id', $user->id)->whereIn('platform_id', ['hessa.q', '+966502102210'])->delete();
+        // The keys Hessa and Um Faisal had while the seed followed the frontend (Hala, Mona).
+        Contact::where('user_id', $user->id)->whereIn('platform_id', ['hala.q', '+962790002210'])->delete();
 
         $conversations = Conversation::with('channel')
             ->whereIn('channel_id', $user->channels()->pluck('id'))
