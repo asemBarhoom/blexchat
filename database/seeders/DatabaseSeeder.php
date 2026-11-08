@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             AuthScreenSeeder::class,
             LegalPageSeeder::class,
             EmailTemplateSeeder::class,
+            AlignmentItemSeeder::class,
             ChannelOptionSeeder::class,
             FirstMoveSeeder::class,
             UserSeeder::class,
