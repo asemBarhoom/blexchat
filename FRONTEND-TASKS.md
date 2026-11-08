@@ -7,7 +7,7 @@
 | **Figma** | [blexchat (Copy)](https://www.figma.com/design/3F9ollZMdHJWqeWTCnhoQT/blexchat--Copy-), page **App** |
 | **API base** | `/api/v1`, Sanctum bearer token, `?lang=ar\|en` |
 
-**Status:** PR #6 closed almost everything. **3 tasks left**, all small. Task numbers stay as in rounds 1 and 2.
+**Status:** PR #6 closed almost everything. **3 tasks left**, all small, plus **11 new screens** the API now supports (FE-27–FE-37, at the end). Task numbers stay as in earlier rounds.
 
 ---
 
@@ -63,9 +63,20 @@ Earlier rounds: FE-01–05, 09, 10, 12, 21–23.
 
 ---
 
-## Coming from the backend (no frontend work yet)
+## New in the API (round 4): screens to wire up
 
-| What | When it lands |
-|---|---|
-| `GET /automations?search=` and `meta.live` (Figma "Search automations", "3 live of 5") | Can replace the local search on `per_page=100` |
-| Marketing 404 copy in `GET /home` | Can replace `src/i18n/locales/en.json:2390` |
+These are on `master` and go live with the next deploy. Every endpoint is in Swagger with its fields and error codes.
+
+| Task | Screen | API |
+|---|---|---|
+| FE-27 | Automations list: search and "3 live of 5" | `GET /automations?search=` and `meta.live` (can replace the local search on `per_page=100`) |
+| FE-28 | Marketing 404 page | `GET /home` → `not_found` {question, replied, answer, code, title, body, cta} (can replace `src/i18n/locales/en.json:2390`) |
+| FE-29 | Inbox: a reminder that has come | `remind_due: true` on the conversation; the owner also gets an email |
+| FE-30 | Contacts · Import (CSV) | `POST /contacts/import` (multipart `file` + `consent: true`) → `{imported, skipped: [{row, reason}], usage}`; `422 code: missing_columns` with `columns`. Headers in English or Arabic: `name` (or `first name`/`last name`), `phone`, optional `email`, `city`, `gender`, `tags` |
+| FE-31 | Blexchat AI: the business info the AI answers from | `GET` / `PATCH /ai/settings` {business_info, included, live}. The automation's AI switch stays `PATCH /automations/{id}/ai` |
+| FE-32 | Inbox: AI replies and the handover reason | Messages have `by_ai: true` for the AI's replies. A handover message's `reason` is now the AI's own line ("Asked about size 40 and a delivery date.") when it wrote one |
+| FE-33 | Settings · Team | `GET /team` {members, invitations, seats {used, limit}, assignment, role}; `POST /team/invitations` {email} (`403 code: seat_limit`); `DELETE /team/invitations/{id}`; `DELETE /team/members/{id}` |
+| FE-34 | Join page `/team/join?token=…` (the invitation email links here) | Sign the person in as usual, then `POST /team/invitations/accept` {token}. Errors: `404 invitation_invalid`, `403 other_email` (with `email`), `403 has_own_account` |
+| FE-35 | A teammate's app | `GET /auth/me` → `role: owner \| agent`. An agent sees only the inbox and contacts; every other endpoint answers `403 code: owner_only`. `POST /team/leave` |
+| FE-36 | Inbox: assign a conversation | `PATCH /conversations/{id}` {assigned_to: user id \| null} (ids from `GET /team` members; `403 plan_required` below Business). The list has `assigned_to` {id, name} and `?assigned=me\|unassigned` |
+| FE-37 | WhatsApp, Messenger and TikTok threads | Replies now send for real on WhatsApp and Messenger. TikTok answers `502` with a message until TikTok opens its API. Locally, `POST /channels/{id}/test-events` {type: message} simulates a customer on all three |
