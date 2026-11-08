@@ -974,5 +974,17 @@
             "footer": "Footer",
             "home": "Blexchat home"
         }
+    },
+    "not_found": {
+        "question": "Is this page still here?",
+        "replied": "Replied in 0.4s",
+        "answer": "It isn’t, but the rest of the site is. The way home is below.",
+        "code": "404",
+        "title": "This page doesn’t exist.",
+        "body": "The link may be old, or the address has a typo.",
+        "cta": {
+            "label": "Back to the homepage",
+            "to": "/"
+        }
     }
 }

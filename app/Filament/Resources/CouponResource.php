@@ -58,7 +58,7 @@ class CouponResource extends Resource
                 ->helperText('اتركها فارغة ليشمل الكوبون كل الخطط المدفوعة. لا يُطبَّق الكوبون على الخطة المجانية ولا على خطة بتجربة مجانية.'),
             DateTimePicker::make('expires_at')->label('ينتهي في')->helperText('اتركه فارغاً ليبقى الكوبون بلا تاريخ انتهاء.'),
             TextInput::make('usage_limit')->label('حد الاستخدام')->numeric()->integer()->minValue(1)
-                ->helperText('اتركه فارغاً لاستخدام بلا حد. لا يُحتسب الاستخدام بعد: الدفع بالبطاقة غير متاح حتى الآن.'),
+                ->helperText('اتركه فارغاً لاستخدام بلا حد. يُحتسب الاستخدام مرة عند نجاح كل دفعة بهذا الكوبون.'),
             Toggle::make('active')->label('فعّال')->default(true),
         ])->columns(1);
     }
@@ -71,6 +71,7 @@ class CouponResource extends Resource
                 TextColumn::make('percent_off')->label('الخصم')->suffix('%'),
                 TextColumn::make('plans.slug')->label('الخطط')->badge()->placeholder('كل الخطط المدفوعة'),
                 TextColumn::make('expires_at')->label('ينتهي في')->dateTime()->placeholder('بلا انتهاء'),
+                TextColumn::make('times_used')->label('مرات الاستخدام')->numeric(),
                 TextColumn::make('usage_limit')->label('حد الاستخدام')->numeric()->placeholder('بلا حد'),
                 ToggleColumn::make('active')->label('فعّال'),
             ])

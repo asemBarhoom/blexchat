@@ -52,13 +52,14 @@ class AutomationController extends Controller
     #[OA\Get(
         path: '/api/v1/automations',
         summary: 'List automations',
-        description: 'Each row carries `runs` (DMs and public replies it sent) and `ctr` (clicks ÷ DMs sent with a button; 0 while none had one), for the list’s Runs and CTR columns.',
+        description: 'Each row carries `runs` (DMs and public replies it sent) and `ctr` (clicks ÷ DMs sent with a button; 0 while none had one), for the list’s Runs and CTR columns. `meta.total` counts every automation the filters match; `meta.live` counts how many of those are live, whatever `status` asks for ("3 live of 5").',
         security: [['sanctum' => []]],
         tags: ['Automations'],
         parameters: [
             new OA\Parameter(name: 'channel_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['active', 'inactive'])),
             new OA\Parameter(name: 'folder_id', in: 'query', required: false, description: 'Only the automations in this folder', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'search', in: 'query', required: false, description: 'Automations whose name contains this text, ignoring case', schema: new OA\Schema(type: 'string', maxLength: 100)),
             new OA\Parameter(name: 'trashed', in: 'query', required: false, description: 'true lists the Trash (S5.3) instead, last deleted first; each has `trashed_at` and `purges_at`', schema: new OA\Schema(type: 'boolean', default: false)),
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
@@ -77,15 +78,22 @@ class AutomationController extends Controller
             $query->where('channel_id', $request->channel_id);
         }
 
-        if ($request->filled('status')) {
-            $query->where('active', $request->status === 'active');
-        }
-
         if ($request->filled('folder_id')) {
             $query->where('automation_folder_id', $request->integer('folder_id'));
         }
 
-        return new AutomationCollection($query->paginate($request->integer('per_page', 20)));
+        if ($request->filled('search')) {
+            $query->whereLike('name', '%'.mb_substr(trim($request->string('search')), 0, 100).'%');
+        }
+
+        $live = (clone $query)->where('active', true)->count();
+
+        if ($request->filled('status')) {
+            $query->where('active', $request->status === 'active');
+        }
+
+        return (new AutomationCollection($query->paginate($request->integer('per_page', 20))))
+            ->additional(['meta' => ['live' => $live]]);
     }
 
     #[OA\Post(

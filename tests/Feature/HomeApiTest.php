@@ -146,11 +146,27 @@ it('serves the top bar and the footer, with their links in the frontend format',
         ->assertJsonPath('data.footer.legal.1', ['id' => 'terms', 'label' => 'الشروط', 'to' => '/legal/terms']);
 });
 
-it('leaves the top bar and the footer null until they are seeded', function () {
+it('leaves the top bar, the footer and the 404 page null until they are seeded', function () {
     $this->seed(HomeContentSeeder::class);
-    HomeBlock::whereIn('key', ['navigation', 'footer'])->delete();
+    HomeBlock::whereIn('key', ['navigation', 'footer', 'not_found'])->delete();
 
-    $this->getJson('/api/v1/home')->assertOk()->assertJsonPath('data.navigation', null)->assertJsonPath('data.footer', null);
+    $this->getJson('/api/v1/home')->assertOk()
+        ->assertJsonPath('data.navigation', null)
+        ->assertJsonPath('data.footer', null)
+        ->assertJsonPath('data.not_found', null);
+});
+
+it('serves the marketing 404 page in each language, with its link in the frontend format', function () {
+    $this->seed(HomeContentSeeder::class);
+
+    $this->getJson('/api/v1/home')
+        ->assertJsonPath('data.not_found.question', 'Is this page still here?')
+        ->assertJsonPath('data.not_found.code', '404')
+        ->assertJsonPath('data.not_found.cta', ['label' => 'Back to the homepage', 'to' => '/']);
+
+    $this->getJson('/api/v1/home?lang=ar')
+        ->assertJsonPath('data.not_found.title', 'هذه الصفحة غير موجودة.')
+        ->assertJsonPath('data.not_found.cta', ['label' => 'العودة إلى الصفحة الرئيسية', 'to' => '/']);
 });
 
 it('sends every plural form of the hero counters for the language', function () {

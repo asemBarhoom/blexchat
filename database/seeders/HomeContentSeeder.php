@@ -18,7 +18,7 @@ use Illuminate\Database\Seeder;
 class HomeContentSeeder extends Seeder
 {
     /** Keys whose string values are the same in every language (ids, routes, frontend switches). */
-    private const SHARED_KEYS = ['id', 'type', 'channel', 'shape', 'tone', 'loop', 'slug', 'url', 'menu', 'icon'];
+    private const SHARED_KEYS = ['id', 'type', 'channel', 'shape', 'tone', 'loop', 'slug', 'url', 'menu', 'icon', 'code'];
 
     public function run(): void
     {
@@ -133,6 +133,15 @@ class HomeContentSeeder extends Seeder
                 'copyright' => '© 2026 BLEXCHAT',
                 'legal' => [['id' => 'privacy', 'label' => 'Privacy', 'url' => '/legal/privacy'], ['id' => 'terms', 'label' => 'Terms', 'url' => '/legal/terms']],
                 'aria' => ['footer' => 'Footer', 'home' => 'Blexchat home'],
+            ],
+            'not_found' => [
+                'question' => 'Is this page still here?',
+                'replied' => 'Replied in 0.4s',
+                'answer' => 'It isn’t, but the rest of the site is. The way home is below.',
+                'code' => '404',
+                'title' => 'This page doesn’t exist.',
+                'body' => 'The link may be old, or the address has a typo.',
+                'cta' => ['label' => 'Back to the homepage', 'url' => '/'],
             ],
             'demo_replies' => [
                 'card' => ['label' => 'Auto-reply', 'timer' => '0.4s'],
@@ -297,6 +306,14 @@ class HomeContentSeeder extends Seeder
                 'copyright' => '© 2026 BLEXCHAT',
                 'legal' => [['label' => 'الخصوصية'], ['label' => 'الشروط']],
                 'aria' => ['footer' => 'تذييل الصفحة', 'home' => 'الصفحة الرئيسية لـ Blexchat'],
+            ],
+            'not_found' => [
+                'question' => 'هل ما زالت هذه الصفحة موجودة؟',
+                'replied' => 'تم الرد خلال 0.4 ث',
+                'answer' => 'لا، لكن بقية الموقع موجودة. طريق العودة إلى الرئيسية في الأسفل.',
+                'title' => 'هذه الصفحة غير موجودة.',
+                'body' => 'قد يكون الرابط قديمًا، أو في العنوان خطأ إملائي.',
+                'cta' => ['label' => 'العودة إلى الصفحة الرئيسية'],
             ],
             'demo_replies' => [
                 'card' => ['label' => 'رد تلقائي', 'timer' => '0.4 ث'],

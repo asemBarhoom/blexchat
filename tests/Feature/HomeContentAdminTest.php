@@ -64,6 +64,21 @@ it('stores English and Arabic texts separately and serves each language', functi
         ->assertJsonPath('meta.fallback', true);
 });
 
+it('edits the 404 page, and shows no tab for a block that is not seeded', function () {
+    Livewire::test(ManageMarketingHome::class)
+        ->fillForm(['not_found.texts.ar.title' => 'الصفحة مش موجودة.', 'not_found.settings.cta.url' => '/pricing'])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $this->getJson('/api/v1/home?lang=ar')
+        ->assertJsonPath('data.not_found.title', 'الصفحة مش موجودة.')
+        ->assertJsonPath('data.not_found.cta.to', '/pricing');
+
+    HomeBlock::where('key', 'not_found')->delete();
+
+    Livewire::test(ManageMarketingHome::class)->call('save')->assertHasNoFormErrors();
+});
+
 it('requires every English text but no Arabic one', function () {
     Livewire::test(ManageMarketingHome::class)
         ->fillForm(['hero.texts.en.subtitle' => '', 'hero.texts.ar.subtitle' => ''])
