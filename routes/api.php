@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AiSettingsController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\AuthScreenController;
 use App\Http\Controllers\Api\V1\Auth\GoogleController;
@@ -148,6 +149,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     // Inbox: conversation list, thread, reply
     Route::get('conversations', [ConversationController::class, 'index'])->name('conversations.index');
     Route::patch('conversations/{conversation}', [ConversationController::class, 'update'])->name('conversations.update'); // Mark done, Reopen, read
+    Route::get('ai/settings', [AiSettingsController::class, 'show'])->name('ai.settings.show');
+    Route::patch('ai/settings', [AiSettingsController::class, 'update'])->name('ai.settings.update');
     Route::get('inbox/settings', [InboxSettingsController::class, 'show'])->name('inbox.settings.show');
     Route::patch('inbox/settings', [InboxSettingsController::class, 'update'])->name('inbox.settings.update');
     Route::get('conversations/{conversation}/messages', [ConversationController::class, 'messages'])->name('conversations.messages');

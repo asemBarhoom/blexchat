@@ -9,6 +9,7 @@ use App\Models\Comment;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Post;
+use App\Services\Ai\ClaudeClient;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Log;
@@ -27,7 +28,7 @@ class AutomationRunner
     /** The quick reply under "Follow us first". Any reply carries on; the chip makes it one tap. */
     private const FOLLOWED_PAYLOAD = 'BLEXCHAT_FOLLOWED';
 
-    public function __construct(private InstagramClient $instagram) {}
+    public function __construct(private InstagramClient $instagram, private ClaudeClient $claude) {}
 
     /**
      * Comment automations answer publicly under the comment and/or privately in the commenter's DMs.
@@ -107,8 +108,8 @@ class AutomationRunner
         $automation = $this->firstMatch($channel, $isStoryReply ? 'story_mention' : 'dm_keyword', $message->content, answerAny: $isStoryReply || $isFirstMessage);
 
         if ($automation === null) {
-            // Nothing answers this, and an automation had been: the owner takes it from here.
-            if ($conversation->state === 'automation') {
+            // Nothing answers this, and an automation had been: Blexchat AI tries, else the owner takes it from here.
+            if ($conversation->state === 'automation' && ! $this->answerWithAi($conversation)) {
                 $conversation->handOver('unmatched');
             }
 
@@ -116,6 +117,52 @@ class AutomationRunner
         }
 
         $this->sendDms($channel, $conversation, $automation, mayAskToFollow: true);
+    }
+
+    /**
+     * Blexchat AI answers for the automation that was handling the conversation, when that
+     * automation has it on, the plan includes it and the owner wrote the business info. Returns
+     * false when it did not run, so the conversation is handed over as usual.
+     */
+    private function answerWithAi(Conversation $conversation): bool
+    {
+        $automation = Automation::find($conversation->messages()->where('automated', true)->latest('id')->value('automation_id'));
+        $owner = $conversation->channel->user;
+
+        if (! $automation?->ai_enabled || ! $owner->currentPlan()->has_ai || blank($owner->business_info) || ! $this->claude->available()) {
+            return false;
+        }
+
+        $history = $conversation->messages()
+            ->whereIn('direction', ['inbound', 'outbound'])
+            ->latest('id')
+            ->limit(20)
+            ->get(['direction', 'content'])
+            ->reverse()
+            ->map(fn (Message $message): array => ['from' => $message->direction === 'inbound' ? 'customer' : 'business', 'text' => (string) $message->content])
+            ->values()
+            ->all();
+
+        try {
+            $answer = $this->claude->answer($owner->business_name ?: $owner->name, $owner->business_info, $history, config('app.locale') === 'ar' ? 'Arabic' : 'English');
+        } catch (RequestException|ConnectionException $exception) {
+            report($exception);
+
+            return false;
+        }
+
+        if ($answer['handover']) {
+            $conversation->handOver('ai_unsure', $answer['reason']);
+
+            return true;
+        }
+
+        $action = ['type' => 'send_dm', 'message' => $answer['reply']];
+
+        return $this->attempt($automation, $action, function () use ($conversation, $automation, $action): void {
+            $messageId = $this->instagram->sendMessage($conversation->channel, $conversation->contact_platform_id, $this->payload($action));
+            $this->record($conversation, $automation, $action, $messageId)->update(['by_ai' => true]);
+        });
     }
 
     /**

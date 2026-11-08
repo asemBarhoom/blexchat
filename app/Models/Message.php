@@ -26,10 +26,12 @@ class Message extends Model
         'direction',
         'type',
         'content',
+        'note',
         'button_label',
         'button_url',
         'link_token',
         'automated',
+        'by_ai',
         'automation_id',
         'sent_at',
     ];
@@ -38,6 +40,7 @@ class Message extends Model
     {
         return [
             'automated' => 'boolean',
+            'by_ai' => 'boolean',
             'link_clicks' => 'integer',
             'sent_at' => 'datetime',
             'first_clicked_at' => 'datetime',

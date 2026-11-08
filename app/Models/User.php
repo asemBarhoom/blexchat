@@ -14,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'google_id', 'password', 'business_name', 'inbox_accepting_new', 'is_admin', 'stripe_customer_id'])]
+#[Fillable(['name', 'email', 'google_id', 'password', 'business_name', 'business_info', 'inbox_accepting_new', 'is_admin', 'stripe_customer_id'])]
 #[Hidden(['password', 'remember_token', 'google_id', 'stripe_customer_id'])]
 class User extends Authenticatable implements FilamentUser
 {
