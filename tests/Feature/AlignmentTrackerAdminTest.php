@@ -31,6 +31,16 @@ it('seeds every gap once, with a valid owner, priority and status, and keeps a s
         ->and(AlignmentItem::firstWhere('code', 'FE-07')->status)->toBe('done');
 });
 
+it('syncs the deployed completion statuses without overwriting a manual panel change', function () {
+    AlignmentItem::factory()->create(['code' => 'BE-06', 'status' => 'open']);
+    AlignmentItem::factory()->create(['code' => 'FE-07', 'status' => 'done']);
+
+    $this->seed(AlignmentItemSeeder::class);
+
+    expect(AlignmentItem::where('code', 'BE-06')->value('status'))->toBe('done')
+        ->and(AlignmentItem::where('code', 'FE-07')->value('status'))->toBe('done');
+});
+
 it('lists the items, filters them by owner, and changes a status from the table', function () {
     $frontend = AlignmentItem::factory()->create(['code' => 'FE-07']);
     $backend = AlignmentItem::factory()->backend()->create();
