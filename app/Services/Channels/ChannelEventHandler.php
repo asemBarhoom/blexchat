@@ -6,6 +6,7 @@ use App\Models\Channel;
 use App\Models\Contact;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Services\Instagram\AutomationRunner;
 use Illuminate\Support\Carbon;
 
 /**
@@ -15,6 +16,8 @@ use Illuminate\Support\Carbon;
  */
 class ChannelEventHandler
 {
+    public function __construct(private AutomationRunner $automations) {}
+
     /**
      * @param  string|null  $phone  WhatsApp's sender number, saved on the contact
      */
@@ -52,5 +55,6 @@ class ChannelEventHandler
         $conversation->contact()->associate($contact);
         $conversation->fill(['status' => 'open', 'last_message' => $text, 'last_message_at' => $sentAt, 'contact_name' => $conversation->contact_name ?? $senderName])->save();
         $conversation->increment('unread_count');
+        $this->automations->forMessage($channel, $conversation, $message, isStoryReply: false);
     }
 }
