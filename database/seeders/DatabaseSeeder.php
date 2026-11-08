@@ -43,6 +43,7 @@ class DatabaseSeeder extends Seeder
             CommentSeeder::class,
             ConversationSeeder::class,
             ContactSeeder::class,
+            AutomationHistorySeeder::class,
         ]);
     }
 }
