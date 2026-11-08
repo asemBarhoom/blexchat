@@ -28,7 +28,7 @@ class InboxSettingsController extends Controller
     )]
     public function show(Request $request): JsonResponse
     {
-        return $this->settings($request->user());
+        return $this->settings($request->user()->account());
     }
 
     #[OA\Patch(

@@ -6,9 +6,12 @@ use App\Filament\Resources\EmailTemplateResource\Pages;
 use App\Filament\Support\Translations;
 use App\Mail\LoginLinkMail;
 use App\Mail\ReminderDueMail;
+use App\Mail\TeamInvitationMail;
 use App\Models\Conversation;
 use App\Models\EmailTemplate;
 use App\Models\LoginLink;
+use App\Models\TeamInvitation;
+use App\Models\User;
 use Closure;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
@@ -31,6 +34,7 @@ class EmailTemplateResource extends Resource
         'login_link.signup' => 'رابط الدخول — حساب جديد',
         'login_link.signin' => 'رابط الدخول — تسجيل الدخول',
         'reminder.due' => 'تذكير بمحادثة',
+        'team.invite' => 'دعوة إلى الفريق',
     ];
 
     /** @var array<string, string> */
@@ -109,6 +113,12 @@ class EmailTemplateResource extends Resource
     {
         if ($record->key === 'reminder.due') {
             return (new ReminderDueMail(new Conversation(['contact_name' => 'Reem K.'])))->locale($locale)->render();
+        }
+
+        if ($record->key === 'team.invite') {
+            $invitation = (new TeamInvitation(['email' => 'preview@blexchat.test']))->setRelation('owner', new User(['name' => 'Reem', 'business_name' => 'Reem Abayas']));
+
+            return (new TeamInvitationMail($invitation, 'preview-token'))->locale($locale)->render();
         }
 
         $link = new LoginLink(['email' => 'preview@blexchat.test', 'mode' => Str::after($record->key, '.')]);

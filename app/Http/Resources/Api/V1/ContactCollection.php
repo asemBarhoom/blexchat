@@ -16,7 +16,7 @@ class ContactCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         /** @var User $user */
-        $user = $request->user();
+        $user = $request->user()->account();
 
         return [
             'data' => $this->collection,

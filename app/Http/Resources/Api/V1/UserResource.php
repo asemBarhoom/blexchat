@@ -17,6 +17,8 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'business_name' => $this->business_name,
+            // agent: a teammate in the owner's inbox and contacts only (Settings · Team).
+            'role' => $this->isTeammate() ? 'agent' : 'owner',
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
         ];

@@ -72,14 +72,14 @@ describe('EmailTemplateSeeder', function () {
         $this->seed(EmailTemplateSeeder::class);
 
         $signin = EmailTemplate::where('key', 'login_link.signin')->firstOrFail();
-        expect(EmailTemplate::count())->toBe(3)
+        expect(EmailTemplate::count())->toBe(4)
             ->and($signin->getTranslations('subject'))->toBe(['en' => 'Your sign-in link', 'ar' => 'رابط تسجيل الدخول'])
             ->and($signin->getTranslation('expiry', 'en'))->toBe('This link works for :minutes minutes.');
 
         $signin->setTranslation('subject', 'en', 'Edited')->save();
         $this->seed(EmailTemplateSeeder::class);
 
-        expect(EmailTemplate::count())->toBe(3)
+        expect(EmailTemplate::count())->toBe(4)
             ->and($signin->fresh()->getTranslation('subject', 'en'))->toBe('Edited');
     });
 });

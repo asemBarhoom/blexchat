@@ -41,7 +41,7 @@ class ChannelController extends Controller
     )]
     public function index(ListChannelsRequest $request): AnonymousResourceCollection
     {
-        $channels = $request->user()->channels()->oldest('connected_at')->oldest('id')->get();
+        $channels = $request->user()->account()->channels()->oldest('connected_at')->oldest('id')->get();
 
         return ConnectedChannelResource::collection(
             $channels->map(fn (Channel $channel): ConnectedChannelResource => new ConnectedChannelResource($channel, forScreen: false)),

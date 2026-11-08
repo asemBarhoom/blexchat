@@ -54,6 +54,8 @@ class OnboardingSeeder extends Seeder
                 'live_automations_limit' => 3,
                 'has_ai' => false,
                 'has_email_capture' => false,
+                'teammates_limit' => 1,
+                'has_assignment' => false,
                 'features' => [
                     'en' => ['1 channel', 'Comment and DM replies', 'Blexchat branding'],
                     'ar' => ['قناة واحدة', 'الرد على التعليقات والرسائل الخاصة', 'تظهر علامة Blexchat'],
@@ -70,6 +72,8 @@ class OnboardingSeeder extends Seeder
                 'contacts_limit' => 250,
                 'has_ai' => false,
                 'has_email_capture' => false,
+                'teammates_limit' => 1,
+                'has_assignment' => false,
                 'features' => [
                     'en' => ['All four channels', 'Unlimited automations', 'No Blexchat branding'],
                     'ar' => ['القنوات الأربع كلها', 'أتمتات غير محدودة', 'بدون شعار Blexchat'],
@@ -86,6 +90,8 @@ class OnboardingSeeder extends Seeder
                 'contacts_limit' => 2500,
                 'has_ai' => true,
                 'has_email_capture' => true,
+                'teammates_limit' => 3,
+                'has_assignment' => false,
                 'features' => [
                     'en' => ['Everything in Essential', 'Follow-ups and email capture', 'Inbox for 3 teammates'],
                     'ar' => ['كل مزايا Essential', 'رسائل المتابعة وجمع البريد الإلكتروني', 'صندوق الوارد لـ 3 من أعضاء الفريق'],
@@ -102,6 +108,8 @@ class OnboardingSeeder extends Seeder
                 'contacts_limit' => 7500,
                 'has_ai' => true,
                 'has_email_capture' => true,
+                'teammates_limit' => 10,
+                'has_assignment' => true,
                 'features' => [
                     'en' => ['Everything in Pro', 'Team roles and assignment', 'Priority support'],
                     'ar' => ['كل مزايا Pro', 'أدوار الفريق وتوزيع المحادثات', 'دعم ذو أولوية'],
@@ -118,6 +126,8 @@ class OnboardingSeeder extends Seeder
                 'contacts_limit' => 25000,
                 'has_ai' => true,
                 'has_email_capture' => true,
+                'teammates_limit' => 25,
+                'has_assignment' => true,
                 'features' => [
                     'en' => ['Everything in Business', 'Many accounts, one seat', 'Onboarding call'],
                     'ar' => ['كل مزايا Business', 'حسابات كثيرة بمستخدم واحد', 'مكالمة الإعداد الأولي'],

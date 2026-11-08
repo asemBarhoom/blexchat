@@ -32,6 +32,7 @@ class ConversationController extends Controller
             new OA\Parameter(name: 'label', in: 'query', required: false, description: 'Only conversations with this label', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'sort', in: 'query', required: false, description: 'By the last message: newest (default) or oldest first', schema: new OA\Schema(type: 'string', enum: ['newest', 'oldest'])),
             new OA\Parameter(name: 'state', in: 'query', required: false, description: 'human: the Needs you folder; automation: an automation is answering; open: neither', schema: new OA\Schema(type: 'string', enum: ['open', 'automation', 'human'])),
+            new OA\Parameter(name: 'assigned', in: 'query', required: false, description: 'me: assigned to the signed-in user; unassigned: to no one', schema: new OA\Schema(type: 'string', enum: ['me', 'unassigned'])),
             new OA\Parameter(name: 'unread', in: 'query', required: false, description: 'true: only conversations with unread messages', schema: new OA\Schema(type: 'boolean')),
             new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
         ],
@@ -39,7 +40,7 @@ class ConversationController extends Controller
     )]
     public function index(Request $request): ConversationCollection
     {
-        $channelIds = $request->user()->channels()->pluck('id');
+        $channelIds = $request->user()->account()->channels()->pluck('id');
 
         $direction = $request->query('sort') === 'oldest' ? 'asc' : 'desc';
 
@@ -68,6 +69,12 @@ class ConversationController extends Controller
         if ($request->filled('label')) {
             $query->whereJsonContains('labels', (string) $request->query('label'));
         }
+
+        match ($request->query('assigned')) {
+            'me' => $query->where('assigned_to', $request->user()->id),
+            'unassigned' => $query->whereNull('assigned_to'),
+            default => null,
+        };
 
         if (in_array($request->query('state'), Conversation::STATES, true)) {
             $query->where('state', $request->query('state'));
@@ -98,6 +105,7 @@ class ConversationController extends Controller
             new OA\Property(property: 'read', type: 'boolean', description: 'true sets unread to 0'),
             new OA\Property(property: 'starred', type: 'boolean', description: 'In or out of Favorites'),
             new OA\Property(property: 'labels', type: 'array', maxItems: 10, items: new OA\Items(type: 'string', maxLength: 30), description: 'The whole list; [] removes every label'),
+            new OA\Property(property: 'assigned_to', type: 'integer', nullable: true, description: 'Assign to the owner or a teammate (ids from `GET /team`); null unassigns. Assigning needs a plan with team roles and assignment (`has_assignment`)'),
             new OA\Property(property: 'remind_at', type: 'string', format: 'date-time', nullable: true, description: 'A reminder (the Reminders folder), in the future; null clears it. Setting one needs a paid plan. When it comes, the owner is emailed and `remind_due` turns true'),
         ], example: ['status' => 'resolved'])),
         responses: [
@@ -109,10 +117,18 @@ class ConversationController extends Controller
     )]
     public function update(UpdateConversationRequest $request, Conversation $conversation): JsonResponse
     {
-        $plan = $request->user()->subscription?->effectivePlan();
+        $plan = $request->user()->account()->subscription?->effectivePlan();
 
         if ($request->filled('remind_at') && ($plan === null || $plan->isFree())) {
             return response()->json(['message' => __('inbox.reminders_plan'), 'code' => 'plan_required'], 403);
+        }
+
+        if ($request->filled('assigned_to') && ! $request->user()->account()->currentPlan()->has_assignment) {
+            return response()->json(['message' => __('team.assignment_plan'), 'code' => 'plan_required'], 403);
+        }
+
+        if ($request->has('assigned_to')) {
+            $conversation->update(['assigned_to' => $request->validated('assigned_to')]);
         }
 
         $conversation->update(array_filter([
@@ -152,7 +168,7 @@ class ConversationController extends Controller
     public function messages(Request $request, Conversation $conversation): MessageCollection
     {
         abort_unless(
-            $request->user()->channels()->where('id', $conversation->channel_id)->exists(),
+            $request->user()->account()->channels()->where('id', $conversation->channel_id)->exists(),
             403
         );
 
@@ -193,7 +209,7 @@ class ConversationController extends Controller
     public function sendMessage(SendMessageRequest $request, Conversation $conversation, InstagramClient $instagram): JsonResponse
     {
         abort_unless(
-            $request->user()->channels()->where('id', $conversation->channel_id)->exists(),
+            $request->user()->account()->channels()->where('id', $conversation->channel_id)->exists(),
             403
         );
 

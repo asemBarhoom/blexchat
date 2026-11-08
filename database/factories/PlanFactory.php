@@ -28,6 +28,8 @@ class PlanFactory extends Factory
             'contacts_limit' => fake()->randomElement([250, 2500, 7500]),
             'has_ai' => false,
             'has_email_capture' => false,
+            'teammates_limit' => 1,
+            'has_assignment' => false,
             'features' => ['en' => [fake()->sentence(3), fake()->sentence(3)]],
             'trial_days' => 0,
             'is_recommended' => false,

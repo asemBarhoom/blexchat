@@ -84,7 +84,7 @@ class ContactController extends Controller
     )]
     public function index(ListContactsRequest $request): ContactCollection
     {
-        $contacts = $request->user()->contacts()
+        $contacts = $request->user()->account()->contacts()
             ->with('sourceAutomation')
             ->when($request->filled('search'), fn ($query) => $query->search($request->input('search')))
             ->when($request->filled('channel'), fn ($query) => $query->where('platform', $request->input('channel')))
@@ -108,7 +108,7 @@ class ContactController extends Controller
     )]
     public function usage(Request $request): JsonResponse
     {
-        return response()->json(['data' => $request->user()->contactsUsage()]);
+        return response()->json(['data' => $request->user()->account()->contactsUsage()]);
     }
 
     #[OA\Post(
@@ -142,7 +142,7 @@ class ContactController extends Controller
     )]
     public function store(StoreContactRequest $request): JsonResponse
     {
-        $user = $request->user();
+        $user = $request->user()->account();
 
         if (! $user->canAddContact()) {
             return response()->json([
@@ -189,7 +189,7 @@ class ContactController extends Controller
     )]
     public function import(ImportContactsRequest $request, ContactImporter $importer): JsonResponse
     {
-        $result = $importer->import($request->user(), $request->file('file')->getRealPath());
+        $result = $importer->import($request->user()->account(), $request->file('file')->getRealPath());
 
         if ($result['missing_columns'] !== []) {
             return response()->json(['code' => 'missing_columns', 'columns' => $result['missing_columns'], 'message' => __('contacts.import.missing_columns')], 422);
@@ -198,7 +198,7 @@ class ContactController extends Controller
         return response()->json(['data' => [
             'imported' => $result['imported'],
             'skipped' => $result['skipped'],
-            'usage' => $request->user()->contactsUsage(),
+            'usage' => $request->user()->account()->contactsUsage(),
         ]]);
     }
 
@@ -218,7 +218,7 @@ class ContactController extends Controller
     )]
     public function show(Request $request, Contact $contact): JsonResponse
     {
-        abort_unless($contact->user_id === $request->user()->id, 404);
+        abort_unless($contact->user_id === $request->user()->account()->id, 404);
 
         $contact->load(['sourceAutomation', 'conversation' => fn (HasOne $query) => $query->withCount(['messages' => fn (Builder $messages) => $messages->where('direction', '!=', Message::DIRECTION_SYSTEM)])]);
 
@@ -252,7 +252,7 @@ class ContactController extends Controller
     )]
     public function update(UpdateContactRequest $request, Contact $contact): JsonResponse
     {
-        abort_unless($contact->user_id === $request->user()->id, 404);
+        abort_unless($contact->user_id === $request->user()->account()->id, 404);
 
         $contact->update($request->contactAttributes());
 
@@ -273,7 +273,7 @@ class ContactController extends Controller
     )]
     public function destroy(Request $request, Contact $contact): JsonResponse
     {
-        abort_unless($contact->user_id === $request->user()->id, 404);
+        abort_unless($contact->user_id === $request->user()->account()->id, 404);
 
         $contact->delete();
 
