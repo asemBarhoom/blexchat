@@ -19,10 +19,11 @@ class MessageResource extends JsonResource
                 $this->button_label,
                 fn () => ['label' => $this->button_label, 'url' => $this->button_url]
             ),
-            // A handover line names why, in the request's language; `content` keeps the code.
+            // A handover line names why: Blexchat AI's own line when it wrote one, else the code's
+            // sentence in the request's language. `content` keeps the code.
             'reason' => $this->when(
                 $this->type === Message::TYPE_HANDOVER,
-                fn (): string => __("inbox.handover.{$this->content}")
+                fn (): string => $this->note ?? __("inbox.handover.{$this->content}")
             ),
             // The comment that opened the thread: the frontend's "· commented on your post".
             'via' => $this->when($this->type === Message::TYPE_COMMENT, 'comment'),
@@ -31,6 +32,7 @@ class MessageResource extends JsonResource
                 fn (): ?PostResource => $this->comment?->post ? new PostResource($this->comment->post) : null
             ),
             'automated' => $this->automated,
+            'by_ai' => $this->by_ai,
             'automation_id' => $this->automation_id,
             'sent_at' => $this->sent_at?->toIso8601String(),
         ];

@@ -241,7 +241,7 @@ class AutomationController extends Controller
     #[OA\Patch(
         path: '/api/v1/automations/{id}/ai',
         summary: 'Turn Blexchat AI on or off for one automation',
-        description: 'On plans that include Blexchat AI (`has_ai` on the plan). Turning it off always works, so a downgraded account can still switch it off. The switch is stored now; AI-written replies start once the AI engine is live.',
+        description: 'On plans that include Blexchat AI (`has_ai` on the plan). Turning it off always works, so a downgraded account can still switch it off. With it on, Blexchat AI answers what no keyword of this automation matches, from the business info in `/ai/settings`, and hands over when unsure.',
         security: [['sanctum' => []]],
         tags: ['Automations'],
         parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],

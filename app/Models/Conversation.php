@@ -36,7 +36,7 @@ class Conversation extends Model
     public const AWAITING = ['follow', 'email_question', 'email'];
 
     /** Why an automation hands a conversation over; each has a text in lang/{locale}/inbox.php. */
-    public const HANDOVER_REASONS = ['unmatched'];
+    public const HANDOVER_REASONS = ['unmatched', 'ai_unsure'];
 
     protected $fillable = [
         'channel_id',
@@ -136,7 +136,7 @@ class Conversation extends Model
      * An automation was answering, and the customer wrote something none answers: the thread
      * gets a "Handed over to you" line and the conversation moves to Needs you.
      */
-    public function handOver(string $reason): void
+    public function handOver(string $reason, ?string $note = null): void
     {
         if ($this->state === 'human') {
             return;
@@ -146,6 +146,7 @@ class Conversation extends Model
             'direction' => Message::DIRECTION_SYSTEM,
             'type' => Message::TYPE_HANDOVER,
             'content' => $reason,
+            'note' => filled($note) ? mb_substr($note, 0, 300) : null,
             'automated' => false,
             'sent_at' => now(),
         ]);

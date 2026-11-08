@@ -77,6 +77,17 @@ return [
         'webhook_tolerance' => 300,
     ],
 
+    /*
+    | Blexchat AI: Claude answers what no automation keyword covers, from the business info the
+    | owner writes, and hands the conversation over when it is not sure. Without a key it is off
+    | (the fake driver, the default on local, answers without the network).
+    */
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-opus-5-5'),
+        'driver' => env('ANTHROPIC_DRIVER', env('APP_ENV', 'production') === 'local' ? 'fake' : 'claude'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
