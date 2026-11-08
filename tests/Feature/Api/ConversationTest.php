@@ -67,7 +67,8 @@ describe('GET /api/v1/conversations/{id}/messages', function () {
 describe('POST /api/v1/conversations/{id}/messages', function () {
     it('sends a text message', function () {
         $user = User::factory()->create();
-        // Instagram sends through its API; that path is covered in InstagramIntegrationTest.
+        // Each platform's API is covered in InstagramIntegrationTest and ChannelMessagingTest.
+        config(['services.channels.driver' => 'fake']);
         $channel = Channel::factory()->create(['user_id' => $user->id, 'platform' => 'whatsapp']);
         $conversation = Conversation::factory()->create(['channel_id' => $channel->id]);
 

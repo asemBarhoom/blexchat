@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\V1\InboxSettingsController;
 use App\Http\Controllers\Api\V1\InstagramConnectionController;
 use App\Http\Controllers\Api\V1\InstagramWebhookController;
 use App\Http\Controllers\Api\V1\LegalPageController;
+use App\Http\Controllers\Api\V1\MetaChannelWebhookController;
 use App\Http\Controllers\Api\V1\OnboardingController;
 use App\Http\Controllers\Api\V1\PlanController;
 use App\Http\Controllers\Api\V1\PricingController;
@@ -63,6 +64,9 @@ Route::get('v1/pricing', PricingController::class)->name('api.v1.pricing');
 Route::get('v1/webhooks/instagram', [InstagramWebhookController::class, 'verify'])->name('webhooks.instagram.verify');
 Route::post('v1/webhooks/instagram', [InstagramWebhookController::class, 'receive'])->name('webhooks.instagram');
 // Stripe calls this about card payments; authenticated by the Stripe-Signature header
+// Meta calls these for WhatsApp and Messenger; authenticated by the X-Hub-Signature-256 header
+Route::get('v1/webhooks/{platform}', [MetaChannelWebhookController::class, 'verify'])->whereIn('platform', ['whatsapp', 'messenger'])->name('webhooks.meta.verify');
+Route::post('v1/webhooks/{platform}', [MetaChannelWebhookController::class, 'receive'])->whereIn('platform', ['whatsapp', 'messenger'])->name('webhooks.meta');
 Route::post('v1/webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
 
 // Sign up / sign in (W01, W04), check email (W02), one more step (W03): passwordless, by emailed link or Google

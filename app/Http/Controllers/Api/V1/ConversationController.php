@@ -10,6 +10,8 @@ use App\Http\Resources\Api\V1\ConversationResource;
 use App\Http\Resources\Api\V1\MessageCollection;
 use App\Http\Resources\Api\V1\MessageResource;
 use App\Models\Conversation;
+use App\Services\Channels\ChannelNotLive;
+use App\Services\Channels\MessagingClient;
 use App\Services\Instagram\InstagramClient;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
@@ -203,10 +205,10 @@ class ConversationController extends Controller
         responses: [
             new OA\Response(response: 201, description: 'Message sent'),
             new OA\Response(response: 422, description: 'Validation error'),
-            new OA\Response(response: 502, description: 'Instagram refused the message (e.g. the 24-hour messaging window has closed)'),
+            new OA\Response(response: 502, description: 'The platform refused the message (e.g. the 24-hour messaging window has closed), or replies on it are not available yet (TikTok)'),
         ]
     )]
-    public function sendMessage(SendMessageRequest $request, Conversation $conversation, InstagramClient $instagram): JsonResponse
+    public function sendMessage(SendMessageRequest $request, Conversation $conversation, InstagramClient $instagram, MessagingClient $messaging): JsonResponse
     {
         abort_unless(
             $request->user()->account()->channels()->where('id', $conversation->channel_id)->exists(),
@@ -226,6 +228,19 @@ class ConversationController extends Controller
                 return response()->json([
                     'message' => 'Instagram did not deliver the message.',
                     'error' => $exception instanceof RequestException ? InstagramClient::errorMessage($exception) : null,
+                ], 502);
+            }
+        } else {
+            try {
+                $platformMessageId = $messaging->send(
+                    $conversation->channel,
+                    $conversation->contact_platform_id,
+                    MessagingClient::text($request->content, $request->button_label, $request->button_url),
+                );
+            } catch (RequestException|ConnectionException|ChannelNotLive $exception) {
+                return response()->json([
+                    'message' => $exception instanceof ChannelNotLive ? $exception->getMessage() : ucfirst($conversation->channel->platform).' did not deliver the message.',
+                    'error' => $exception instanceof RequestException ? $exception->response->json('error.message') : null,
                 ], 502);
             }
         }
