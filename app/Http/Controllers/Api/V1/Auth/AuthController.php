@@ -21,6 +21,7 @@ use OpenApi\Attributes as OA;
     new OA\Property(property: 'name', type: 'string', nullable: true, description: 'From Google; null for an email-link account until it is set', example: 'Nour'),
     new OA\Property(property: 'email', type: 'string', format: 'email', example: 'sara@nourboutique.com'),
     new OA\Property(property: 'business_name', type: 'string', nullable: true),
+    new OA\Property(property: 'role', type: 'string', enum: ['owner', 'agent'], description: 'agent: a teammate, who sees only the inbox and contacts of the owner who invited them (`GET /team`)'),
     new OA\Property(property: 'email_verified_at', type: 'string', format: 'date-time'),
     new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
 ])]

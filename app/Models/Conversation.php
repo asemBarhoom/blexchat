@@ -26,7 +26,7 @@ class Conversation extends Model
     public const MAX_LABELS = 10;
 
     /** What the inbox list shows with each conversation. */
-    public const LIST_RELATIONS = ['channel', 'contact.sourceAutomation'];
+    public const LIST_RELATIONS = ['channel', 'contact.sourceAutomation', 'assignee'];
 
     /**
      * What an automation's extras wait on: a reply to "Follow us first" before the DM goes out, a
@@ -41,6 +41,7 @@ class Conversation extends Model
     protected $fillable = [
         'channel_id',
         'contact_id',
+        'assigned_to',
         'platform_conversation_id',
         'contact_name',
         'contact_avatar',
@@ -130,6 +131,16 @@ class Conversation extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);
+    }
+
+    /**
+     * The teammate (or owner) the conversation is assigned to.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 
     /**

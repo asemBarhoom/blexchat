@@ -46,6 +46,12 @@ class EmailTemplate extends Model
             'line' => 'inbox.reminder_due.line',
             'button' => 'inbox.reminder_due.button',
         ],
+        'team.invite' => [
+            'subject' => 'team.invite.subject',
+            'line' => 'team.invite.line',
+            'button' => 'team.invite.button',
+            'expiry' => 'team.invite.expiry',
+        ],
     ];
 
     /** @var list<string> */

@@ -10,14 +10,14 @@ use Illuminate\Validation\Validator;
 class UpdateConversationRequest extends FormRequest
 {
     /** @var list<string> */
-    private const FIELDS = ['status', 'read', 'starred', 'labels', 'remind_at'];
+    private const FIELDS = ['status', 'read', 'starred', 'labels', 'remind_at', 'assigned_to'];
 
     /**
      * Only the owner of the conversation's channel may change it.
      */
     public function authorize(): bool
     {
-        return $this->user()->channels()->whereKey($this->route('conversation')->channel_id)->exists();
+        return $this->user()->account()->channels()->whereKey($this->route('conversation')->channel_id)->exists();
     }
 
     /**
@@ -37,6 +37,8 @@ class UpdateConversationRequest extends FormRequest
             'labels' => ['sometimes', 'array', 'max:'.Conversation::MAX_LABELS],
             'labels.*' => ['required', 'string', 'max:30', 'distinct:ignore_case'],
             'remind_at' => ['sometimes', 'nullable', 'date', 'after:now'],
+            // The owner or one of their teammates; null unassigns.
+            'assigned_to' => ['sometimes', 'nullable', 'integer', Rule::in($this->teamIds())],
         ];
     }
 
@@ -49,7 +51,7 @@ class UpdateConversationRequest extends FormRequest
     {
         return [function (Validator $validator): void {
             if (! $this->hasAny(self::FIELDS)) {
-                $message = 'Send status, read, starred, labels or remind_at.';
+                $message = 'Send status, read, starred, labels, remind_at or assigned_to.';
                 $validator->errors()->add('status', $message)->add('read', $message);
             }
         }];
@@ -63,5 +65,15 @@ class UpdateConversationRequest extends FormRequest
         if (is_array($this->input('labels'))) {
             $this->merge(['labels' => array_values(array_map(fn (mixed $label): mixed => is_string($label) ? trim($label) : $label, $this->input('labels')))]);
         }
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function teamIds(): array
+    {
+        $owner = $this->user()->account();
+
+        return [$owner->id, ...$owner->teammates()->pluck('id')->all()];
     }
 }

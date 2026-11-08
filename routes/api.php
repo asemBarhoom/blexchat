@@ -35,6 +35,8 @@ use App\Http\Controllers\Api\V1\StatsController;
 use App\Http\Controllers\Api\V1\StripeWebhookController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\SurveyController;
+use App\Http\Controllers\Api\V1\TeamController;
+use App\Http\Middleware\EnsureAccountOwner;
 use App\Models\LegalPage;
 use Illuminate\Support\Facades\Route;
 
@@ -75,7 +77,7 @@ Route::prefix('v1/auth')->name('auth.')->middleware('throttle:30,1')->group(func
 // The texts of the sign-up and sign-in screens (W01–W04), edited in the admin panel
 Route::get('v1/auth/screens', AuthScreenController::class)->name('api.v1.auth.screens');
 
-Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function () {
+Route::middleware(['auth:sanctum', EnsureAccountOwner::class])->prefix('v1')->name('api.v1.')->group(function () {
     // App home screen, and its "last 7 days" cards (S7.2)
     Route::get('dashboard', DashboardController::class)->name('dashboard');
     Route::get('stats/overview', [StatsController::class, 'overview'])->name('stats.overview');
@@ -153,6 +155,14 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     Route::patch('ai/settings', [AiSettingsController::class, 'update'])->name('ai.settings.update');
     Route::get('inbox/settings', [InboxSettingsController::class, 'show'])->name('inbox.settings.show');
     Route::patch('inbox/settings', [InboxSettingsController::class, 'update'])->name('inbox.settings.update');
+    // Settings · Team: invite teammates to the inbox (seats per plan), remove them; a teammate accepts or leaves
+    Route::get('team', [TeamController::class, 'show'])->name('team.show');
+    Route::post('team/invitations', [TeamController::class, 'invite'])->middleware('throttle:20,1')->name('team.invitations.store');
+    Route::delete('team/invitations/{invitation}', [TeamController::class, 'withdraw'])->name('team.invitations.destroy');
+    Route::post('team/invitations/accept', [TeamController::class, 'accept'])->middleware('throttle:10,1')->name('team.invitations.accept');
+    Route::delete('team/members/{member}', [TeamController::class, 'remove'])->name('team.members.destroy');
+    Route::post('team/leave', [TeamController::class, 'leave'])->name('team.leave');
+
     Route::get('conversations/{conversation}/messages', [ConversationController::class, 'messages'])->name('conversations.messages');
     Route::post('conversations/{conversation}/messages', [ConversationController::class, 'sendMessage'])->name('conversations.send-message');
 });

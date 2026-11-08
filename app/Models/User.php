@@ -7,6 +7,7 @@ use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -48,6 +49,57 @@ class User extends Authenticatable implements FilamentUser
         $user->save();
 
         return [$user, $isNew];
+    }
+
+    /**
+     * The owner whose inbox and contacts this teammate works in.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function teamOwner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'team_owner_id');
+    }
+
+    /**
+     * @return HasMany<User, $this>
+     */
+    public function teammates(): HasMany
+    {
+        return $this->hasMany(User::class, 'team_owner_id');
+    }
+
+    /**
+     * @return HasMany<TeamInvitation, $this>
+     */
+    public function teamInvitations(): HasMany
+    {
+        return $this->hasMany(TeamInvitation::class, 'owner_id');
+    }
+
+    public function isTeammate(): bool
+    {
+        return $this->team_owner_id !== null;
+    }
+
+    /**
+     * Whose data this user works with: the owner for a teammate, else themself.
+     */
+    public function account(): self
+    {
+        return $this->isTeammate() ? $this->teamOwner : $this;
+    }
+
+    /**
+     * Inbox seats: the owner, the teammates and the invitations still open, against the plan's.
+     *
+     * @return array{used: int, limit: int}
+     */
+    public function seatsUsage(): array
+    {
+        $open = $this->teamInvitations()->where('expires_at', '>', now())->count();
+
+        return ['used' => 1 + $this->teammates()->count() + $open, 'limit' => $this->currentPlan()->teammates_limit];
     }
 
     protected function casts(): array
