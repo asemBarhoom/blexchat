@@ -3,9 +3,11 @@
 namespace App\Services\Channels;
 
 use App\Models\Channel;
+use App\Models\Comment;
 use App\Models\Contact;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\Post;
 use App\Services\Instagram\AutomationRunner;
 use Illuminate\Support\Carbon;
 
@@ -56,5 +58,25 @@ class ChannelEventHandler
         $conversation->fill(['status' => 'open', 'last_message' => $text, 'last_message_at' => $sentAt, 'contact_name' => $conversation->contact_name ?? $senderName])->save();
         $conversation->increment('unread_count');
         $this->automations->forMessage($channel, $conversation, $message, isStoryReply: false);
+    }
+
+    public function comment(Channel $channel, string $commentId, string $senderId, string $text, ?string $senderName = null, ?string $postId = null): void
+    {
+        if ($commentId === '' || $senderId === '') {
+            return;
+        }
+
+        $post = Post::firstOrCreate(['channel_id' => $channel->id, 'platform_post_id' => $postId ?: 'fake-post']);
+        $comment = Comment::firstOrCreate(['channel_id' => $channel->id, 'platform_comment_id' => $commentId], [
+            'post_id' => $post->id,
+            'author_name' => $senderName,
+            'author_platform_id' => $senderId,
+            'text' => $text,
+            'posted_at' => now(),
+        ]);
+
+        if ($comment->wasRecentlyCreated) {
+            $this->automations->forComment($channel, $comment);
+        }
     }
 }

@@ -106,10 +106,14 @@ class ChannelTestEventController extends Controller
     private function otherChannel(SimulateChannelEventRequest $request, Channel $channel, ChannelEventHandler $handler): JsonResponse
     {
         abort_unless(MessagingClient::fakeActive(), 404);
-        abort_if($request->input('type') !== 'message', 422, 'Only messages can be simulated on '.$channel->platform.'.');
+        abort_if(! in_array($request->input('type'), ['message', 'comment'], true), 422, 'Only messages and comments can be simulated on '.$channel->platform.'.');
 
         $customerId = $channel->platform === 'whatsapp' ? '9665'.substr((string) crc32($request->from()), 0, 8) : 'fake-customer-'.$request->from();
-        $handler->message($channel, $customerId, 'fake_'.Str::random(16), $request->input('text'), $request->from(), $channel->platform === 'whatsapp' ? '+'.$customerId : null);
+        if ($request->input('type') === 'comment') {
+            $handler->comment($channel, 'fake_'.Str::random(16), $customerId, $request->input('text'), $request->from(), $request->input('post'));
+        } else {
+            $handler->message($channel, $customerId, 'fake_'.Str::random(16), $request->input('text'), $request->from(), $channel->platform === 'whatsapp' ? '+'.$customerId : null);
+        }
 
         return response()->json(['data' => [
             'type' => 'message',
