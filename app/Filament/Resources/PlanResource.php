@@ -55,6 +55,8 @@ class PlanResource extends Resource
                 TextInput::make('annual_price')->label('السعر الشهري بالدفع السنوي ($)')->numeric()->integer()->minValue(0)->required(),
                 TextInput::make('contacts_limit')->label('حد جهات الاتصال')->numeric()->integer()->minValue(1)->required(),
                 TextInput::make('live_automations_limit')->label('حد الأتمتات الشغالة')->numeric()->integer()->minValue(1)->helperText('اتركه فارغاً بلا حد.'),
+                TextInput::make('teammates_limit')->label('عدد المقاعد (مع المالك)')->numeric()->integer()->minValue(1)
+                    ->helperText('المالك يحسب مقعداً. اتركه فارغاً بلا حد.'),
                 TextInput::make('trial_days')->label('أيام التجربة المجانية')->numeric()->integer()->minValue(0)->maxValue(365)->default(0)
                     ->helperText('0 = بدون تجربة: تُدفع الخطة من اليوم.')
                     // A trial has to outlast the reminder email (إعدادات الدفع).
@@ -75,9 +77,10 @@ class PlanResource extends Resource
                 config('app.supported_locales'),
             ))->columnSpanFull(),
 
-            Grid::make(4)->schema([
+            Grid::make(5)->schema([
                 Toggle::make('has_ai')->label('يشمل Blexchat AI'),
                 Toggle::make('has_email_capture')->label('يشمل جمع البريد الإلكتروني'),
+                Toggle::make('has_assignment')->label('يشمل توزيع المحادثات'),
                 Toggle::make('is_recommended')->label('"اختيارنا لك"'),
                 Toggle::make('active')->label('معروضة للبيع')->default(true),
             ])->columnSpanFull(),
@@ -94,6 +97,8 @@ class PlanResource extends Resource
                 TextColumn::make('monthly_price')->label('شهري')->money('USD'),
                 TextColumn::make('annual_price')->label('سنوي / شهر')->money('USD'),
                 TextColumn::make('contacts_limit')->label('جهات الاتصال')->numeric(),
+                TextColumn::make('teammates_limit')->label('المقاعد')->numeric()->placeholder('بلا حد'),
+                IconColumn::make('has_assignment')->label('التوزيع')->boolean(),
                 TextColumn::make('trial_days')->label('أيام التجربة')->numeric(),
                 IconColumn::make('is_recommended')->label('اختيارنا')->boolean(),
                 TextColumn::make('subscriptions_count')->label('المشتركون')->numeric(),
