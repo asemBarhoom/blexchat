@@ -78,6 +78,21 @@ return [
     ],
 
     /*
+    | WhatsApp (Cloud API) and Messenger come through one Meta app: its secret signs their webhooks
+    | (/api/v1/webhooks/whatsapp and /messenger), and the verify token answers Meta's check.
+    | MESSAGING_DRIVER=fake (the default on local) logs WhatsApp, Messenger and TikTok replies.
+    */
+    'meta' => [
+        'app_secret' => env('META_APP_SECRET'),
+        'webhook_verify_token' => env('META_WEBHOOK_VERIFY_TOKEN'),
+        'graph_version' => env('META_GRAPH_VERSION', 'v21.0'),
+    ],
+
+    'channels' => [
+        'driver' => env('MESSAGING_DRIVER', env('APP_ENV', 'production') === 'local' ? 'fake' : 'meta'),
+    ],
+
+    /*
     | Blexchat AI: Claude answers what no automation keyword covers, from the business info the
     | owner writes, and hands the conversation over when it is not sure. Without a key it is off
     | (the fake driver, the default on local, answers without the network).

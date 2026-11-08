@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Services\Ai\ClaudeClient;
 use App\Services\Ai\FakeClaudeClient;
+use App\Services\Channels\FakeMessagingClient;
+use App\Services\Channels\MessagingClient;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -18,6 +20,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ClaudeClient::class, fn (): ClaudeClient => config('services.anthropic.driver') === 'fake' && ! $this->app->isProduction()
             ? new FakeClaudeClient
             : new ClaudeClient);
+
+        $this->app->bind(MessagingClient::class, fn (): MessagingClient => MessagingClient::fakeActive() ? new FakeMessagingClient : new MessagingClient);
 
         if ($this->app->environment('local') && class_exists(\Laravel\Telescope\TelescopeServiceProvider::class)) {
             $this->app->register(\Laravel\Telescope\TelescopeServiceProvider::class);

@@ -7,6 +7,8 @@ use App\Http\Requests\Api\Channel\SimulateChannelEventRequest;
 use App\Models\Channel;
 use App\Models\Comment;
 use App\Models\Conversation;
+use App\Services\Channels\ChannelEventHandler;
+use App\Services\Channels\MessagingClient;
 use App\Services\Instagram\FakeInstagramClient;
 use App\Services\Instagram\InstagramEventHandler;
 use Illuminate\Http\JsonResponse;
@@ -48,8 +50,12 @@ class ChannelTestEventController extends Controller
             new OA\Response(response: 422, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')),
         ],
     )]
-    public function __invoke(SimulateChannelEventRequest $request, Channel $channel, InstagramEventHandler $events, FakeInstagramClient $instagram): JsonResponse
+    public function __invoke(SimulateChannelEventRequest $request, Channel $channel, InstagramEventHandler $events, FakeInstagramClient $instagram, ChannelEventHandler $handler): JsonResponse
     {
+        if (in_array($channel->platform, MessagingClient::PLATFORMS, true)) {
+            return $this->otherChannel($request, $channel, $handler);
+        }
+
         abort_unless(FakeInstagramClient::active() && $channel->platform === 'instagram', 404);
 
         $customerId = 'fake-customer-'.$request->from();
@@ -90,6 +96,26 @@ class ChannelTestEventController extends Controller
             'conversation_id' => $conversation->id,
             // Only a reply to this message: earlier ones in the thread were answers to something else.
             'automation_id' => $conversation->messages()->where('automated', true)->where('id', '>', $inbound->id)->value('automation_id'),
+        ]], 201);
+    }
+
+    /**
+     * WhatsApp, Messenger and TikTok (MESSAGING_DRIVER=fake): an incoming message only; their
+     * conversations wait for the owner.
+     */
+    private function otherChannel(SimulateChannelEventRequest $request, Channel $channel, ChannelEventHandler $handler): JsonResponse
+    {
+        abort_unless(MessagingClient::fakeActive(), 404);
+        abort_if($request->input('type') !== 'message', 422, 'Only messages can be simulated on '.$channel->platform.'.');
+
+        $customerId = $channel->platform === 'whatsapp' ? '9665'.substr((string) crc32($request->from()), 0, 8) : 'fake-customer-'.$request->from();
+        $handler->message($channel, $customerId, 'fake_'.Str::random(16), $request->input('text'), $request->from(), $channel->platform === 'whatsapp' ? '+'.$customerId : null);
+
+        return response()->json(['data' => [
+            'type' => 'message',
+            'comment_id' => null,
+            'conversation_id' => Conversation::where('channel_id', $channel->id)->where('platform_conversation_id', $customerId)->value('id'),
+            'automation_id' => null,
         ]], 201);
     }
 }
