@@ -14,6 +14,7 @@ class ChannelOAuthController extends Controller
 {
     public function start(Request $request, string $platform): JsonResponse
     {
+        abort_unless(config('services.channels.oauth_driver') === 'fake', 501, 'OAuth providers are not configured.');
         abort_unless(in_array($platform, ['messenger', 'whatsapp', 'tiktok'], true), 404);
         $state = Str::random(40);
         Cache::put("channel-oauth:{$state}", ['user_id' => $request->user()->id, 'platform' => $platform], now()->addMinutes(10));
@@ -23,6 +24,7 @@ class ChannelOAuthController extends Controller
 
     public function callback(Request $request, string $platform): JsonResponse
     {
+        abort_unless(config('services.channels.oauth_driver') === 'fake', 501, 'OAuth providers are not configured.');
         $state = (string) $request->query('state');
         $pending = Cache::pull("channel-oauth:{$state}");
         abort_unless(is_array($pending) && $pending['platform'] === $platform, 400, 'Invalid OAuth state.');
