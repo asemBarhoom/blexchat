@@ -19,7 +19,7 @@ The API returns JSON in a `data` property. Paginated responses also return `meta
 | Connect a channel | `POST /channels/connect` | Uses the selected channel driver's connection payload. |
 | Test a local channel | `POST /channels/{id}/test-events` | Available with the fake driver; use `type=message` or `type=comment`. |
 
-Real OAuth requires provider applications and redirect configuration. The local fake driver exercises the same callback and persistence paths without provider credentials. Messenger uses Facebook Login and page selection, WhatsApp uses Embedded Signup, and TikTok uses TikTok Login.
+Real OAuth requires provider applications and redirect configuration. Start a connection with `GET /channels/oauth/{platform}/start`, then return to `GET /channels/oauth/{platform}/callback?state=...`. Messenger uses Facebook Login and page selection (`page_id`), WhatsApp uses Embedded Signup (`phone_number_id`), and TikTok uses TikTok Login (`open_id`). The local fake driver exercises the same callback and persistence paths without provider credentials.
 
 ## Inbox and automations
 
@@ -52,6 +52,8 @@ Conversation messages identify AI replies with `by_ai: true`. Handover messages 
 | Webhooks | `POST /webhooks/whatsapp`, `POST /webhooks/messenger` |
 
 Webhook requests are verified by the server and queued for processing. The fake channel test events are the recommended local smoke test; no real Meta or TikTok secret should be placed in source files.
+
+For Messenger and TikTok comment automations, send a fake `comment` event with `text`, `from`, and optional `post`. A matching `reply_comment` action is recorded and delivered through the fake messaging client.
 
 ## Local verification
 
