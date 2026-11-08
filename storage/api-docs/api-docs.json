@@ -676,7 +676,7 @@
                     "Automations"
                 ],
                 "summary": "List automations",
-                "description": "Each row carries `runs` (DMs and public replies it sent) and `ctr` (clicks ÷ DMs sent with a button; null while none had one), for the list’s Runs and CTR columns.",
+                "description": "Each row carries `runs` (DMs and public replies it sent) and `ctr` (clicks ÷ DMs sent with a button; 0 while none had one), for the list’s Runs and CTR columns.",
                 "operationId": "c72fb0b8dc11d136aa13f458b1e172ab",
                 "parameters": [
                     {
@@ -6044,10 +6044,9 @@
                         "example": "Reem Khalid"
                     },
                     "handle": {
-                        "description": "Username, or the phone number for someone added by hand",
+                        "description": "Username, else the phone number, else the name",
                         "type": "string",
-                        "example": "reem.k",
-                        "nullable": true
+                        "example": "reem.k"
                     },
                     "channel": {
                         "type": "string",
@@ -8247,7 +8246,7 @@
                         "nullable": true
                     },
                     "ctr": {
-                        "description": "clicks ÷ DMs sent with a button; null while none had a button",
+                        "description": "clicks ÷ DMs sent with a button; 0 while none had a button, null only before it has answered anyone",
                         "type": "number",
                         "example": 0.25,
                         "nullable": true,
