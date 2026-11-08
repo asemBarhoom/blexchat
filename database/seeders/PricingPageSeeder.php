@@ -183,7 +183,7 @@ class PricingPageSeeder extends Seeder
                 'title' => $text('Support', 'الدعم'),
                 'rows' => [
                     ['key' => 'help', 'label' => $text('Help', 'المساعدة'), 'cells' => $byPlan(
-                        $text('Help center', 'مركز المساعدة'),
+                        $text('Email', 'البريد الإلكتروني'),
                         $text('Email', 'البريد الإلكتروني'),
                         $text('Email', 'البريد الإلكتروني'),
                         $text('Priority', 'دعم بأولوية'),
