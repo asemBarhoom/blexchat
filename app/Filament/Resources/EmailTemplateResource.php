@@ -5,6 +5,8 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\EmailTemplateResource\Pages;
 use App\Filament\Support\Translations;
 use App\Mail\LoginLinkMail;
+use App\Mail\ReminderDueMail;
+use App\Models\Conversation;
 use App\Models\EmailTemplate;
 use App\Models\LoginLink;
 use Closure;
@@ -28,6 +30,7 @@ class EmailTemplateResource extends Resource
     public const TEMPLATE_LABELS = [
         'login_link.signup' => 'رابط الدخول — حساب جديد',
         'login_link.signin' => 'رابط الدخول — تسجيل الدخول',
+        'reminder.due' => 'تذكير بمحادثة',
     ];
 
     /** @var array<string, string> */
@@ -70,7 +73,8 @@ class EmailTemplateResource extends Resource
         return $schema->components([
             Section::make(fn (?EmailTemplate $record): string => self::TEMPLATE_LABELS[$record?->key] ?? 'الرسالة')
                 ->description('اترك أي نص فارغاً لاستخدام النص الافتراضي.')
-                ->schema(array_map(self::textInputs(...), array_keys(self::FIELD_LABELS))),
+                // Only the texts this email has: the reminder has no expiry or ignore line.
+                ->schema(fn (?EmailTemplate $record): array => array_map(self::textInputs(...), array_keys(EmailTemplate::TEMPLATES[$record?->key] ?? self::FIELD_LABELS))),
         ])->columns(1);
     }
 
@@ -103,6 +107,10 @@ class EmailTemplateResource extends Resource
      */
     public static function previewHtml(EmailTemplate $record, string $locale): string
     {
+        if ($record->key === 'reminder.due') {
+            return (new ReminderDueMail(new Conversation(['contact_name' => 'Reem K.'])))->locale($locale)->render();
+        }
+
         $link = new LoginLink(['email' => 'preview@blexchat.test', 'mode' => Str::after($record->key, '.')]);
 
         return (new LoginLinkMail($link, 'preview-token'))->locale($locale)->render();

@@ -36,6 +36,8 @@ class ConversationResource extends JsonResource
             'starred' => $this->starred,
             'labels' => $this->labels ?? [],
             'remind_at' => $this->remind_at?->toIso8601String(),
+            // The reminder's time has come: the owner was emailed, and the inbox marks it.
+            'remind_due' => $this->remind_at !== null && $this->remind_at->isPast(),
         ];
     }
 }

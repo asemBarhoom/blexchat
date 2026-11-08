@@ -72,14 +72,14 @@ describe('EmailTemplateSeeder', function () {
         $this->seed(EmailTemplateSeeder::class);
 
         $signin = EmailTemplate::where('key', 'login_link.signin')->firstOrFail();
-        expect(EmailTemplate::count())->toBe(2)
+        expect(EmailTemplate::count())->toBe(3)
             ->and($signin->getTranslations('subject'))->toBe(['en' => 'Your sign-in link', 'ar' => 'رابط تسجيل الدخول'])
             ->and($signin->getTranslation('expiry', 'en'))->toBe('This link works for :minutes minutes.');
 
         $signin->setTranslation('subject', 'en', 'Edited')->save();
         $this->seed(EmailTemplateSeeder::class);
 
-        expect(EmailTemplate::count())->toBe(2)
+        expect(EmailTemplate::count())->toBe(3)
             ->and($signin->fresh()->getTranslation('subject', 'en'))->toBe('Edited');
     });
 });
@@ -135,5 +135,15 @@ describe('the admin panel', function () {
 
         expect(EmailTemplateResource::previewHtml($this->template, 'en'))->toContain('Sign in to Blexchat')
             ->and(EmailTemplateResource::previewHtml($this->template, 'ar'))->toContain('الدخول إلى بلكس تشات');
+    });
+
+    it('edits only the reminder email’s own texts, and previews it', function () {
+        $reminder = EmailTemplate::where('key', 'reminder.due')->firstOrFail();
+
+        Livewire::test(EditEmailTemplate::class, ['record' => $reminder->getRouteKey()])
+            ->assertFormFieldExists('subject.en')
+            ->assertFormFieldDoesNotExist('expiry.en');
+
+        expect(EmailTemplateResource::previewHtml($reminder, 'en'))->toContain('You asked to be reminded about your conversation with Reem K.');
     });
 });

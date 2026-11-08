@@ -98,7 +98,7 @@ class ConversationController extends Controller
             new OA\Property(property: 'read', type: 'boolean', description: 'true sets unread to 0'),
             new OA\Property(property: 'starred', type: 'boolean', description: 'In or out of Favorites'),
             new OA\Property(property: 'labels', type: 'array', maxItems: 10, items: new OA\Items(type: 'string', maxLength: 30), description: 'The whole list; [] removes every label'),
-            new OA\Property(property: 'remind_at', type: 'string', format: 'date-time', nullable: true, description: 'A reminder (the Reminders folder), in the future; null clears it. Setting one needs a paid plan'),
+            new OA\Property(property: 'remind_at', type: 'string', format: 'date-time', nullable: true, description: 'A reminder (the Reminders folder), in the future; null clears it. Setting one needs a paid plan. When it comes, the owner is emailed and `remind_due` turns true'),
         ], example: ['status' => 'resolved'])),
         responses: [
             new OA\Response(response: 200, description: 'The conversation as the list shows it'),
@@ -123,7 +123,8 @@ class ConversationController extends Controller
         ], fn (mixed $value): bool => $value !== null));
 
         if ($request->has('remind_at')) {
-            $conversation->update(['remind_at' => $request->validated('remind_at')]);
+            // A new reminder is emailed again when it comes.
+            $conversation->update(['remind_at' => $request->validated('remind_at'), 'reminded_at' => null]);
         }
 
         // Marked done: it no longer waits on anyone.
