@@ -8,6 +8,7 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\RestoreAction;
 use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -19,7 +20,10 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class AutomationResource extends Resource
 {
@@ -83,6 +87,15 @@ class AutomationResource extends Resource
                     ->trueColor('success')
                     ->falseColor('danger'),
 
+                IconColumn::make('ai_enabled')
+                    ->label('AI')
+                    ->boolean(),
+
+                TextColumn::make('folder.name')
+                    ->label('المجلد')
+                    ->placeholder('—')
+                    ->toggleable(),
+
                 TextColumn::make('created_at')
                     ->label('تاريخ الإنشاء')
                     ->dateTime('d/m/Y')
@@ -107,6 +120,9 @@ class AutomationResource extends Resource
                     ->trueLabel('مفعّلة فقط')
                     ->falseLabel('معطّلة فقط')
                     ->native(false),
+
+                TrashedFilter::make()
+                    ->label('المحذوفة'),
             ])
             ->actions([
                 ViewAction::make()->label('عرض'),
@@ -115,7 +131,10 @@ class AutomationResource extends Resource
                     ->icon(fn (Automation $record) => $record->active ? 'heroicon-o-pause' : 'heroicon-o-play')
                     ->color(fn (Automation $record) => $record->active ? 'warning' : 'success')
                     ->action(fn (Automation $record) => $record->update(['active' => ! $record->active])),
-                DeleteAction::make()->label('حذف'),
+                DeleteAction::make()
+                    ->label('حذف')
+                    ->modalDescription('تنتقل الأتمتة إلى سلة المحذوفات، وتُحذف نهائياً بعد 30 يوماً.'),
+                RestoreAction::make()->label('استرجاع'),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
@@ -123,6 +142,14 @@ class AutomationResource extends Resource
                 ]),
             ])
             ->defaultSort('created_at', 'desc');
+    }
+
+    public static function getRecordRouteBindingEloquentQuery(): Builder
+    {
+        return parent::getRecordRouteBindingEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
     }
 
     public static function infolist(Schema $schema): Schema
