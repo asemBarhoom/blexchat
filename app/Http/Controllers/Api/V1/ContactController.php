@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Contact\ImportContactsRequest;
 use App\Http\Requests\Api\Contact\ListContactsRequest;
 use App\Http\Requests\Api\Contact\StoreContactRequest;
 use App\Http\Requests\Api\Contact\UpdateContactRequest;
@@ -10,6 +11,7 @@ use App\Http\Resources\Api\V1\ContactCollection;
 use App\Http\Resources\Api\V1\ContactResource;
 use App\Models\Contact;
 use App\Models\Message;
+use App\Services\Contacts\ContactImporter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Http\JsonResponse;
@@ -152,6 +154,52 @@ class ContactController extends Controller
         $contact = $user->contacts()->create($request->contactAttributes());
 
         return response()->json(['data' => new ContactResource($contact)], 201);
+    }
+
+    #[OA\Post(
+        path: '/api/v1/contacts/import',
+        summary: 'Import contacts from a CSV',
+        description: <<<'MD'
+            Contacts · Import. A CSV (comma or semicolon, UTF-8) whose first row names the columns, in English or Arabic:
+            `name` (or `first name` and `last name`) and `phone` are required; `email`, `city`, `gender` (female/male) and `tags` (separated by `;`) are optional.
+            Each row becomes a WhatsApp contact reached by phone, like Create New Contact. A row with a problem, a phone already in the contacts, or past the plan's contacts limit is skipped and listed with its line number; the others are added. At most 1,000 rows.
+            MD,
+        security: [['sanctum' => []]],
+        tags: ['Contacts'],
+        requestBody: new OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'multipart/form-data', schema: new OA\Schema(
+            required: ['file', 'consent'],
+            properties: [
+                new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'CSV, up to 1 MB'),
+                new OA\Property(property: 'consent', type: 'boolean', description: 'Must be true: everyone in the file agreed to receive messages'),
+            ],
+        ))),
+        responses: [
+            new OA\Response(response: 200, description: 'Imported', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'data', properties: [
+                    new OA\Property(property: 'imported', type: 'integer', example: 42),
+                    new OA\Property(property: 'skipped', type: 'array', items: new OA\Items(properties: [
+                        new OA\Property(property: 'row', type: 'integer', example: 7, description: 'Line in the file, the header being 1'),
+                        new OA\Property(property: 'reason', type: 'string', example: 'Already in your contacts (same phone).'),
+                    ])),
+                    new OA\Property(property: 'usage', ref: '#/components/schemas/ContactsUsage'),
+                ]),
+            ])),
+            new OA\Response(response: 422, description: 'Validation error, or `code: missing_columns` with `columns` when the first row has no name or phone column'),
+        ]
+    )]
+    public function import(ImportContactsRequest $request, ContactImporter $importer): JsonResponse
+    {
+        $result = $importer->import($request->user(), $request->file('file')->getRealPath());
+
+        if ($result['missing_columns'] !== []) {
+            return response()->json(['code' => 'missing_columns', 'columns' => $result['missing_columns'], 'message' => __('contacts.import.missing_columns')], 422);
+        }
+
+        return response()->json(['data' => [
+            'imported' => $result['imported'],
+            'skipped' => $result['skipped'],
+            'usage' => $request->user()->contactsUsage(),
+        ]]);
     }
 
     #[OA\Get(

@@ -142,6 +142,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
 
     // Contacts list (W23), contact detail (W22), and the sidebar's contacts meter
     Route::get('contacts/usage', [ContactController::class, 'usage'])->name('contacts.usage');
+    Route::post('contacts/import', [ContactController::class, 'import'])->middleware('throttle:10,1')->name('contacts.import');
     Route::apiResource('contacts', ContactController::class)->whereNumber('contact');
 
     // Inbox: conversation list, thread, reply
