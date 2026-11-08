@@ -10,6 +10,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Post;
 use App\Services\Ai\ClaudeClient;
+use App\Services\Channels\MessagingClient;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Log;
@@ -28,7 +29,7 @@ class AutomationRunner
     /** The quick reply under "Follow us first". Any reply carries on; the chip makes it one tap. */
     private const FOLLOWED_PAYLOAD = 'BLEXCHAT_FOLLOWED';
 
-    public function __construct(private InstagramClient $instagram, private ClaudeClient $claude) {}
+    public function __construct(private InstagramClient $instagram, private ClaudeClient $claude, private MessagingClient $messaging) {}
 
     /**
      * Comment automations answer publicly under the comment and/or privately in the commenter's DMs.
@@ -160,7 +161,7 @@ class AutomationRunner
         $action = ['type' => 'send_dm', 'message' => $answer['reply']];
 
         return $this->attempt($automation, $action, function () use ($conversation, $automation, $action): void {
-            $messageId = $this->instagram->sendMessage($conversation->channel, $conversation->contact_platform_id, $this->payload($action));
+            $messageId = $this->sendMessage($conversation->channel, $conversation->contact_platform_id, $this->payload($action));
             $this->record($conversation, $automation, $action, $messageId)->update(['by_ai' => true]);
         });
     }
@@ -248,7 +249,7 @@ class AutomationRunner
 
             $this->attempt($automation, $action, function () use ($channel, $conversation, $automation, $action, &$dm): void {
                 $action = $this->withLinkToken($action);
-                $messageId = $this->instagram->sendMessage($channel, $conversation->contact_platform_id, $this->payload($action));
+                $messageId = $this->sendMessage($channel, $conversation->contact_platform_id, $this->payload($action));
                 $dm = $this->record($conversation, $automation, $action, $messageId);
             });
         }
@@ -365,9 +366,20 @@ class AutomationRunner
     private function sendText(Conversation $conversation, Automation $automation, array $action): bool
     {
         return $this->attempt($automation, $action, function () use ($conversation, $automation, $action): void {
-            $messageId = $this->instagram->sendMessage($conversation->channel, $conversation->contact_platform_id, $this->payload($action));
+            $messageId = $this->sendMessage($conversation->channel, $conversation->contact_platform_id, $this->payload($action));
             $this->record($conversation, $automation, $action, $messageId);
         });
+    }
+
+    private function sendMessage(Channel $channel, string $recipientId, string|array $text): ?string
+    {
+        if (is_array($text)) {
+            $text = MessagingClient::text((string) ($text['message'] ?? ''), $text['button_label'] ?? null, $text['button_url'] ?? null);
+        }
+
+        return in_array($channel->platform, MessagingClient::PLATFORMS, true)
+            ? $this->messaging->send($channel, $recipientId, $text)
+            : $this->instagram->sendMessage($channel, $recipientId, $text);
     }
 
     /**
