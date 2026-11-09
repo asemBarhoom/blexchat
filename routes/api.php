@@ -121,6 +121,7 @@ Route::middleware(['auth:sanctum', EnsureAccountOwner::class])->prefix('v1')->na
     Route::post('channels/instagram', [InstagramConnectionController::class, 'store'])->name('channels.instagram.store');
     Route::post('channels/connect', [ChannelController::class, 'connect'])->name('channels.connect');
     Route::get('channels/oauth/{platform}/start', [ChannelOAuthController::class, 'start'])->name('channels.oauth.start');
+    Route::get('channels/oauth/status', [ChannelOAuthController::class, 'status'])->name('channels.oauth.status');
     Route::get('channels/oauth/{platform}/callback', [ChannelOAuthController::class, 'callback'])->withoutMiddleware('auth:sanctum')->name('channels.oauth.callback');
 
     // Connect a channel (W06): the screen per channel, and Request access for an account another workspace has
