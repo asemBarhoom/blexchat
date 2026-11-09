@@ -42,6 +42,8 @@ Real OAuth requires provider applications and redirect configuration. Start a co
 
 Conversation messages identify AI replies with `by_ai: true`. Handover messages include a `reason`. A due reminder is represented by `remind_due: true`.
 
+`GET /automations` also returns `meta.live`: how many of the filtered automations are active ("3 live of 5"), whatever `status` asks for.
+
 ## Contacts, team, and integrations
 
 | Use | Endpoint |
@@ -55,9 +57,32 @@ Conversation messages identify AI replies with `by_ai: true`. Handover messages 
 | Remove or leave team | `DELETE /team/members/{id}`, `POST /team/leave` |
 | Webhooks | `POST /webhooks/whatsapp`, `POST /webhooks/messenger` |
 
+`GET /team` returns `members`, `invitations`, `seats` (`used`, `limit`), `assignment` and `role`. `GET /ai/settings` returns `business_info`, `included` (the plan includes Blexchat AI) and `live` (the server has the AI engine configured); `PATCH` takes `business_info`.
+
 Webhook requests are verified by the server and queued for processing. The fake channel test events are the recommended local smoke test; no real Meta or TikTok secret should be placed in source files.
 
+Replying on TikTok returns `502` (`channel_not_live`) until TikTok opens its messaging API; WhatsApp and Messenger deliver for real once the channel is connected.
+
 For Messenger and TikTok comment automations, send a fake `comment` event with `text`, `from`, and optional `post`. A matching `reply_comment` action is recorded and delivered through the fake messaging client.
+
+## Marketing content
+
+`GET /home` is public and returns every marketing block. `not_found` is the 404 page (`null` until it is written in the admin panel): `question`, `replied` and `answer` for the comment and its auto-reply, then `code`, `title`, `body` and `cta` for the page itself.
+
+## Errors and limits
+
+Errors return `message` and `code`; a `422` validation error also returns `errors`. Branch on `code`, not on the message.
+
+| `code` | Status | When |
+| --- | --- | --- |
+| `missing_columns` | 422 | `POST /contacts/import`: the first row has no name or phone column; `columns` lists the missing ones |
+| `seat_limit` | 403 | `POST /team/invitations` with every seat in use; `seats` is `{used, limit}` (show Upgrade) |
+| `invitation_invalid` | 404 | `POST /team/invitations/accept`: expired, withdrawn or unknown token |
+| `other_email` | 403 | Accepting while signed in with another email; `email` names the invited address |
+| `has_own_account` | 403 | The account already has channels or a team of its own |
+| `owner_only` | 403 | A teammate (`role: agent`) calling anything outside the inbox, contacts and their own team entry |
+| `plan_required` | 403 | Reminders, conversation assignment, or Blexchat AI below the plan that includes them |
+| `channel_not_live` | 502 | The channel cannot send yet (TikTok) or is disconnected; permanent |
 
 ## Local verification
 
