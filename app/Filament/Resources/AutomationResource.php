@@ -130,7 +130,8 @@ class AutomationResource extends Resource
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()->label('حذف المحدد'),
+                    DeleteBulkAction::make()->label('حذف المحدد')
+                        ->modalDescription('تنتقل الأتمتات المحددة إلى سلة المحذوفات، وتُحذف نهائياً بعد 30 يوماً.'),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');

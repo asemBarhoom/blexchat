@@ -1,6 +1,7 @@
 <?php
 
 use App\Filament\Resources\AutomationResource\Pages\ListAutomations;
+use App\Filament\Resources\AutomationResource\Pages\ViewAutomation;
 use App\Models\Automation;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
@@ -23,6 +24,20 @@ it('restores a deleted automation from the trash', function () {
         ->filterTable('trashed', false)
         ->assertCanSeeTableRecords([$automation])
         ->callAction(TestAction::make('restore')->table($automation));
+
+    $this->assertDatabaseHas('automations', [
+        'id' => $automation->id,
+        'deleted_at' => null,
+    ]);
+});
+
+it('restores a deleted automation from its detail page', function () {
+    $automation = Automation::factory()->create();
+    $automation->delete();
+
+    Livewire::test(ViewAutomation::class, ['record' => $automation->getRouteKey()])
+        ->assertActionHidden('delete')
+        ->callAction('restore');
 
     $this->assertDatabaseHas('automations', [
         'id' => $automation->id,
