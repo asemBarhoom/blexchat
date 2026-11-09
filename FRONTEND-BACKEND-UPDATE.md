@@ -22,6 +22,7 @@
 
 - إضافة إعادة محاولة للإرسال:
   - `POST /api/v1/message-delivery-attempts/{attempt}/retry`
+  - استجابة فشل الإرسال تحتوي `attempt_id` لاستخدامه في الرابط.
 - إضافة فحص القناة:
   - `GET /api/v1/channels/{channel}/health`
 - إضافة حالة OAuth:
@@ -35,6 +36,8 @@
   - `ai_comments`
   - `review_before_send`
 - تحديث Swagger في `storage/api-docs/api-docs.json`.
+
+قيم AI الحالية تُحفظ كما يرسلها الفرونت داخل `extras.ai_goal`، وتُعاد كاملة ضمن `extras` في كل Automation resource.
 
 ## المطلوب من Frontend
 

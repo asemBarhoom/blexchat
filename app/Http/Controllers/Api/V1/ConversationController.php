@@ -226,13 +226,14 @@ class ConversationController extends Controller
                     InstagramClient::message($request->content, $request->button_label, $request->button_url),
                 );
             } catch (RequestException|ConnectionException $exception) {
-                MessageDeliveryAttempt::create(['conversation_id' => $conversation->id, 'idempotency_key' => 'manual-'.sha1($conversation->id.'|'.$request->content.'|'.now()->timestamp), 'content' => $request->content, 'type' => $request->type, 'error_code' => 'provider_error', 'error_message' => $exception->getMessage(), 'last_attempt_at' => now()]);
+                $attempt = MessageDeliveryAttempt::create(['conversation_id' => $conversation->id, 'idempotency_key' => 'manual-'.sha1($conversation->id.'|'.$request->content.'|'.now()->timestamp), 'content' => $request->content, 'type' => $request->type, 'error_code' => 'provider_error', 'error_message' => $exception->getMessage(), 'last_attempt_at' => now()]);
 
                 return response()->json([
                     'message' => 'Instagram did not deliver the message.',
                     'code' => $exception instanceof ConnectionException ? 'provider_unavailable' : 'provider_rejected',
                     'platform' => 'instagram',
                     'retryable' => $exception instanceof ConnectionException || ($exception instanceof RequestException && $exception->response->status() >= 500),
+                    'attempt_id' => $attempt->id,
                     'error' => $exception instanceof RequestException ? InstagramClient::errorMessage($exception) : null,
                 ], 502);
             }
@@ -244,13 +245,14 @@ class ConversationController extends Controller
                     MessagingClient::text($request->content, $request->button_label, $request->button_url),
                 );
             } catch (RequestException|ConnectionException|ChannelNotLive $exception) {
-                MessageDeliveryAttempt::create(['conversation_id' => $conversation->id, 'idempotency_key' => 'manual-'.sha1($conversation->id.'|'.$request->content.'|'.now()->timestamp), 'content' => $request->content, 'type' => $request->type, 'error_code' => $exception instanceof ChannelNotLive ? 'channel_not_live' : 'provider_error', 'error_message' => $exception->getMessage(), 'last_attempt_at' => now()]);
+                $attempt = MessageDeliveryAttempt::create(['conversation_id' => $conversation->id, 'idempotency_key' => 'manual-'.sha1($conversation->id.'|'.$request->content.'|'.now()->timestamp), 'content' => $request->content, 'type' => $request->type, 'error_code' => $exception instanceof ChannelNotLive ? 'channel_not_live' : 'provider_error', 'error_message' => $exception->getMessage(), 'last_attempt_at' => now()]);
 
                 return response()->json([
                     'message' => $exception instanceof ChannelNotLive ? $exception->getMessage() : ucfirst($conversation->channel->platform).' did not deliver the message.',
                     'code' => $exception instanceof ChannelNotLive ? 'channel_not_live' : ($exception instanceof ConnectionException ? 'provider_unavailable' : 'provider_rejected'),
                     'platform' => $conversation->channel->platform,
                     'retryable' => $exception instanceof ConnectionException || ($exception instanceof RequestException && $exception->response->status() >= 500),
+                    'attempt_id' => $attempt->id,
                     'error' => $exception instanceof RequestException ? $exception->response->json('error.message') : null,
                 ], 502);
             }
