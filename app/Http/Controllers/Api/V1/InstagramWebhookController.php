@@ -7,6 +7,7 @@ use App\Jobs\ProcessInstagramWebhook;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'Webhooks', description: 'Events Meta sends about connected Instagram accounts')]
@@ -58,7 +59,10 @@ class InstagramWebhookController extends Controller
         abort_unless($secret !== '' && hash_equals($expected, $signature), 403);
 
         if ($request->input('object') === 'instagram') {
-            ProcessInstagramWebhook::dispatch($request->input('entry', []));
+            $key = 'webhook:instagram:'.sha1($request->getContent());
+            if (Cache::add($key, true, now()->addMinutes(10))) {
+                ProcessInstagramWebhook::dispatch($request->input('entry', []));
+            }
         }
 
         return response()->json(['status' => 'received']);
