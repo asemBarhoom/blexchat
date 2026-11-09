@@ -2,6 +2,8 @@
 
 The API is rooted at `/api/v1`. Requests that belong to an account use a Sanctum bearer token:
 
+Public support content is available at `GET /help`. It returns localized FAQ articles and the configured support email.
+
 ```http
 Authorization: Bearer <token>
 Accept: application/json

@@ -7,6 +7,7 @@ use App\Jobs\ProcessMetaChannelWebhook;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use OpenApi\Attributes as OA;
 
 /**
@@ -58,7 +59,10 @@ class MetaChannelWebhookController extends Controller
         abort_unless($secret !== '' && hash_equals($expected, (string) $request->header('X-Hub-Signature-256')), 403);
 
         if ($request->input('object') === self::OBJECTS[$platform]) {
-            ProcessMetaChannelWebhook::dispatch($platform, $request->input('entry', []));
+            $key = 'webhook:meta:'.sha1($request->getContent());
+            if (Cache::add($key, true, now()->addMinutes(10))) {
+                ProcessMetaChannelWebhook::dispatch($platform, $request->input('entry', []));
+            }
         }
 
         return response()->json(['status' => 'received']);
