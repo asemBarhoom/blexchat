@@ -25,6 +25,10 @@ class UpdateAutomationRequest extends FormRequest
             'actions.*.message' => ['required_with:actions', 'string', 'max:2200'],
             'actions.*.button_label' => ['nullable', 'string', 'max:20'],
             'actions.*.button_url' => ['nullable', 'url'],
+            'extras' => ['sometimes', 'array'],
+            'extras.ai_goal' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'extras.review_before_send' => ['sometimes', 'boolean'],
+            'extras.ai_comments' => ['sometimes', 'boolean'],
         ];
     }
 }

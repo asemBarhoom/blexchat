@@ -153,7 +153,11 @@ class AutomationController extends Controller
     {
         abort_unless($automation->user_id === $request->user()->id, 403);
 
-        $automation->update($request->validated());
+        $data = $request->validated();
+        if (array_key_exists('extras', $data)) {
+            $data['extras'] = array_merge($automation->extras ?? [], $data['extras']);
+        }
+        $automation->update($data);
 
         return response()->json(['data' => new AutomationResource($automation->fresh())]);
     }
