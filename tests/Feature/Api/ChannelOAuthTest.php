@@ -22,3 +22,12 @@ it('connects a fake Messenger, WhatsApp or TikTok OAuth account', function (stri
     'whatsapp' => ['whatsapp', 'phone_number_id'],
     'tiktok' => ['tiktok', 'open_id'],
 ]);
+
+it('rejects an OAuth callback when the state is expired or reused', function () {
+    config()->set('services.channels.oauth_driver', 'fake');
+    $owner = User::factory()->create();
+    $state = $this->actingAs($owner, 'sanctum')->getJson('/api/v1/channels/oauth/messenger/start')->json('data.state');
+
+    $this->getJson("/api/v1/channels/oauth/messenger/callback?state={$state}&page_id=page-1")->assertCreated();
+    $this->getJson("/api/v1/channels/oauth/messenger/callback?state={$state}&page_id=page-1")->assertBadRequest();
+});
