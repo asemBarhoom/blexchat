@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Empties the Trash of automations past Automation::TRASH_DAYS
         $schedule->command('model:prune')->daily()->onOneServer();
         $schedule->command('conversations:send-reminders')->everyMinute()->onOneServer()->withoutOverlapping();
+        $schedule->command('webhooks:purge --days=30')->daily()->onOneServer();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
