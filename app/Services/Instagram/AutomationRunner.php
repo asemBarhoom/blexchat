@@ -377,13 +377,15 @@ class AutomationRunner
 
     private function sendMessage(Channel $channel, string $recipientId, string|array $text): ?string
     {
-        if (is_array($text)) {
-            $text = MessagingClient::text((string) ($text['message'] ?? ''), $text['button_label'] ?? null, $text['button_url'] ?? null);
+        if (! in_array($channel->platform, MessagingClient::PLATFORMS, true)) {
+            return $this->instagram->sendMessage($channel, $recipientId, is_array($text) ? $text : ['type' => 'send_dm', 'message' => $text]);
         }
 
-        return in_array($channel->platform, MessagingClient::PLATFORMS, true)
-            ? $this->messaging->send($channel, $recipientId, $text)
-            : $this->instagram->sendMessage($channel, $recipientId, $text);
+        $text = is_array($text)
+            ? MessagingClient::text((string) ($text['message'] ?? ''), $text['button_label'] ?? null, $text['button_url'] ?? null)
+            : $text;
+
+        return $this->messaging->send($channel, $recipientId, $text);
     }
 
     /**
