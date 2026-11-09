@@ -83,9 +83,30 @@ return [
     | MESSAGING_DRIVER=fake (the default on local) logs WhatsApp, Messenger and TikTok replies.
     */
     'meta' => [
+        'app_id' => env('META_APP_ID'),
         'app_secret' => env('META_APP_SECRET'),
         'webhook_verify_token' => env('META_WEBHOOK_VERIFY_TOKEN'),
         'graph_version' => env('META_GRAPH_VERSION', 'v21.0'),
+    ],
+
+    /*
+    | Channel OAuth applications: Facebook Login for a Messenger page, Embedded Signup for
+    | WhatsApp and TikTok Login. Messenger and WhatsApp run on the Meta app above, so both read
+    | its id and secret; a platform without a client id reports itself as not configured.
+    */
+    'messenger' => [
+        'client_id' => env('META_APP_ID'),
+        'client_secret' => env('META_APP_SECRET'),
+    ],
+
+    'whatsapp' => [
+        'client_id' => env('META_APP_ID'),
+        'client_secret' => env('META_APP_SECRET'),
+    ],
+
+    'tiktok' => [
+        'client_id' => env('TIKTOK_CLIENT_ID'),
+        'client_secret' => env('TIKTOK_CLIENT_SECRET'),
     ],
 
     'channels' => [
