@@ -9,9 +9,12 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'Channels', description: 'List, connect and disconnect social channels')]
 class ChannelOAuthController extends Controller
 {
+    #[OA\Get(path: '/api/v1/channels/oauth/{platform}/start', summary: 'Start a channel OAuth flow', tags: ['Channels'], security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'platform', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: ['messenger', 'whatsapp', 'tiktok']))], responses: [new OA\Response(response: 200, description: 'OAuth state and authorization URL'), new OA\Response(response: 501, description: 'Provider OAuth is not configured')])]
     public function start(Request $request, string $platform): JsonResponse
     {
         abort_unless(config('services.channels.oauth_driver') === 'fake', 501, 'OAuth providers are not configured.');
@@ -22,6 +25,7 @@ class ChannelOAuthController extends Controller
         return response()->json(['data' => ['platform' => $platform, 'state' => $state, 'authorization_url' => url("/api/v1/channels/oauth/{$platform}/callback?state={$state}")]]);
     }
 
+    #[OA\Get(path: '/api/v1/channels/oauth/{platform}/callback', summary: 'Complete a channel OAuth flow', tags: ['Channels'], parameters: [new OA\Parameter(name: 'platform', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: ['messenger', 'whatsapp', 'tiktok'])), new OA\Parameter(name: 'state', in: 'query', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 201, description: 'Channel connected'), new OA\Response(response: 400, description: 'Invalid or expired OAuth state'), new OA\Response(response: 501, description: 'Provider OAuth is not configured')])]
     public function callback(Request $request, string $platform): JsonResponse
     {
         abort_unless(config('services.channels.oauth_driver') === 'fake', 501, 'OAuth providers are not configured.');

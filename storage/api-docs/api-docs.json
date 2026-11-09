@@ -1989,6 +1989,86 @@
                 ]
             }
         },
+        "/api/v1/channels/oauth/{platform}/start": {
+            "get": {
+                "tags": [
+                    "Channels"
+                ],
+                "summary": "Start a channel OAuth flow",
+                "operationId": "5aed58c4ad4ca3ab1ca48d89dfa6655b",
+                "parameters": [
+                    {
+                        "name": "platform",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "messenger",
+                                "whatsapp",
+                                "tiktok"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OAuth state and authorization URL"
+                    },
+                    "501": {
+                        "description": "Provider OAuth is not configured"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/channels/oauth/{platform}/callback": {
+            "get": {
+                "tags": [
+                    "Channels"
+                ],
+                "summary": "Complete a channel OAuth flow",
+                "operationId": "05ad70feeef8e26d3af6c6cd13a1ec1c",
+                "parameters": [
+                    {
+                        "name": "platform",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "messenger",
+                                "whatsapp",
+                                "tiktok"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "state",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Channel connected"
+                    },
+                    "400": {
+                        "description": "Invalid or expired OAuth state"
+                    },
+                    "501": {
+                        "description": "Provider OAuth is not configured"
+                    }
+                }
+            }
+        },
         "/api/v1/onboarding/channels": {
             "get": {
                 "tags": [
