@@ -19,7 +19,7 @@ class ChannelOAuthController extends Controller
     {
         $driver = (string) config('services.channels.oauth_driver');
 
-        return response()->json(['data' => ['driver' => $driver, 'providers' => collect(['messenger', 'whatsapp', 'tiktok'])->mapWithKeys(fn (string $platform): array => [$platform => ['configured' => $driver !== 'provider' || filled(config("services.{$platform}.client_id")), 'supports_refresh' => in_array($platform, ['messenger', 'whatsapp'], true)]])->all()]]);
+        return response()->json(['data' => ['driver' => $driver, 'providers' => collect(['messenger', 'whatsapp', 'tiktok'])->mapWithKeys(fn (string $platform): array => [$platform => ['configured' => $driver !== 'provider' || filled(config("services.{$platform}.client_id"))]])->all()]]);
     }
 
     #[OA\Get(path: '/api/v1/channels/oauth/{platform}/start', summary: 'Start a channel OAuth flow', tags: ['Channels'], security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'platform', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: ['messenger', 'whatsapp', 'tiktok']))], responses: [new OA\Response(response: 200, description: 'OAuth state and authorization URL'), new OA\Response(response: 501, description: 'Provider OAuth is not configured')])]
