@@ -99,6 +99,27 @@ describe('POST /api/v1/automations', function () {
     });
 });
 
+describe('PATCH /api/v1/automations/{id}', function () {
+    it('returns the Blexchat AI extras it saved', function () {
+        $user = User::factory()->create();
+        $automation = Automation::factory()->for($user)->create();
+
+        $this->actingAs($user, 'sanctum')
+            ->patchJson("/api/v1/automations/{$automation->id}", ['extras' => [
+                'ai_goal' => 'Answer sizing questions and link the catalogue.',
+                'ai_comments' => true,
+                'review_before_send' => false,
+            ]])
+            ->assertOk()
+            ->assertJsonPath('data.extras.ai_goal', 'Answer sizing questions and link the catalogue.')
+            ->assertJsonPath('data.extras.ai_comments', true)
+            ->assertJsonPath('data.extras.review_before_send', false);
+
+        $this->getJson("/api/v1/automations/{$automation->id}")
+            ->assertJsonPath('data.extras.ai_goal', 'Answer sizing questions and link the catalogue.');
+    });
+});
+
 describe('PATCH /api/v1/automations/{id}/toggle', function () {
     it('toggles an automation off', function () {
         $user = User::factory()->create();

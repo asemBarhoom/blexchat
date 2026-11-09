@@ -146,8 +146,13 @@ class AutomationController extends Controller
         requestBody: new OA\RequestBody(content: new OA\JsonContent(properties: [
             new OA\Property(property: 'name', type: 'string', maxLength: 255),
             new OA\Property(property: 'automation_folder_id', type: 'integer', nullable: true, description: 'One of the owner’s folders, or null'),
+            new OA\Property(property: 'extras', type: 'object', description: 'Blexchat AI settings, merged into the stored extras; every automation response returns `extras` whole', properties: [
+                new OA\Property(property: 'ai_goal', type: 'string', nullable: true, maxLength: 500, example: 'Answer sizing questions and link the catalogue.'),
+                new OA\Property(property: 'ai_comments', type: 'boolean'),
+                new OA\Property(property: 'review_before_send', type: 'boolean'),
+            ]),
         ], example: ['automation_folder_id' => 3])),
-        responses: [new OA\Response(response: 200, description: 'Updated')]
+        responses: [new OA\Response(response: 200, description: 'Updated; `data` is the automation, with `extras` returned whole')]
     )]
     public function update(UpdateAutomationRequest $request, Automation $automation): JsonResponse
     {

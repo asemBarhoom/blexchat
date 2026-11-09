@@ -85,6 +85,27 @@ it('says a TikTok reply cannot be sent yet, and keeps nothing', function () {
     expect($conversation->messages()->count())->toBe(0);
 });
 
+it('retries a failed delivery for the conversation’s owner', function () {
+    $conversation = Conversation::factory()->for(Channel::factory()->for($this->owner)->create(['platform' => 'tiktok']))->create();
+
+    $failed = $this->actingAs($this->owner)
+        ->postJson("/api/v1/conversations/{$conversation->id}/messages", ['type' => 'text', 'content' => 'Hi'])
+        ->assertStatus(502)
+        ->assertJsonPath('code', 'channel_not_live')
+        ->assertJsonStructure(['attempt_id', 'code', 'platform', 'retryable'])
+        ->json();
+
+    $this->postJson("/api/v1/message-delivery-attempts/{$failed['attempt_id']}/retry")
+        ->assertStatus(502)
+        ->assertJsonPath('code', 'channel_not_live')
+        ->assertJsonPath('attempt_id', $failed['attempt_id'])
+        ->assertJsonPath('attempts', 2);
+
+    $this->actingAs(User::factory()->create())
+        ->postJson("/api/v1/message-delivery-attempts/{$failed['attempt_id']}/retry")
+        ->assertForbidden();
+});
+
 it('simulates and answers messages on the fake driver', function (string $platform) {
     config(['services.channels.driver' => 'fake']);
     $channel = Channel::factory()->for($this->owner)->create(['platform' => $platform, 'status' => 'active']);
