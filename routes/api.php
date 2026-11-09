@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\FirstMoveController;
 use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\HelpController;
+use App\Http\Controllers\Api\V1\MessageDeliveryAttemptController;
 use App\Http\Controllers\Api\V1\ChannelHealthController;
 use App\Http\Controllers\Api\V1\InboxSettingsController;
 use App\Http\Controllers\Api\V1\InstagramConnectionController;
@@ -177,4 +178,5 @@ Route::middleware(['auth:sanctum', EnsureAccountOwner::class])->prefix('v1')->na
 
     Route::get('conversations/{conversation}/messages', [ConversationController::class, 'messages'])->name('conversations.messages');
     Route::post('conversations/{conversation}/messages', [ConversationController::class, 'sendMessage'])->middleware('throttle:60,1')->name('conversations.send-message');
+    Route::post('message-delivery-attempts/{attempt}/retry', [MessageDeliveryAttemptController::class, 'retry'])->middleware('throttle:10,1')->name('message-delivery-attempts.retry');
 });

@@ -1,0 +1,21 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class MessageDeliveryAttempt extends Model
+{
+    protected $fillable = ['conversation_id', 'idempotency_key', 'content', 'type', 'status', 'error_code', 'error_message', 'attempts', 'last_attempt_at'];
+
+    protected function casts(): array
+    {
+        return ['last_attempt_at' => 'datetime', 'attempts' => 'integer'];
+    }
+
+    public function conversation(): BelongsTo
+    {
+        return $this->belongsTo(Conversation::class);
+    }
+}
