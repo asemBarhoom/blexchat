@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\V1\FirstMoveController;
 use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\HelpController;
 use App\Http\Controllers\Api\V1\MessageDeliveryAttemptController;
+use App\Http\Controllers\Api\V1\SystemHealthController;
 use App\Http\Controllers\Api\V1\ChannelHealthController;
 use App\Http\Controllers\Api\V1\InboxSettingsController;
 use App\Http\Controllers\Api\V1\InstagramConnectionController;
@@ -64,6 +65,7 @@ Route::get('v1/checkout', CheckoutController::class)->name('api.v1.checkout');
 // Marketing site: PricingPage (copy, plan comparison, FAQ)
 Route::get('v1/pricing', PricingController::class)->name('api.v1.pricing');
 Route::get('v1/help', HelpController::class)->name('api.v1.help');
+Route::get('v1/health', SystemHealthController::class)->name('api.v1.health');
 
 // Meta calls these; requests are authenticated by their signature, not a user
 Route::get('v1/webhooks/instagram', [InstagramWebhookController::class, 'verify'])->name('webhooks.instagram.verify');

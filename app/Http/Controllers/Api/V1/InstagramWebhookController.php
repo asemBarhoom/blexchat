@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ProcessInstagramWebhook;
+use App\Models\WebhookEvent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -60,7 +61,8 @@ class InstagramWebhookController extends Controller
 
         if ($request->input('object') === 'instagram') {
             $key = 'webhook:instagram:'.sha1($request->getContent());
-            if (Cache::add($key, true, now()->addMinutes(10))) {
+            $event = WebhookEvent::firstOrCreate(['event_key' => 'instagram:'.sha1($request->getContent())], ['provider' => 'instagram', 'status' => 'received', 'object' => 'instagram', 'payload' => $request->input('entry', [])]);
+            if ($event->wasRecentlyCreated && Cache::add($key, true, now()->addMinutes(10))) {
                 ProcessInstagramWebhook::dispatch($request->input('entry', []));
             }
         }

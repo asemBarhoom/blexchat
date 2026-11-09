@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ProcessMetaChannelWebhook;
+use App\Models\WebhookEvent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -60,7 +61,8 @@ class MetaChannelWebhookController extends Controller
 
         if ($request->input('object') === self::OBJECTS[$platform]) {
             $key = 'webhook:meta:'.sha1($request->getContent());
-            if (Cache::add($key, true, now()->addMinutes(10))) {
+            $event = WebhookEvent::firstOrCreate(['event_key' => $platform.':'.sha1($request->getContent())], ['provider' => $platform, 'status' => 'received', 'object' => $request->input('object'), 'payload' => $request->input('entry', [])]);
+            if ($event->wasRecentlyCreated && Cache::add($key, true, now()->addMinutes(10))) {
                 ProcessMetaChannelWebhook::dispatch($platform, $request->input('entry', []));
             }
         }
