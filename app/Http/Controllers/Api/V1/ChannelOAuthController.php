@@ -43,12 +43,20 @@ class ChannelOAuthController extends Controller
 
         $user = User::findOrFail($pending['user_id']);
         $accountId = (string) ($request->input('page_id') ?: $request->input('phone_number_id') ?: $request->input('open_id'));
+        if ($accountId === '' && config('services.channels.oauth_driver') === 'fake') {
+            $accountId = 'fake-oauth-'.$platform.'-'.$user->id;
+        }
         abort_if($accountId === '', 422, 'The provider did not return an account id.');
 
         $channel = Channel::updateOrCreate(
             ['user_id' => $user->id, 'platform' => $platform, 'account_id' => $accountId],
             ['access_token' => (string) $request->input('access_token', 'fake-oauth-token'), 'status' => 'active', 'connected_at' => now()],
         );
+
+        $redirect = config('services.channels.oauth_redirect_url');
+        if (filled($redirect)) {
+            return redirect()->away($redirect.'?'.http_build_query(['platform' => $platform, 'id' => $channel->id]));
+        }
 
         return response()->json(['data' => ['channel' => $channel->id, 'platform' => $platform, 'account_id' => $accountId]], 201);
     }

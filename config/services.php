@@ -112,6 +112,7 @@ return [
     'channels' => [
         'driver' => env('MESSAGING_DRIVER', env('APP_ENV', 'production') === 'local' ? 'fake' : 'meta'),
         'oauth_driver' => env('CHANNEL_OAUTH_DRIVER', env('APP_ENV', 'production') === 'local' ? 'fake' : 'provider'),
+        'oauth_redirect_url' => env('CHANNEL_OAUTH_REDIRECT_URL'),
     ],
 
     /*
