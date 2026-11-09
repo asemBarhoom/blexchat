@@ -4,6 +4,8 @@ The API is rooted at `/api/v1`. Requests that belong to an account use a Sanctum
 
 Public support content is available at `GET /help`. It returns localized FAQ articles and the configured support email.
 
+Message delivery failures return `code`, `platform`, and `retryable`. Retry only when `retryable` is true; `channel_not_live` and provider policy errors are permanent.
+
 ```http
 Authorization: Bearer <token>
 Accept: application/json

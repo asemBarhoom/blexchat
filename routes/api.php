@@ -132,7 +132,7 @@ Route::middleware(['auth:sanctum', EnsureAccountOwner::class])->prefix('v1')->na
     Route::get('channels/{channel}', ConnectedChannelController::class)->whereNumber('channel')->name('channels.show');
     Route::get('channels/{channel}/health', ChannelHealthController::class)->whereNumber('channel')->name('channels.health');
     // INSTAGRAM_DRIVER=fake only: a simulated comment or DM, handled like Instagram's webhook
-    Route::post('channels/{channel}/test-events', ChannelTestEventController::class)->whereNumber('channel')->name('channels.test-events');
+    Route::post('channels/{channel}/test-events', ChannelTestEventController::class)->whereNumber('channel')->middleware('throttle:30,1')->name('channels.test-events');
 
     // Automations list, detail, wizard, start/stop, move to Trash and restore (S5.3)
     Route::get('automations', [AutomationController::class, 'index'])->name('automations.index');
@@ -175,5 +175,5 @@ Route::middleware(['auth:sanctum', EnsureAccountOwner::class])->prefix('v1')->na
     Route::post('team/leave', [TeamController::class, 'leave'])->name('team.leave');
 
     Route::get('conversations/{conversation}/messages', [ConversationController::class, 'messages'])->name('conversations.messages');
-    Route::post('conversations/{conversation}/messages', [ConversationController::class, 'sendMessage'])->name('conversations.send-message');
+    Route::post('conversations/{conversation}/messages', [ConversationController::class, 'sendMessage'])->middleware('throttle:60,1')->name('conversations.send-message');
 });

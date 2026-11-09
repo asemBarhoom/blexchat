@@ -227,6 +227,9 @@ class ConversationController extends Controller
             } catch (RequestException|ConnectionException $exception) {
                 return response()->json([
                     'message' => 'Instagram did not deliver the message.',
+                    'code' => $exception instanceof ConnectionException ? 'provider_unavailable' : 'provider_rejected',
+                    'platform' => 'instagram',
+                    'retryable' => $exception instanceof ConnectionException || ($exception instanceof RequestException && $exception->response->status() >= 500),
                     'error' => $exception instanceof RequestException ? InstagramClient::errorMessage($exception) : null,
                 ], 502);
             }
@@ -240,6 +243,9 @@ class ConversationController extends Controller
             } catch (RequestException|ConnectionException|ChannelNotLive $exception) {
                 return response()->json([
                     'message' => $exception instanceof ChannelNotLive ? $exception->getMessage() : ucfirst($conversation->channel->platform).' did not deliver the message.',
+                    'code' => $exception instanceof ChannelNotLive ? 'channel_not_live' : ($exception instanceof ConnectionException ? 'provider_unavailable' : 'provider_rejected'),
+                    'platform' => $conversation->channel->platform,
+                    'retryable' => $exception instanceof ConnectionException || ($exception instanceof RequestException && $exception->response->status() >= 500),
                     'error' => $exception instanceof RequestException ? $exception->response->json('error.message') : null,
                 ], 502);
             }
