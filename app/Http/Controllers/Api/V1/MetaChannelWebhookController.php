@@ -57,7 +57,11 @@ class MetaChannelWebhookController extends Controller
         $secret = (string) config('services.meta.app_secret');
         $expected = 'sha256='.hash_hmac('sha256', $request->getContent(), $secret);
 
-        abort_unless($secret !== '' && hash_equals($expected, (string) $request->header('X-Hub-Signature-256')), 403);
+        $signatureValid = $secret !== '' && hash_equals($expected, (string) $request->header('X-Hub-Signature-256'));
+        if (! $signatureValid) {
+            WebhookEvent::firstOrCreate(['event_key' => $platform.':rejected:'.sha1($request->getContent())], ['provider' => $platform, 'status' => 'rejected', 'object' => $request->input('object'), 'payload' => $request->input('entry', []), 'error' => 'invalid_signature']);
+        }
+        abort_unless($signatureValid, 403);
 
         if ($request->input('object') === self::OBJECTS[$platform]) {
             $key = 'webhook:meta:'.sha1($request->getContent());
