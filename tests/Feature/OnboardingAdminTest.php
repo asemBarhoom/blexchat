@@ -33,6 +33,7 @@ it('creates, edits and deletes a plan in both languages', function () {
             'monthly_price' => 9,
             'annual_price' => 7,
             'contacts_limit' => 100,
+            'teammates_limit' => 1,
             'trial_days' => 10,
             'features' => ['en' => ['2 channels'], 'ar' => ['قناتان']],
             'active' => true,
@@ -110,7 +111,7 @@ it('gives each option a simple-icons logo, a cropped wordmark or an uploaded one
 
     $test = Livewire::test(EditSurveyQuestion::class, ['record' => SurveyQuestion::where('key', 'crm')->firstOrFail()->getRouteKey()]);
     $secondItem = array_keys($test->get('data.options'))[1];
-    $test->fillForm(["options.{$secondItem}.icon_image" => [UploadedFile::fake()->image('zoho.png')]])
+    $test->fillForm(["options.{$secondItem}.icon_image" => [UploadedFile::fake()->create('zoho.png', 100, 'image/png')]])
         ->call('save')
         ->assertHasNoFormErrors();
 

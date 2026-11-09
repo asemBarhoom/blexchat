@@ -100,7 +100,7 @@ it('stores an uploaded section image and serves it as an absolute URL', function
     }
 
     Livewire::test(ManageMarketingHome::class)
-        ->fillForm(['autopilot.settings.photo' => [UploadedFile::fake()->image('new.png')]])
+        ->fillForm(['autopilot.settings.photo' => [UploadedFile::fake()->create('new.png', 100, 'image/png')]])
         ->call('save')
         ->assertHasNoFormErrors();
 
