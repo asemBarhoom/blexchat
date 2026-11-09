@@ -1989,6 +1989,54 @@
                 ]
             }
         },
+        "/api/v1/channels/{channel}/health": {
+            "get": {
+                "tags": [
+                    "Channels"
+                ],
+                "summary": "Check a connected channel readiness",
+                "operationId": "98007870055d38d1f77aa25d34b179e7",
+                "parameters": [
+                    {
+                        "name": "channel",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Readiness state"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/channels/oauth/status": {
+            "get": {
+                "tags": [
+                    "Channels"
+                ],
+                "summary": "OAuth provider readiness",
+                "operationId": "ef45d7ed754910c3dc0ebae821d0035a",
+                "responses": {
+                    "200": {
+                        "description": "Provider configuration status"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/channels/oauth/{platform}/start": {
             "get": {
                 "tags": [
@@ -3943,6 +3991,20 @@
                         "sanctum": []
                     }
                 ]
+            }
+        },
+        "/api/v1/help": {
+            "get": {
+                "tags": [
+                    "Help"
+                ],
+                "summary": "Public help centre content",
+                "operationId": "df202b1b0bf5755576d385c1b897fc4f",
+                "responses": {
+                    "200": {
+                        "description": "Help articles and support links"
+                    }
+                }
             }
         },
         "/api/v1/home": {
@@ -9411,6 +9473,10 @@
         {
             "name": "Subscription",
             "description": "The plan after onboarding: read it, change it, cancel back to Free"
+        },
+        {
+            "name": "Help",
+            "description": "Help"
         },
         {
             "name": "Team",
