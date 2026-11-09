@@ -23,6 +23,7 @@
 - إضافة إعادة محاولة للإرسال:
   - `POST /api/v1/message-delivery-attempts/{attempt}/retry`
   - استجابة فشل الإرسال تحتوي `attempt_id` لاستخدامه في الرابط.
+  - استجابة إعادة المحاولة تحتوي `attempt_id` و`attempts`، وتعمل لصاحب المحادثة (كانت ترجع 403 لكل أحد).
 - إضافة فحص القناة:
   - `GET /api/v1/channels/{channel}/health`
 - إضافة حالة OAuth:

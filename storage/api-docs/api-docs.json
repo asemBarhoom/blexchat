@@ -968,6 +968,24 @@
                                         "description": "One of the owner’s folders, or null",
                                         "type": "integer",
                                         "nullable": true
+                                    },
+                                    "extras": {
+                                        "description": "Blexchat AI settings, merged into the stored extras; every automation response returns `extras` whole",
+                                        "properties": {
+                                            "ai_goal": {
+                                                "type": "string",
+                                                "example": "Answer sizing questions and link the catalogue.",
+                                                "nullable": true,
+                                                "maxLength": 500
+                                            },
+                                            "ai_comments": {
+                                                "type": "boolean"
+                                            },
+                                            "review_before_send": {
+                                                "type": "boolean"
+                                            }
+                                        },
+                                        "type": "object"
                                     }
                                 },
                                 "type": "object"
@@ -980,7 +998,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Updated"
+                        "description": "Updated; `data` is the automation, with `extras` returned whole"
                     }
                 },
                 "security": [
@@ -3582,7 +3600,7 @@
                         "description": "Validation error"
                     },
                     "502": {
-                        "description": "The platform refused the message (e.g. the 24-hour messaging window has closed), or replies on it are not available yet (TikTok)"
+                        "description": "The platform refused the message (e.g. the 24-hour messaging window has closed), or replies on it are not available yet (TikTok). The body carries `attempt_id` for POST /message-delivery-attempts/{attempt}/retry"
                     }
                 },
                 "security": [
@@ -4496,6 +4514,43 @@
                         "description": "Not privacy or terms, or the page has not been seeded"
                     }
                 }
+            }
+        },
+        "/api/v1/message-delivery-attempts/{attempt}/retry": {
+            "post": {
+                "tags": [
+                    "Conversations"
+                ],
+                "summary": "Retry a failed delivery",
+                "description": "Safe to call twice: an attempt already sent answers `idempotent: true` and sends nothing. `attempts` counts the sends made for it, starting at 1.",
+                "operationId": "817f80d2393c24ff5c1dcbccc9284d3e",
+                "parameters": [
+                    {
+                        "name": "attempt",
+                        "in": "path",
+                        "description": "The `attempt_id` returned by a failed send",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sent, or already sent; `data` has `attempt_id`, `status`, `attempts` and `platform_message_id`"
+                    },
+                    "403": {
+                        "description": "The conversation belongs to another account"
+                    },
+                    "502": {
+                        "description": "Delivery failed again; `code` is `channel_not_live` or `provider_error`, with `retryable`, `attempt_id` and `attempts`"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/api/v1/webhooks/{platform}": {
@@ -5561,6 +5616,21 @@
                         "sanctum": []
                     }
                 ]
+            }
+        },
+        "/api/v1/health": {
+            "get": {
+                "tags": [
+                    "Health"
+                ],
+                "summary": "System health",
+                "description": "Database, cache and queue readiness for uptime checks and the status page.",
+                "operationId": "e7a0c35d0969226d7c7eb61ada8bbf8a",
+                "responses": {
+                    "200": {
+                        "description": "`status` is `ok` or `degraded`; `checks` has `database`, `cache` and `queue`"
+                    }
+                }
             }
         },
         "/api/v1/team": {
@@ -9477,6 +9547,10 @@
         {
             "name": "Help",
             "description": "Help"
+        },
+        {
+            "name": "Health",
+            "description": "Health"
         },
         {
             "name": "Team",

@@ -206,7 +206,7 @@ class ConversationController extends Controller
         responses: [
             new OA\Response(response: 201, description: 'Message sent'),
             new OA\Response(response: 422, description: 'Validation error'),
-            new OA\Response(response: 502, description: 'The platform refused the message (e.g. the 24-hour messaging window has closed), or replies on it are not available yet (TikTok)'),
+            new OA\Response(response: 502, description: 'The platform refused the message (e.g. the 24-hour messaging window has closed), or replies on it are not available yet (TikTok). The body carries `attempt_id` for POST /message-delivery-attempts/{attempt}/retry'),
         ]
     )]
     public function sendMessage(SendMessageRequest $request, Conversation $conversation, InstagramClient $instagram, MessagingClient $messaging): JsonResponse
