@@ -56,7 +56,7 @@ describe('the sign-in link email', function () {
         ]);
 
         $mail = sentLoginLinkMail('signup', 'ar');
-        $mail->assertSeeInHtml('نص المدير.')->assertSeeInHtml('تأكيد بريدي')->assertSeeInHtml('يعمل هذا الرابط لمدة 15 دقيقة.');
+        $mail->assertSeeInHtml('نص المدير.')->assertSeeInHtml('أكّد بريدي')->assertSeeInHtml('يعمل هذا الرابط لمدة 15 دقيقة.');
         expect($mail->envelope()->subject)->toBe('أكّد بريدك الإلكتروني');
 
         $mail = sentLoginLinkMail('signup');
@@ -134,7 +134,7 @@ describe('the admin panel', function () {
             ->assertActionMounted('preview');
 
         expect(EmailTemplateResource::previewHtml($this->template, 'en'))->toContain('Sign in to Blexchat')
-            ->and(EmailTemplateResource::previewHtml($this->template, 'ar'))->toContain('الدخول إلى بلكس تشات');
+            ->and(EmailTemplateResource::previewHtml($this->template, 'ar'))->toContain('ادخل إلى Blexchat');
     });
 
     it('edits only the reminder email’s own texts, and previews it', function () {
