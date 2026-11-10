@@ -7,6 +7,7 @@ use App\Filament\Resources\ConversationResource\RelationManagers;
 use App\Models\Channel;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\Workspace;
 use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -66,8 +67,9 @@ class ConversationResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['channel', 'assignee']))
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['channel.workspace', 'assignee']))
             ->columns([
+                TextColumn::make('channel.workspace.name')->label(__('admin/common.workspace'))->searchable()->toggleable(),
                 TextColumn::make('contact_name')
                     ->label(__('admin/common.sender'))
                     ->searchable()
@@ -137,6 +139,7 @@ class ConversationResource extends Resource
                     ->sortable(),
             ])
             ->filters([
+                SelectFilter::make('workspace_id')->label(__('admin/common.workspace'))->options(fn (): array => Workspace::query()->orderBy('name')->pluck('name', 'id')->all())->query(fn (Builder $query, array $data): Builder => filled($data['value'] ?? null) ? $query->whereHas('channel', fn (Builder $channel): Builder => $channel->where('workspace_id', $data['value'])) : $query),
                 SelectFilter::make('status')
                     ->label(__('admin/common.status'))
                     ->options([

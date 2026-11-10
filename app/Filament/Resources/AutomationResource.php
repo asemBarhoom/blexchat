@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\AutomationResource\Pages;
 use App\Models\Automation;
+use App\Models\Workspace;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -56,7 +57,9 @@ class AutomationResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['workspace', 'channel', 'folder']))
             ->columns([
+                TextColumn::make('workspace.name')->label(__('admin/common.workspace'))->searchable()->toggleable(),
                 TextColumn::make('name')
                     ->label(__('admin/common.name'))
                     ->searchable()
@@ -110,6 +113,7 @@ class AutomationResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                SelectFilter::make('workspace_id')->label(__('admin/common.workspace'))->options(fn (): array => Workspace::query()->orderBy('name')->pluck('name', 'id')->all()),
                 TrashedFilter::make()->label(__('admin/automations.trashed')),
                 SelectFilter::make('channel_id')
                     ->label(__('admin/common.channel'))

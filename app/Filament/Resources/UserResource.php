@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\TeamInvitation;
 use App\Models\User;
+use App\Models\Workspace;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -129,6 +130,8 @@ class UserResource extends Resource
             ->recordActions([
                 ViewAction::make()->label(__('admin/common.view')),
                 EditAction::make()->label(__('admin/common.edit')),
+                self::renameWorkspaceAction(),
+                self::deleteWorkspaceAction(),
                 self::deleteAction(),
             ])
             ->toolbarActions([
@@ -214,6 +217,8 @@ class UserResource extends Resource
                 TextEntry::make('subscription.trial_ends_at')->label(__('admin/users.trial_ends_at'))->dateTime('Y-m-d')->placeholder('—'),
             ])->columns(2),
             Section::make(__('admin/users.team'))->schema([
+                TextEntry::make('locale')->label(__('admin/users.locale'))->formatStateUsing(fn (?string $state): string => $state === null ? __('admin/users.locale_missing') : __('admin/common.locale_'.$state)),
+                TextEntry::make('teamWorkspace.name')->label(__('admin/users.workspace'))->visible(fn (User $record): bool => $record->isTeammate())->placeholder('—'),
                 TextEntry::make('role')->label(__('admin/common.role'))->badge()
                     ->state(fn (User $record): string => self::roles()[$record->isTeammate() ? 'agent' : 'owner']),
                 TextEntry::make('teamOwner.email')->label(__('admin/common.owner'))->visible(fn (User $record): bool => $record->isTeammate()),
@@ -234,6 +239,11 @@ class UserResource extends Resource
                         ->map(fn (TeamInvitation $invitation): string => __('admin/users.invitation_line', ['email' => $invitation->email, 'date' => $invitation->expires_at->format('Y-m-d')]))->all())
                     ->listWithLineBreaks()->placeholder(__('admin/users.none')),
             ])->columns(2),
+            Section::make(__('admin/users.workspaces'))->schema([
+                TextEntry::make('workspaces_list')->hiddenLabel()->state(function (User $record): array {
+                    return $record->workspaces()->withCount(['channels', 'contacts', 'automations', 'teammates'])->withCount(['teamInvitations as open_invitations_count' => fn ($query) => $query->where('expires_at', '>', now())])->get()->map(fn (Workspace $workspace): string => __('admin/users.workspace_line', ['name' => $workspace->name, 'channels' => $workspace->channels_count, 'contacts' => $workspace->contacts_count, 'automations' => $workspace->automations_count, 'teammates' => $workspace->teammates_count, 'invitations' => $workspace->open_invitations_count]))->all();
+                })->listWithLineBreaks()->placeholder(__('admin/users.none')),
+            ])->visible(fn (User $record): bool => ! $record->isTeammate()),
             Section::make(__('admin/users.business_info'))->schema([
                 TextEntry::make('business_info')->hiddenLabel()->placeholder(__('admin/users.not_written'))->prose()->columnSpanFull(),
             ])->collapsible(),
@@ -242,6 +252,39 @@ class UserResource extends Resource
                 TextEntry::make('automations_count')->label(__('admin/common.automations'))->state(fn (User $record): int => $record->automations()->count()),
             ])->columns(2),
         ]);
+    }
+
+    public static function renameWorkspaceAction(): Action
+    {
+        return Action::make('renameWorkspace')->label(__('admin/users.rename_workspace'))->icon('heroicon-o-pencil-square')->visible(fn (User $record): bool => $record->workspaces()->exists())->schema([
+            Select::make('workspace_id')->label(__('admin/users.workspace'))->options(fn (User $record): array => $record->workspaces()->pluck('name', 'id')->all())->required(),
+            TextInput::make('name')->label(__('admin/common.name'))->required()->maxLength(80),
+        ])->action(function (User $record, array $data): void {
+            $record->workspaces()->whereKey($data['workspace_id'])->update(['name' => $data['name']]);
+            Notification::make()->title(__('admin/users.workspace_renamed'))->success()->send();
+        });
+    }
+
+    public static function deleteWorkspaceAction(): Action
+    {
+        return Action::make('deleteWorkspace')->label(__('admin/users.delete_workspace'))->icon('heroicon-o-trash')->color('danger')->visible(fn (User $record): bool => $record->workspaces()->exists())->disabled(fn (User $record): bool => $record->workspaces()->count() <= 1)->tooltip(fn (User $record): ?string => $record->workspaces()->count() <= 1 ? __('admin/users.last_workspace') : null)->schema([
+            Select::make('workspace_id')->label(__('admin/users.workspace'))->options(fn (User $record): array => $record->workspaces()->pluck('name', 'id')->all())->required(),
+        ])->requiresConfirmation()->modalDescription(function (User $record, array $data): string {
+            $workspace = $record->workspaces()->find($data['workspace_id'] ?? null);
+            if ($workspace === null) {
+                return __('admin/users.delete_workspace_note');
+            }
+            $counts = $workspace->resourcesCount();
+
+            return __('admin/users.delete_workspace_note', $counts);
+        })->action(function (User $record, array $data): void {
+            $workspace = $record->workspaces()->findOrFail($data['workspace_id']);
+            if ($record->workspaces()->count() <= 1) {
+                return;
+            }
+            $workspace->deleteWithTeam();
+            Notification::make()->title(__('admin/users.workspace_deleted'))->success()->send();
+        });
     }
 
     public static function getPages(): array

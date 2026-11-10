@@ -6,6 +6,7 @@ use App\Filament\Resources\ContactResource\Pages;
 use App\Models\Automation;
 use App\Models\Channel;
 use App\Models\Contact;
+use App\Models\Workspace;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -93,8 +94,9 @@ class ContactResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['user', 'sourceAutomation']))
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['user', 'sourceAutomation', 'workspace']))
             ->columns([
+                TextColumn::make('workspace.name')->label(__('admin/common.workspace'))->searchable()->toggleable(),
                 TextColumn::make('name')->label(__('admin/common.name'))->searchable(['name', 'handle', 'phone', 'email'])
                     ->description(fn (Contact $record): ?string => $record->handle),
                 TextColumn::make('platform')->label(__('admin/common.channel'))->badge()
@@ -116,6 +118,7 @@ class ContactResource extends Resource
             ])
             ->defaultSort('last_active_at', 'desc')
             ->filters([
+                SelectFilter::make('workspace_id')->label(__('admin/common.workspace'))->options(fn (): array => Workspace::query()->orderBy('name')->pluck('name', 'id')->all()),
                 SelectFilter::make('platform')->label(__('admin/common.channel'))->options(Contact::PLATFORMS),
                 SelectFilter::make('user_id')->label(__('admin/common.owner'))->relationship('user', 'email')->searchable()->preload(),
                 TernaryFilter::make('added_manually')->label(__('admin/common.added_manually')),

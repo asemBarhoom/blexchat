@@ -101,6 +101,7 @@ return [
     'unassigned' => 'غير موزّعة',
     'updated_at' => 'آخر تعديل',
     'user' => 'المستخدم',
+    'workspace' => 'مساحة العمل',
     'username' => 'اسم الحساب',
     'view' => 'عرض',
     'visible' => 'ظاهرة',

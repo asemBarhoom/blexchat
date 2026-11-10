@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ChannelResource\Pages;
 use App\Filament\Resources\ChannelResource\RelationManagers;
 use App\Models\Channel;
+use App\Models\Workspace;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -48,7 +49,9 @@ class ChannelResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['workspace', 'user']))
             ->columns([
+                TextColumn::make('workspace.name')->label(__('admin/common.workspace'))->searchable()->toggleable(),
                 TextColumn::make('platform')
                     ->label(__('admin/common.platform'))
                     ->badge()
@@ -102,6 +105,7 @@ class ChannelResource extends Resource
                     ->sortable(),
             ])
             ->filters([
+                SelectFilter::make('workspace_id')->label(__('admin/common.workspace'))->options(fn (): array => Workspace::query()->orderBy('name')->pluck('name', 'id')->all()),
                 SelectFilter::make('platform')
                     ->label(__('admin/common.platform'))
                     ->options([
