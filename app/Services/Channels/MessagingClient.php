@@ -48,9 +48,36 @@ class MessagingClient
         };
     }
 
+    /**
+     * A public reply under a comment. Facebook Pages only: TikTok's comment API is not open to apps yet.
+     *
+     * @throws RequestException|ConnectionException|ChannelNotLive
+     */
     public function replyToComment(Channel $channel, string $commentId, string $text): ?string
     {
-        throw new ChannelNotLive($channel->platform);
+        if ($channel->platform !== 'messenger') {
+            throw new ChannelNotLive($channel->platform);
+        }
+
+        return $this->graph($channel)->post("{$commentId}/comments", ['message' => $text])->throw()->json('id');
+    }
+
+    /**
+     * A private message to whoever wrote a comment on the Page, sent through Messenger.
+     *
+     * @throws RequestException|ConnectionException|ChannelNotLive
+     */
+    public function sendPrivateReply(Channel $channel, string $commentId, string $text): ?string
+    {
+        if ($channel->platform !== 'messenger') {
+            throw new ChannelNotLive($channel->platform);
+        }
+
+        return $this->graph($channel)
+            ->post('me/messages', [
+                'recipient' => ['comment_id' => $commentId],
+                'message' => ['text' => $text],
+            ])->throw()->json('message_id');
     }
 
     /**

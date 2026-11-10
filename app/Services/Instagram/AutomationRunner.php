@@ -69,7 +69,7 @@ class AutomationRunner
                 }
 
                 $action = $asksToFollow ? $this->followAsk($automation) : $this->withLinkToken($action);
-                $messageId = $this->instagram->sendPrivateReply($channel, $comment->platform_comment_id, $this->payload($action));
+                $messageId = $this->sendPrivateReply($channel, $comment->platform_comment_id, $action);
                 $conversation = Conversation::firstOrCreate(
                     ['channel_id' => $channel->id, 'platform_conversation_id' => $comment->author_platform_id],
                     ['contact_platform_id' => $comment->author_platform_id, 'contact_name' => $comment->author_name, 'status' => 'open'],
@@ -389,9 +389,33 @@ class AutomationRunner
             return $this->instagram->sendMessage($channel, $recipientId, $this->payload($action));
         }
 
+        return $this->messaging->send($channel, $recipientId, $this->plainText($action));
+    }
+
+    /**
+     * The private reply to a comment's author: Instagram's own, else through the messaging client.
+     *
+     * @param  array<string, mixed>  $action
+     */
+    private function sendPrivateReply(Channel $channel, string $commentId, array $action): ?string
+    {
+        if (! in_array($channel->platform, MessagingClient::PLATFORMS, true)) {
+            return $this->instagram->sendPrivateReply($channel, $commentId, $this->payload($action));
+        }
+
+        return $this->messaging->sendPrivateReply($channel, $commentId, $this->plainText($action));
+    }
+
+    /**
+     * An action as plain text, its button's link after the text.
+     *
+     * @param  array<string, mixed>  $action
+     */
+    private function plainText(array $action): string
+    {
         $url = isset($action['link_token']) ? Message::trackedUrl($action['link_token']) : ($action['button_url'] ?? null);
 
-        return $this->messaging->send($channel, $recipientId, MessagingClient::text($action['message'], $action['button_label'] ?? null, $url));
+        return MessagingClient::text($action['message'], $action['button_label'] ?? null, $url);
     }
 
     /**

@@ -25,4 +25,11 @@ class FakeMessagingClient extends MessagingClient
 
         return 'fake_comment_'.Str::random(16);
     }
+
+    public function sendPrivateReply(Channel $channel, string $commentId, string $text): ?string
+    {
+        Log::info("Fake {$channel->platform} private reply", ['channel_id' => $channel->id, 'comment_id' => $commentId, 'text' => $text]);
+
+        return 'fake_'.Str::random(16);
+    }
 }
