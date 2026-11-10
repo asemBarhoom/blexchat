@@ -12,6 +12,6 @@ class ManageContacts extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('إضافة جهة اتصال')];
+        return [CreateAction::make()->label(__('admin/contacts.create'))];
     }
 }

@@ -13,7 +13,7 @@ class ViewUser extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            EditAction::make()->label('تعديل'),
+            EditAction::make()->label(__('admin/common.edit')),
             UserResource::withdrawInvitationAction(),
             UserResource::deleteAction(),
         ];

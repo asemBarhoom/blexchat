@@ -13,7 +13,7 @@ class ViewChannel extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make()->label('حذف القناة'),
+            DeleteAction::make()->label(__('admin/channels.delete')),
         ];
     }
 }
