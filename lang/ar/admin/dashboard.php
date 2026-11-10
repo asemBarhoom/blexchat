@@ -12,6 +12,8 @@ return [
     'channels_note' => 'كل القنوات النشطة',
     'handovers_today' => 'تحويلات لموظف اليوم',
     'handovers_today_note' => 'محادثات احتاجت موظفاً',
+    'failed_deliveries_today' => 'رسائل فشل إرسالها اليوم',
+    'failed_deliveries_today_note' => 'تحتاج إعادة إرسال',
     'messages_today' => 'رسائل اليوم',
     'messages_today_note' => 'المُرسَلة والواردة',
     'open_conversations' => 'محادثات مفتوحة',

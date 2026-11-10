@@ -12,6 +12,8 @@ return [
     'channels_note' => 'All active channels',
     'handovers_today' => 'Handovers today',
     'handovers_today_note' => 'Conversations that needed a person',
+    'failed_deliveries_today' => 'Failed messages today',
+    'failed_deliveries_today_note' => 'Need a retry',
     'messages_today' => 'Messages today',
     'messages_today_note' => 'Sent and received',
     'open_conversations' => 'Open conversations',
