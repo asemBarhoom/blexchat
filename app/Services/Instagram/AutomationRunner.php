@@ -10,6 +10,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Post;
 use App\Services\Ai\ClaudeClient;
+use App\Services\Channels\ChannelNotLive;
 use App\Services\Channels\MessagingClient;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
@@ -165,7 +166,7 @@ class AutomationRunner
         $action = ['type' => 'send_dm', 'message' => $answer['reply']];
 
         return $this->attempt($automation, $action, function () use ($conversation, $automation, $action): void {
-            $messageId = $this->sendMessage($conversation->channel, $conversation->contact_platform_id, $this->payload($action));
+            $messageId = $this->sendMessage($conversation->channel, $conversation->contact_platform_id, $action);
             $this->record($conversation, $automation, $action, $messageId)->update(['by_ai' => true]);
         });
     }
@@ -253,7 +254,7 @@ class AutomationRunner
 
             $this->attempt($automation, $action, function () use ($channel, $conversation, $automation, $action, &$dm): void {
                 $action = $this->withLinkToken($action);
-                $messageId = $this->sendMessage($channel, $conversation->contact_platform_id, $this->payload($action));
+                $messageId = $this->sendMessage($channel, $conversation->contact_platform_id, $action);
                 $dm = $this->record($conversation, $automation, $action, $messageId);
             });
         }
@@ -370,22 +371,27 @@ class AutomationRunner
     private function sendText(Conversation $conversation, Automation $automation, array $action): bool
     {
         return $this->attempt($automation, $action, function () use ($conversation, $automation, $action): void {
-            $messageId = $this->sendMessage($conversation->channel, $conversation->contact_platform_id, $this->payload($action));
+            $messageId = $this->sendMessage($conversation->channel, $conversation->contact_platform_id, $action);
             $this->record($conversation, $automation, $action, $messageId);
         });
     }
 
-    private function sendMessage(Channel $channel, string $recipientId, string|array $text): ?string
+    /**
+     * Instagram takes the message as a payload (button template, quick reply). WhatsApp, Messenger
+     * and TikTok take plain text, with the button's link after the text; a quick reply chip has no
+     * text equivalent, and any reply carries on anyway.
+     *
+     * @param  array<string, mixed>  $action
+     */
+    private function sendMessage(Channel $channel, string $recipientId, array $action): ?string
     {
         if (! in_array($channel->platform, MessagingClient::PLATFORMS, true)) {
-            return $this->instagram->sendMessage($channel, $recipientId, is_array($text) ? $text : ['type' => 'send_dm', 'message' => $text]);
+            return $this->instagram->sendMessage($channel, $recipientId, $this->payload($action));
         }
 
-        $text = is_array($text)
-            ? MessagingClient::text((string) ($text['message'] ?? ''), $text['button_label'] ?? null, $text['button_url'] ?? null)
-            : $text;
+        $url = isset($action['link_token']) ? Message::trackedUrl($action['link_token']) : ($action['button_url'] ?? null);
 
-        return $this->messaging->send($channel, $recipientId, $text);
+        return $this->messaging->send($channel, $recipientId, MessagingClient::text($action['message'], $action['button_label'] ?? null, $url));
     }
 
     /**
@@ -397,8 +403,8 @@ class AutomationRunner
             $send();
 
             return true;
-        } catch (RequestException|ConnectionException $exception) {
-            Log::warning('Instagram automation reply failed', [
+        } catch (RequestException|ConnectionException|ChannelNotLive $exception) {
+            Log::warning('Automation reply failed', [
                 'automation_id' => $automation->id,
                 'action' => $action['type'],
                 'error' => $exception instanceof RequestException ? InstagramClient::errorMessage($exception) : $exception->getMessage(),
