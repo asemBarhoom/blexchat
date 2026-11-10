@@ -11,7 +11,7 @@ class ToggleAutomationAiRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->route('automation')->user_id === $this->user()->id;
+        return $this->user()->workspace()->holds($this->route('automation'));
     }
 
     /**

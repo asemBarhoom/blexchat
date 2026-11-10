@@ -127,6 +127,7 @@ class OnboardingSeeder extends Seeder
                 'has_ai' => true,
                 'has_email_capture' => true,
                 'teammates_limit' => 25,
+                'workspaces_limit' => 10,
                 'has_assignment' => true,
                 'features' => [
                     'en' => ['Everything in Business', 'Many accounts, one seat', 'Onboarding call'],

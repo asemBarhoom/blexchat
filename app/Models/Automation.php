@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToWorkspace;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +25,7 @@ use Illuminate\Support\Carbon;
  */
 class Automation extends Model
 {
+    use BelongsToWorkspace;
     use HasFactory, Prunable, SoftDeletes;
 
     /** How long a deleted automation stays in the Trash before it is deleted for good. */
@@ -54,6 +56,7 @@ class Automation extends Model
     ];
 
     protected $fillable = [
+        'workspace_id',
         'user_id',
         'channel_id',
         'automation_folder_id',

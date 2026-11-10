@@ -42,7 +42,9 @@ use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\SurveyController;
 use App\Http\Controllers\Api\V1\SystemHealthController;
 use App\Http\Controllers\Api\V1\TeamController;
+use App\Http\Controllers\Api\V1\WorkspaceController;
 use App\Http\Middleware\EnsureAccountOwner;
+use App\Http\Middleware\ResolveWorkspace;
 use App\Models\LegalPage;
 use Illuminate\Support\Facades\Route;
 
@@ -88,7 +90,7 @@ Route::prefix('v1/auth')->name('auth.')->middleware('throttle:30,1')->group(func
 // The texts of the sign-up and sign-in screens (W01–W04), edited in the admin panel
 Route::get('v1/auth/screens', AuthScreenController::class)->name('api.v1.auth.screens');
 
-Route::middleware(['auth:sanctum', EnsureAccountOwner::class])->prefix('v1')->name('api.v1.')->group(function () {
+Route::middleware(['auth:sanctum', ResolveWorkspace::class, EnsureAccountOwner::class])->prefix('v1')->name('api.v1.')->group(function () {
     // App home screen, and its "last 7 days" cards (S7.2)
     Route::get('dashboard', DashboardController::class)->name('dashboard');
     Route::get('stats/overview', [StatsController::class, 'overview'])->name('stats.overview');
@@ -150,6 +152,9 @@ Route::middleware(['auth:sanctum', EnsureAccountOwner::class])->prefix('v1')->na
     Route::delete('automations/{automation}', [AutomationController::class, 'destroy'])->name('automations.destroy');
     Route::patch('automations/{automation}/toggle', [AutomationController::class, 'toggle'])->name('automations.toggle');
     Route::patch('automations/{automation}/ai', [AutomationController::class, 'ai'])->name('automations.ai'); // Blexchat AI, on plans that include it
+
+    // Workspaces (BE-11): the businesses an owner runs; X-Workspace picks one per request
+    Route::apiResource('workspaces', WorkspaceController::class)->except('show');
 
     // Automation folders: the list's Create folder, rename and delete; automations move with PATCH automations/{id}
     Route::apiResource('automation-folders', AutomationFolderController::class)->except('show')->parameters(['automation-folders' => 'folder']);

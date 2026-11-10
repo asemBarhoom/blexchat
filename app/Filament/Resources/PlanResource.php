@@ -72,6 +72,7 @@ class PlanResource extends Resource
                 TextInput::make('live_automations_limit')->label(__('admin/plans.live_automations_limit'))->numeric()->integer()->minValue(1)->helperText(__('admin/plans.no_limit_help')),
                 TextInput::make('teammates_limit')->label(__('admin/plans.teammates_limit'))->numeric()->integer()->minValue(1)->required()
                     ->helperText(__('admin/plans.teammates_help')),
+                TextInput::make('workspaces_limit')->label(__('admin/plans.workspaces_limit'))->numeric()->integer()->minValue(1)->default(1)->required(),
                 TextInput::make('trial_days')->label(__('admin/plans.trial_days'))->numeric()->integer()->minValue(0)->maxValue(365)->default(0)
                     ->helperText(__('admin/plans.trial_days_help'))
                     // A trial has to outlast the reminder email (إعدادات الدفع).

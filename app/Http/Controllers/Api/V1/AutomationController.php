@@ -68,7 +68,7 @@ class AutomationController extends Controller
     )]
     public function index(Request $request): AutomationCollection
     {
-        $query = $request->user()->automations()->with(['channel', 'template'])->withListFigures();
+        $query = $request->user()->workspace()->automations()->with(['channel', 'template'])->withListFigures();
 
         if ($request->boolean('trashed')) {
             $query->onlyTrashed()->latest('deleted_at')->orderByDesc('id');
@@ -109,11 +109,11 @@ class AutomationController extends Controller
     public function store(StoreAutomationRequest $request): JsonResponse
     {
         abort_unless(
-            $request->user()->channels()->where('id', $request->channel_id)->exists(),
+            $request->user()->workspace()->channels()->where('id', $request->channel_id)->exists(),
             403
         );
 
-        $automation = $request->user()->automations()->create($request->validated());
+        $automation = $request->user()->automations()->create([...$request->validated(), 'workspace_id' => $request->user()->workspace()->id]);
 
         return response()->json(['data' => new AutomationResource($automation)], 201);
     }
@@ -129,7 +129,7 @@ class AutomationController extends Controller
     )]
     public function show(Request $request, Automation $automation): JsonResponse
     {
-        abort_unless($automation->user_id === $request->user()->id, 403);
+        abort_unless($request->user()->workspace()->holds($automation), 403);
 
         $automation = Automation::withListFigures()->with('post')->findOrFail($automation->id);
 
@@ -156,7 +156,7 @@ class AutomationController extends Controller
     )]
     public function update(UpdateAutomationRequest $request, Automation $automation): JsonResponse
     {
-        abort_unless($automation->user_id === $request->user()->id, 403);
+        abort_unless($request->user()->workspace()->holds($automation), 403);
 
         $data = $request->validated();
         if (array_key_exists('extras', $data)) {
@@ -182,7 +182,7 @@ class AutomationController extends Controller
     )]
     public function destroy(Request $request, Automation $automation): JsonResponse
     {
-        abort_unless($automation->user_id === $request->user()->id, 403);
+        abort_unless($request->user()->workspace()->holds($automation), 403);
 
         $automation->moveToTrash();
 
@@ -204,7 +204,7 @@ class AutomationController extends Controller
     )]
     public function restore(Request $request, Automation $automation): JsonResponse
     {
-        abort_unless($automation->user_id === $request->user()->id, 403);
+        abort_unless($request->user()->workspace()->holds($automation), 403);
         abort_unless($automation->trashed(), 404);
 
         $automation->restore();
@@ -232,7 +232,7 @@ class AutomationController extends Controller
     )]
     public function toggle(ToggleAutomationRequest $request, Automation $automation): JsonResponse
     {
-        abort_unless($automation->user_id === $request->user()->id, 403);
+        abort_unless($request->user()->workspace()->holds($automation), 403);
 
         if ($request->boolean('active') && ! $automation->active) {
             $refusal = $request->user()->goLiveRefusal($automation->channel, $automation);
@@ -313,6 +313,7 @@ class AutomationController extends Controller
         }
 
         $automation = $request->user()->automations()->create([
+            'workspace_id' => $request->user()->workspace()->id,
             ...$request->automationAttributes(),
             'channel_id' => $request->integer('channel_id'),
             'automation_template_id' => $request->template()?->id,

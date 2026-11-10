@@ -11,7 +11,7 @@ class UpdateWizardAutomationRequest extends WizardAutomationRequest
      */
     public function authorize(): bool
     {
-        return $this->current()->user_id === $this->user()->id;
+        return $this->user()->workspace()->holds($this->current());
     }
 
     /**

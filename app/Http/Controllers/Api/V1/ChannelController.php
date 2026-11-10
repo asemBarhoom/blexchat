@@ -41,7 +41,7 @@ class ChannelController extends Controller
     )]
     public function index(ListChannelsRequest $request): AnonymousResourceCollection
     {
-        $channels = $request->user()->account()->channels()->oldest('connected_at')->oldest('id')->get();
+        $channels = $request->user()->workspace()->channels()->oldest('connected_at')->oldest('id')->get();
 
         return ConnectedChannelResource::collection(
             $channels->map(fn (Channel $channel): ConnectedChannelResource => new ConnectedChannelResource($channel, forScreen: false)),
@@ -72,7 +72,7 @@ class ChannelController extends Controller
     )]
     public function connect(ConnectChannelRequest $request): JsonResponse
     {
-        $exists = $request->user()->channels()
+        $exists = $request->user()->workspace()->channels()
             ->where('platform', $request->platform)
             ->where('account_id', $request->account_id)
             ->exists();
@@ -82,6 +82,7 @@ class ChannelController extends Controller
         }
 
         $channel = $request->user()->channels()->create([
+            'workspace_id' => $request->user()->workspace()->id,
             'platform' => $request->platform,
             'access_token' => $request->access_token,
             'account_id' => $request->account_id,
@@ -106,7 +107,7 @@ class ChannelController extends Controller
     )]
     public function destroy(Request $request, Channel $channel): JsonResponse
     {
-        abort_unless($channel->user_id === $request->user()->id, 403);
+        abort_unless($request->user()->workspace()->holds($channel), 403);
 
         $channel->delete();
 

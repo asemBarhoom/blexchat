@@ -20,11 +20,12 @@ use Spatie\Translatable\HasTranslations;
  * @property int $contacts_limit
  * @property int|null $live_automations_limit
  * @property int $teammates_limit inbox seats, the owner included
+ * @property int $workspaces_limit businesses the owner may run (BE-11)
  * @property bool $has_assignment "Team roles and assignment"
  * @property int $trial_days
  * @property bool $in_checkout
  */
-#[Fillable(['slug', 'name', 'tagline', 'monthly_price', 'annual_price', 'contacts_limit', 'live_automations_limit', 'teammates_limit', 'has_ai', 'has_email_capture', 'has_assignment', 'features', 'trial_days', 'is_recommended', 'in_checkout', 'sort', 'active'])]
+#[Fillable(['slug', 'name', 'tagline', 'monthly_price', 'annual_price', 'contacts_limit', 'live_automations_limit', 'teammates_limit', 'workspaces_limit', 'has_ai', 'has_email_capture', 'has_assignment', 'features', 'trial_days', 'is_recommended', 'in_checkout', 'sort', 'active'])]
 class Plan extends Model
 {
     /** @use HasFactory<PlanFactory> */
@@ -48,6 +49,7 @@ class Plan extends Model
             'has_ai' => 'boolean',
             'has_email_capture' => 'boolean',
             'teammates_limit' => 'integer',
+            'workspaces_limit' => 'integer',
             'has_assignment' => 'boolean',
             'trial_days' => 'integer',
             'is_recommended' => 'boolean',

@@ -72,7 +72,7 @@ class StatsController extends Controller
     )]
     public function automation(Request $request, Automation $automation): JsonResponse
     {
-        abort_unless($automation->user_id === $request->user()->id, 403);
+        abort_unless($request->user()->workspace()->holds($automation), 403);
 
         $messages = Message::query()->where('automation_id', $automation->id)->where('automated', true);
         $publicReplies = Comment::query()->where('automation_id', $automation->id)->where('automated_reply', true)->count();
@@ -131,7 +131,7 @@ class StatsController extends Controller
      */
     private function engagement(User $user, Carbon $before, Carbon $from, Carbon $to): ?array
     {
-        $comments = fn (): Builder => Comment::query()->whereIn('comments.channel_id', $user->channels()->select('id'));
+        $comments = fn (): Builder => Comment::query()->whereIn('comments.channel_id', $user->workspace()->channels()->select('id'));
 
         if (! $comments()->exists()) {
             return null;
@@ -165,7 +165,7 @@ class StatsController extends Controller
      */
     private function timeSaved(User $user, Carbon $before, Carbon $from, Carbon $to): ?array
     {
-        $automationIds = $user->automations()->withTrashed()->select('id');
+        $automationIds = $user->workspace()->automations()->withTrashed()->select('id');
         $dms = fn (): Builder => Message::query()->where('automated', true)->whereIn('automation_id', $automationIds);
         $publicReplies = fn (): Builder => Comment::query()->where('automated_reply', true)->whereIn('automation_id', $automationIds);
 

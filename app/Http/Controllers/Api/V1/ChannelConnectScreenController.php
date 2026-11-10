@@ -61,7 +61,7 @@ class ChannelConnectScreenController extends Controller
         $screen = ChannelConnectScreen::where('platform', $platform)->where('active', true)->firstOrFail();
         $user = $request->user();
 
-        $channel = $user->channels()
+        $channel = $user->workspace()->channels()
             ->where('platform', $platform)
             ->orderByRaw("status = 'active' desc")
             ->latest('connected_at')
