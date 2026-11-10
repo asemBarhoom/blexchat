@@ -2,11 +2,13 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Resources\MessageDeliveryAttemptResource;
 use App\Models\Automation;
 use App\Models\Channel;
 use App\Models\Comment;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\MessageDeliveryAttempt;
 use App\Models\Subscription;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -70,6 +72,12 @@ class StatsOverviewWidget extends BaseWidget
                 ->description(__('admin/dashboard.running_trials', ['count' => Subscription::where('status', 'trialing')->where('trial_ends_at', '>', now())->count()]))
                 ->descriptionIcon('heroicon-o-credit-card')
                 ->color('success'),
+
+            Stat::make(__('admin/dashboard.failed_deliveries_today'), MessageDeliveryAttempt::where('status', 'failed')->whereDate('last_attempt_at', today())->count())
+                ->description(__('admin/dashboard.failed_deliveries_today_note'))
+                ->descriptionIcon('heroicon-o-exclamation-triangle')
+                ->color('danger')
+                ->url(MessageDeliveryAttemptResource::getUrl('index', ['tableFilters' => ['status' => ['value' => 'failed']]])),
         ];
     }
 
