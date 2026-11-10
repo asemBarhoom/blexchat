@@ -18,6 +18,7 @@ use OpenApi\Attributes as OA;
     new OA\Property(property: 'currency', type: 'string', enum: ['USD']),
     new OA\Property(property: 'contacts_limit', type: 'integer', example: 250, description: 'Never unlimited'),
     new OA\Property(property: 'live_automations_limit', type: 'integer', nullable: true, example: 3, description: 'How many automations may be live at once; null for no limit'),
+    new OA\Property(property: 'workspaces_limit', type: 'integer', example: 1, description: 'How many businesses (workspaces) the owner may run'),
     new OA\Property(property: 'has_ai', type: 'boolean', description: 'Shows the "+ Blexchat AI" row'),
     new OA\Property(property: 'has_email_capture', type: 'boolean', description: 'Includes email capture: the automation extra ask_email and the dashboard leads card'),
     new OA\Property(property: 'features', type: 'array', items: new OA\Items(type: 'string'), example: ['All four channels', 'Unlimited automations']),

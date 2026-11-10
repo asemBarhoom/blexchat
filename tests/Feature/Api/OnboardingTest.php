@@ -31,6 +31,7 @@ describe('GET /api/v1/plans', function () {
                 'currency' => 'USD',
                 'contacts_limit' => 250,
                 'live_automations_limit' => null,
+                'workspaces_limit' => 1,
                 'has_ai' => false,
                 'has_email_capture' => false,
                 'features' => ['All four channels', 'Unlimited automations', 'No Blexchat branding'],

@@ -5,6 +5,7 @@
 | **Backend** | `blexchat` `master` @ `8f24319` |
 | **API base** | `/api/v1`, Sanctum bearer token |
 | **Earlier rounds** | `FRONTEND-TASKS.md` (FE-01–FE-37; FE-08, FE-17 and FE-26 are still open there) |
+| **Also read** | `FRONTEND-BACKEND-UPDATE.md`: retrying a failed send (`POST /message-delivery-attempts/{id}/retry`), channel health (`GET /channels/{id}/health`), the help centre (`GET /help`), and `429` rate limits |
 
 **Status:** this round adds **7 tasks** (FE-38 to FE-44). Every endpoint is in Swagger, with its fields and error codes.
 
@@ -30,6 +31,7 @@
 - Send `Accept-Language: ar` or `en`, matching the language picked in the UI, on **every** API request. `?lang=` works too.
 - **Done when:** switching the language changes API errors and toasts with no reload, and reminder emails arrive in the language last used.
 - **Remove:** any frontend-side translation of API `message` strings. Show `message` as it comes.
+- `GET /auth/me` now returns `locale` (`ar` | `en`), the language the user last used. Use it as the UI language on a new device until the user picks one.
 
 ### FE-39 · Arabic layout for API text
 - API messages in Arabic can mix in names such as `Instagram` and `:platform`. Render them with `dir="auto"`, or inside the RTL layout.
@@ -49,6 +51,8 @@
 - **Add:** `POST /workspaces` {name}. At the plan's limit it answers `403 code: workspace_limit` (with `limit`), so show Upgrade. Only Advanced has more than one workspace (10).
 - **Rename:** `PATCH /workspaces/{id}` {name}.
 - **Delete:** `DELETE /workspaces/{id}`. This deletes everything in the workspace, so ask for a strong confirmation. The last workspace answers `409 code: last_workspace`.
+- `GET /auth/me` returns `workspace: {id, name}`, the workspace the request worked in. Use it for the switcher's label.
+- Plans (`GET /plans` and pricing) now have `workspaces_limit`. Show it on the Advanced card ("10 businesses").
 - Contact and seat limits count **all** of the owner's workspaces together (`meta.usage` and `seats` already reflect that).
 
 ### FE-42 · Team per workspace
