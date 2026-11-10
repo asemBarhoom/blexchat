@@ -23,12 +23,27 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
     use HasApiTokens, HasFactory, Notifiable;
 
     /**
+     * A teammate joined without a workspace works in the owner's first.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (User $user): void {
+            if ($user->team_owner_id !== null && $user->workspace_id === null && ($owner = self::find($user->team_owner_id)) !== null) {
+                $user->workspace_id = Workspace::defaultFor($owner)->id;
+            }
+        });
+    }
+
+    /**
      * The language the frontend last asked for, else the app default. Mail to the user goes out in it.
      */
     public function preferredLocale(): string
     {
         return $this->locale ?? config('app.locale');
     }
+
+    /** The workspace picked for this request; see workspace(). */
+    private ?Workspace $currentWorkspace = null;
 
     protected $attributes = [
         'inbox_accepting_new' => true,
@@ -84,6 +99,59 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
     public function teamInvitations(): HasMany
     {
         return $this->hasMany(TeamInvitation::class, 'owner_id');
+    }
+
+    /**
+     * The businesses this owner runs (BE-11).
+     *
+     * @return HasMany<Workspace, $this>
+     */
+    public function workspaces(): HasMany
+    {
+        return $this->hasMany(Workspace::class, 'owner_id');
+    }
+
+    /**
+     * The workspace a teammate was invited to.
+     *
+     * @return BelongsTo<Workspace, $this>
+     */
+    public function teamWorkspace(): BelongsTo
+    {
+        return $this->belongsTo(Workspace::class, 'workspace_id');
+    }
+
+    /**
+     * Picks the workspace this request works in: one of the owner's, by the X-Workspace header.
+     * Returns false when the owner has no such workspace, or a teammate names another one.
+     */
+    public function useWorkspace(?string $workspaceId): bool
+    {
+        $workspace = match (true) {
+            $this->isTeammate() => $this->teamWorkspace ?? Workspace::defaultFor($this->teamOwner),
+            blank($workspaceId) => Workspace::defaultFor($this),
+            default => $this->workspaces()->find($workspaceId),
+        };
+
+        if ($workspace === null || (filled($workspaceId) && (string) $workspace->id !== (string) $workspaceId)) {
+            return false;
+        }
+
+        $this->currentWorkspace = $workspace;
+
+        return true;
+    }
+
+    /**
+     * The workspace this user works in now: the one picked for the request, else their first.
+     */
+    public function workspace(): Workspace
+    {
+        if ($this->currentWorkspace === null) {
+            $this->useWorkspace(null);
+        }
+
+        return $this->currentWorkspace;
     }
 
     public function isTeammate(): bool

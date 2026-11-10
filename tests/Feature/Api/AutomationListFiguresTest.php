@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->owner = User::factory()->create();
+    $this->owner = User::factory()->create(['locale' => 'en']);
     $this->channel = Channel::factory()->for($this->owner)->create();
     $this->post = Post::factory()->for($this->channel)->create(['caption' => 'Winter jacket reel', 'thumbnail_url' => 'https://cdn.example.com/reel.jpg']);
     $this->automation = Automation::factory()->for($this->owner)->for($this->channel)->create(['post_id' => $this->post->id]);

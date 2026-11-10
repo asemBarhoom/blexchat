@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToWorkspace;
 use Database\Factories\TeamInvitationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -18,14 +19,21 @@ use Illuminate\Support\Str;
  * @property string $email
  * @property Carbon $expires_at
  */
-#[Fillable(['email', 'token_hash', 'expires_at'])]
+#[Fillable(['workspace_id', 'email', 'token_hash', 'expires_at'])]
 #[Hidden(['token_hash'])]
 class TeamInvitation extends Model
 {
+    use BelongsToWorkspace;
+
     /** @use HasFactory<TeamInvitationFactory> */
     use HasFactory;
 
     public const DAYS_VALID = 7;
+
+    protected static function workspaceOwnerKey(): string
+    {
+        return 'owner_id';
+    }
 
     protected function casts(): array
     {
@@ -48,7 +56,7 @@ class TeamInvitation extends Model
     public static function issue(User $owner, string $email): array
     {
         $token = Str::random(48);
-        $invitation = $owner->teamInvitations()->updateOrCreate(['email' => Str::lower($email)], [
+        $invitation = $owner->teamInvitations()->updateOrCreate(['workspace_id' => $owner->workspace()->id, 'email' => Str::lower($email)], [
             'token_hash' => hash('sha256', $token),
             'expires_at' => now()->addDays(self::DAYS_VALID),
         ]);

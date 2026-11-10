@@ -73,7 +73,7 @@ class TeamController extends Controller
         $owner = $request->user();
         $email = Str::lower($request->validated('email'));
         $seats = $owner->seatsUsage();
-        $isResend = $owner->teamInvitations()->where('email', $email)->where('expires_at', '>', now())->exists();
+        $isResend = $owner->workspace()->teamInvitations()->where('email', $email)->where('expires_at', '>', now())->exists();
 
         if (! $isResend && $seats['used'] >= $seats['limit']) {
             return response()->json(['message' => __('team.seat_limit', ['limit' => $seats['limit']]), 'code' => 'seat_limit', 'seats' => $seats], 403);
@@ -98,7 +98,7 @@ class TeamController extends Controller
     )]
     public function withdraw(Request $request, TeamInvitation $invitation): JsonResponse
     {
-        abort_unless($invitation->owner_id === $request->user()->id, 404);
+        abort_unless($request->user()->workspace()->holds($invitation), 404);
         $invitation->delete();
 
         return $this->team($request->user());
@@ -137,11 +137,13 @@ class TeamController extends Controller
         }
 
         DB::transaction(function () use ($user, $invitation): void {
-            $user->forceFill(['team_owner_id' => $invitation->owner_id])->save();
+            $user->forceFill(['team_owner_id' => $invitation->owner_id, 'workspace_id' => $invitation->workspace_id])->save();
             $invitation->delete();
         });
 
-        return $this->team($user->refresh());
+        $user->refresh()->useWorkspace(null);
+
+        return $this->team($user);
     }
 
     #[OA\Delete(
@@ -158,7 +160,7 @@ class TeamController extends Controller
     )]
     public function remove(Request $request, User $member): JsonResponse
     {
-        abort_unless($member->team_owner_id === $request->user()->id, 404);
+        abort_unless($member->team_owner_id === $request->user()->id && $request->user()->workspace()->holds($member), 404);
         $this->leaveTeam($member);
 
         return $this->team($request->user());
@@ -185,8 +187,8 @@ class TeamController extends Controller
     private function leaveTeam(User $member): void
     {
         DB::transaction(function () use ($member): void {
-            Conversation::whereIn('channel_id', $member->teamOwner->channels()->select('id'))->where('assigned_to', $member->id)->update(['assigned_to' => null]);
-            $member->forceFill(['team_owner_id' => null])->save();
+            Conversation::whereIn('channel_id', $member->workspace()->channels()->select('id'))->where('assigned_to', $member->id)->update(['assigned_to' => null]);
+            $member->forceFill(['team_owner_id' => null, 'workspace_id' => null])->save();
         });
     }
 
@@ -196,8 +198,8 @@ class TeamController extends Controller
         $member = fn (User $person, string $role): array => ['id' => $person->id, 'name' => $person->name, 'email' => $person->email, 'role' => $role];
 
         return response()->json(['data' => [
-            'members' => [$member($owner, 'owner'), ...$owner->teammates()->orderBy('id')->get()->map(fn (User $teammate): array => $member($teammate, 'agent'))],
-            'invitations' => $user->isTeammate() ? [] : $owner->teamInvitations()->where('expires_at', '>', now())->orderBy('id')->get(['id', 'email', 'expires_at'])
+            'members' => [$member($owner, 'owner'), ...$user->workspace()->teammates()->orderBy('id')->get()->map(fn (User $teammate): array => $member($teammate, 'agent'))],
+            'invitations' => $user->isTeammate() ? [] : $user->workspace()->teamInvitations()->where('expires_at', '>', now())->orderBy('id')->get(['id', 'email', 'expires_at'])
                 ->map(fn (TeamInvitation $invitation): array => ['id' => $invitation->id, 'email' => $invitation->email, 'expires_at' => $invitation->expires_at->toIso8601String()])
                 ->all(),
             'seats' => $owner->seatsUsage(),

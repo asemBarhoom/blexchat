@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToWorkspace;
 use Database\Factories\ContactFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -23,9 +24,11 @@ use Illuminate\Support\Carbon;
  * @property Carbon $first_seen_at
  * @property Carbon|null $last_active_at
  */
-#[Fillable(['user_id', 'channel_id', 'platform', 'platform_id', 'name', 'handle', 'avatar', 'phone', 'email', 'city', 'gender', 'language', 'tags', 'subscribed', 'source_automation_id', 'added_manually', 'consented_at', 'first_seen_at', 'last_active_at'])]
+#[Fillable(['workspace_id', 'user_id', 'channel_id', 'platform', 'platform_id', 'name', 'handle', 'avatar', 'phone', 'email', 'city', 'gender', 'language', 'tags', 'subscribed', 'source_automation_id', 'added_manually', 'consented_at', 'first_seen_at', 'last_active_at'])]
 class Contact extends Model
 {
+    use BelongsToWorkspace;
+
     /** @use HasFactory<ContactFactory> */
     use HasFactory;
 
@@ -91,6 +94,7 @@ class Contact extends Model
 
         $contact->fill([
             'user_id' => $channel->user_id,
+            'workspace_id' => $channel->workspace_id,
             'platform' => $channel->platform,
             'name' => $name ?? $contact->name ?? $handle ?? $platformId,
             'handle' => $handle ?? $contact->handle,

@@ -44,7 +44,7 @@ class ChannelOAuthController extends Controller
         abort_unless((config('services.channels.oauth_driver') === 'fake' && ! app()->isProduction()) || (filled(config("services.{$platform}.client_id")) && filled(config('services.channels.oauth_redirect_url'))), 501, __('channels.oauth_not_configured'));
         abort_unless(in_array($platform, ['messenger', 'whatsapp', 'tiktok'], true), 404);
         $state = Str::random(40);
-        Cache::put("channel-oauth:{$state}", ['user_id' => $request->user()->id, 'platform' => $platform], now()->addMinutes(10));
+        Cache::put("channel-oauth:{$state}", ['user_id' => $request->user()->id, 'workspace_id' => $request->user()->workspace()->id, 'platform' => $platform], now()->addMinutes(10));
 
         $url = config('services.channels.oauth_driver') === 'fake' ? url("/api/v1/channels/oauth/{$platform}/callback?state={$state}") : $provider->authorizationUrl($platform, $state);
 
@@ -81,7 +81,7 @@ class ChannelOAuthController extends Controller
 
         $channel = Channel::updateOrCreate(
             ['user_id' => $user->id, 'platform' => $platform, 'account_id' => $accountId],
-            ['access_token' => $accessToken, 'status' => 'active', 'connected_at' => now()],
+            [...array_filter(['workspace_id' => $pending['workspace_id'] ?? null]), 'access_token' => $accessToken, 'status' => 'active', 'connected_at' => now()],
         );
 
         $redirect = config('services.channels.oauth_redirect_url');

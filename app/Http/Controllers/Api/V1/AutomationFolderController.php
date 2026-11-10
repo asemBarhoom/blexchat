@@ -31,7 +31,7 @@ class AutomationFolderController extends Controller
     )]
     public function index(Request $request): JsonResponse
     {
-        $folders = $request->user()->automationFolders()->withCount('automations')->orderBy('name')->get();
+        $folders = $request->user()->workspace()->automationFolders()->withCount('automations')->orderBy('name')->get();
 
         return response()->json(['data' => $folders->map(fn (AutomationFolder $folder): array => $this->present($folder))->all()]);
     }
@@ -51,7 +51,7 @@ class AutomationFolderController extends Controller
     )]
     public function store(SaveAutomationFolderRequest $request): JsonResponse
     {
-        $folder = $request->user()->automationFolders()->create($request->validated());
+        $folder = $request->user()->automationFolders()->create([...$request->validated(), 'workspace_id' => $request->user()->workspace()->id]);
 
         return response()->json(['data' => $this->present($folder->loadCount('automations'))], 201);
     }
@@ -92,7 +92,7 @@ class AutomationFolderController extends Controller
     )]
     public function destroy(Request $request, AutomationFolder $folder): JsonResponse
     {
-        abort_unless($folder->user_id === $request->user()->id, 403);
+        abort_unless($request->user()->workspace()->holds($folder), 403);
 
         $folder->delete();
 

@@ -88,9 +88,9 @@ class DashboardController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $user = $request->user();
-        $channels = $user->channels()->orderByDesc('connected_at')->get();
+        $channels = $user->workspace()->channels()->orderByDesc('connected_at')->get();
         $channelIds = $channels->pluck('id');
-        $automationModels = $user->automations()->orderByDesc('active')->orderByDesc('created_at')->get();
+        $automationModels = $user->workspace()->automations()->orderByDesc('active')->orderByDesc('created_at')->get();
 
         $runsByAutomation = Message::query()
             ->whereIn('automation_id', $automationModels->pluck('id'))
@@ -161,7 +161,7 @@ class DashboardController extends Controller
      */
     private function hasAnswered(User $user): bool
     {
-        $ids = $user->automations()->withTrashed()->select('id');
+        $ids = $user->workspace()->automations()->withTrashed()->select('id');
 
         return Message::whereIn('automation_id', $ids)->where('automated', true)->exists()
             || Comment::whereIn('automation_id', $ids)->where('automated_reply', true)->exists();
@@ -172,7 +172,7 @@ class DashboardController extends Controller
      */
     private function leadsSince(User $user, Carbon $since): int
     {
-        return $user->contacts()
+        return $user->workspace()->contacts()
             ->where('added_manually', false)
             ->where('first_seen_at', '>=', $since)
             ->where(fn ($query) => $query->whereNotNull('email')->orWhereNotNull('phone'))

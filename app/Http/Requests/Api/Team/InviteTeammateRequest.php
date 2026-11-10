@@ -41,7 +41,7 @@ class InviteTeammateRequest extends FormRequest
 
             if ($email === Str::lower($owner->email)) {
                 $validator->errors()->add('email', __('team.own_email'));
-            } elseif ($owner->teammates()->where('email', $email)->exists()) {
+            } elseif ($owner->workspace()->teammates()->where('email', $email)->exists()) {
                 $validator->errors()->add('email', __('team.already_member'));
             }
         }];

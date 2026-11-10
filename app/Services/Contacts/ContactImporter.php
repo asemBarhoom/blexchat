@@ -3,7 +3,7 @@
 namespace App\Services\Contacts;
 
 use App\Models\Contact;
-use App\Models\User;
+use App\Models\Workspace;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -31,8 +31,9 @@ class ContactImporter
     /**
      * @return array{imported: int, skipped: list<array{row: int, reason: string}>, missing_columns: list<string>}
      */
-    public function import(User $user, string $path): array
+    public function import(Workspace $workspace, string $path): array
     {
+        $user = $workspace->owner;
         $rows = $this->rows($path);
         $columns = $this->columns(array_shift($rows) ?? []);
 
@@ -47,7 +48,7 @@ class ContactImporter
 
         $usage = $user->contactsUsage();
         $room = max(0, $usage['limit'] - $usage['used']);
-        $known = $user->contacts()->whereNotNull('phone')->pluck('phone')->map($this->digits(...))->flip();
+        $known = $workspace->contacts()->whereNotNull('phone')->pluck('phone')->map($this->digits(...))->flip();
         $imported = 0;
         $skipped = [];
 
@@ -76,7 +77,7 @@ class ContactImporter
                 continue;
             }
 
-            $user->contacts()->create([...$attributes, 'platform' => 'whatsapp', 'handle' => $attributes['phone'], 'added_manually' => true, 'consented_at' => now(), 'first_seen_at' => now()]);
+            $user->contacts()->create([...$attributes, 'workspace_id' => $workspace->id, 'platform' => 'whatsapp', 'handle' => $attributes['phone'], 'added_manually' => true, 'consented_at' => now(), 'first_seen_at' => now()]);
             $known->put($this->digits($attributes['phone']), true);
             $imported++;
         }

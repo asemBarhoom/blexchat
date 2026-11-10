@@ -25,6 +25,7 @@ return [
     'tagline' => 'Tagline',
     'teammates_help' => 'The owner takes a seat.',
     'teammates_limit' => 'Seats (owner included)',
+    'workspaces_limit' => 'Workspaces',
     'trial_days' => 'Free trial days',
     'trial_days_column' => 'Trial days',
     'trial_days_help' => '0 = no trial: the plan is paid from day one.',

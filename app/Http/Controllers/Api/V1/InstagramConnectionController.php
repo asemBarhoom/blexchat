@@ -125,6 +125,7 @@ class InstagramConnectionController extends Controller
         $channel = $request->user()->channels()->updateOrCreate(
             ['platform' => 'instagram', 'account_id' => (string) $profile['user_id']],
             [
+                'workspace_id' => $request->user()->workspace()->id,
                 'username' => $profile['username'],
                 'profile_picture' => $profile['profile_picture_url'] ?? null,
                 'followers' => $profile['followers_count'] ?? 0,

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToWorkspace;
 use Database\Factories\AutomationFolderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,12 +15,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class AutomationFolder extends Model
 {
+    use BelongsToWorkspace;
+
     /** @use HasFactory<AutomationFolderFactory> */
     use HasFactory;
 
     public const MAX_PER_USER = 50;
 
-    protected $fillable = ['user_id', 'name'];
+    protected $fillable = ['workspace_id', 'user_id', 'name'];
 
     /**
      * @return BelongsTo<User, $this>

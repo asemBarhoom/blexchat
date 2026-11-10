@@ -14,7 +14,7 @@ class ShowConnectedChannelRequest extends FormRequest
     {
         $channel = $this->route('channel');
 
-        return $channel instanceof Channel && $channel->user_id === $this->user()->id;
+        return $channel instanceof Channel && $this->user()->workspace()->holds($channel);
     }
 
     /**

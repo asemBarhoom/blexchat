@@ -12,7 +12,7 @@ class SimulateChannelEventRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->route('channel')->user_id === $this->user()->id;
+        return $this->user()->workspace()->holds($this->route('channel'));
     }
 
     /**

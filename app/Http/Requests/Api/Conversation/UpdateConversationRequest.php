@@ -17,7 +17,7 @@ class UpdateConversationRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->account()->channels()->whereKey($this->route('conversation')->channel_id)->exists();
+        return $this->user()->workspace()->channels()->whereKey($this->route('conversation')->channel_id)->exists();
     }
 
     /**
@@ -74,6 +74,6 @@ class UpdateConversationRequest extends FormRequest
     {
         $owner = $this->user()->account();
 
-        return [$owner->id, ...$owner->teammates()->pluck('id')->all()];
+        return [$owner->id, ...$this->user()->workspace()->teammates()->pluck('id')->all()];
     }
 }

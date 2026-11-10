@@ -44,7 +44,7 @@ class ConversationController extends Controller
     )]
     public function index(Request $request): ConversationCollection
     {
-        $channelIds = $request->user()->account()->channels()->pluck('id');
+        $channelIds = $request->user()->workspace()->channels()->pluck('id');
 
         $direction = $request->query('sort') === 'oldest' ? 'asc' : 'desc';
 
@@ -172,7 +172,7 @@ class ConversationController extends Controller
     public function messages(Request $request, Conversation $conversation): MessageCollection
     {
         abort_unless(
-            $request->user()->account()->channels()->where('id', $conversation->channel_id)->exists(),
+            $request->user()->workspace()->channels()->where('id', $conversation->channel_id)->exists(),
             403
         );
 
@@ -213,7 +213,7 @@ class ConversationController extends Controller
     public function sendMessage(SendMessageRequest $request, Conversation $conversation, InstagramClient $instagram, MessagingClient $messaging): JsonResponse
     {
         abort_unless(
-            $request->user()->account()->channels()->where('id', $conversation->channel_id)->exists(),
+            $request->user()->workspace()->channels()->where('id', $conversation->channel_id)->exists(),
             403
         );
 

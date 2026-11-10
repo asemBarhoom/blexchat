@@ -34,7 +34,7 @@ class MessageDeliveryAttemptController extends Controller
         $conversation = $attempt->conversation()->with('channel')->firstOrFail();
 
         // A conversation has no owner of its own: the channel it belongs to names the account.
-        abort_unless($request->user()->account()->channels()->whereKey($conversation->channel_id)->exists(), 403);
+        abort_unless($request->user()->workspace()->channels()->whereKey($conversation->channel_id)->exists(), 403);
 
         if ($attempt->status === 'sent') {
             return response()->json(['data' => ['attempt_id' => $attempt->id, 'status' => 'sent', 'attempts' => $attempt->attempts, 'idempotent' => true]]);

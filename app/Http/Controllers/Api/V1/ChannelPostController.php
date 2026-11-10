@@ -51,7 +51,7 @@ class ChannelPostController extends Controller
     )]
     public function __invoke(Request $request, Channel $channel): PostCollection
     {
-        abort_unless($channel->user_id === $request->user()->id, 403);
+        abort_unless($request->user()->workspace()->holds($channel), 403);
 
         $synced = $this->sync($channel);
         $perPage = min(max($request->integer('per_page', 30), 1), 100);
