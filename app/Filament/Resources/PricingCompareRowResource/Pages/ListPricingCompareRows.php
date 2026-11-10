@@ -13,7 +13,7 @@ class ListPricingCompareRows extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('إضافة صف'),
+            CreateAction::make()->label(__('admin/pricing.add_row')),
         ];
     }
 }

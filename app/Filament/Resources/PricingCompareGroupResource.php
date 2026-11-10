@@ -20,22 +20,34 @@ class PricingCompareGroupResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-group';
 
-    protected static ?string $navigationLabel = 'مجموعات المقارنة';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/pricing.comparison_groups');
+    }
 
-    protected static ?string $modelLabel = 'مجموعة';
+    public static function getModelLabel(): string
+    {
+        return __('admin/pricing.group');
+    }
 
-    protected static ?string $pluralModelLabel = 'مجموعات جدول المقارنة';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/pricing.comparison_table_groups');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = ManagePricingPage::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return ManagePricingPage::pricingGroup();
+    }
 
     protected static ?int $navigationSort = 10;
 
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('key')->label('المعرّف')->required()->alphaDash()->maxLength(50)->unique(ignoreRecord: true)
-                ->helperText('ثابت يستخدمه الفرونت، مثل automation.'),
-            Translations::input('title', 'العنوان'),
+            TextInput::make('key')->label(__('admin/common.key'))->required()->alphaDash()->maxLength(50)->unique(ignoreRecord: true)
+                ->helperText(__('admin/pricing.a_fixed_value_the_frontend_uses_like_aut')),
+            Translations::input('title', __('admin/common.title')),
             HomeContentFields::active(),
         ])->columns(1);
     }
@@ -43,9 +55,9 @@ class PricingCompareGroupResource extends Resource
     public static function table(Table $table): Table
     {
         return HomeContentFields::table($table->modifyQueryUsing(fn (Builder $query): Builder => $query->withCount('rows')), [
-            TextColumn::make('title')->label('العنوان')->searchable(),
-            TextColumn::make('key')->label('المعرّف')->badge()->color('gray'),
-            TextColumn::make('rows_count')->label('الصفوف')->numeric(),
+            TextColumn::make('title')->label(__('admin/common.title'))->searchable(),
+            TextColumn::make('key')->label(__('admin/common.key'))->badge()->color('gray'),
+            TextColumn::make('rows_count')->label(__('admin/pricing.rows'))->numeric(),
         ]);
     }
 

@@ -19,25 +19,37 @@ class CreatorResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
 
-    protected static ?string $navigationLabel = 'صُنّاع المحتوى';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/home.creators');
+    }
 
-    protected static ?string $modelLabel = 'صانع محتوى';
+    public static function getModelLabel(): string
+    {
+        return __('admin/home.creator');
+    }
 
-    protected static ?string $pluralModelLabel = 'صُنّاع المحتوى';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/home.creators');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = HomeContentFields::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return HomeContentFields::homeGroup();
+    }
 
     protected static ?int $navigationSort = 11;
 
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('key')->label('المعرّف (بالإنجليزية بدون مسافات)')->required()->alphaDash()->unique(ignoreRecord: true),
-            TextInput::make('handle')->label('الحساب')->required(),
-            Translations::input('name', 'الاسم'),
-            Translations::input('followers', 'المتابعون'),
-            Translations::input('quote', 'الاقتباس', long: true),
-            HomeContentFields::image('photo', 'الصورة')->columnSpanFull(),
+            TextInput::make('key')->label(__('admin/home.key_english_no_spaces'))->required()->alphaDash()->unique(ignoreRecord: true),
+            TextInput::make('handle')->label(__('admin/common.account'))->required(),
+            Translations::input('name', __('admin/common.name')),
+            Translations::input('followers', __('admin/channels.followers')),
+            Translations::input('quote', __('admin/home.quote'), long: true),
+            HomeContentFields::image('photo', __('admin/common.photo'))->columnSpanFull(),
             HomeContentFields::active(),
         ])->columns(2);
     }
@@ -45,9 +57,9 @@ class CreatorResource extends Resource
     public static function table(Table $table): Table
     {
         return HomeContentFields::table($table, [
-            ImageColumn::make('photo')->label('الصورة')->disk('public')->circular(),
-            TextColumn::make('name')->label('الاسم')->searchable(),
-            TextColumn::make('handle')->label('الحساب'),
+            ImageColumn::make('photo')->label(__('admin/common.photo'))->disk('public')->circular(),
+            TextColumn::make('name')->label(__('admin/common.name'))->searchable(),
+            TextColumn::make('handle')->label(__('admin/common.account')),
         ]);
     }
 

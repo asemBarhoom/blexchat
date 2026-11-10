@@ -26,33 +26,45 @@ use Illuminate\Support\Arr;
 class ManageSolutionLabels extends Page
 {
     /** @var array<string, list<array{0: string, 1: string}>> group label => [path, label] */
-    private const TEXTS = [
-        'الواجهة' => [
-            ['hero.chip', 'الشارة ({name} اسم الصفحة)'], ['hero.get_started', 'زر البدء'], ['hero.see_pricing', 'رابط الأسعار'],
-            ['art.replied_in', 'شارة سرعة الرد في الصورة'],
-        ],
-        'الأتمتات' => [
-            ['automations.title', 'عنوان القسم'],
-            ['trigger.comment', 'تعليق'], ['trigger.dm', 'رسالة خاصة'], ['trigger.story', 'رد على ستوري'],
-            ['trigger.every_comment', 'بلا كلمات: كل تعليق'], ['trigger.every_dm', 'بلا كلمات: كل رسالة أولى'], ['trigger.every_story', 'بلا كلمات: كل رد'],
-            ['trigger.keyword', 'كلمة مفتاحية (مفرد)'], ['trigger.keywords', 'كلمات مفتاحية (جمع)'], ['trigger.or', 'أو (بين الكلمات)'],
-        ],
-        'كيف تعمل' => [
-            ['steps.title', 'عنوان القسم'],
-        ],
-        'الأسئلة الشائعة والختام' => [
-            ['faq.title_lead', 'العنوان: أوله'], ['faq.title_marked', 'العنوان: الكلمة المميّزة'], ['faq.title_end', 'العنوان: آخره'],
-            ['closing.cta', 'زر الختام'],
-        ],
-    ];
+    private static function texts(): array
+    {
+        return [
+            __('admin/pricing.hero') => [
+                ['hero.chip', __('admin/solutions.badge_name_is_the_page_name')], ['hero.get_started', __('admin/common.get_started_button')], ['hero.see_pricing', __('admin/solutions.pricing_link')],
+                ['art.replied_in', __('admin/solutions.reply_speed_badge_on_the_image')],
+            ],
+            __('admin/solutions.automations') => [
+                ['automations.title', __('admin/common.section_title')],
+                ['trigger.comment', __('admin/common.comment')], ['trigger.dm', __('admin/common.dm')], ['trigger.story', __('admin/templates.trigger_story')],
+                ['trigger.every_comment', __('admin/solutions.no_words_every_comment')], ['trigger.every_dm', __('admin/solutions.no_words_every_first_message')], ['trigger.every_story', __('admin/solutions.no_words_every_reply')],
+                ['trigger.keyword', __('admin/solutions.keyword_singular')], ['trigger.keywords', __('admin/solutions.keywords_plural')], ['trigger.or', __('admin/solutions.or_between_words')],
+            ],
+            __('admin/solutions.how_it_works') => [
+                ['steps.title', __('admin/common.section_title')],
+            ],
+            __('admin/solutions.faq_and_closing') => [
+                ['faq.title_lead', __('admin/solutions.title_start')], ['faq.title_marked', __('admin/solutions.title_highlighted_word')], ['faq.title_end', __('admin/solutions.title_end')],
+                ['closing.cta', __('admin/solutions.closing_button')],
+            ],
+        ];
+    }
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-language';
 
-    protected static ?string $navigationLabel = 'نصوص قالب صفحات الحلول';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/solutions.solution_page_template_texts');
+    }
 
-    protected static ?string $title = 'نصوص قالب صفحات الحلول';
+    public function getTitle(): string
+    {
+        return __('admin/solutions.solution_page_template_texts');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = SolutionResource::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return SolutionResource::solutionsGroup();
+    }
 
     protected static ?int $navigationSort = 20;
 
@@ -73,7 +85,7 @@ class ManageSolutionLabels extends Page
         return $schema
             ->statePath('data')
             ->components([
-                Section::make('النصوص')->description('تظهر في كل صفحات الحلول حول محتوى الصفحة. العربية اختيارية: أي نص عربي فارغ يظهر بالإنجليزية.')->schema([
+                Section::make(__('admin/auth_screens.texts'))->description(__('admin/solutions.they_show_on_every_solution_page_around'))->schema([
                     Tabs::make('languages')->tabs(array_map(
                         fn (string $locale): Tab => Tab::make(Translations::localeName($locale))->schema(array_map(
                             fn (string $group, array $fields): Fieldset => Fieldset::make($group)->schema(array_map(
@@ -85,8 +97,8 @@ class ManageSolutionLabels extends Page
                                 ),
                                 $fields,
                             ))->columns(2),
-                            array_keys(self::TEXTS),
-                            self::TEXTS,
+                            array_keys(self::texts()),
+                            self::texts(),
                         )),
                         config('app.supported_locales'),
                     )),
@@ -102,7 +114,7 @@ class ManageSolutionLabels extends Page
                 ->livewireSubmitHandler('save')
                 ->footer([
                     Actions::make([
-                        Action::make('save')->label('حفظ')->submit('save')->keyBindings(['mod+s']),
+                        Action::make('save')->label(__('admin/common.save'))->submit('save')->keyBindings(['mod+s']),
                     ])->sticky()->key('form-actions'),
                 ]),
         ]);
@@ -126,6 +138,6 @@ class ManageSolutionLabels extends Page
         $labels->replaceTranslations('texts', $texts);
         $labels->save();
 
-        Notification::make()->title('تم حفظ نصوص قالب صفحات الحلول')->success()->send();
+        Notification::make()->title(__('admin/solutions.solution_page_template_texts_saved'))->success()->send();
     }
 }

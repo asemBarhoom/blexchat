@@ -19,24 +19,36 @@ class DemoReplyRuleResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-chat-bubble-bottom-center-text';
 
-    protected static ?string $navigationLabel = 'ردود التجربة الحية';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/home.live_demo_replies');
+    }
 
-    protected static ?string $modelLabel = 'قاعدة رد';
+    public static function getModelLabel(): string
+    {
+        return __('admin/home.reply_rule');
+    }
 
-    protected static ?string $pluralModelLabel = 'ردود التجربة الحية';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/home.live_demo_replies');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = HomeContentFields::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return HomeContentFields::homeGroup();
+    }
 
     protected static ?int $navigationSort = 14;
 
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('key')->label('المعرّف')->required()->alphaDash()->unique(ignoreRecord: true),
-            TagsInput::make('keywords')->label('الكلمات المفتاحية (أي لغة)')->helperText('أول قاعدة تطابق كلمة من كلماتها في تعليق الزائر هي التي ترد.')->required(),
-            Translations::input('reply', 'الرد'),
-            Translations::input('action', 'زر الرد'),
-            Translations::input('result', 'النتيجة'),
+            TextInput::make('key')->label(__('admin/common.key'))->required()->alphaDash()->unique(ignoreRecord: true),
+            TagsInput::make('keywords')->label(__('admin/home.keywords_any_language'))->helperText(__('admin/home.the_first_rule_with_a_word_in_the_visito'))->required(),
+            Translations::input('reply', __('admin/common.reply')),
+            Translations::input('action', __('admin/common.reply_button')),
+            Translations::input('result', __('admin/common.result')),
             HomeContentFields::active(),
         ])->columns(1);
     }
@@ -44,8 +56,8 @@ class DemoReplyRuleResource extends Resource
     public static function table(Table $table): Table
     {
         return HomeContentFields::table($table, [
-            TextColumn::make('keywords')->label('الكلمات')->badge(),
-            TextColumn::make('reply')->label('الرد')->wrap(),
+            TextColumn::make('keywords')->label(__('admin/home.words'))->badge(),
+            TextColumn::make('reply')->label(__('admin/common.reply'))->wrap(),
         ]);
     }
 

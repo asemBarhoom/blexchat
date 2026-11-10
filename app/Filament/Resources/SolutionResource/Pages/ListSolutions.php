@@ -13,7 +13,7 @@ class ListSolutions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('إضافة صفحة حل'),
+            CreateAction::make()->label(__('admin/solutions.add_solution_page')),
         ];
     }
 }

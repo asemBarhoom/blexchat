@@ -26,13 +26,25 @@ class LegalPageResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-scale';
 
-    protected static ?string $navigationLabel = 'الخصوصية والشروط';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/home.privacy_and_terms');
+    }
 
-    protected static ?string $modelLabel = 'صفحة قانونية';
+    public static function getModelLabel(): string
+    {
+        return __('admin/home.legal_page');
+    }
 
-    protected static ?string $pluralModelLabel = 'الخصوصية والشروط';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/home.privacy_and_terms');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = HomeContentFields::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return HomeContentFields::homeGroup();
+    }
 
     protected static ?int $navigationSort = 90;
 
@@ -42,14 +54,14 @@ class LegalPageResource extends Resource
 
         return $schema->components([
             Section::make()->schema([
-                Translations::input('title', 'العنوان'),
-                DatePicker::make('effective_on')->label('آخر تحديث')
-                    ->helperText('يظهر للزوار كتاريخ "آخر تحديث". غيّره عند تغيير مضمون الصفحة، لا عند تصحيح خطأ إملائي.'),
+                Translations::input('title', __('admin/common.title')),
+                DatePicker::make('effective_on')->label(__('admin/home.last_updated'))
+                    ->helperText(__('admin/home.visitors_see_it_as_the_last_updated_date')),
             ]),
-            Section::make('النص')->description('Markdown: ## للعناوين، - للقوائم، **للخط العريض**.')->schema([
+            Section::make(__('admin/common.text'))->description(__('admin/home.markdown_for_headings_for_lists_for_bold'))->schema([
                 Grid::make(count($locales))->schema(array_map(
                     fn (string $locale): MarkdownEditor => MarkdownEditor::make("body.{$locale}")
-                        ->label('النص — '.Translations::localeName($locale))
+                        ->label(__('admin/home.text_in', ['locale' => Translations::localeName($locale)]))
                         ->required(Translations::isFallback($locale))
                         ->toolbarButtons([['heading', 'bold', 'italic', 'link'], ['bulletList', 'orderedList'], ['undo', 'redo']])
                         ->extraAttributes(['dir' => $locale === 'ar' ? 'rtl' : 'ltr']),
@@ -63,14 +75,14 @@ class LegalPageResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('title')->label('العنوان'),
-                TextColumn::make('slug')->label('الرابط')->formatStateUsing(fn (string $state): string => "/legal/{$state}")->badge()->color('gray'),
-                TextColumn::make('effective_on')->label('آخر تحديث')->date(),
-                TextColumn::make('updated_at')->label('آخر تعديل')->since(),
+                TextColumn::make('title')->label(__('admin/common.title')),
+                TextColumn::make('slug')->label(__('admin/common.link'))->formatStateUsing(fn (string $state): string => "/legal/{$state}")->badge()->color('gray'),
+                TextColumn::make('effective_on')->label(__('admin/home.last_updated'))->date(),
+                TextColumn::make('updated_at')->label(__('admin/common.updated_at'))->since(),
             ])
             ->defaultSort('id')
             ->paginated(false)
-            ->recordActions([EditAction::make()->label('تعديل')]);
+            ->recordActions([EditAction::make()->label(__('admin/common.edit'))]);
     }
 
     public static function canCreate(): bool

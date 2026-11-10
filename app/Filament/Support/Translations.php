@@ -13,9 +13,6 @@ use Filament\Schemas\Components\Grid;
  */
 final class Translations
 {
-    /** @var array<string, string> */
-    private const LOCALE_NAMES = ['en' => 'English', 'ar' => 'العربية'];
-
     public static function input(string $name, string $label, bool $required = true, bool $long = false): Grid
     {
         $locales = config('app.supported_locales');
@@ -41,7 +38,7 @@ final class Translations
 
     public static function localeName(string $locale): string
     {
-        return self::LOCALE_NAMES[$locale] ?? $locale;
+        return ['en' => __('admin/common.locale_en'), 'ar' => __('admin/common.locale_ar')][$locale] ?? $locale;
     }
 
     public static function isFallback(string $locale): bool

@@ -12,6 +12,6 @@ class ManageDemoReplyRules extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('إضافة قاعدة')];
+        return [CreateAction::make()->label(__('admin/home.add_rule'))];
     }
 }

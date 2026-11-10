@@ -22,19 +22,34 @@ use Filament\Tables\Table;
  */
 class AlignmentItemResource extends Resource
 {
-    public const NAVIGATION_GROUP = 'المطابقة';
+    public static function alignmentGroup(): string
+    {
+        return __('admin/alignment.alignment');
+    }
 
     protected static ?string $model = AlignmentItem::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-check';
 
-    protected static ?string $navigationLabel = 'مطابقة فيغما والـ API';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/alignment.figma_and_api_alignment');
+    }
 
-    protected static ?string $modelLabel = 'بند مطابقة';
+    public static function getModelLabel(): string
+    {
+        return __('admin/alignment.alignment_item');
+    }
 
-    protected static ?string $pluralModelLabel = 'بنود المطابقة';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/alignment.alignment_items');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = self::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return self::alignmentGroup();
+    }
 
     protected static ?int $navigationSort = 10;
 
@@ -48,18 +63,18 @@ class AlignmentItemResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('code')->label('الرمز')->required()->maxLength(20)->unique(ignoreRecord: true)
-                ->helperText('FE- للفرونت، BE- للباك إند، DS- للتصميم.'),
-            TextInput::make('title')->label('العنوان')->required()->maxLength(255),
-            Select::make('owner')->label('المسؤول')->options(AlignmentItem::OWNERS)->required(),
-            Select::make('priority')->label('الأولوية')->options(AlignmentItem::PRIORITIES)->required()->default('p1'),
-            Select::make('status')->label('الحالة')->options(AlignmentItem::STATUSES)->required()->default('open'),
-            TextInput::make('screen')->label('الشاشة')->maxLength(255),
-            TextInput::make('figma_url')->label('رابط فيغما')->url()->maxLength(255),
-            TextInput::make('endpoint')->label('الـ endpoint والحقل')->maxLength(255),
-            Textarea::make('frontend_ref')->label('مرجع الفرونت')->rows(2)->helperText('ملف ورقم سطر، مثل src/app/liveInbox.ts:118'),
-            Textarea::make('backend_ref')->label('مرجع الباك إند')->rows(2),
-            Textarea::make('details')->label('التفاصيل')->rows(5),
+            TextInput::make('code')->label(__('admin/coupons.code'))->required()->maxLength(20)->unique(ignoreRecord: true)
+                ->helperText(__('admin/alignment.fe_for_frontend_be_for_backend_ds_for_de')),
+            TextInput::make('title')->label(__('admin/common.title'))->required()->maxLength(255),
+            Select::make('owner')->label(__('admin/common.assignee'))->options(AlignmentItem::owners())->required(),
+            Select::make('priority')->label(__('admin/alignment.priority'))->options(AlignmentItem::priorities())->required()->default('p1'),
+            Select::make('status')->label(__('admin/common.status'))->options(AlignmentItem::statuses())->required()->default('open'),
+            TextInput::make('screen')->label(__('admin/alignment.screen'))->maxLength(255),
+            TextInput::make('figma_url')->label(__('admin/alignment.figma_link'))->url()->maxLength(255),
+            TextInput::make('endpoint')->label(__('admin/alignment.endpoint_and_field'))->maxLength(255),
+            Textarea::make('frontend_ref')->label(__('admin/alignment.frontend_reference'))->rows(2)->helperText(__('admin/alignment.a_file_and_line_like_src_app_liveinbox_t')),
+            Textarea::make('backend_ref')->label(__('admin/alignment.backend_reference'))->rows(2),
+            Textarea::make('details')->label(__('admin/alignment.details'))->rows(5),
         ])->columns(1);
     }
 
@@ -67,39 +82,39 @@ class AlignmentItemResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('code')->label('الرمز')->searchable()->sortable()->badge()->color('gray'),
-                TextColumn::make('title')->label('العنوان')->searchable()->wrap()
+                TextColumn::make('code')->label(__('admin/coupons.code'))->searchable()->sortable()->badge()->color('gray'),
+                TextColumn::make('title')->label(__('admin/common.title'))->searchable()->wrap()
                     ->description(fn (AlignmentItem $record): ?string => $record->screen),
-                TextColumn::make('owner')->label('المسؤول')->badge()
-                    ->formatStateUsing(fn (string $state): string => AlignmentItem::OWNERS[$state] ?? $state)
+                TextColumn::make('owner')->label(__('admin/common.assignee'))->badge()
+                    ->formatStateUsing(fn (string $state): string => AlignmentItem::owners()[$state] ?? $state)
                     ->color(fn (string $state): string => match ($state) {
                         'backend' => 'info',
                         'design' => 'gray',
                         default => 'primary',
                     }),
-                TextColumn::make('priority')->label('الأولوية')->badge()->sortable()
-                    ->formatStateUsing(fn (string $state): string => AlignmentItem::PRIORITIES[$state] ?? $state)
+                TextColumn::make('priority')->label(__('admin/alignment.priority'))->badge()->sortable()
+                    ->formatStateUsing(fn (string $state): string => AlignmentItem::priorities()[$state] ?? $state)
                     ->color(fn (string $state): string => match ($state) {
                         'p0' => 'danger',
                         'p1' => 'warning',
                         default => 'gray',
                     }),
-                SelectColumn::make('status')->label('الحالة')->options(AlignmentItem::STATUSES)->selectablePlaceholder(false),
-                TextColumn::make('endpoint')->label('الـ endpoint')->toggleable()->wrap()->fontFamily('mono'),
-                TextColumn::make('figma_url')->label('فيغما')->placeholder('—')
-                    ->formatStateUsing(fn (): string => 'افتح')
+                SelectColumn::make('status')->label(__('admin/common.status'))->options(AlignmentItem::statuses())->selectablePlaceholder(false),
+                TextColumn::make('endpoint')->label(__('admin/alignment.endpoint'))->toggleable()->wrap()->fontFamily('mono'),
+                TextColumn::make('figma_url')->label(__('admin/alignment.figma'))->placeholder('—')
+                    ->formatStateUsing(fn (): string => __('admin/alignment.open'))
                     ->url(fn (AlignmentItem $record): ?string => $record->figma_url, shouldOpenInNewTab: true)
                     ->color('primary'),
             ])
             ->filters([
-                SelectFilter::make('owner')->label('المسؤول')->options(AlignmentItem::OWNERS),
-                SelectFilter::make('status')->label('الحالة')->options(AlignmentItem::STATUSES),
-                SelectFilter::make('priority')->label('الأولوية')->options(AlignmentItem::PRIORITIES),
+                SelectFilter::make('owner')->label(__('admin/common.assignee'))->options(AlignmentItem::owners()),
+                SelectFilter::make('status')->label(__('admin/common.status'))->options(AlignmentItem::statuses()),
+                SelectFilter::make('priority')->label(__('admin/alignment.priority'))->options(AlignmentItem::priorities()),
             ])
             ->defaultSort('code')
             ->recordActions([
-                EditAction::make()->label('تعديل'),
-                DeleteAction::make()->label('حذف'),
+                EditAction::make()->label(__('admin/common.edit')),
+                DeleteAction::make()->label(__('admin/common.delete')),
             ]);
     }
 

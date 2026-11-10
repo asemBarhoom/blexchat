@@ -13,7 +13,7 @@ class ManageAlignmentItems extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('إضافة بند')];
+        return [CreateAction::make()->label(__('admin/alignment.add_item'))];
     }
 
     protected function getHeaderWidgets(): array

@@ -131,6 +131,9 @@ it('shows the content and communication screens in English when English is picke
         ->assertSee('Add user')
         ->assertSee('Communication')
         ->assertSee('Sign-up and billing')
+        ->assertSee('Website home page')
+        ->assertSee('Pricing page')
+        ->assertSee('Solution pages')
         ->assertDontSee('المستخدمون')
         ->assertDontSee('التسجيل والاشتراكات');
 });
