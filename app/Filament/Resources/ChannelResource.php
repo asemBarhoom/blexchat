@@ -23,13 +23,25 @@ class ChannelResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-signal';
 
-    protected static ?string $navigationLabel = 'القنوات';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/common.channels');
+    }
 
-    protected static ?string $modelLabel = 'قناة';
+    public static function getModelLabel(): string
+    {
+        return __('admin/channels.model');
+    }
 
-    protected static ?string $pluralModelLabel = 'القنوات';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/common.channels');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = 'إدارة المحتوى';
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return __('admin/common.nav_content');
+    }
 
     protected static ?int $navigationSort = 1;
 
@@ -38,7 +50,7 @@ class ChannelResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('platform')
-                    ->label('المنصة')
+                    ->label(__('admin/common.platform'))
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'instagram' => 'pink',
@@ -50,26 +62,26 @@ class ChannelResource extends Resource
                     ->formatStateUsing(fn (string $state) => ucfirst($state)),
 
                 TextColumn::make('username')
-                    ->label('اسم الحساب')
+                    ->label(__('admin/channels.username'))
                     ->default('—')
                     ->searchable(),
 
                 TextColumn::make('account_id')
-                    ->label('معرّف الحساب')
+                    ->label(__('admin/channels.account_id'))
                     ->copyable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('user.name')
-                    ->label('صاحب الحساب')
+                    ->label(__('admin/common.owner'))
                     ->searchable(),
 
                 TextColumn::make('followers')
-                    ->label('المتابعون')
+                    ->label(__('admin/channels.followers'))
                     ->numeric()
                     ->sortable(),
 
                 TextColumn::make('status')
-                    ->label('الحالة')
+                    ->label(__('admin/common.status'))
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'active' => 'success',
@@ -78,20 +90,20 @@ class ChannelResource extends Resource
                         default => 'secondary',
                     })
                     ->formatStateUsing(fn (string $state) => match ($state) {
-                        'active' => 'نشط',
-                        'inactive' => 'غير نشط',
-                        'expired' => 'منتهي الصلاحية',
+                        'active' => __('admin/channels.active'),
+                        'inactive' => __('admin/channels.inactive'),
+                        'expired' => __('admin/channels.expired'),
                         default => $state,
                     }),
 
                 TextColumn::make('connected_at')
-                    ->label('تاريخ الربط')
+                    ->label(__('admin/channels.connected_at'))
                     ->dateTime('d/m/Y')
                     ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('platform')
-                    ->label('المنصة')
+                    ->label(__('admin/common.platform'))
                     ->options([
                         'instagram' => 'Instagram',
                         'whatsapp' => 'WhatsApp',
@@ -100,20 +112,20 @@ class ChannelResource extends Resource
                     ]),
 
                 SelectFilter::make('status')
-                    ->label('الحالة')
+                    ->label(__('admin/common.status'))
                     ->options([
-                        'active' => 'نشط',
-                        'inactive' => 'غير نشط',
-                        'expired' => 'منتهي الصلاحية',
+                        'active' => __('admin/channels.active'),
+                        'inactive' => __('admin/channels.inactive'),
+                        'expired' => __('admin/channels.expired'),
                     ]),
             ])
             ->actions([
-                ViewAction::make()->label('عرض'),
-                DeleteAction::make()->label('حذف'),
+                ViewAction::make()->label(__('admin/common.view')),
+                DeleteAction::make()->label(__('admin/common.delete')),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()->label('حذف المحدد'),
+                    DeleteBulkAction::make()->label(__('admin/common.delete_selected')),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');
@@ -122,28 +134,28 @@ class ChannelResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('معلومات القناة')->schema([
+            Section::make(__('admin/channels.details'))->schema([
                 TextEntry::make('platform')
-                    ->label('المنصة')
+                    ->label(__('admin/common.platform'))
                     ->badge()
                     ->formatStateUsing(fn ($state) => ucfirst($state)),
 
-                TextEntry::make('username')->label('اسم الحساب'),
-                TextEntry::make('account_id')->label('معرّف الحساب')->copyable(),
-                TextEntry::make('user.name')->label('صاحب الحساب'),
-                TextEntry::make('followers')->label('المتابعون')->numeric(),
+                TextEntry::make('username')->label(__('admin/channels.username')),
+                TextEntry::make('account_id')->label(__('admin/channels.account_id'))->copyable(),
+                TextEntry::make('user.name')->label(__('admin/common.owner')),
+                TextEntry::make('followers')->label(__('admin/channels.followers'))->numeric(),
 
                 TextEntry::make('status')
-                    ->label('الحالة')
+                    ->label(__('admin/common.status'))
                     ->badge()
                     ->formatStateUsing(fn ($state) => match ($state) {
-                        'active' => 'نشط',
-                        'inactive' => 'غير نشط',
-                        'expired' => 'منتهي الصلاحية',
+                        'active' => __('admin/channels.active'),
+                        'inactive' => __('admin/channels.inactive'),
+                        'expired' => __('admin/channels.expired'),
                         default => $state,
                     }),
 
-                TextEntry::make('connected_at')->label('تاريخ الربط')->dateTime('d/m/Y H:i'),
+                TextEntry::make('connected_at')->label(__('admin/channels.connected_at'))->dateTime('d/m/Y H:i'),
             ])->columns(3),
         ]);
     }

@@ -15,6 +15,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->seed(DatabaseSeeder::class);
     $this->actingAs(User::where('email', 'admin@blexchat.test')->firstOrFail());
+    app()->setLocale('ar');
 });
 
 it('counts AI replies, handovers, channels by platform and paid subscriptions', function () {

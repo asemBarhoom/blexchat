@@ -26,48 +26,48 @@ class StatsOverviewWidget extends BaseWidget
             ->whereDate('posted_at', today())->count();
 
         return [
-            Stat::make('القنوات المربوطة', $totalChannels)
-                ->description('إجمالي القنوات النشطة')
+            Stat::make(__('admin/dashboard.channels'), $totalChannels)
+                ->description(__('admin/dashboard.channels_note'))
                 ->descriptionIcon('heroicon-o-signal')
                 ->color('info'),
 
-            Stat::make('الأتمتة النشطة', $activeAutomations)
-                ->description('قواعد مفعّلة حالياً')
+            Stat::make(__('admin/dashboard.automations'), $activeAutomations)
+                ->description(__('admin/dashboard.automations_note'))
                 ->descriptionIcon('heroicon-o-bolt')
                 ->color('success'),
 
-            Stat::make('محادثات مفتوحة', $openConversations)
-                ->description('تحتاج متابعة')
+            Stat::make(__('admin/dashboard.open_conversations'), $openConversations)
+                ->description(__('admin/dashboard.open_conversations_note'))
                 ->descriptionIcon('heroicon-o-chat-bubble-left-right')
                 ->color('warning'),
 
-            Stat::make('رسائل اليوم', $messagesToday)
-                ->description('مُرسَلة ووارده')
+            Stat::make(__('admin/dashboard.messages_today'), $messagesToday)
+                ->description(__('admin/dashboard.messages_today_note'))
                 ->descriptionIcon('heroicon-o-paper-airplane')
                 ->color('primary'),
 
-            Stat::make('ردود تلقائية اليوم', $automatedComments)
-                ->description('تعليقات ردّ عليها بوت')
+            Stat::make(__('admin/dashboard.auto_replies_today'), $automatedComments)
+                ->description(__('admin/dashboard.auto_replies_today_note'))
                 ->descriptionIcon('heroicon-o-cpu-chip')
                 ->color('gray'),
 
-            Stat::make('ردود Blexchat AI اليوم', Message::where('by_ai', true)->whereDate('sent_at', today())->count())
-                ->description('رسائل كتبها الذكاء الاصطناعي')
+            Stat::make(__('admin/dashboard.ai_replies_today'), Message::where('by_ai', true)->whereDate('sent_at', today())->count())
+                ->description(__('admin/dashboard.ai_replies_today_note'))
                 ->descriptionIcon('heroicon-o-sparkles')
                 ->color('primary'),
 
-            Stat::make('تحويلات لموظف اليوم', Message::where('type', Message::TYPE_HANDOVER)->whereDate('sent_at', today())->count())
-                ->description('محادثات احتاجت إنساناً')
+            Stat::make(__('admin/dashboard.handovers_today'), Message::where('type', Message::TYPE_HANDOVER)->whereDate('sent_at', today())->count())
+                ->description(__('admin/dashboard.handovers_today_note'))
                 ->descriptionIcon('heroicon-o-user')
                 ->color('danger'),
 
-            Stat::make('القنوات حسب المنصة', $totalChannels)
+            Stat::make(__('admin/dashboard.channels_by_platform'), $totalChannels)
                 ->description($this->channelsByPlatform())
                 ->descriptionIcon('heroicon-o-squares-2x2')
                 ->color('info'),
 
-            Stat::make('الاشتراكات المدفوعة', $this->paidSubscriptions())
-                ->description('تجارب شغّالة: '.Subscription::where('status', 'trialing')->where('trial_ends_at', '>', now())->count())
+            Stat::make(__('admin/dashboard.paid_subscriptions'), $this->paidSubscriptions())
+                ->description(__('admin/dashboard.running_trials', ['count' => Subscription::where('status', 'trialing')->where('trial_ends_at', '>', now())->count()]))
                 ->descriptionIcon('heroicon-o-credit-card')
                 ->color('success'),
         ];

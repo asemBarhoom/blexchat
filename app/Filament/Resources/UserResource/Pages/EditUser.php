@@ -13,7 +13,7 @@ class EditUser extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            ViewAction::make()->label('عرض'),
+            ViewAction::make()->label(__('admin/common.view')),
             UserResource::deleteAction(),
         ];
     }

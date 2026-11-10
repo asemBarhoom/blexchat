@@ -15,8 +15,8 @@ class ViewAutomation extends ViewRecord
     {
         return [
             // Filament shows each of these only in the state it applies to: the trash or live.
-            DeleteAction::make()->label('حذف'),
-            RestoreAction::make()->label('استرجاع'),
+            DeleteAction::make()->label(__('admin/common.delete')),
+            RestoreAction::make()->label(__('admin/common.restore')),
         ];
     }
 }

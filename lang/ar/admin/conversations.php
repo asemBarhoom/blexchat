@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'assigned' => 'موزّعة',
+    'assignment' => 'التوزيع',
+    'automated' => 'تلقائية',
+    'details' => 'معلومات المحادثة',
+    'direction' => 'الاتجاه',
+    'handover' => 'تحويل لموظف',
+    'handover_reason' => 'سبب آخر تحويل',
+    'inbound' => 'وارد',
+    'inbox' => 'صندوق الوارد',
+    'messages' => 'الرسائل',
+    'model' => 'محادثة',
+    'outbound' => 'صادر',
+    'reminder' => 'التذكير',
+    'sent_at' => 'وقت الإرسال',
+    'state_automation' => 'الأتمتة ترد',
+    'state_human' => 'محوّلة لموظف',
+    'state_open' => 'بانتظار الرد',
+    'system' => 'النظام',
+    'text' => 'نص',
+    'text_with_button' => 'نص + زر',
+    'unread' => 'غير مقروءة',
+    'unread_messages' => 'رسائل غير مقروءة',
+];

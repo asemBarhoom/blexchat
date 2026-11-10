@@ -25,18 +25,33 @@ class ConversationResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-chat-bubble-left-right';
 
-    protected static ?string $navigationLabel = 'المحادثات';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/common.conversations');
+    }
 
-    protected static ?string $modelLabel = 'محادثة';
+    public static function getModelLabel(): string
+    {
+        return __('admin/conversations.model');
+    }
 
-    protected static ?string $pluralModelLabel = 'المحادثات';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/common.conversations');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = 'التواصل';
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return __('admin/common.nav_communication');
+    }
 
     protected static ?int $navigationSort = 3;
 
-    /** @var array<string, string> Who answers the conversation now (Conversation::STATES). */
-    public const STATE_LABELS = ['open' => 'بانتظار الرد', 'automation' => 'الأتمتة ترد', 'human' => 'محوّلة لموظف'];
+    /** @return array<string, string> Who answers the conversation now (Conversation::STATES). */
+    public static function stateLabels(): array
+    {
+        return ['open' => __('admin/conversations.state_open'), 'automation' => __('admin/conversations.state_automation'), 'human' => __('admin/conversations.state_human')];
+    }
 
     /**
      * Why the conversation was last handed over to a person, from its latest handover message.
@@ -54,12 +69,12 @@ class ConversationResource extends Resource
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['channel', 'assignee']))
             ->columns([
                 TextColumn::make('contact_name')
-                    ->label('المُرسِل')
+                    ->label(__('admin/common.sender'))
                     ->searchable()
                     ->description(fn (Conversation $record) => $record->contact_platform_id),
 
                 TextColumn::make('channel.platform')
-                    ->label('القناة')
+                    ->label(__('admin/common.channel'))
                     ->badge()
                     ->formatStateUsing(fn ($state) => ucfirst($state ?? ''))
                     ->color(fn ($state): string => match ($state) {
@@ -71,9 +86,9 @@ class ConversationResource extends Resource
                     }),
 
                 TextColumn::make('state')
-                    ->label('من يرد')
+                    ->label(__('admin/common.answered_by'))
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => self::STATE_LABELS[$state] ?? $state)
+                    ->formatStateUsing(fn (string $state): string => self::stateLabels()[$state] ?? $state)
                     ->color(fn (string $state): string => match ($state) {
                         'human' => 'danger',
                         'automation' => 'info',
@@ -81,29 +96,29 @@ class ConversationResource extends Resource
                     }),
 
                 TextColumn::make('assignee.name')
-                    ->label('المسؤول')
-                    ->placeholder('غير موزّعة')
+                    ->label(__('admin/common.assignee'))
+                    ->placeholder(__('admin/common.unassigned'))
                     ->toggleable(),
 
                 IconColumn::make('starred')
-                    ->label('مميّزة')
+                    ->label(__('admin/common.starred'))
                     ->boolean()
                     ->trueIcon('heroicon-s-star')
                     ->falseIcon('heroicon-o-star')
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('last_message')
-                    ->label('آخر رسالة')
+                    ->label(__('admin/common.last_message'))
                     ->limit(50)
                     ->wrap(),
 
                 TextColumn::make('unread_count')
-                    ->label('غير مقروءة')
+                    ->label(__('admin/conversations.unread'))
                     ->badge()
                     ->color(fn (int $state): string => $state > 0 ? 'danger' : 'gray'),
 
                 TextColumn::make('status')
-                    ->label('الحالة')
+                    ->label(__('admin/common.status'))
                     ->badge()
                     ->color(fn ($state) => match ($state) {
                         'open' => 'success',
@@ -111,45 +126,45 @@ class ConversationResource extends Resource
                         default => 'gray',
                     })
                     ->formatStateUsing(fn ($state) => match ($state) {
-                        'open' => 'مفتوحة',
-                        'resolved' => 'محلولة',
+                        'open' => __('admin/common.open'),
+                        'resolved' => __('admin/common.resolved'),
                         default => $state,
                     }),
 
                 TextColumn::make('last_message_at')
-                    ->label('آخر نشاط')
+                    ->label(__('admin/common.last_active'))
                     ->since()
                     ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('status')
-                    ->label('الحالة')
+                    ->label(__('admin/common.status'))
                     ->options([
-                        'open' => 'مفتوحة',
-                        'resolved' => 'محلولة',
+                        'open' => __('admin/common.open'),
+                        'resolved' => __('admin/common.resolved'),
                     ]),
 
                 SelectFilter::make('state')
-                    ->label('من يرد')
-                    ->options(self::STATE_LABELS),
+                    ->label(__('admin/common.answered_by'))
+                    ->options(self::stateLabels()),
 
                 SelectFilter::make('channel_id')
-                    ->label('القناة')
+                    ->label(__('admin/common.channel'))
                     ->relationship('channel', 'account_id')
                     ->getOptionLabelFromRecordUsing(fn (Channel $record): string => ucfirst($record->platform).' — '.($record->username ?? $record->account_id))
                     ->searchable()
                     ->preload(),
 
                 TernaryFilter::make('assigned_to')
-                    ->label('التوزيع')
+                    ->label(__('admin/conversations.assignment'))
                     ->nullable()
-                    ->trueLabel('موزّعة')
-                    ->falseLabel('غير موزّعة'),
+                    ->trueLabel(__('admin/conversations.assigned'))
+                    ->falseLabel(__('admin/common.unassigned')),
 
-                TernaryFilter::make('starred')->label('مميّزة'),
+                TernaryFilter::make('starred')->label(__('admin/common.starred')),
             ])
             ->actions([
-                ViewAction::make()->label('عرض'),
+                ViewAction::make()->label(__('admin/common.view')),
             ])
             ->defaultSort('last_message_at', 'desc');
     }
@@ -157,34 +172,34 @@ class ConversationResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('معلومات المحادثة')->schema([
-                TextEntry::make('contact_name')->label('المُرسِل'),
-                TextEntry::make('contact_platform_id')->label('معرّف المنصة'),
+            Section::make(__('admin/conversations.details'))->schema([
+                TextEntry::make('contact_name')->label(__('admin/common.sender')),
+                TextEntry::make('contact_platform_id')->label(__('admin/common.platform_id')),
                 TextEntry::make('channel.platform')
-                    ->label('القناة')
+                    ->label(__('admin/common.channel'))
                     ->badge()
                     ->formatStateUsing(fn ($state) => ucfirst($state ?? '')),
                 TextEntry::make('status')
-                    ->label('الحالة')
+                    ->label(__('admin/common.status'))
                     ->badge()
                     ->formatStateUsing(fn ($state) => match ($state) {
-                        'open' => 'مفتوحة',
-                        'resolved' => 'محلولة',
+                        'open' => __('admin/common.open'),
+                        'resolved' => __('admin/common.resolved'),
                         default => $state,
                     }),
-                TextEntry::make('unread_count')->label('رسائل غير مقروءة')->numeric(),
-                TextEntry::make('last_message_at')->label('آخر نشاط')->dateTime('d/m/Y H:i'),
+                TextEntry::make('unread_count')->label(__('admin/conversations.unread_messages'))->numeric(),
+                TextEntry::make('last_message_at')->label(__('admin/common.last_active'))->dateTime('d/m/Y H:i'),
             ])->columns(3),
-            Section::make('صندوق الوارد')->schema([
-                TextEntry::make('state')->label('من يرد')->badge()
-                    ->formatStateUsing(fn (string $state): string => self::STATE_LABELS[$state] ?? $state),
-                TextEntry::make('handover_reason')->label('سبب آخر تحويل')->placeholder('—')
+            Section::make(__('admin/conversations.inbox'))->schema([
+                TextEntry::make('state')->label(__('admin/common.answered_by'))->badge()
+                    ->formatStateUsing(fn (string $state): string => self::stateLabels()[$state] ?? $state),
+                TextEntry::make('handover_reason')->label(__('admin/conversations.handover_reason'))->placeholder('—')
                     ->state(fn (Conversation $record): ?string => self::handoverReason($record)),
-                TextEntry::make('assignee.name')->label('المسؤول')->placeholder('غير موزّعة'),
-                TextEntry::make('remind_at')->label('التذكير')->dateTime('d/m/Y H:i')->placeholder('—'),
-                TextEntry::make('labels')->label('الوسوم')->badge()->placeholder('بلا وسوم'),
-                TextEntry::make('starred')->label('مميّزة')
-                    ->formatStateUsing(fn (bool $state): string => $state ? 'نعم' : 'لا'),
+                TextEntry::make('assignee.name')->label(__('admin/common.assignee'))->placeholder(__('admin/common.unassigned')),
+                TextEntry::make('remind_at')->label(__('admin/conversations.reminder'))->dateTime('d/m/Y H:i')->placeholder('—'),
+                TextEntry::make('labels')->label(__('admin/common.tags'))->badge()->placeholder(__('admin/common.no_tags')),
+                TextEntry::make('starred')->label(__('admin/common.starred'))
+                    ->formatStateUsing(fn (bool $state): string => $state ? __('admin/common.yes') : __('admin/common.no')),
             ])->columns(3),
         ]);
     }

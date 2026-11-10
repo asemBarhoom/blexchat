@@ -1,0 +1,21 @@
+<?php
+
+return [
+    'ai_replies_today' => 'ردود Blexchat AI اليوم',
+    'ai_replies_today_note' => 'رسائل كتبها Blexchat AI',
+    'auto_replies_today' => 'ردود تلقائية اليوم',
+    'auto_replies_today_note' => 'تعليقات ردّت عليها الأتمتة',
+    'automations' => 'الأتمتة المفعّلة',
+    'automations_note' => 'تعمل الآن',
+    'channels' => 'القنوات المربوطة',
+    'channels_by_platform' => 'القنوات حسب المنصة',
+    'channels_note' => 'كل القنوات النشطة',
+    'handovers_today' => 'تحويلات لموظف اليوم',
+    'handovers_today_note' => 'محادثات احتاجت موظفاً',
+    'messages_today' => 'رسائل اليوم',
+    'messages_today_note' => 'المُرسَلة والواردة',
+    'open_conversations' => 'محادثات مفتوحة',
+    'open_conversations_note' => 'تحتاج متابعة',
+    'paid_subscriptions' => 'الاشتراكات المدفوعة',
+    'running_trials' => 'تجارب شغّالة: :count',
+];
