@@ -12,6 +12,6 @@ class ManageChannelConnectedScreens extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('إضافة شاشة')];
+        return [CreateAction::make()->label(__('admin/connected_screens.create'))];
     }
 }

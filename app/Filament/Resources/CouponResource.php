@@ -25,20 +25,32 @@ class CouponResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-ticket';
 
-    protected static ?string $navigationLabel = 'الكوبونات';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/coupons.plural');
+    }
 
-    protected static ?string $modelLabel = 'كوبون';
+    public static function getModelLabel(): string
+    {
+        return __('admin/coupons.model');
+    }
 
-    protected static ?string $pluralModelLabel = 'الكوبونات';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/coupons.plural');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = PlanResource::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return PlanResource::signupBillingGroup();
+    }
 
     protected static ?int $navigationSort = 20;
 
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('code')->label('الرمز')->required()->alphaDash()->maxLength(50)
+            TextInput::make('code')->label(__('admin/coupons.code'))->required()->alphaDash()->maxLength(50)
                 // Unique ignoring case, as codes are matched.
                 ->rule(fn (?Coupon $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($record): void {
                     $taken = Coupon::where('code', Coupon::normalize((string) $value))
@@ -46,20 +58,20 @@ class CouponResource extends Resource
                         ->exists();
 
                     if ($taken) {
-                        $fail('هذا الرمز مستخدم بالفعل.');
+                        $fail(__('admin/coupons.code_taken'));
                     }
                 })
                 ->dehydrateStateUsing(fn (string $state): string => Coupon::normalize($state))
-                ->helperText('يُحفظ بأحرف كبيرة، ويُقبل من العميل بأي حالة أحرف، مثل BLEX20.'),
-            TextInput::make('percent_off')->label('نسبة الخصم (%)')->numeric()->integer()->minValue(1)->maxValue(100)->required(),
-            Select::make('plans')->label('الخطط المشمولة')->multiple()->preload()
+                ->helperText(__('admin/coupons.code_help')),
+            TextInput::make('percent_off')->label(__('admin/coupons.percent_off'))->numeric()->integer()->minValue(1)->maxValue(100)->required(),
+            Select::make('plans')->label(__('admin/coupons.plans'))->multiple()->preload()
                 ->relationship('plans', 'slug', fn (Builder $query): Builder => $query->where('monthly_price', '>', 0)->orderBy('sort'))
                 ->getOptionLabelFromRecordUsing(fn (Plan $record): string => $record->name)
-                ->helperText('اتركها فارغة ليشمل الكوبون كل الخطط المدفوعة. لا يُطبَّق الكوبون على الخطة المجانية ولا على خطة بتجربة مجانية.'),
-            DateTimePicker::make('expires_at')->label('ينتهي في')->helperText('اتركه فارغاً ليبقى الكوبون بلا تاريخ انتهاء.'),
-            TextInput::make('usage_limit')->label('حد الاستخدام')->numeric()->integer()->minValue(1)
-                ->helperText('اتركه فارغاً لاستخدام بلا حد. يُحتسب الاستخدام مرة عند نجاح كل دفعة بهذا الكوبون.'),
-            Toggle::make('active')->label('فعّال')->default(true),
+                ->helperText(__('admin/coupons.plans_help')),
+            DateTimePicker::make('expires_at')->label(__('admin/coupons.expires_at'))->helperText(__('admin/coupons.expires_help')),
+            TextInput::make('usage_limit')->label(__('admin/coupons.usage_limit'))->numeric()->integer()->minValue(1)
+                ->helperText(__('admin/coupons.usage_limit_help')),
+            Toggle::make('active')->label(__('admin/common.enabled'))->default(true),
         ])->columns(1);
     }
 
@@ -67,18 +79,18 @@ class CouponResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('code')->label('الرمز')->searchable()->badge()->color('gray'),
-                TextColumn::make('percent_off')->label('الخصم')->suffix('%'),
-                TextColumn::make('plans.slug')->label('الخطط')->badge()->placeholder('كل الخطط المدفوعة'),
-                TextColumn::make('expires_at')->label('ينتهي في')->dateTime()->placeholder('بلا انتهاء'),
-                TextColumn::make('times_used')->label('مرات الاستخدام')->numeric(),
-                TextColumn::make('usage_limit')->label('حد الاستخدام')->numeric()->placeholder('بلا حد'),
-                ToggleColumn::make('active')->label('فعّال'),
+                TextColumn::make('code')->label(__('admin/coupons.code'))->searchable()->badge()->color('gray'),
+                TextColumn::make('percent_off')->label(__('admin/coupons.discount'))->suffix('%'),
+                TextColumn::make('plans.slug')->label(__('admin/common.plans'))->badge()->placeholder(__('admin/coupons.all_paid_plans')),
+                TextColumn::make('expires_at')->label(__('admin/coupons.expires_at'))->dateTime()->placeholder(__('admin/coupons.never')),
+                TextColumn::make('times_used')->label(__('admin/coupons.times_used'))->numeric(),
+                TextColumn::make('usage_limit')->label(__('admin/coupons.usage_limit'))->numeric()->placeholder(__('admin/coupons.no_limit')),
+                ToggleColumn::make('active')->label(__('admin/common.enabled')),
             ])
             ->defaultSort('id', 'desc')
             ->recordActions([
-                EditAction::make()->label('تعديل'),
-                DeleteAction::make()->label('حذف'),
+                EditAction::make()->label(__('admin/common.edit')),
+                DeleteAction::make()->label(__('admin/common.delete')),
             ]);
     }
 

@@ -29,22 +29,28 @@ use Illuminate\Support\Str;
  */
 class EmailTemplateResource extends Resource
 {
-    /** @var array<string, string> */
-    public const TEMPLATE_LABELS = [
-        'login_link.signup' => 'رابط الدخول — حساب جديد',
-        'login_link.signin' => 'رابط الدخول — تسجيل الدخول',
-        'reminder.due' => 'تذكير بمحادثة',
-        'team.invite' => 'دعوة إلى الفريق',
-    ];
+    /** @return array<string, string> */
+    public static function templateLabels(): array
+    {
+        return [
+            'login_link.signup' => __('admin/emails.login_link_signup'),
+            'login_link.signin' => __('admin/emails.login_link_signin'),
+            'reminder.due' => __('admin/emails.reminder_due'),
+            'team.invite' => __('admin/emails.team_invite'),
+        ];
+    }
 
-    /** @var array<string, string> */
-    private const FIELD_LABELS = [
-        'subject' => 'عنوان الرسالة',
-        'line' => 'النص',
-        'button' => 'نص الزر',
-        'expiry' => 'مدة صلاحية الرابط',
-        'ignore' => 'ملاحظة التجاهل',
-    ];
+    /** @return array<string, string> */
+    private static function fieldLabels(): array
+    {
+        return [
+            'subject' => __('admin/emails.subject'),
+            'line' => __('admin/common.text'),
+            'button' => __('admin/common.button_text'),
+            'expiry' => __('admin/emails.expiry'),
+            'ignore' => __('admin/emails.ignore'),
+        ];
+    }
 
     private const LONG_FIELDS = ['line', 'expiry', 'ignore'];
 
@@ -52,13 +58,25 @@ class EmailTemplateResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-envelope';
 
-    protected static ?string $navigationLabel = 'نصوص الرسائل البريدية';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/emails.plural');
+    }
 
-    protected static ?string $modelLabel = 'رسالة بريدية';
+    public static function getModelLabel(): string
+    {
+        return __('admin/emails.model');
+    }
 
-    protected static ?string $pluralModelLabel = 'نصوص الرسائل البريدية';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/emails.plural');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = PlanResource::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return PlanResource::signupBillingGroup();
+    }
 
     protected static ?int $navigationSort = 40;
 
@@ -75,10 +93,10 @@ class EmailTemplateResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make(fn (?EmailTemplate $record): string => self::TEMPLATE_LABELS[$record?->key] ?? 'الرسالة')
-                ->description('اترك أي نص فارغاً لاستخدام النص الافتراضي.')
+            Section::make(fn (?EmailTemplate $record): string => self::templateLabels()[$record?->key] ?? __('admin/emails.email'))
+                ->description(__('admin/emails.defaults_help'))
                 // Only the texts this email has: the reminder has no expiry or ignore line.
-                ->schema(fn (?EmailTemplate $record): array => array_map(self::textInputs(...), array_keys(EmailTemplate::TEMPLATES[$record?->key] ?? self::FIELD_LABELS))),
+                ->schema(fn (?EmailTemplate $record): array => array_map(self::textInputs(...), array_keys(EmailTemplate::TEMPLATES[$record?->key] ?? self::fieldLabels()))),
         ])->columns(1);
     }
 
@@ -86,15 +104,15 @@ class EmailTemplateResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('key')->label('الرسالة')
-                    ->formatStateUsing(fn (string $state): string => self::TEMPLATE_LABELS[$state] ?? $state)
+                TextColumn::make('key')->label(__('admin/emails.email'))
+                    ->formatStateUsing(fn (string $state): string => self::templateLabels()[$state] ?? $state)
                     ->description(fn (EmailTemplate $record): string => $record->key),
-                TextColumn::make('subject')->label('عنوان الرسالة')->wrap(),
-                TextColumn::make('updated_at')->label('آخر تعديل')->since(),
+                TextColumn::make('subject')->label(__('admin/emails.subject'))->wrap(),
+                TextColumn::make('updated_at')->label(__('admin/common.updated_at'))->since(),
             ])
             ->defaultSort('id')
             ->recordActions([
-                EditAction::make()->label('تعديل'),
+                EditAction::make()->label(__('admin/common.edit')),
             ]);
     }
 
@@ -135,7 +153,7 @@ class EmailTemplateResource extends Resource
         $locales = config('app.supported_locales');
 
         return Grid::make(count($locales))->schema(array_map(
-            fn (string $locale) => Translations::field("{$field}.{$locale}", self::FIELD_LABELS[$field].' — '.Translations::localeName($locale), $locale, required: false, long: in_array($field, self::LONG_FIELDS, true))
+            fn (string $locale) => Translations::field("{$field}.{$locale}", self::fieldLabels()[$field].' — '.Translations::localeName($locale), $locale, required: false, long: in_array($field, self::LONG_FIELDS, true))
                 ->helperText(fn (?EmailTemplate $record): ?string => $record ? self::placeholderHint($record->key, $field) : null)
                 ->rules([fn (?EmailTemplate $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($record, $field): void {
                     if ($record === null || blank($value)) {
@@ -145,11 +163,11 @@ class EmailTemplateResource extends Resource
                     $used = EmailTemplate::placeholdersIn($value);
 
                     foreach (array_diff(EmailTemplate::requiredPlaceholders($record->key, $field), $used) as $missing) {
-                        $fail("يجب أن يبقى المتغير :{$missing} في النص.");
+                        $fail(__('admin/emails.variable_missing', ['name' => ':'.$missing]));
                     }
 
                     foreach (array_diff($used, EmailTemplate::allowedPlaceholders($record->key)) as $unknown) {
-                        $fail("المتغير :{$unknown} غير معروف في هذه الرسالة.");
+                        $fail(__('admin/emails.variable_unknown', ['name' => ':'.$unknown]));
                     }
                 }]),
             $locales,
@@ -161,11 +179,11 @@ class EmailTemplateResource extends Resource
         $required = EmailTemplate::requiredPlaceholders($key, $field);
 
         if ($required !== []) {
-            return 'يجب أن يحتوي على: '.implode('، ', array_map(fn (string $name): string => ":{$name}", $required));
+            return __('admin/emails.must_contain', ['names' => implode(__('admin/emails.separator'), array_map(fn (string $name): string => ":{$name}", $required))]);
         }
 
         $allowed = EmailTemplate::allowedPlaceholders($key);
 
-        return $allowed === [] ? null : 'يمكن استخدام: '.implode('، ', array_map(fn (string $name): string => ":{$name}", $allowed));
+        return $allowed === [] ? null : __('admin/emails.can_use', ['names' => implode(__('admin/emails.separator'), array_map(fn (string $name): string => ":{$name}", $allowed))]);
     }
 }
