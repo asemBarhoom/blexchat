@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,9 +18,17 @@ use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'google_id', 'password', 'business_name', 'business_info', 'inbox_accepting_new', 'is_admin', 'stripe_customer_id'])]
 #[Hidden(['password', 'remember_token', 'google_id', 'stripe_customer_id'])]
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasLocalePreference
 {
     use HasApiTokens, HasFactory, Notifiable;
+
+    /**
+     * The language the frontend last asked for, else the app default. Mail to the user goes out in it.
+     */
+    public function preferredLocale(): string
+    {
+        return $this->locale ?? config('app.locale');
+    }
 
     protected $attributes = [
         'inbox_accepting_new' => true,
