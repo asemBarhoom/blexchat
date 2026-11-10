@@ -52,7 +52,7 @@ class MessageDeliveryAttemptController extends Controller
             $attempt->update(['error_code' => $code, 'error_message' => $exception->getMessage()]);
 
             return response()->json([
-                'message' => $code === 'channel_not_live' ? $exception->getMessage() : 'Delivery failed again.',
+                'message' => $code === 'channel_not_live' ? __('channels.not_live', ['platform' => __("channels.platforms.{$conversation->channel->platform}")]) : __('channels.delivery_failed_again'),
                 'code' => $code,
                 'retryable' => $code !== 'channel_not_live',
                 'attempt_id' => $attempt->id,

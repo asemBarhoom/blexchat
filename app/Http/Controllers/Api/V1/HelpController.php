@@ -17,6 +17,6 @@ class HelpController extends Controller
         $locale = App::getLocale();
         $faq = PricingFaqItem::visible()->get()->map(fn (PricingFaqItem $item): array => ['question' => $item->getTranslation('question', $locale, true), 'answer' => $item->getTranslation('answer', $locale, true)])->values();
 
-        return response()->json(['data' => ['title' => $locale === 'ar' ? 'مركز المساعدة' : 'Help centre', 'articles' => $faq, 'support' => ['email' => config('mail.from.address'), 'response_time_hours' => 24]], 'meta' => ['locale' => $locale, 'available_locales' => config('app.supported_locales')]]);
+        return response()->json(['data' => ['title' => __('help.title'), 'articles' => $faq, 'support' => ['email' => config('mail.from.address'), 'response_time_hours' => 24]], 'meta' => ['locale' => $locale, 'available_locales' => config('app.supported_locales')]]);
     }
 }
