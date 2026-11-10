@@ -12,6 +12,6 @@ class ManageHomeStats extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('إضافة رقم')];
+        return [CreateAction::make()->label(__('admin/home.add_number'))];
     }
 }

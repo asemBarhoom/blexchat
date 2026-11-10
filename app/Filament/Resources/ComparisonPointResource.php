@@ -19,24 +19,39 @@ class ComparisonPointResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-arrows-right-left';
 
-    protected static ?string $navigationLabel = 'نقاط قبل وبعد';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/home.before_and_after_points');
+    }
 
-    protected static ?string $modelLabel = 'نقطة';
+    public static function getModelLabel(): string
+    {
+        return __('admin/home.point');
+    }
 
-    protected static ?string $pluralModelLabel = 'نقاط قبل وبعد';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/home.before_and_after_points');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = HomeContentFields::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return HomeContentFields::homeGroup();
+    }
 
     protected static ?int $navigationSort = 17;
 
-    /** @var array<string, string> */
-    private const SIDE_NAMES = ['before' => 'قبل', 'after' => 'بعد'];
+    /** @return array<string, string> */
+    private static function sideNames(): array
+    {
+        return ['before' => __('admin/home.before'), 'after' => __('admin/home.after')];
+    }
 
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Select::make('side')->label('الجهة')->options(self::SIDE_NAMES)->required(),
-            Translations::input('text', 'النص'),
+            Select::make('side')->label(__('admin/home.side'))->options(self::sideNames())->required(),
+            Translations::input('text', __('admin/common.text')),
             HomeContentFields::active(),
         ])->columns(1);
     }
@@ -44,10 +59,10 @@ class ComparisonPointResource extends Resource
     public static function table(Table $table): Table
     {
         return HomeContentFields::table($table, [
-            TextColumn::make('side')->label('الجهة')->badge()->formatStateUsing(fn (string $state): string => self::SIDE_NAMES[$state] ?? $state),
-            TextColumn::make('text')->label('النص')->searchable(),
+            TextColumn::make('side')->label(__('admin/home.side'))->badge()->formatStateUsing(fn (string $state): string => self::sideNames()[$state] ?? $state),
+            TextColumn::make('text')->label(__('admin/common.text'))->searchable(),
         ], [
-            SelectFilter::make('side')->label('الجهة')->options(self::SIDE_NAMES),
+            SelectFilter::make('side')->label(__('admin/home.side'))->options(self::sideNames()),
         ]);
     }
 

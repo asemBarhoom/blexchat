@@ -25,39 +25,57 @@ use Illuminate\Support\Arr;
  */
 class ManagePricingPage extends Page
 {
-    public const NAVIGATION_GROUP = 'صفحة الأسعار';
+    public static function pricingGroup(): string
+    {
+        return __('admin/pricing.pricing_page');
+    }
 
-    public const FIGURES_HELP = 'تُملأ تلقائياً من الخطط: {max_saving} أكبر نسبة توفير سنوي، {free_contacts} حد جهات الاتصال في الخطة المجانية، {trial_days} أيام التجربة، {trial_plan} اسم الخطة التي فيها تجربة.';
+    public static function figuresHelp(): string
+    {
+        return __('admin/pricing.filled_in_from_the_plans_max_saving_is_t');
+    }
 
     /** @var array<string, list<array{0: string, 1: string, 2?: string}>> group label => [path, label, 'long'] */
-    private const TEXTS = [
-        'الواجهة' => [
-            ['hero.chip', 'الشارة'], ['hero.title', 'العنوان'], ['hero.lead', 'المقدمة', 'long'], ['hero.billing_label', 'تسمية مدة الفوترة (لقارئ الشاشة)'],
-            ['hero.monthly', 'شهرياً'], ['hero.annual', 'سنوياً'], ['hero.save', 'التوفير'], ['hero.note', 'ملاحظة تحت البطاقات'],
-        ],
-        'بطاقات الخطط' => [
-            ['card.ribbon', 'شريط الخطة المميزة'], ['card.forever', 'بجانب سعر المجانية'], ['card.per_month', 'بجانب السعر'], ['card.no_card', 'تحت سعر المجانية'],
-            ['card.billed_annually', 'الفوترة السنوية ({total})'], ['card.billed_monthly', 'الفوترة الشهرية'], ['card.start_free', 'زر المجانية'],
-            ['card.try_free', 'زر التجربة ({days})'], ['card.choose', 'زر الاختيار ({plan})'], ['card.contacts', 'جهات الاتصال ({contacts})'], ['card.ai', 'شارة الذكاء الاصطناعي'],
-        ],
-        'جدول المقارنة' => [
-            ['compare.title', 'العنوان'], ['compare.feature', 'رأس عمود الميزات (لقارئ الشاشة)'], ['compare.included', 'معنى علامة الصح (لقارئ الشاشة)'], ['compare.not_included', 'معنى الشرطة (لقارئ الشاشة)'],
-        ],
-        'قسم الوكالات' => [
-            ['agency.title', 'العنوان'], ['agency.line', 'السطر', 'long'], ['agency.link_label', 'نص الرابط'],
-        ],
-        'الأسئلة الشائعة' => [
-            ['faq.title', 'العنوان'], ['faq.marked', 'الكلمة المميّزة من العنوان'],
-        ],
-    ];
+    private static function texts(): array
+    {
+        return [
+            __('admin/pricing.hero') => [
+                ['hero.chip', __('admin/auth_screens.badge')], ['hero.title', __('admin/common.title')], ['hero.lead', __('admin/channel_screens.lead'), 'long'], ['hero.billing_label', __('admin/pricing.billing_period_label_screen_reader')],
+                ['hero.monthly', __('admin/pricing.monthly')], ['hero.annual', __('admin/pricing.yearly')], ['hero.save', __('admin/pricing.saving')], ['hero.note', __('admin/pricing.note_under_the_cards')],
+            ],
+            __('admin/pricing.plan_cards') => [
+                ['card.ribbon', __('admin/pricing.featured_plan_ribbon')], ['card.forever', __('admin/pricing.next_to_the_free_price')], ['card.per_month', __('admin/pricing.next_to_the_price')], ['card.no_card', __('admin/pricing.under_the_free_price')],
+                ['card.billed_annually', __('admin/pricing.billed_yearly_total')], ['card.billed_monthly', __('admin/pricing.billed_monthly')], ['card.start_free', __('admin/pricing.free_plan_button')],
+                ['card.try_free', __('admin/pricing.trial_button_days')], ['card.choose', __('admin/pricing.choose_button_plan')], ['card.contacts', __('admin/pricing.contacts_contacts')], ['card.ai', __('admin/pricing.ai_badge')],
+            ],
+            __('admin/pricing.comparison_table') => [
+                ['compare.title', __('admin/common.title')], ['compare.feature', __('admin/pricing.feature_column_header_screen_reader')], ['compare.included', __('admin/pricing.meaning_of_the_tick_screen_reader')], ['compare.not_included', __('admin/pricing.meaning_of_the_dash_screen_reader')],
+            ],
+            __('admin/pricing.agencies_section') => [
+                ['agency.title', __('admin/common.title')], ['agency.line', __('admin/pricing.line'), 'long'], ['agency.link_label', __('admin/home.link_text')],
+            ],
+            __('admin/common.faq') => [
+                ['faq.title', __('admin/common.title')], ['faq.marked', __('admin/pricing.highlighted_word_in_the_title')],
+            ],
+        ];
+    }
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
 
-    protected static ?string $navigationLabel = 'نصوص صفحة الأسعار';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/pricing.pricing_page_texts');
+    }
 
-    protected static ?string $title = 'نصوص صفحة الأسعار';
+    public function getTitle(): string
+    {
+        return __('admin/pricing.pricing_page_texts');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = self::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return self::pricingGroup();
+    }
 
     protected static ?int $navigationSort = 0;
 
@@ -81,7 +99,7 @@ class ManagePricingPage extends Page
         return $schema
             ->statePath('data')
             ->components([
-                Section::make('النصوص')->description('العربية اختيارية: أي نص عربي فارغ يظهر بالإنجليزية. '.self::FIGURES_HELP.' أما {total} و{days} و{plan} و{contacts} في البطاقات فيملؤها الموقع لكل خطة.')->schema([
+                Section::make(__('admin/auth_screens.texts'))->description(__('admin/common.arabic_optional').' '.self::figuresHelp().' '.__('admin/pricing.card_figures_help'))->schema([
                     Tabs::make('languages')->tabs(array_map(
                         fn (string $locale): Tab => Tab::make(Translations::localeName($locale))->schema(array_map(
                             fn (string $group, array $fields): Fieldset => Fieldset::make($group)->schema(array_map(
@@ -94,14 +112,14 @@ class ManagePricingPage extends Page
                                 ),
                                 $fields,
                             ))->columns(2),
-                            array_keys(self::TEXTS),
-                            self::TEXTS,
+                            array_keys(self::texts()),
+                            self::texts(),
                         )),
                         config('app.supported_locales'),
                     )),
                 ]),
-                Section::make('الروابط (مشتركة بين اللغات)')->schema([
-                    TextInput::make('agency_url')->label('رابط قسم الوكالات')->required()->helperText('صفحة مثل /solutions/agencies'),
+                Section::make(__('admin/pricing.links_shared_by_both_languages'))->schema([
+                    TextInput::make('agency_url')->label(__('admin/pricing.agencies_section_link'))->required()->helperText(__('admin/pricing.a_page_like_solutions_agencies')),
                 ]),
             ]);
     }
@@ -114,7 +132,7 @@ class ManagePricingPage extends Page
                 ->livewireSubmitHandler('save')
                 ->footer([
                     Actions::make([
-                        Action::make('save')->label('حفظ')->submit('save')->keyBindings(['mod+s']),
+                        Action::make('save')->label(__('admin/common.save'))->submit('save')->keyBindings(['mod+s']),
                     ])->sticky()->key('form-actions'),
                 ]),
         ]);
@@ -139,6 +157,6 @@ class ManagePricingPage extends Page
         $page->agency_url = $state['agency_url'];
         $page->save();
 
-        Notification::make()->title('تم حفظ نصوص صفحة الأسعار')->success()->send();
+        Notification::make()->title(__('admin/pricing.pricing_page_texts_saved'))->success()->send();
     }
 }

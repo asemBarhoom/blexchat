@@ -18,24 +18,36 @@ class FaqItemResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-question-mark-circle';
 
-    protected static ?string $navigationLabel = 'الأسئلة الشائعة';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/common.faq');
+    }
 
-    protected static ?string $modelLabel = 'سؤال';
+    public static function getModelLabel(): string
+    {
+        return __('admin/survey.question_model');
+    }
 
-    protected static ?string $pluralModelLabel = 'الأسئلة الشائعة';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/common.faq');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = HomeContentFields::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return HomeContentFields::homeGroup();
+    }
 
     protected static ?int $navigationSort = 10;
 
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Translations::input('question', 'السؤال'),
-            Translations::input('answer', 'الإجابة', long: true),
-            Translations::input('link_label', 'نص الرابط', required: false),
-            TextInput::make('link_url')->label('الرابط')->requiredWith('link_label.en')
-                ->helperText('اكتب {link} داخل الإجابة في المكان الذي يظهر فيه الرابط. صفحة مثل /pricing أو قسم مثل #try-it.'),
+            Translations::input('question', __('admin/common.question')),
+            Translations::input('answer', __('admin/survey.answer'), long: true),
+            Translations::input('link_label', __('admin/home.link_text'), required: false),
+            TextInput::make('link_url')->label(__('admin/common.link'))->requiredWith('link_label.en')
+                ->helperText(__('admin/home.write_link_in_the_answer_where_the_link')),
             HomeContentFields::active(),
         ])->columns(1);
     }
@@ -43,7 +55,7 @@ class FaqItemResource extends Resource
     public static function table(Table $table): Table
     {
         return HomeContentFields::table($table, [
-            TextColumn::make('question')->label('السؤال')->searchable()->wrap(),
+            TextColumn::make('question')->label(__('admin/common.question'))->searchable()->wrap(),
         ]);
     }
 

@@ -12,6 +12,6 @@ class ManageCreators extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('إضافة صانع محتوى')];
+        return [CreateAction::make()->label(__('admin/home.add_creator'))];
     }
 }
