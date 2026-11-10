@@ -106,7 +106,7 @@ class ChannelTestEventController extends Controller
     private function otherChannel(SimulateChannelEventRequest $request, Channel $channel, ChannelEventHandler $handler): JsonResponse
     {
         abort_unless(MessagingClient::fakeActive(), 404);
-        abort_if(! in_array($request->input('type'), ['message', 'comment'], true), 422, 'Only messages and comments can be simulated on '.$channel->platform.'.');
+        abort_if(! in_array($request->input('type'), ['message', 'comment'], true), 422, __('channels.test_event_unsupported', ['platform' => __("channels.platforms.{$channel->platform}")]));
 
         $customerId = $channel->platform === 'whatsapp' ? '9665'.substr((string) crc32($request->from()), 0, 8) : 'fake-customer-'.$request->from();
         if ($request->input('type') === 'comment') {

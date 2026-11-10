@@ -8,4 +8,6 @@ return [
     'channel_disconnected' => 'Couldn’t go live: :channel is disconnected. Reconnect it, and this automation goes live.',
     'live_limit' => 'Couldn’t go live: your plan allows :count live automation. Stop one, or upgrade.|Couldn’t go live: your plan allows :count live automations. Stop one, or upgrade.',
 
+    'trashed' => 'Automation moved to the trash.',
+    'ai_plan_required' => 'Blexchat AI isn’t in your plan. Upgrade to use it.',
 ];

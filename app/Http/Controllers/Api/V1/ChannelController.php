@@ -78,7 +78,7 @@ class ChannelController extends Controller
             ->exists();
 
         if ($exists) {
-            return response()->json(['message' => 'This account is already connected.'], 409);
+            return response()->json(['message' => __('channels.already_connected')], 409);
         }
 
         $channel = $request->user()->channels()->create([
@@ -110,6 +110,6 @@ class ChannelController extends Controller
 
         $channel->delete();
 
-        return response()->json(['message' => 'Channel disconnected successfully.']);
+        return response()->json(['message' => __('channels.disconnected')]);
     }
 }

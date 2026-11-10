@@ -146,7 +146,7 @@ class ContactController extends Controller
 
         if (! $user->canAddContact()) {
             return response()->json([
-                'message' => 'Your plan’s contacts limit is reached. Upgrade to add more.',
+                'message' => __('contacts.limit'),
                 'usage' => $user->contactsUsage(),
             ], 403);
         }
@@ -277,6 +277,6 @@ class ContactController extends Controller
 
         $contact->delete();
 
-        return response()->json(['message' => 'Contact deleted.']);
+        return response()->json(['message' => __('contacts.deleted')]);
     }
 }
