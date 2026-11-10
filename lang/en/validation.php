@@ -197,6 +197,22 @@ return [
     |
     */
 
-    'attributes' => [],
+    'attributes' => [
+        'name' => 'name',
+        'email' => 'email',
+        'password' => 'password',
+        'business_name' => 'business name',
+        'platform' => 'platform',
+        'access_token' => 'access token',
+        'account_id' => 'account ID',
+        'channel_id' => 'channel',
+        'trigger_type' => 'trigger type',
+        'keywords' => 'keywords',
+        'actions' => 'actions',
+        'message' => 'message',
+        'content' => 'content',
+        'type' => 'type',
+        'active' => 'status',
+    ],
 
 ];
