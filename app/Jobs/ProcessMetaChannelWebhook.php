@@ -87,6 +87,34 @@ class ProcessMetaChannelWebhook implements ShouldQueue
                 sentAt: isset($event['timestamp']) ? Carbon::createFromTimestampMs($event['timestamp']) : null,
             );
         }
+
+        foreach ($channel === null ? [] : $entry['changes'] ?? [] as $change) {
+            $this->pageComment($handler, $channel, $change);
+        }
+    }
+
+    /**
+     * A new comment from the Page's `feed` field. Edits, removals and the Page's own comments are skipped.
+     *
+     * @param  array<string, mixed>  $change
+     */
+    private function pageComment(ChannelEventHandler $handler, Channel $channel, array $change): void
+    {
+        $value = $change['value'] ?? [];
+        $authorId = (string) data_get($value, 'from.id');
+
+        if (($change['field'] ?? null) !== 'feed' || ($value['item'] ?? null) !== 'comment' || ($value['verb'] ?? null) !== 'add' || $authorId === $channel->account_id) {
+            return;
+        }
+
+        $handler->comment(
+            $channel,
+            (string) ($value['comment_id'] ?? ''),
+            $authorId,
+            (string) ($value['message'] ?? ''),
+            data_get($value, 'from.name'),
+            $value['post_id'] ?? null,
+        );
     }
 
     private function channel(string $accountId): ?Channel
