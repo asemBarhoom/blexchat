@@ -12,6 +12,6 @@ class ManageChannelAccessRequests extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('إضافة طلب')];
+        return [CreateAction::make()->label(__('admin/access_requests.create'))];
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
-use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
@@ -14,8 +13,9 @@ class ViewUser extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            EditAction::make()->label('تعديل'),
-            DeleteAction::make()->label('حذف')->hidden(fn (): bool => $this->record->is(auth()->user())),
+            EditAction::make()->label(__('admin/common.edit')),
+            UserResource::withdrawInvitationAction(),
+            UserResource::deleteAction(),
         ];
     }
 }

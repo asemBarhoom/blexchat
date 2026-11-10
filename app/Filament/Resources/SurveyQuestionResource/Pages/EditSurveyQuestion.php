@@ -13,7 +13,7 @@ class EditSurveyQuestion extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make()->label('حذف'),
+            DeleteAction::make()->label(__('admin/common.delete')),
         ];
     }
 }

@@ -21,7 +21,7 @@ class AlignmentProgress extends BaseWidget
 
         $stats = [];
 
-        foreach (AlignmentItem::OWNERS as $owner => $label) {
+        foreach (AlignmentItem::owners() as $owner => $label) {
             $byStatus = ($counts[$owner] ?? collect())->pluck('total', 'status');
             $all = (int) $byStatus->sum();
             $done = (int) ($byStatus['done'] ?? 0);
@@ -30,7 +30,7 @@ class AlignmentProgress extends BaseWidget
             $p0 = AlignmentItem::where('owner', $owner)->where('priority', 'p0')->where('status', '!=', 'done')->count();
 
             $stats[] = Stat::make($label, "{$done} / {$all}")
-                ->description("مفتوح {$open} · جزئي {$partial}".($p0 > 0 ? " · عاجل {$p0}" : ''))
+                ->description(__('admin/alignment.progress', ['open' => $open, 'partial' => $partial]).($p0 > 0 ? ' · '.__('admin/alignment.progress_urgent', ['count' => $p0]) : ''))
                 ->color($p0 > 0 ? 'danger' : ($done === $all ? 'success' : 'warning'));
         }
 

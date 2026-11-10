@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'assigned' => 'Assigned',
+    'assignment' => 'Assignment',
+    'automated' => 'Automated',
+    'details' => 'Conversation details',
+    'direction' => 'Direction',
+    'handover' => 'Handover',
+    'handover_reason' => 'Last handover reason',
+    'inbound' => 'Inbound',
+    'inbox' => 'Inbox',
+    'messages' => 'Messages',
+    'model' => 'conversation',
+    'outbound' => 'Outbound',
+    'reminder' => 'Reminder',
+    'sent_at' => 'Sent',
+    'state_automation' => 'Automation replies',
+    'state_human' => 'Handed over to a person',
+    'state_open' => 'Waiting for a reply',
+    'system' => 'System',
+    'text' => 'Text',
+    'text_with_button' => 'Text + button',
+    'unread' => 'Unread',
+    'unread_messages' => 'Unread messages',
+];

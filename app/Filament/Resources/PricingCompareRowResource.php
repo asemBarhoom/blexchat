@@ -27,59 +27,74 @@ use Illuminate\Database\Eloquent\Builder;
 
 class PricingCompareRowResource extends Resource
 {
-    /** @var array<string, string> */
-    public const SOURCE_LABELS = [
-        'has_ai' => 'من الخطة: صح إن كانت تشمل Blexchat AI',
-        'paid' => 'من الخطة: صح للخطط المدفوعة',
-    ];
+    /** @return array<string, string> */
+    public static function sourceLabels(): array
+    {
+        return [
+            'has_ai' => __('admin/pricing.from_the_plan_a_tick_if_it_includes_blex'),
+            'paid' => __('admin/pricing.from_the_plan_a_tick_for_paid_plans'),
+        ];
+    }
 
     protected static ?string $model = PricingCompareRow::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-table-cells';
 
-    protected static ?string $navigationLabel = 'صفوف المقارنة';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/pricing.comparison_rows');
+    }
 
-    protected static ?string $modelLabel = 'صف';
+    public static function getModelLabel(): string
+    {
+        return __('admin/pricing.row');
+    }
 
-    protected static ?string $pluralModelLabel = 'صفوف جدول المقارنة';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/pricing.comparison_table_rows');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = ManagePricingPage::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return ManagePricingPage::pricingGroup();
+    }
 
     protected static ?int $navigationSort = 20;
 
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('الصف')->schema([
-                Select::make('pricing_compare_group_id')->label('المجموعة')->required()
+            Section::make(__('admin/pricing.row_2'))->schema([
+                Select::make('pricing_compare_group_id')->label(__('admin/pricing.group_2'))->required()
                     ->options(fn (): array => PricingCompareGroup::query()->orderBy('sort')->get()
                         ->mapWithKeys(fn (PricingCompareGroup $group): array => [$group->id => $group->title])->all()),
-                TextInput::make('key')->label('المعرّف')->required()->alphaDash()->maxLength(50)->unique(ignoreRecord: true)
-                    ->helperText('ثابت يستخدمه الفرونت، مثل automations.'),
-                Translations::input('label', 'الميزة'),
-                Select::make('source')->label('مصدر الخلايا')->options(self::SOURCE_LABELS)->placeholder('الخلايا أدناه')->live()
-                    ->helperText('اختر مصدراً من الخطة حتى لا تتكرر معلومة موجودة في الخطط.'),
+                TextInput::make('key')->label(__('admin/common.key'))->required()->alphaDash()->maxLength(50)->unique(ignoreRecord: true)
+                    ->helperText(__('admin/pricing.a_fixed_value_the_frontend_uses_like_aut_2')),
+                Translations::input('label', __('admin/pricing.feature')),
+                Select::make('source')->label(__('admin/pricing.cell_source'))->options(self::sourceLabels())->placeholder(__('admin/pricing.the_cells_below'))->live()
+                    ->helperText(__('admin/pricing.pick_a_plan_source_so_the_plans_and_this')),
                 HomeContentFields::active(),
             ])->columns(2),
 
-            Section::make('الخلايا لكل خطة')
-                ->description('اكتب نصاً، أو اتركه فارغاً لتظهر علامة صح (مشمولة) أو شرطة. {contacts} داخل النص = حد جهات الاتصال للخطة. خطة بلا خلية تظهر لها شرطة.')
+            Section::make(__('admin/pricing.cells_per_plan'))
+                ->description(__('admin/pricing.write_a_text_or_leave_it_empty_to_show_a'))
                 ->visible(fn (Get $get): bool => blank($get('source')))
                 ->schema([
                     Repeater::make('cells')->hiddenLabel()
                         ->relationship()
                         ->default(fn (): array => Plan::query()->orderBy('sort')->pluck('id')
                             ->map(fn (int $planId): array => ['plan_id' => $planId, 'included' => false])->all())
-                        ->addActionLabel('إضافة خلية')
+                        ->addActionLabel(__('admin/pricing.add_cell'))
                         ->itemLabel(fn (array $state): ?string => Plan::find($state['plan_id'] ?? null)?->name)
                         ->collapsible()
                         ->columns(3)
                         ->schema([
-                            Select::make('plan_id')->label('الخطة')->required()->distinct()->disableOptionsWhenSelectedInSiblingRepeaterItems()
+                            Select::make('plan_id')->label(__('admin/common.plan'))->required()->distinct()->disableOptionsWhenSelectedInSiblingRepeaterItems()
                                 ->options(fn (): array => Plan::query()->orderBy('sort')->get()
                                     ->mapWithKeys(fn (Plan $plan): array => [$plan->id => $plan->name])->all()),
-                            Toggle::make('included')->label('مشمولة (صح)')->inline(false),
-                            Translations::input('text', 'النص', required: false),
+                            Toggle::make('included')->label(__('admin/pricing.included_tick'))->inline(false),
+                            Translations::input('text', __('admin/common.text'), required: false),
                         ]),
                 ]),
         ])->columns(1);
@@ -90,24 +105,24 @@ class PricingCompareRowResource extends Resource
         return $table
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('group')->withCount('cells'))
             ->columns([
-                TextColumn::make('label')->label('الميزة')->searchable(),
-                TextColumn::make('group.title')->label('المجموعة'),
-                TextColumn::make('key')->label('المعرّف')->badge()->color('gray'),
-                TextColumn::make('source')->label('المصدر')->placeholder('الخلايا')
-                    ->formatStateUsing(fn (string $state): string => self::SOURCE_LABELS[$state] ?? $state),
-                TextColumn::make('cells_count')->label('الخلايا')->numeric(),
-                ToggleColumn::make('active')->label('ظاهر'),
+                TextColumn::make('label')->label(__('admin/pricing.feature'))->searchable(),
+                TextColumn::make('group.title')->label(__('admin/pricing.group_2')),
+                TextColumn::make('key')->label(__('admin/common.key'))->badge()->color('gray'),
+                TextColumn::make('source')->label(__('admin/contacts.source'))->placeholder(__('admin/pricing.cells'))
+                    ->formatStateUsing(fn (string $state): string => self::sourceLabels()[$state] ?? $state),
+                TextColumn::make('cells_count')->label(__('admin/pricing.cells'))->numeric(),
+                ToggleColumn::make('active')->label(__('admin/common.visible')),
             ])
             ->filters([
-                SelectFilter::make('pricing_compare_group_id')->label('المجموعة')
+                SelectFilter::make('pricing_compare_group_id')->label(__('admin/pricing.group_2'))
                     ->options(fn (): array => PricingCompareGroup::query()->orderBy('sort')->get()
                         ->mapWithKeys(fn (PricingCompareGroup $group): array => [$group->id => $group->title])->all()),
             ])
             ->reorderable('sort')
             ->defaultSort('sort')
             ->recordActions([
-                EditAction::make()->label('تعديل'),
-                DeleteAction::make()->label('حذف'),
+                EditAction::make()->label(__('admin/common.edit')),
+                DeleteAction::make()->label(__('admin/common.delete')),
             ]);
     }
 

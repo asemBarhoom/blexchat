@@ -26,11 +26,20 @@ class ManageCheckoutSettings extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-shopping-cart';
 
-    protected static ?string $navigationLabel = 'إعدادات الدفع';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/checkout.nav');
+    }
 
-    protected static ?string $title = 'إعدادات صفحة الدفع';
+    public function getTitle(): string
+    {
+        return __('admin/checkout.title');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = PlanResource::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return PlanResource::signupBillingGroup();
+    }
 
     protected static ?int $navigationSort = 15;
 
@@ -52,14 +61,14 @@ class ManageCheckoutSettings extends Page
         return $schema
             ->statePath('data')
             ->components([
-                CheckboxList::make('checkout_plans')->label('الخطط المعروضة في صفحة الدفع')
+                CheckboxList::make('checkout_plans')->label(__('admin/checkout.plans'))
                     ->options(fn (): array => Plan::where('monthly_price', '>', 0)->orderBy('sort')->get()
                         ->mapWithKeys(fn (Plan $plan): array => [$plan->id => $plan->name])->all())
                     ->required()
-                    ->helperText('الخطط التي يتنقّل بينها العميل في صفحة الدفع، بترتيب الخطط.'),
-                TextInput::make('trial_reminder_days')->label('يوم تذكير التجربة المجانية')
+                    ->helperText(__('admin/checkout.plans_help')),
+                TextInput::make('trial_reminder_days')->label(__('admin/checkout.trial_reminder_days'))
                     ->numeric()->integer()->minValue(1)->maxValue(fn (): int => self::shortestTrial() - 1)->required()
-                    ->helperText(fn (): string => 'في أي يوم من التجربة المجانية نرسل بريد التذكير. يجب أن يسبق نهاية أقصر تجربة ('.self::shortestTrial().' يوماً).'),
+                    ->helperText(fn (): string => __('admin/checkout.trial_reminder_help', ['days' => self::shortestTrial()])),
             ]);
     }
 
@@ -72,7 +81,7 @@ class ManageCheckoutSettings extends Page
                 ->livewireSubmitHandler('save')
                 ->footer([
                     Actions::make([
-                        Action::make('save')->label('حفظ')->submit('save')->keyBindings(['mod+s']),
+                        Action::make('save')->label(__('admin/common.save'))->submit('save')->keyBindings(['mod+s']),
                     ])->key('form-actions'),
                 ]),
         ]);
@@ -84,26 +93,26 @@ class ManageCheckoutSettings extends Page
     public static function stripeNote(): Callout
     {
         $webhook = route('webhooks.stripe');
-        $prices = 'الأسعار تُرسل من جدول الخطط مباشرة (السنوي = السعر الشهري للخطة السنوية × 12)، والقسيمة تُخصم من أول دفعة.';
+        $prices = __('admin/checkout.prices_note');
 
         if (config('services.payments.driver') === 'fake') {
             return FakeGateway::allowed()
-                ? Callout::make('الدفع التجريبي (PAYMENT_DRIVER=fake) مُفعّل')->warning()
-                    ->description("لا يُخصم أي مبلغ: صفحة الدفع صفحة اختبار في هذا الخادم بزرّي «ادفع (اختبار)» و«رفض». {$prices} للدفع الحقيقي اضبط PAYMENT_DRIVER=stripe.")
-                : Callout::make('الدفع التجريبي مرفوض في الإنتاج')->danger()
-                    ->description('PAYMENT_DRIVER=fake على خادم إنتاج، فالخطط المدفوعة ترد بـ «الدفع غير متاح». اضبط PAYMENT_DRIVER=stripe، أو PAYMENT_ALLOW_FAKE=true على خادم تطوير فقط.');
+                ? Callout::make(__('admin/checkout.fake_on'))->warning()
+                    ->description(__('admin/checkout.fake_on_note', ['prices' => $prices]))
+                : Callout::make(__('admin/checkout.fake_in_production'))->danger()
+                    ->description(__('admin/checkout.fake_in_production_note'));
         }
 
         if (! StripeClient::isConfigured()) {
-            return Callout::make('الدفع بالبطاقة (Stripe) غير مُفعّل')->warning()
-                ->description("أضف STRIPE_SECRET وSTRIPE_WEBHOOK_SECRET إلى متغيرات البيئة. حتى ذلك الحين، الخطط المدفوعة ترد بـ «الدفع غير متاح» والتجربة المجانية تعمل كالمعتاد. عنوان الـ webhook: {$webhook}");
+            return Callout::make(__('admin/checkout.stripe_off'))->warning()
+                ->description(__('admin/checkout.stripe_off_note', ['webhook' => $webhook]));
         }
 
-        $mode = str_starts_with((string) config('services.stripe.secret'), 'sk_live_') ? 'الوضع الحقيقي (live)' : 'وضع الاختبار (test)';
+        $mode = str_starts_with((string) config('services.stripe.secret'), 'sk_live_') ? __('admin/checkout.live') : __('admin/checkout.test');
 
-        return Callout::make("الدفع بالبطاقة (Stripe) مُفعّل — {$mode}")->info()
-            ->description("{$prices} في Stripe أضف webhook إلى {$webhook} للأحداث: checkout.session.completed وcheckout.session.expired وinvoice.paid وcustomer.subscription.deleted."
-                .(filled(config('services.stripe.webhook_secret')) ? '' : ' تنبيه: STRIPE_WEBHOOK_SECRET فارغ، فلن تُقبل أحداث Stripe.'));
+        return Callout::make(__('admin/checkout.stripe_on', ['mode' => $mode]))->info()
+            ->description(__('admin/checkout.stripe_on_note', ['prices' => $prices, 'webhook' => $webhook])
+                .(filled(config('services.stripe.webhook_secret')) ? '' : ' '.__('admin/checkout.webhook_secret_missing')));
     }
 
     /**
@@ -122,6 +131,6 @@ class ManageCheckoutSettings extends Page
         Plan::whereIn('id', $state['checkout_plans'])->update(['in_checkout' => true]);
         Setting::put(Setting::TRIAL_REMINDER_DAYS, (int) $state['trial_reminder_days']);
 
-        Notification::make()->title('تم حفظ إعدادات الدفع')->success()->send();
+        Notification::make()->title(__('admin/checkout.saved'))->success()->send();
     }
 }

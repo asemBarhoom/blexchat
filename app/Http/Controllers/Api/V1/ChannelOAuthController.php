@@ -41,7 +41,7 @@ class ChannelOAuthController extends Controller
     #[OA\Get(path: '/api/v1/channels/oauth/{platform}/start', summary: 'Start a channel OAuth flow', tags: ['Channels'], security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'platform', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: ['messenger', 'whatsapp', 'tiktok']))], responses: [new OA\Response(response: 200, description: 'OAuth state and authorization URL'), new OA\Response(response: 501, description: 'Provider OAuth is not configured')])]
     public function start(Request $request, string $platform, ChannelOAuthProvider $provider): JsonResponse
     {
-        abort_unless((config('services.channels.oauth_driver') === 'fake' && ! app()->isProduction()) || (filled(config("services.{$platform}.client_id")) && filled(config('services.channels.oauth_redirect_url'))), 501, 'OAuth providers are not configured.');
+        abort_unless((config('services.channels.oauth_driver') === 'fake' && ! app()->isProduction()) || (filled(config("services.{$platform}.client_id")) && filled(config('services.channels.oauth_redirect_url'))), 501, __('channels.oauth_not_configured'));
         abort_unless(in_array($platform, ['messenger', 'whatsapp', 'tiktok'], true), 404);
         $state = Str::random(40);
         Cache::put("channel-oauth:{$state}", ['user_id' => $request->user()->id, 'platform' => $platform], now()->addMinutes(10));
@@ -54,7 +54,7 @@ class ChannelOAuthController extends Controller
     #[OA\Get(path: '/api/v1/channels/oauth/{platform}/callback', summary: 'Complete a channel OAuth flow', tags: ['Channels'], parameters: [new OA\Parameter(name: 'platform', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: ['messenger', 'whatsapp', 'tiktok'])), new OA\Parameter(name: 'state', in: 'query', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 201, description: 'Channel connected'), new OA\Response(response: 400, description: 'Invalid or expired OAuth state'), new OA\Response(response: 501, description: 'Provider OAuth is not configured')])]
     public function callback(Request $request, string $platform, ChannelOAuthProvider $provider): JsonResponse
     {
-        abort_unless((config('services.channels.oauth_driver') === 'fake' && ! app()->isProduction()) || filled(config("services.{$platform}.client_id")), 501, 'OAuth providers are not configured.');
+        abort_unless((config('services.channels.oauth_driver') === 'fake' && ! app()->isProduction()) || filled(config("services.{$platform}.client_id")), 501, __('channels.oauth_not_configured'));
         $state = (string) $request->query('state');
         $pending = Cache::pull("channel-oauth:{$state}");
         abort_unless(is_array($pending) && $pending['platform'] === $platform, 400, 'Invalid OAuth state.');
@@ -76,7 +76,7 @@ class ChannelOAuthController extends Controller
         if ($accountId === '' && config('services.channels.oauth_driver') === 'fake') {
             $accountId = 'fake-oauth-'.$platform.'-'.$user->id;
         }
-        abort_if($accountId === '', 422, 'The provider did not return an account id.');
+        abort_if($accountId === '', 422, __('channels.oauth_no_account'));
         abort_if(Channel::where('platform', $platform)->where('account_id', $accountId)->where('user_id', '!=', $user->id)->exists(), 409, 'This account is already connected to another workspace.');
 
         $channel = Channel::updateOrCreate(

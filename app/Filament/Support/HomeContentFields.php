@@ -19,7 +19,10 @@ use Filament\Tables\Table;
  */
 final class HomeContentFields
 {
-    public const NAVIGATION_GROUP = 'الصفحة الرئيسية للموقع';
+    public static function homeGroup(): string
+    {
+        return __('admin/home.website_home_page');
+    }
 
     /**
      * @param  list<Column>  $columns
@@ -28,22 +31,22 @@ final class HomeContentFields
     public static function table(Table $table, array $columns, array $filters = []): Table
     {
         return $table
-            ->columns([...$columns, ToggleColumn::make('active')->label('ظاهر')])
+            ->columns([...$columns, ToggleColumn::make('active')->label(__('admin/common.visible'))])
             ->filters($filters)
             ->reorderable('sort')
             ->defaultSort('sort')
             ->recordActions([
-                EditAction::make()->label('تعديل'),
-                DeleteAction::make()->label('حذف'),
+                EditAction::make()->label(__('admin/common.edit')),
+                DeleteAction::make()->label(__('admin/common.delete')),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([DeleteBulkAction::make()->label('حذف المحدد')]),
+                BulkActionGroup::make([DeleteBulkAction::make()->label(__('admin/common.delete_selected'))]),
             ]);
     }
 
     public static function active(): Toggle
     {
-        return Toggle::make('active')->label('ظاهر في الموقع')->default(true);
+        return Toggle::make('active')->label(__('admin/home.shown_on_the_website'))->default(true);
     }
 
     public static function image(string $name, string $label): FileUpload

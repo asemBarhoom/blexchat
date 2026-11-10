@@ -124,3 +124,23 @@ it('renders every admin detail page with seeded data', function () {
     $this->get('/admin/conversations/'.Conversation::firstOrFail()->id)->assertOk();
     $this->get('/admin/posts/'.Post::firstOrFail()->id)->assertOk()->assertSee('عباية الشتاء وصلت');
 });
+
+it('shows the content and communication screens in English when English is picked', function () {
+    $this->withSession(['admin_locale' => 'en'])->get('/admin/users')
+        ->assertOk()
+        ->assertSee('Add user')
+        ->assertSee('Communication')
+        ->assertSee('Sign-up and billing')
+        ->assertSee('Website home page')
+        ->assertSee('Pricing page')
+        ->assertSee('Solution pages')
+        ->assertDontSee('المستخدمون')
+        ->assertDontSee('التسجيل والاشتراكات');
+});
+
+it('shows the content and communication screens in Arabic by default', function () {
+    $this->get('/admin/users')
+        ->assertOk()
+        ->assertSee('أضف مستخدماً')
+        ->assertSee('التواصل');
+});

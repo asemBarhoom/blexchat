@@ -31,14 +31,23 @@ class AlignmentItem extends Model
 
     public const FIGMA_FILE = 'https://www.figma.com/design/3F9ollZMdHJWqeWTCnhoQT/blexchat--Copy-';
 
-    /** @var array<string, string> */
-    public const OWNERS = ['frontend' => 'الفرونت', 'backend' => 'الباك إند', 'design' => 'التصميم'];
+    /** @return array<string, string> */
+    public static function owners(): array
+    {
+        return ['frontend' => __('admin/alignment.owner_frontend'), 'backend' => __('admin/alignment.owner_backend'), 'design' => __('admin/alignment.owner_design')];
+    }
 
-    /** @var array<string, string> */
-    public const PRIORITIES = ['p0' => 'P0 · عاجل', 'p1' => 'P1', 'p2' => 'P2'];
+    /** @return array<string, string> */
+    public static function priorities(): array
+    {
+        return ['p0' => __('admin/alignment.priority_p0'), 'p1' => 'P1', 'p2' => 'P2'];
+    }
 
-    /** @var array<string, string> */
-    public const STATUSES = ['open' => 'مفتوح', 'partial' => 'جزئي', 'done' => 'منجز'];
+    /** @return array<string, string> */
+    public static function statuses(): array
+    {
+        return ['open' => __('admin/alignment.status_open'), 'partial' => __('admin/alignment.status_partial'), 'done' => __('admin/alignment.status_done')];
+    }
 
     /**
      * A link to a node of the Figma file, from its id as Figma writes it ("49:10433" or "49-10433").

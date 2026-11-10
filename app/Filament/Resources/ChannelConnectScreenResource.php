@@ -22,20 +22,35 @@ use Filament\Tables\Table;
 
 class ChannelConnectScreenResource extends Resource
 {
-    /** @var array<string, string> */
-    public const METHOD_LABELS = ['meta' => 'عبر Meta', 'tiktok' => 'عبر TikTok'];
+    /** @return array<string, string> */
+    public static function methodLabels(): array
+    {
+        return ['meta' => __('admin/channel_screens.via_meta'), 'tiktok' => __('admin/channel_screens.via_tiktok')];
+    }
 
     protected static ?string $model = ChannelConnectScreen::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-link';
 
-    protected static ?string $navigationLabel = 'شاشات ربط القنوات';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/channel_screens.plural');
+    }
 
-    protected static ?string $modelLabel = 'شاشة ربط';
+    public static function getModelLabel(): string
+    {
+        return __('admin/channel_screens.model');
+    }
 
-    protected static ?string $pluralModelLabel = 'شاشات ربط القنوات';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/channel_screens.plural');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = PlanResource::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return PlanResource::signupBillingGroup();
+    }
 
     protected static ?int $navigationSort = 50;
 
@@ -44,59 +59,59 @@ class ChannelConnectScreenResource extends Resource
         $locales = config('app.supported_locales');
 
         return $schema->components([
-            Section::make('القناة')->schema([
-                Select::make('platform')->label('المنصة')->required()->unique(ignoreRecord: true)
+            Section::make(__('admin/common.channel'))->schema([
+                Select::make('platform')->label(__('admin/common.platform'))->required()->unique(ignoreRecord: true)
                     ->options(array_combine(ChannelConnectScreen::PLATFORMS, ['Instagram', 'WhatsApp', 'TikTok', 'Messenger'])),
-                Select::make('method')->label('طريقة الربط')->options(self::METHOD_LABELS)->required()->default('meta')
-                    ->helperText('تحدد شعار زر الربط.'),
-                Translations::input('name', 'الاسم'),
-                Translations::input('cta', 'نص زر الربط'),
-                Translations::input('lead', 'المقدمة', long: true),
-                Translations::input('account_kind', 'نوع الحساب المقبول', required: false),
-                Translations::input('can', 'ما يستطيعه Blexchat بعد الربط', required: false),
-                Toggle::make('active')->label('ظاهرة')->default(true),
+                Select::make('method')->label(__('admin/channel_screens.method'))->options(self::methodLabels())->required()->default('meta')
+                    ->helperText(__('admin/channel_screens.method_help')),
+                Translations::input('name', __('admin/common.name')),
+                Translations::input('cta', __('admin/channel_screens.cta')),
+                Translations::input('lead', __('admin/channel_screens.lead'), long: true),
+                Translations::input('account_kind', __('admin/channel_screens.account_kind'), required: false),
+                Translations::input('can', __('admin/channel_screens.can'), required: false),
+                Toggle::make('active')->label(__('admin/common.visible'))->default(true),
             ])->columns(2),
 
-            Section::make('الخطوات')->schema([
+            Section::make(__('admin/channel_screens.steps'))->schema([
                 Grid::make(count($locales))->schema(array_map(
                     fn (string $locale): TagsInput => TagsInput::make("steps.{$locale}")
-                        ->label('الخطوات — '.Translations::localeName($locale))
-                        ->placeholder('اكتب خطوة واضغط Enter')
+                        ->label(__('admin/channel_screens.steps_in', ['locale' => Translations::localeName($locale)]))
+                        ->placeholder(__('admin/channel_screens.steps_placeholder'))
                         ->reorderable()
                         ->required(Translations::isFallback($locale)),
                     $locales,
                 )),
             ]),
 
-            Section::make('خيارات أخرى ("See more options")')->schema([
+            Section::make(__('admin/channel_screens.more_options'))->schema([
                 Grid::make(count($locales))->schema(array_map(
                     fn (string $locale): Repeater => Repeater::make("options.{$locale}")
-                        ->label('الخيارات — '.Translations::localeName($locale))
+                        ->label(__('admin/channel_screens.options_in', ['locale' => Translations::localeName($locale)]))
                         ->reorderable()
                         ->collapsible()
                         ->defaultItems(0)
-                        ->addActionLabel('إضافة خيار')
+                        ->addActionLabel(__('admin/common.add_option'))
                         ->itemLabel(fn (array $state): ?string => $state['title'] ?? null)
                         ->schema([
-                            Translations::field('title', 'العنوان', $locale, required: true),
-                            Translations::field('note', 'الملاحظة', $locale, required: false),
-                            TextInput::make('url')->label('رابط صفحة المساعدة')->url(),
+                            Translations::field('title', __('admin/common.title'), $locale, required: true),
+                            Translations::field('note', __('admin/channel_screens.note'), $locale, required: false),
+                            TextInput::make('url')->label(__('admin/channel_screens.help_url'))->url(),
                         ]),
                     $locales,
                 )),
             ])->collapsible(),
 
-            Section::make('أثناء الربط وإعادة الربط')->schema([
-                Translations::input('reconnect_cta', 'نص زر إعادة الربط'),
-                Translations::input('waiting_in', 'النافذة التي يُنتظر فيها ("Finish in …")'),
+            Section::make(__('admin/channel_screens.while_connecting'))->schema([
+                Translations::input('reconnect_cta', __('admin/channel_screens.reconnect_cta')),
+                Translations::input('waiting_in', __('admin/channel_screens.waiting_in')),
             ]),
 
-            Section::make('حساب غير مؤهل')->schema([
-                Translations::input('ineligible_title', 'العنوان'),
-                Translations::input('ineligible_text', 'النص', long: true),
-                Translations::input('ineligible_kind', 'نوع الحساب المرفوض', required: false),
-                Translations::input('ineligible_how', 'نص رابط المساعدة', required: false),
-                TextInput::make('ineligible_help_url')->label('رابط المساعدة')->url(),
+            Section::make(__('admin/channel_screens.ineligible'))->schema([
+                Translations::input('ineligible_title', __('admin/common.title')),
+                Translations::input('ineligible_text', __('admin/common.text'), long: true),
+                Translations::input('ineligible_kind', __('admin/channel_screens.ineligible_kind'), required: false),
+                Translations::input('ineligible_how', __('admin/channel_screens.ineligible_how'), required: false),
+                TextInput::make('ineligible_help_url')->label(__('admin/channel_screens.ineligible_help_url'))->url(),
             ]),
         ])->columns(1);
     }
@@ -105,16 +120,16 @@ class ChannelConnectScreenResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->label('القناة')->searchable(),
-                TextColumn::make('platform')->label('المنصة')->badge()->color('gray'),
-                TextColumn::make('method')->label('طريقة الربط')->formatStateUsing(fn (string $state): string => self::METHOD_LABELS[$state] ?? $state),
-                TextColumn::make('cta')->label('زر الربط'),
-                ToggleColumn::make('active')->label('ظاهرة'),
+                TextColumn::make('name')->label(__('admin/common.channel'))->searchable(),
+                TextColumn::make('platform')->label(__('admin/common.platform'))->badge()->color('gray'),
+                TextColumn::make('method')->label(__('admin/channel_screens.method'))->formatStateUsing(fn (string $state): string => self::methodLabels()[$state] ?? $state),
+                TextColumn::make('cta')->label(__('admin/channel_screens.cta_column')),
+                ToggleColumn::make('active')->label(__('admin/common.visible')),
             ])
             ->defaultSort('id')
             ->recordActions([
-                EditAction::make()->label('تعديل'),
-                DeleteAction::make()->label('حذف')->modalDescription('ستعيد واجهة الربط لهذه القناة الخطأ 404. لإخفائها فقط، أوقف "ظاهرة".'),
+                EditAction::make()->label(__('admin/common.edit')),
+                DeleteAction::make()->label(__('admin/common.delete'))->modalDescription(__('admin/channel_screens.delete_note')),
             ]);
     }
 

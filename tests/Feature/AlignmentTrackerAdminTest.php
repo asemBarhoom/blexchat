@@ -19,9 +19,9 @@ it('seeds every gap once, with a valid owner, priority and status, and keeps a s
 
     $items = AlignmentItem::all();
     expect($items->where('owner', 'frontend'))->toHaveCount(26)
-        ->and($items->pluck('owner')->unique()->diff(array_keys(AlignmentItem::OWNERS)))->toBeEmpty()
-        ->and($items->pluck('priority')->unique()->diff(array_keys(AlignmentItem::PRIORITIES)))->toBeEmpty()
-        ->and($items->pluck('status')->unique()->diff(array_keys(AlignmentItem::STATUSES)))->toBeEmpty()
+        ->and($items->pluck('owner')->unique()->diff(array_keys(AlignmentItem::owners())))->toBeEmpty()
+        ->and($items->pluck('priority')->unique()->diff(array_keys(AlignmentItem::priorities())))->toBeEmpty()
+        ->and($items->pluck('status')->unique()->diff(array_keys(AlignmentItem::statuses())))->toBeEmpty()
         ->and(AlignmentItem::firstWhere('code', 'FE-07')->figma_url)->toBe(AlignmentItem::FIGMA_FILE.'?node-id=49-10433');
 
     AlignmentItem::where('code', 'FE-07')->update(['status' => 'done']);

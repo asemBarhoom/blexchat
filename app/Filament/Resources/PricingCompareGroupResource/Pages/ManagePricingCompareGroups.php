@@ -12,6 +12,6 @@ class ManagePricingCompareGroups extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('إضافة مجموعة')];
+        return [CreateAction::make()->label(__('admin/pricing.add_group'))];
     }
 }

@@ -26,11 +26,20 @@ class ManageAuthScreens extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-language';
 
-    protected static ?string $navigationLabel = 'نصوص شاشات التسجيل';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/auth_screens.nav');
+    }
 
-    protected static ?string $title = 'نصوص شاشات التسجيل وتسجيل الدخول';
+    public function getTitle(): string
+    {
+        return __('admin/auth_screens.title');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = PlanResource::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return PlanResource::signupBillingGroup();
+    }
 
     protected static ?int $navigationSort = -1;
 
@@ -41,41 +50,44 @@ class ManageAuthScreens extends Page
      *
      * @var array<string, array{label: string, texts: array<string, array{0: string, 1?: string}>}>
      */
-    private const SCREENS = [
-        'signup' => ['label' => 'إنشاء حساب (W01)', 'texts' => [
-            'title' => ['العنوان'], 'lead' => ['الوصف', 'long'], 'google' => ['زر Google'], 'submit' => ['زر البريد الإلكتروني'],
-            'aside_text' => ['نص أعلى الصفحة'], 'aside_link' => ['رابط أعلى الصفحة'],
-            'legal' => ['نص الموافقة ({terms} و{privacy} مكان الرابطين)', 'long'], 'legal_terms' => ['رابط الشروط'], 'legal_privacy' => ['رابط سياسة الخصوصية'],
-        ]],
-        'signin' => ['label' => 'تسجيل الدخول (W04)', 'texts' => [
-            'title' => ['العنوان'], 'lead' => ['الوصف', 'long'], 'google' => ['زر Google'], 'submit' => ['زر البريد الإلكتروني'],
-            'aside_text' => ['نص أعلى الصفحة'], 'aside_link' => ['رابط أعلى الصفحة'],
-        ]],
-        'email_form' => ['label' => 'نموذج البريد والتنبيهات', 'texts' => [
-            'or' => ['الفاصل "أو"'], 'email_label' => ['عنوان الحقل'], 'email_placeholder' => ['النص التوضيحي للحقل'],
-            'email_required' => ['خطأ: الحقل فارغ'], 'email_invalid' => ['خطأ: بريد غير مكتمل'],
-            'notice_google_failed' => ['تنبيه: فشل الدخول عبر Google', 'long'], 'notice_signed_out' => ['تنبيه: تم تسجيل الخروج', 'long'],
-        ]],
-        'check_email' => ['label' => 'تحقّق من بريدك (W02)', 'texts' => [
-            'title' => ['العنوان'], 'lead_signup' => ['الوصف عند إنشاء حساب ({email} مكان البريد)', 'long'], 'lead_signin' => ['الوصف عند تسجيل الدخول ({email} مكان البريد)', 'long'],
-            'open_gmail' => ['زر Gmail'], 'open_outlook' => ['زر Outlook'],
-            'resend_countdown' => ['نص العدّ التنازلي ({time} مكان الوقت)', 'long'], 'resend_prompt' => ['سؤال "لم يصلك؟"'], 'resend' => ['زر إعادة الإرسال'],
-            'resend_limited' => ['خطأ: محاولات كثيرة'], 'wrong_address' => ['سؤال "عنوان خاطئ؟"'], 'use_another' => ['رابط بريد آخر'],
-        ]],
-        'verify' => ['label' => 'خطوة أخيرة (W03)', 'texts' => [
-            'title' => ['العنوان'], 'lead' => ['الوصف', 'long'], 'status_title' => ['عنوان حالة التحقق'], 'status_note' => ['ملاحظة حالة التحقق'],
-            'badge' => ['الشارة'], 'fine' => ['النص السفلي', 'long'],
-            'toast_created_title' => ['إشعار: تم إنشاء الحساب'], 'toast_created_text' => ['نص إشعار إنشاء الحساب'], 'toast_welcome_back' => ['إشعار: أهلًا بعودتك ({name} مكان الاسم)'],
-        ]],
-        'link_expired' => ['label' => 'رابط منتهي الصلاحية', 'texts' => [
-            'title' => ['العنوان'], 'lead' => ['الوصف ({email} مكان البريد)', 'long'], 'submit' => ['زر إرسال رابط جديد'], 'use_another' => ['رابط بريد آخر'],
-            'toast_title' => ['إشعار: تم الإرسال'], 'toast_text' => ['نص الإشعار ({email} مكان البريد)'],
-        ]],
-        'layout' => ['label' => 'الإطار المشترك', 'texts' => [
-            'panel_line' => ['عبارة اللوحة الجانبية'], 'home_label' => ['تسمية الشعار لقارئ الشاشة'], 'copyright' => ['حقوق النشر'],
-            'privacy' => ['رابط الخصوصية في التذييل'], 'terms' => ['رابط الشروط في التذييل'],
-        ]],
-    ];
+    private static function screenDefinitions(): array
+    {
+        return [
+            'signup' => ['label' => __('admin/auth_screens.signup'), 'texts' => [
+                'title' => [__('admin/common.title')], 'lead' => [__('admin/common.description'), 'long'], 'google' => [__('admin/auth_screens.google')], 'submit' => [__('admin/auth_screens.submit')],
+                'aside_text' => [__('admin/auth_screens.aside_text')], 'aside_link' => [__('admin/auth_screens.aside_link')],
+                'legal' => [__('admin/auth_screens.legal'), 'long'], 'legal_terms' => [__('admin/auth_screens.legal_terms')], 'legal_privacy' => [__('admin/auth_screens.legal_privacy')],
+            ]],
+            'signin' => ['label' => __('admin/auth_screens.signin'), 'texts' => [
+                'title' => [__('admin/common.title')], 'lead' => [__('admin/common.description'), 'long'], 'google' => [__('admin/auth_screens.google')], 'submit' => [__('admin/auth_screens.submit')],
+                'aside_text' => [__('admin/auth_screens.aside_text')], 'aside_link' => [__('admin/auth_screens.aside_link')],
+            ]],
+            'email_form' => ['label' => __('admin/auth_screens.email_form'), 'texts' => [
+                'or' => [__('admin/auth_screens.or')], 'email_label' => [__('admin/auth_screens.email_label')], 'email_placeholder' => [__('admin/auth_screens.email_placeholder')],
+                'email_required' => [__('admin/auth_screens.email_required')], 'email_invalid' => [__('admin/auth_screens.email_invalid')],
+                'notice_google_failed' => [__('admin/auth_screens.notice_google_failed'), 'long'], 'notice_signed_out' => [__('admin/auth_screens.notice_signed_out'), 'long'],
+            ]],
+            'check_email' => ['label' => __('admin/auth_screens.check_email'), 'texts' => [
+                'title' => [__('admin/common.title')], 'lead_signup' => [__('admin/auth_screens.lead_signup'), 'long'], 'lead_signin' => [__('admin/auth_screens.lead_signin'), 'long'],
+                'open_gmail' => [__('admin/auth_screens.open_gmail')], 'open_outlook' => [__('admin/auth_screens.open_outlook')],
+                'resend_countdown' => [__('admin/auth_screens.resend_countdown'), 'long'], 'resend_prompt' => [__('admin/auth_screens.resend_prompt')], 'resend' => [__('admin/auth_screens.resend')],
+                'resend_limited' => [__('admin/auth_screens.resend_limited')], 'wrong_address' => [__('admin/auth_screens.wrong_address')], 'use_another' => [__('admin/auth_screens.use_another')],
+            ]],
+            'verify' => ['label' => __('admin/auth_screens.verify'), 'texts' => [
+                'title' => [__('admin/common.title')], 'lead' => [__('admin/common.description'), 'long'], 'status_title' => [__('admin/auth_screens.status_title')], 'status_note' => [__('admin/auth_screens.status_note')],
+                'badge' => [__('admin/auth_screens.badge')], 'fine' => [__('admin/auth_screens.fine'), 'long'],
+                'toast_created_title' => [__('admin/auth_screens.toast_created_title')], 'toast_created_text' => [__('admin/auth_screens.toast_created_text')], 'toast_welcome_back' => [__('admin/auth_screens.toast_welcome_back')],
+            ]],
+            'link_expired' => ['label' => __('admin/auth_screens.link_expired'), 'texts' => [
+                'title' => [__('admin/common.title')], 'lead' => [__('admin/auth_screens.lead_email'), 'long'], 'submit' => [__('admin/auth_screens.send_new_link')], 'use_another' => [__('admin/auth_screens.use_another')],
+                'toast_title' => [__('admin/auth_screens.toast_sent')], 'toast_text' => [__('admin/auth_screens.toast_text')],
+            ]],
+            'layout' => ['label' => __('admin/auth_screens.layout'), 'texts' => [
+                'panel_line' => [__('admin/auth_screens.panel_line')], 'home_label' => [__('admin/auth_screens.home_label')], 'copyright' => [__('admin/auth_screens.copyright')],
+                'privacy' => [__('admin/auth_screens.footer_privacy')], 'terms' => [__('admin/auth_screens.footer_terms')],
+            ]],
+        ];
+    }
 
     /** @var array<string, mixed>|null */
     public ?array $data = [];
@@ -96,7 +108,7 @@ class ManageAuthScreens extends Page
             ->components([
                 Tabs::make('screens')->persistTabInQueryString()->tabs(array_map(
                     fn (string $key): Tab => $this->screenTab($key),
-                    array_keys(self::SCREENS),
+                    array_keys(self::screenDefinitions()),
                 )),
             ]);
     }
@@ -109,7 +121,7 @@ class ManageAuthScreens extends Page
                 ->livewireSubmitHandler('save')
                 ->footer([
                     Actions::make([
-                        Action::make('save')->label('حفظ')->submit('save')->keyBindings(['mod+s']),
+                        Action::make('save')->label(__('admin/common.save'))->submit('save')->keyBindings(['mod+s']),
                     ])->sticky()->key('form-actions'),
                 ]),
         ]);
@@ -141,7 +153,7 @@ class ManageAuthScreens extends Page
             $screen->save();
         }
 
-        Notification::make()->title('تم حفظ نصوص شاشات التسجيل')->success()->send();
+        Notification::make()->title(__('admin/auth_screens.saved'))->success()->send();
     }
 
     /**
@@ -149,7 +161,7 @@ class ManageAuthScreens extends Page
      */
     private function screens(): Collection
     {
-        return AuthScreen::query()->whereIn('key', array_keys(self::SCREENS))->get();
+        return AuthScreen::query()->whereIn('key', array_keys(self::screenDefinitions()))->get();
     }
 
     private function screenTab(string $key): Tab
@@ -163,14 +175,14 @@ class ManageAuthScreens extends Page
                     required: Translations::isFallback($locale),
                     long: ($field[1] ?? null) === 'long',
                 ),
-                array_keys(self::SCREENS[$key]['texts']),
-                self::SCREENS[$key]['texts'],
+                array_keys(self::screenDefinitions()[$key]['texts']),
+                self::screenDefinitions()[$key]['texts'],
             ))->columns(2),
             config('app.supported_locales'),
         ));
 
-        return Tab::make(self::SCREENS[$key]['label'])->schema([
-            Section::make('النصوص')->description('العربية اختيارية: أي نص عربي فارغ يظهر بالإنجليزية. الكلمات بين القوسين { } تُستبدل تلقائيًا ويجب إبقاؤها كما هي.')->schema([$languages]),
+        return Tab::make(self::screenDefinitions()[$key]['label'])->schema([
+            Section::make(__('admin/auth_screens.texts'))->description(__('admin/auth_screens.texts_help'))->schema([$languages]),
         ]);
     }
 }

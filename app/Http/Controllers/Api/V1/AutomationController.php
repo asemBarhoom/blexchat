@@ -186,7 +186,7 @@ class AutomationController extends Controller
 
         $automation->moveToTrash();
 
-        return response()->json(['message' => 'Automation moved to the Trash.', 'data' => new AutomationResource($automation)]);
+        return response()->json(['message' => __('automation.trashed'), 'data' => new AutomationResource($automation)]);
     }
 
     #[OA\Post(
@@ -276,7 +276,7 @@ class AutomationController extends Controller
         $enabled = $request->boolean('enabled');
 
         if ($enabled && ! $request->user()->currentPlan()->has_ai) {
-            return response()->json(['message' => 'Blexchat AI is not included in your plan.', 'code' => 'plan_required'], 403);
+            return response()->json(['message' => __('automation.ai_plan_required'), 'code' => 'plan_required'], 403);
         }
 
         $automation->update(['ai_enabled' => $enabled]);

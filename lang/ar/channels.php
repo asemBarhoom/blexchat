@@ -22,4 +22,19 @@ return [
         'deny' => 'إلغاء',
     ],
 
+    'already_connected' => 'هذا الحساب مربوط بالفعل.',
+    'disconnected' => 'فُصلت القناة.',
+    'oauth_not_configured' => 'ربط هذه المنصة غير متاح على هذا الخادم بعد.',
+    'oauth_state_invalid' => 'انتهت جلسة الربط. جرّب مرة أخرى.',
+    'oauth_no_account' => 'لم تُرسل المنصة معرّف الحساب. جرّب مرة أخرى.',
+    'test_event_unsupported' => 'على :platform يمكن تجربة الرسائل والتعليقات فقط.',
+    'not_delivered' => 'لم يوصل :platform الرسالة. جرّب مرة أخرى بعد قليل.',
+    'not_live' => 'الرد على :platform غير متاح بعد.',
+    'delivery_failed_again' => 'لم تُرسل الرسالة هذه المرة أيضاً. جرّب بعد قليل.',
+    'platforms' => [
+        'instagram' => 'Instagram',
+        'whatsapp' => 'WhatsApp',
+        'messenger' => 'Messenger',
+        'tiktok' => 'TikTok',
+    ],
 ];

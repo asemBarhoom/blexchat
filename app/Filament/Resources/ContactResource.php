@@ -27,51 +27,66 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ContactResource extends Resource
 {
-    /** @var array<string, string> */
-    public const GENDER_LABELS = ['female' => 'أنثى', 'male' => 'ذكر'];
+    /** @return array<string, string> */
+    public static function genderLabels(): array
+    {
+        return ['female' => __('admin/contacts.female'), 'male' => __('admin/contacts.male')];
+    }
 
     protected static ?string $model = Contact::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
 
-    protected static ?string $navigationLabel = 'جهات الاتصال';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/contacts.plural');
+    }
 
-    protected static ?string $modelLabel = 'جهة اتصال';
+    public static function getModelLabel(): string
+    {
+        return __('admin/contacts.model');
+    }
 
-    protected static ?string $pluralModelLabel = 'جهات الاتصال';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/contacts.plural');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = 'التواصل';
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return __('admin/common.nav_communication');
+    }
 
     protected static ?int $navigationSort = 4;
 
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Select::make('user_id')->label('صاحب الحساب')->relationship('user', 'email')->searchable()->preload()->required()
+            Select::make('user_id')->label(__('admin/common.owner'))->relationship('user', 'email')->searchable()->preload()->required()
                 ->live()->afterStateUpdated(fn (Set $set): mixed => $set('channel_id', null)),
-            Select::make('channel_id')->label('القناة المتصلة')
+            Select::make('channel_id')->label(__('admin/contacts.connected_channel'))
                 ->relationship('channel', 'username', fn (Builder $query, Get $get): Builder => $query->where('user_id', $get('user_id')))
                 ->getOptionLabelFromRecordUsing(fn (Channel $record): string => (Contact::PLATFORMS[$record->platform] ?? $record->platform).' — '.($record->username ?? $record->account_id))
-                ->helperText('اتركها فارغة لجهة أُضيفت يدوياً.'),
-            Select::make('platform')->label('المنصة')->options(Contact::PLATFORMS)->required()->default('instagram'),
-            TextInput::make('platform_id')->label('معرّف المنصة')->maxLength(255)
-                ->helperText('معرّف الشخص لدى المنصة، يربطه بمحادثاته وتعليقاته.'),
-            TextInput::make('name')->label('الاسم')->required()->maxLength(200),
-            TextInput::make('handle')->label('اسم المستخدم أو الرقم')->maxLength(255),
-            TextInput::make('phone')->label('الجوال')->tel()->maxLength(30),
-            TextInput::make('email')->label('البريد الإلكتروني')->email()->maxLength(255),
-            TextInput::make('city')->label('المدينة')->maxLength(100),
-            Select::make('gender')->label('الجنس')->options(self::GENDER_LABELS),
-            TextInput::make('language')->label('اللغة')->maxLength(10)->placeholder('ar'),
-            TagsInput::make('tags')->label('الوسوم')->columnSpanFull(),
-            Select::make('source_automation_id')->label('الأتمتة التي جلبته')
+                ->helperText(__('admin/contacts.channel_help')),
+            Select::make('platform')->label(__('admin/common.platform'))->options(Contact::PLATFORMS)->required()->default('instagram'),
+            TextInput::make('platform_id')->label(__('admin/common.platform_id'))->maxLength(255)
+                ->helperText(__('admin/contacts.platform_id_help')),
+            TextInput::make('name')->label(__('admin/common.name'))->required()->maxLength(200),
+            TextInput::make('handle')->label(__('admin/contacts.handle'))->maxLength(255),
+            TextInput::make('phone')->label(__('admin/contacts.phone'))->tel()->maxLength(30),
+            TextInput::make('email')->label(__('admin/common.email'))->email()->maxLength(255),
+            TextInput::make('city')->label(__('admin/common.city'))->maxLength(100),
+            Select::make('gender')->label(__('admin/contacts.gender'))->options(self::genderLabels()),
+            TextInput::make('language')->label(__('admin/contacts.language'))->maxLength(10)->placeholder('ar'),
+            TagsInput::make('tags')->label(__('admin/common.tags'))->columnSpanFull(),
+            Select::make('source_automation_id')->label(__('admin/contacts.source_automation'))
                 ->relationship('sourceAutomation', 'name', fn (Builder $query, Get $get): Builder => $query->where('user_id', $get('user_id')))
                 ->getOptionLabelFromRecordUsing(fn (Automation $record): string => $record->name),
-            DateTimePicker::make('first_seen_at')->label('أول ظهور')->required()->default(now()),
-            DateTimePicker::make('last_active_at')->label('آخر نشاط'),
-            DateTimePicker::make('consented_at')->label('تاريخ الموافقة على المراسلة'),
-            Toggle::make('added_manually')->label('أُضيف يدوياً'),
-            Toggle::make('subscribed')->label('مشترك في الرسائل')->default(true),
+            DateTimePicker::make('first_seen_at')->label(__('admin/common.first_seen'))->required()->default(now()),
+            DateTimePicker::make('last_active_at')->label(__('admin/common.last_active')),
+            DateTimePicker::make('consented_at')->label(__('admin/contacts.consented_at')),
+            Toggle::make('added_manually')->label(__('admin/common.added_manually')),
+            Toggle::make('subscribed')->label(__('admin/contacts.subscribed_to_messages'))->default(true),
         ])->columns(2);
     }
 
@@ -80,9 +95,9 @@ class ContactResource extends Resource
         return $table
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['user', 'sourceAutomation']))
             ->columns([
-                TextColumn::make('name')->label('الاسم')->searchable(['name', 'handle', 'phone', 'email'])
+                TextColumn::make('name')->label(__('admin/common.name'))->searchable(['name', 'handle', 'phone', 'email'])
                     ->description(fn (Contact $record): ?string => $record->handle),
-                TextColumn::make('platform')->label('القناة')->badge()
+                TextColumn::make('platform')->label(__('admin/common.channel'))->badge()
                     ->formatStateUsing(fn (string $state): string => Contact::PLATFORMS[$state] ?? $state)
                     ->color(fn (string $state): string => match ($state) {
                         'instagram' => 'pink',
@@ -90,26 +105,26 @@ class ContactResource extends Resource
                         'messenger' => 'info',
                         default => 'gray',
                     }),
-                TextColumn::make('user.email')->label('صاحب الحساب')->searchable()->toggleable(),
-                TextColumn::make('tags')->label('الوسوم')->badge()->placeholder('بلا وسوم'),
-                TextColumn::make('sourceAutomation.name')->label('المصدر')
-                    ->placeholder(fn (Contact $record): string => $record->added_manually ? 'أُضيف يدوياً' : 'راسل مباشرة'),
-                TextColumn::make('city')->label('المدينة')->placeholder('—')->toggleable(),
-                IconColumn::make('subscribed')->label('مشترك')->boolean(),
-                TextColumn::make('last_active_at')->label('آخر نشاط')->since()->placeholder('—')->sortable(),
-                TextColumn::make('first_seen_at')->label('أول ظهور')->dateTime('Y-m-d')->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('user.email')->label(__('admin/common.owner'))->searchable()->toggleable(),
+                TextColumn::make('tags')->label(__('admin/common.tags'))->badge()->placeholder(__('admin/common.no_tags')),
+                TextColumn::make('sourceAutomation.name')->label(__('admin/contacts.source'))
+                    ->placeholder(fn (Contact $record): string => $record->added_manually ? __('admin/common.added_manually') : __('admin/contacts.messaged_directly')),
+                TextColumn::make('city')->label(__('admin/common.city'))->placeholder('—')->toggleable(),
+                IconColumn::make('subscribed')->label(__('admin/common.subscribed'))->boolean(),
+                TextColumn::make('last_active_at')->label(__('admin/common.last_active'))->since()->placeholder('—')->sortable(),
+                TextColumn::make('first_seen_at')->label(__('admin/common.first_seen'))->dateTime('Y-m-d')->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('last_active_at', 'desc')
             ->filters([
-                SelectFilter::make('platform')->label('القناة')->options(Contact::PLATFORMS),
-                SelectFilter::make('user_id')->label('صاحب الحساب')->relationship('user', 'email')->searchable()->preload(),
-                TernaryFilter::make('added_manually')->label('أُضيف يدوياً'),
-                TernaryFilter::make('subscribed')->label('مشترك'),
+                SelectFilter::make('platform')->label(__('admin/common.channel'))->options(Contact::PLATFORMS),
+                SelectFilter::make('user_id')->label(__('admin/common.owner'))->relationship('user', 'email')->searchable()->preload(),
+                TernaryFilter::make('added_manually')->label(__('admin/common.added_manually')),
+                TernaryFilter::make('subscribed')->label(__('admin/common.subscribed')),
             ])
             ->recordActions([
-                ViewAction::make()->label('عرض'),
-                EditAction::make()->label('تعديل'),
-                DeleteAction::make()->label('حذف')->modalDescription('تبقى محادثاته في صندوق الوارد.'),
+                ViewAction::make()->label(__('admin/common.view')),
+                EditAction::make()->label(__('admin/common.edit')),
+                DeleteAction::make()->label(__('admin/common.delete'))->modalDescription(__('admin/contacts.delete_note')),
             ]);
     }
 

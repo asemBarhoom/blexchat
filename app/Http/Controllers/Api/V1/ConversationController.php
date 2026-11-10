@@ -230,7 +230,7 @@ class ConversationController extends Controller
                 $attempt = MessageDeliveryAttempt::create(['conversation_id' => $conversation->id, 'idempotency_key' => 'manual-'.Str::uuid(), 'content' => $request->content, 'type' => $request->type, 'error_code' => 'provider_error', 'error_message' => $exception->getMessage(), 'last_attempt_at' => now()]);
 
                 return response()->json([
-                    'message' => 'Instagram did not deliver the message.',
+                    'message' => __('channels.not_delivered', ['platform' => __('channels.platforms.instagram')]),
                     'code' => $exception instanceof ConnectionException ? 'provider_unavailable' : 'provider_rejected',
                     'platform' => 'instagram',
                     'retryable' => $exception instanceof ConnectionException || ($exception instanceof RequestException && $exception->response->status() >= 500),
@@ -249,7 +249,7 @@ class ConversationController extends Controller
                 $attempt = MessageDeliveryAttempt::create(['conversation_id' => $conversation->id, 'idempotency_key' => 'manual-'.Str::uuid(), 'content' => $request->content, 'type' => $request->type, 'error_code' => $exception instanceof ChannelNotLive ? 'channel_not_live' : 'provider_error', 'error_message' => $exception->getMessage(), 'last_attempt_at' => now()]);
 
                 return response()->json([
-                    'message' => $exception instanceof ChannelNotLive ? $exception->getMessage() : ucfirst($conversation->channel->platform).' did not deliver the message.',
+                    'message' => __($exception instanceof ChannelNotLive ? 'channels.not_live' : 'channels.not_delivered', ['platform' => __("channels.platforms.{$conversation->channel->platform}")]),
                     'code' => $exception instanceof ChannelNotLive ? 'channel_not_live' : ($exception instanceof ConnectionException ? 'provider_unavailable' : 'provider_rejected'),
                     'platform' => $conversation->channel->platform,
                     'retryable' => $exception instanceof ConnectionException || ($exception instanceof RequestException && $exception->response->status() >= 500),

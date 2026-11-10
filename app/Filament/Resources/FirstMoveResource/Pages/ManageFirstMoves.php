@@ -12,6 +12,6 @@ class ManageFirstMoves extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('إضافة خطوة أولى')];
+        return [CreateAction::make()->label(__('admin/first_moves.create'))];
     }
 }

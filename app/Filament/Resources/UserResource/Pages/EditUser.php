@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
-use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 
@@ -14,8 +13,8 @@ class EditUser extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            ViewAction::make()->label('عرض'),
-            DeleteAction::make()->label('حذف')->hidden(fn (): bool => $this->record->is(auth()->user())),
+            ViewAction::make()->label(__('admin/common.view')),
+            UserResource::deleteAction(),
         ];
     }
 }

@@ -12,6 +12,6 @@ class ManageUseCases extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('إضافة حالة استخدام')];
+        return [CreateAction::make()->label(__('admin/home.add_use_case'))];
     }
 }

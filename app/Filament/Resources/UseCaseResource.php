@@ -19,25 +19,37 @@ class UseCaseResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-briefcase';
 
-    protected static ?string $navigationLabel = 'حالات الاستخدام';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/home.use_cases');
+    }
 
-    protected static ?string $modelLabel = 'حالة استخدام';
+    public static function getModelLabel(): string
+    {
+        return __('admin/home.use_case');
+    }
 
-    protected static ?string $pluralModelLabel = 'حالات الاستخدام';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/home.use_cases');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = HomeContentFields::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return HomeContentFields::homeGroup();
+    }
 
     protected static ?int $navigationSort = 12;
 
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('key')->label('المعرّف')->required()->alphaDash()->unique(ignoreRecord: true),
-            TextInput::make('slug')->label('رابط صفحة الحل (/solutions/…)')->required()->alphaDash()->unique(ignoreRecord: true),
-            Translations::input('name', 'الاسم'),
-            Translations::input('line', 'الوصف'),
-            Select::make('shape')->label('شكل البطاقة')->options(array_combine(UseCase::SHAPES, UseCase::SHAPES))->required(),
-            Select::make('tone')->label('لون البطاقة')->options(array_combine(UseCase::TONES, UseCase::TONES))->required(),
+            TextInput::make('key')->label(__('admin/common.key'))->required()->alphaDash()->unique(ignoreRecord: true),
+            TextInput::make('slug')->label(__('admin/home.solution_page_link_solutions'))->required()->alphaDash()->unique(ignoreRecord: true),
+            Translations::input('name', __('admin/common.name')),
+            Translations::input('line', __('admin/common.description')),
+            Select::make('shape')->label(__('admin/common.card_shape'))->options(array_combine(UseCase::SHAPES, UseCase::SHAPES))->required(),
+            Select::make('tone')->label(__('admin/common.card_tone'))->options(array_combine(UseCase::TONES, UseCase::TONES))->required(),
             HomeContentFields::active(),
         ])->columns(2);
     }
@@ -45,9 +57,9 @@ class UseCaseResource extends Resource
     public static function table(Table $table): Table
     {
         return HomeContentFields::table($table, [
-            TextColumn::make('name')->label('الاسم')->searchable(),
-            TextColumn::make('line')->label('الوصف'),
-            TextColumn::make('slug')->label('الرابط'),
+            TextColumn::make('name')->label(__('admin/common.name'))->searchable(),
+            TextColumn::make('line')->label(__('admin/common.description')),
+            TextColumn::make('slug')->label(__('admin/common.link')),
         ]);
     }
 

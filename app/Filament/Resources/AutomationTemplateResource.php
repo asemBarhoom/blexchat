@@ -26,25 +26,49 @@ use Filament\Tables\Table;
 
 class AutomationTemplateResource extends Resource
 {
-    public const BUILDS = ['quick' => 'أتمتة سريعة', 'flow' => 'منشئ التدفقات'];
+    public static function builds(): array
+    {
+        return ['quick' => __('admin/templates.build_quick'), 'flow' => __('admin/templates.build_flow')];
+    }
 
-    public const GOALS = ['sell' => 'بيع منتج', 'grow' => 'تنمية القائمة', 'support' => 'الرد على الأسئلة', 'book' => 'استقبال الحجوزات'];
+    public static function goals(): array
+    {
+        return ['sell' => __('admin/templates.goal_sell'), 'grow' => __('admin/templates.goal_grow'), 'support' => __('admin/templates.goal_support'), 'book' => __('admin/templates.goal_book')];
+    }
 
-    public const TRIGGERS = ['comment' => 'تعليق على منشور أو ريل', 'story' => 'رد على ستوري', 'dm' => 'رسالة خاصة', 'ad' => 'إعلان المراسلة'];
+    public static function triggers(): array
+    {
+        return ['comment' => __('admin/templates.trigger_comment'), 'story' => __('admin/templates.trigger_story'), 'dm' => __('admin/templates.trigger_dm'), 'ad' => __('admin/templates.trigger_ad')];
+    }
 
-    public const MATCHES = ['words' => 'كلمات محددة', 'any' => 'أي تعليق أو رسالة'];
+    public static function matches(): array
+    {
+        return ['words' => __('admin/templates.match_words'), 'any' => __('admin/templates.match_any')];
+    }
 
     protected static ?string $model = AutomationTemplate::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-squares-plus';
 
-    protected static ?string $navigationLabel = 'قوالب الأتمتة';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/templates.plural');
+    }
 
-    protected static ?string $modelLabel = 'قالب أتمتة';
+    public static function getModelLabel(): string
+    {
+        return __('admin/templates.model');
+    }
 
-    protected static ?string $pluralModelLabel = 'قوالب الأتمتة';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/templates.plural');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = 'إدارة المحتوى';
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return __('admin/common.nav_content');
+    }
 
     protected static ?int $navigationSort = 3;
 
@@ -54,43 +78,43 @@ class AutomationTemplateResource extends Resource
 
         return $schema->components([
             Grid::make(2)->schema([
-                TextInput::make('key')->label('المعرّف')->required()->alphaDash()->maxLength(50)->unique(ignoreRecord: true)
-                    ->helperText('ثابت يستخدمه الفرونت في الرابط، مثل t1.'),
-                Toggle::make('is_starter')->label('بداية المعالج لهذا المحفّز')->live()
-                    ->helperText('لا يظهر في قائمة القوالب: يبدأ به المعالج حين لا يُختار قالب. واحد لكل محفّز.')
+                TextInput::make('key')->label(__('admin/templates.key'))->required()->alphaDash()->maxLength(50)->unique(ignoreRecord: true)
+                    ->helperText(__('admin/templates.key_help')),
+                Toggle::make('is_starter')->label(__('admin/templates.starter_for_trigger'))->live()
+                    ->helperText(__('admin/templates.starter_help'))
                     ->rules([fn (Get $get, ?AutomationTemplate $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get, $record): void {
                         if ($value && AutomationTemplate::starters()->where('trigger', $get('trigger'))->whereKeyNot($record?->id)->exists()) {
-                            $fail('لهذا المحفّز بداية أخرى بالفعل.');
+                            $fail(__('admin/templates.starter_taken'));
                         }
                     }]),
             ])->columnSpanFull(),
-            Translations::input('name', 'الاسم'),
-            Translations::input('line', 'الوصف', required: false, long: true),
+            Translations::input('name', __('admin/common.name')),
+            Translations::input('line', __('admin/templates.description'), required: false, long: true),
 
             Grid::make(4)->schema([
-                Select::make('trigger')->label('المحفّز')->options(self::TRIGGERS)->required()->live(),
-                Select::make('build')->label('النوع')->options(self::BUILDS)->required()->default('quick')->live(),
-                Select::make('goal')->label('الهدف')->options(self::GOALS)
+                Select::make('trigger')->label(__('admin/templates.trigger'))->options(self::triggers())->required()->live(),
+                Select::make('build')->label(__('admin/common.type'))->options(self::builds())->required()->default('quick')->live(),
+                Select::make('goal')->label(__('admin/templates.goal'))->options(self::goals())
                     ->required(fn (Get $get): bool => ! $get('is_starter')),
-                Toggle::make('locked')->label('يحتاج خطة مدفوعة')->inline(false),
+                Toggle::make('locked')->label(__('admin/templates.locked'))->inline(false),
             ])->columnSpanFull(),
 
-            Section::make('ما يملؤه في المعالج')->visible($fillsWizard)->schema([
-                Select::make('match')->label('الرد على')->options(self::MATCHES)->required($fillsWizard)->live(),
+            Section::make(__('admin/templates.wizard_fill'))->visible($fillsWizard)->schema([
+                Select::make('match')->label(__('admin/templates.match'))->options(self::matches())->required($fillsWizard)->live(),
                 Grid::make(count(config('app.supported_locales')))->visible(fn (Get $get): bool => $get('match') === 'words')->schema(array_map(
                     fn (string $locale): TagsInput => TagsInput::make("keywords.{$locale}")
-                        ->label('الكلمات — '.Translations::localeName($locale))
-                        ->placeholder('اكتب كلمة واضغط Enter'),
+                        ->label(__('admin/templates.keywords_in', ['locale' => Translations::localeName($locale)]))
+                        ->placeholder(__('admin/templates.keywords_placeholder')),
                     config('app.supported_locales'),
                 ))->columnSpanFull(),
-                Translations::input('public_reply', 'الرد العلني تحت التعليق', required: false)
+                Translations::input('public_reply', __('admin/templates.public_reply'), required: false)
                     ->visible(fn (Get $get): bool => $get('trigger') === 'comment'),
-                Translations::input('dm_text', 'الرسالة الخاصة', required: true, long: true),
-                Translations::input('dm_button', 'نص الزر', required: false),
-                TextInput::make('link_url')->label('رابط الزر (مثال)')->url()->maxLength(2048)->columnSpanFull(),
+                Translations::input('dm_text', __('admin/templates.dm_text'), required: true, long: true),
+                Translations::input('dm_button', __('admin/common.button_text'), required: false),
+                TextInput::make('link_url')->label(__('admin/templates.link_url'))->url()->maxLength(2048)->columnSpanFull(),
             ])->columnSpanFull(),
 
-            Toggle::make('active')->label('معروض')->default(true),
+            Toggle::make('active')->label(__('admin/templates.shown'))->default(true),
         ])->columns(1);
     }
 
@@ -98,25 +122,25 @@ class AutomationTemplateResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->label('الاسم')->searchable()->wrap(),
-                TextColumn::make('key')->label('المعرّف')->badge()->color('gray'),
-                TextColumn::make('trigger')->label('المحفّز')->formatStateUsing(fn (string $state): string => self::TRIGGERS[$state] ?? $state),
-                TextColumn::make('build')->label('النوع')->badge()->formatStateUsing(fn (string $state): string => self::BUILDS[$state] ?? $state),
-                TextColumn::make('goal')->label('الهدف')->formatStateUsing(fn (?string $state): string => self::GOALS[$state] ?? '—'),
-                IconColumn::make('is_starter')->label('بداية المعالج')->boolean(),
-                IconColumn::make('locked')->label('مدفوع')->boolean(),
-                ToggleColumn::make('active')->label('معروض'),
+                TextColumn::make('name')->label(__('admin/common.name'))->searchable()->wrap(),
+                TextColumn::make('key')->label(__('admin/templates.key'))->badge()->color('gray'),
+                TextColumn::make('trigger')->label(__('admin/templates.trigger'))->formatStateUsing(fn (string $state): string => self::triggers()[$state] ?? $state),
+                TextColumn::make('build')->label(__('admin/common.type'))->badge()->formatStateUsing(fn (string $state): string => self::builds()[$state] ?? $state),
+                TextColumn::make('goal')->label(__('admin/templates.goal'))->formatStateUsing(fn (?string $state): string => self::goals()[$state] ?? '—'),
+                IconColumn::make('is_starter')->label(__('admin/templates.starter'))->boolean(),
+                IconColumn::make('locked')->label(__('admin/templates.paid'))->boolean(),
+                ToggleColumn::make('active')->label(__('admin/templates.shown')),
             ])
             ->filters([
-                SelectFilter::make('trigger')->label('المحفّز')->options(self::TRIGGERS),
-                TernaryFilter::make('is_starter')->label('بداية المعالج'),
+                SelectFilter::make('trigger')->label(__('admin/templates.trigger'))->options(self::triggers()),
+                TernaryFilter::make('is_starter')->label(__('admin/templates.starter')),
             ])
             ->reorderable('sort')
             ->defaultSort('sort')
             ->recordActions([
-                EditAction::make()->label('تعديل'),
+                EditAction::make()->label(__('admin/common.edit')),
                 // The wizard opens with a starter whenever no template is named.
-                DeleteAction::make()->label('حذف')->hidden(fn (AutomationTemplate $record): bool => $record->is_starter),
+                DeleteAction::make()->label(__('admin/common.delete'))->hidden(fn (AutomationTemplate $record): bool => $record->is_starter),
             ]);
     }
 

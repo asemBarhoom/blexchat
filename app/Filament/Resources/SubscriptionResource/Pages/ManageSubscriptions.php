@@ -12,6 +12,6 @@ class ManageSubscriptions extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('إضافة اشتراك')];
+        return [CreateAction::make()->label(__('admin/subscriptions.create'))];
     }
 }
