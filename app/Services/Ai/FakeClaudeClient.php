@@ -23,7 +23,7 @@ class FakeClaudeClient extends ClaudeClient
     {
         $question = mb_strtolower((string) (collect($history)->last()['text'] ?? ''));
         $answer = Str::contains($question, self::HANDOVER_WORDS)
-            ? ['handover' => true, 'reply' => '', 'reason' => 'Asked something the business info does not cover (demo).']
+            ? ['handover' => true, 'reply' => '', 'reason' => $ownerLanguage === 'Arabic' ? 'سأل عن شيء لا تغطيه معلومات النشاط (تجربة).' : 'Asked something the business info doesn’t cover (demo).']
             : ['handover' => false, 'reply' => Str::limit(Str::before(trim($businessInfo), "\n"), 300), 'reason' => ''];
 
         Log::info('Blexchat AI (fake) answered', ['question' => $question, ...$answer]);
