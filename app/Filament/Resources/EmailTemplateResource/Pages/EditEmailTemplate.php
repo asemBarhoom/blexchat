@@ -16,13 +16,13 @@ class EditEmailTemplate extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('preview')->label('معاينة الرسالة')
+            Action::make('preview')->label(__('admin/emails.preview'))
                 ->icon('heroicon-o-eye')
                 ->color('gray')
-                ->modalHeading('معاينة الرسالة كما تُرسل (آخر نص محفوظ)')
+                ->modalHeading(__('admin/emails.preview_heading'))
                 ->modalWidth('7xl')
                 ->modalSubmitAction(false)
-                ->modalCancelActionLabel('إغلاق')
+                ->modalCancelActionLabel(__('admin/common.close'))
                 ->modalContent(fn (EmailTemplate $record): View => view('filament.email-template-preview', [
                     'previews' => collect(config('app.supported_locales'))->mapWithKeys(fn (string $locale): array => [$locale => [
                         'language' => Translations::localeName($locale),

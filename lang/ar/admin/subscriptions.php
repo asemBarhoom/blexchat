@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'annual' => 'سنوي',
+    'billing' => 'الفوترة',
+    'create' => 'أضف اشتراكاً',
+    'current_period_end' => 'نهاية الفترة المدفوعة',
+    'delete_note' => 'يعود المستخدم إلى خطوة اختيار الباقة.',
+    'model' => 'اشتراك',
+    'monthly' => 'شهري',
+    'no_card' => '— بدون دفع بالبطاقة',
+    'paid_by_card' => 'بالبطاقة',
+    'plural' => 'الاشتراكات',
+    'renews_at' => 'التجديد القادم',
+    'stripe_customer' => 'عميل Stripe',
+    'stripe_customer_id' => 'معرّف عميل Stripe',
+    'stripe_help' => 'يُملأ تلقائيًا عند الدفع في Stripe. الإلغاء والاسترداد من لوحة Stripe.',
+    'stripe_subscription' => 'اشتراك Stripe',
+    'stripe_subscription_id' => 'معرّف اشتراك Stripe',
+    'trial_ended' => 'انتهت التجربة (الباقة المجانية)',
+    'trial_used_at' => 'تاريخ استخدام التجربة',
+    'trial_used_help' => 'لكل حساب تجربة واحدة. امسحه ليسمح للمستخدم بتجربة جديدة.',
+    'trialing' => 'تجربة مجانية',
+    'unique' => 'لهذا المستخدم اشتراك بالفعل. عدّله بدل إضافة آخر.',
+    'updated_at' => 'آخر تغيير',
+];

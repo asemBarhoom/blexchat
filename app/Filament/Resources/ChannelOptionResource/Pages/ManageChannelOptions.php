@@ -12,6 +12,6 @@ class ManageChannelOptions extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('إضافة قناة')];
+        return [CreateAction::make()->label(__('admin/channel_options.create'))];
     }
 }

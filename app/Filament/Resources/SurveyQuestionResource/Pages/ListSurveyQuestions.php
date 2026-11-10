@@ -13,7 +13,7 @@ class ListSurveyQuestions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('إضافة سؤال'),
+            CreateAction::make()->label(__('admin/survey.create_question')),
         ];
     }
 }

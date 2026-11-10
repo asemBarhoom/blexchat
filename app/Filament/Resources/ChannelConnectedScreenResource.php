@@ -18,41 +18,56 @@ use Filament\Tables\Table;
 
 class ChannelConnectedScreenResource extends Resource
 {
-    /** @var array<string, string> */
-    public const PLATFORM_LABELS = ['instagram' => 'إنستغرام', 'whatsapp' => 'واتساب', 'tiktok' => 'تيك توك', 'messenger' => 'ماسنجر'];
+    /** @return array<string, string> */
+    public static function platformLabels(): array
+    {
+        return ['instagram' => __('admin/connected_screens.instagram'), 'whatsapp' => __('admin/connected_screens.whatsapp'), 'tiktok' => __('admin/connected_screens.tiktok'), 'messenger' => __('admin/connected_screens.messenger')];
+    }
 
     protected static ?string $model = ChannelConnectedScreen::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-check-badge';
 
-    protected static ?string $navigationLabel = 'شاشة نجاح ربط القناة';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/connected_screens.nav');
+    }
 
-    protected static ?string $modelLabel = 'شاشة نجاح ربط';
+    public static function getModelLabel(): string
+    {
+        return __('admin/connected_screens.model');
+    }
 
-    protected static ?string $pluralModelLabel = 'شاشات نجاح ربط القنوات';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/connected_screens.plural');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = PlanResource::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return PlanResource::signupBillingGroup();
+    }
 
     protected static ?int $navigationSort = 7;
 
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Select::make('platform')->label('المنصة')->options(self::PLATFORM_LABELS)->required()
+            Select::make('platform')->label(__('admin/common.platform'))->options(self::platformLabels())->required()
                 ->unique(ignoreRecord: true)
-                ->helperText('تظهر هذه النصوص بعد ربط قناة من هذه المنصة.'),
-            Translations::input('channel_name', 'اسم القناة'),
-            Translations::input('title', 'العنوان'),
-            Translations::input('lead', 'النص التمهيدي', long: true),
-            Translations::input('account_kind', 'نوع الحساب'),
+                ->helperText(__('admin/connected_screens.platform_help')),
+            Translations::input('channel_name', __('admin/connected_screens.channel_name')),
+            Translations::input('title', __('admin/common.title')),
+            Translations::input('lead', __('admin/connected_screens.lead'), long: true),
+            Translations::input('account_kind', __('admin/common.account_kind')),
 
-            Section::make('الأزرار والحالة')->schema([
-                Translations::input('status_label', 'شارة الحالة'),
-                Translations::input('continue_label', 'زر المتابعة'),
-                Translations::input('connect_another_label', 'رابط ربط قناة أخرى'),
+            Section::make(__('admin/connected_screens.buttons'))->schema([
+                Translations::input('status_label', __('admin/connected_screens.status_label')),
+                Translations::input('continue_label', __('admin/connected_screens.continue_label')),
+                Translations::input('connect_another_label', __('admin/connected_screens.connect_another')),
             ]),
 
-            Toggle::make('active')->label('معروضة')->default(true),
+            Toggle::make('active')->label(__('admin/common.shown'))->default(true),
         ])->columns(1);
     }
 
@@ -60,16 +75,16 @@ class ChannelConnectedScreenResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('platform')->label('المنصة')->badge()
-                    ->formatStateUsing(fn (string $state): string => self::PLATFORM_LABELS[$state] ?? $state),
-                TextColumn::make('title')->label('العنوان')->searchable(),
-                TextColumn::make('account_kind')->label('نوع الحساب'),
-                ToggleColumn::make('active')->label('معروضة'),
+                TextColumn::make('platform')->label(__('admin/common.platform'))->badge()
+                    ->formatStateUsing(fn (string $state): string => self::platformLabels()[$state] ?? $state),
+                TextColumn::make('title')->label(__('admin/common.title'))->searchable(),
+                TextColumn::make('account_kind')->label(__('admin/common.account_kind')),
+                ToggleColumn::make('active')->label(__('admin/common.shown')),
             ])
             ->defaultSort('id')
             ->recordActions([
-                EditAction::make()->label('تعديل'),
-                DeleteAction::make()->label('حذف'),
+                EditAction::make()->label(__('admin/common.edit')),
+                DeleteAction::make()->label(__('admin/common.delete')),
             ]);
     }
 

@@ -25,68 +25,83 @@ use Illuminate\Database\Eloquent\Builder;
 
 class SurveyQuestionResource extends Resource
 {
-    /** @var array<string, string> */
-    public const KIND_LABELS = ['radio' => 'إجابة واحدة', 'multi' => 'عدة إجابات', 'grid' => 'عدة إجابات (شبكة شعارات)'];
+    /** @return array<string, string> */
+    public static function kindLabels(): array
+    {
+        return ['radio' => __('admin/survey.kind_radio'), 'multi' => __('admin/survey.kind_multi'), 'grid' => __('admin/survey.kind_grid')];
+    }
 
     protected static ?string $model = SurveyQuestion::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static ?string $navigationLabel = 'أسئلة الاستبيان';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/survey.questions');
+    }
 
-    protected static ?string $modelLabel = 'سؤال';
+    public static function getModelLabel(): string
+    {
+        return __('admin/survey.question_model');
+    }
 
-    protected static ?string $pluralModelLabel = 'أسئلة الاستبيان';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/survey.questions');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = PlanResource::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return PlanResource::signupBillingGroup();
+    }
 
     protected static ?int $navigationSort = 20;
 
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('السؤال')->schema([
-                TextInput::make('key')->label('المعرّف')->required()->alphaDash()->maxLength(50)->unique(ignoreRecord: true)
-                    ->helperText('ثابت يستخدمه الفرونت والإجابات، مثل heard.'),
-                Select::make('kind')->label('النوع')->options(self::KIND_LABELS)->required()->default('multi'),
-                Translations::input('question', 'السؤال'),
-                Translations::input('hint', 'التلميح', required: false),
-                TextInput::make('other_option')->label('خيار "غير ذلك"')->alphaDash()
-                    ->helperText('معرّف الخيار الذي يُظهر حقلاً نصياً، مثل other. اتركه فارغاً إن لم يوجد.')
+            Section::make(__('admin/common.question'))->schema([
+                TextInput::make('key')->label(__('admin/common.key'))->required()->alphaDash()->maxLength(50)->unique(ignoreRecord: true)
+                    ->helperText(__('admin/survey.key_help')),
+                Select::make('kind')->label(__('admin/common.type'))->options(self::kindLabels())->required()->default('multi'),
+                Translations::input('question', __('admin/common.question')),
+                Translations::input('hint', __('admin/survey.hint'), required: false),
+                TextInput::make('other_option')->label(__('admin/survey.other_option'))->alphaDash()
+                    ->helperText(__('admin/survey.other_option_help'))
                     ->in(fn (Get $get): array => collect($get('options'))->pluck('key')->filter()->values()->all()),
-                Toggle::make('active')->label('ظاهر في الاستبيان')->default(true),
+                Toggle::make('active')->label(__('admin/survey.active'))->default(true),
             ])->columns(2),
 
-            Section::make('الخيارات')->schema([
+            Section::make(__('admin/common.options'))->schema([
                 Repeater::make('options')->hiddenLabel()
                     ->relationship()
                     ->orderColumn('sort')
                     ->reorderable()
                     ->minItems(2)
-                    ->addActionLabel('إضافة خيار')
+                    ->addActionLabel(__('admin/common.add_option'))
                     ->itemLabel(fn (array $state): ?string => $state['label']['en'] ?? null)
                     ->collapsible()
                     ->mutateRelationshipDataBeforeCreateUsing(fn (array $data): array => self::withIconBox($data))
                     ->mutateRelationshipDataBeforeSaveUsing(fn (array $data): array => self::withIconBox($data))
                     ->schema([
-                        TextInput::make('key')->label('المعرّف')->required()->alphaDash()->maxLength(50)->distinct()
-                            ->helperText('ثابت تُحفظ به الإجابات، مثل instagram.'),
-                        Translations::input('label', 'النص'),
-                        Translations::input('note', 'ملاحظة', required: false),
-                        TextInput::make('icon')->label('الأيقونة (simple-icons)')->maxLength(50)->regex(SurveyOption::ICON_SLUG_PATTERN)
-                            ->helperText('اسم الشعار من simpleicons.org بأحرف إنجليزية صغيرة، مثل instagram أو googlesheets. اتركه فارغاً لخيار بلا شعار.'),
-                        FileUpload::make('icon_image')->label('أو ارفع شعاراً')
+                        TextInput::make('key')->label(__('admin/common.key'))->required()->alphaDash()->maxLength(50)->distinct()
+                            ->helperText(__('admin/survey.option_key_help')),
+                        Translations::input('label', __('admin/common.text')),
+                        Translations::input('note', __('admin/common.note'), required: false),
+                        TextInput::make('icon')->label(__('admin/survey.icon'))->maxLength(50)->regex(SurveyOption::ICON_SLUG_PATTERN)
+                            ->helperText(__('admin/survey.icon_help')),
+                        FileUpload::make('icon_image')->label(__('admin/survey.icon_image'))
                             ->image()
                             ->disk('public')
                             ->directory('survey/icons')
                             ->visibility('public')
-                            ->helperText('إن رُفع شعار يظهر بدل أيقونة simple-icons.'),
-                        Fieldset::make('قص الشعار العريض')->statePath('icon_box')->columns(3)->schema([
+                            ->helperText(__('admin/survey.icon_image_help')),
+                        Fieldset::make(__('admin/survey.icon_box'))->statePath('icon_box')->columns(3)->schema([
                             TextInput::make('viewBox')->label('viewBox')->placeholder('0 9.58 24 4.84')->regex(SurveyOption::VIEW_BOX_PATTERN)
                                 ->required(fn (Get $get): bool => filled($get('width')) || filled($get('height'))),
-                            TextInput::make('width')->label('العرض')->integer()->minValue(1)->maxValue(200)
+                            TextInput::make('width')->label(__('admin/survey.width'))->integer()->minValue(1)->maxValue(200)
                                 ->required(fn (Get $get): bool => filled($get('viewBox'))),
-                            TextInput::make('height')->label('الارتفاع')->integer()->minValue(1)->maxValue(200)
+                            TextInput::make('height')->label(__('admin/survey.height'))->integer()->minValue(1)->maxValue(200)
                                 ->required(fn (Get $get): bool => filled($get('viewBox'))),
                         ]),
                     ]),
@@ -116,19 +131,19 @@ class SurveyQuestionResource extends Resource
         return $table
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->withCount(['options', 'answers']))
             ->columns([
-                TextColumn::make('question')->label('السؤال')->searchable()->wrap(),
-                TextColumn::make('key')->label('المعرّف')->badge()->color('gray'),
-                TextColumn::make('kind')->label('النوع')->formatStateUsing(fn (string $state): string => self::KIND_LABELS[$state] ?? $state),
-                TextColumn::make('options_count')->label('الخيارات')->numeric(),
-                TextColumn::make('answers_count')->label('الإجابات')->numeric(),
-                ToggleColumn::make('active')->label('ظاهر'),
+                TextColumn::make('question')->label(__('admin/common.question'))->searchable()->wrap(),
+                TextColumn::make('key')->label(__('admin/common.key'))->badge()->color('gray'),
+                TextColumn::make('kind')->label(__('admin/common.type'))->formatStateUsing(fn (string $state): string => self::kindLabels()[$state] ?? $state),
+                TextColumn::make('options_count')->label(__('admin/common.options'))->numeric(),
+                TextColumn::make('answers_count')->label(__('admin/survey.answers_count'))->numeric(),
+                ToggleColumn::make('active')->label(__('admin/common.visible')),
             ])
             ->reorderable('sort')
             ->defaultSort('sort')
             ->recordActions([
-                EditAction::make()->label('تعديل'),
-                DeleteAction::make()->label('حذف')
-                    ->modalDescription('ستُحذف معه كل إجابات المستخدمين عن هذا السؤال. لإخفائه فقط، أوقف "ظاهر".'),
+                EditAction::make()->label(__('admin/common.edit')),
+                DeleteAction::make()->label(__('admin/common.delete'))
+                    ->modalDescription(__('admin/survey.delete_note')),
             ]);
     }
 

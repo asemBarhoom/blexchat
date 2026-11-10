@@ -12,6 +12,6 @@ class ManageSurveyAnswers extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('إضافة إجابة')];
+        return [CreateAction::make()->label(__('admin/survey.create_answer'))];
     }
 }

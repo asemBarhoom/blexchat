@@ -130,7 +130,9 @@ it('shows the content and communication screens in English when English is picke
         ->assertOk()
         ->assertSee('Add user')
         ->assertSee('Communication')
-        ->assertDontSee('المستخدمون');
+        ->assertSee('Sign-up and billing')
+        ->assertDontSee('المستخدمون')
+        ->assertDontSee('التسجيل والاشتراكات');
 });
 
 it('shows the content and communication screens in Arabic by default', function () {

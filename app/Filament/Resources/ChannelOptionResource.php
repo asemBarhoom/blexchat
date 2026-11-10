@@ -22,25 +22,37 @@ class ChannelOptionResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-squares-2x2';
 
-    protected static ?string $navigationLabel = 'قنوات البداية';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin/channel_options.plural');
+    }
 
-    protected static ?string $modelLabel = 'قناة';
+    public static function getModelLabel(): string
+    {
+        return __('admin/channel_options.model');
+    }
 
-    protected static ?string $pluralModelLabel = 'قنوات البداية';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin/channel_options.plural');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = PlanResource::NAVIGATION_GROUP;
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return PlanResource::signupBillingGroup();
+    }
 
     protected static ?int $navigationSort = 5;
 
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Select::make('platform')->label('المنصة')->required()->unique(ignoreRecord: true)
+            Select::make('platform')->label(__('admin/common.platform'))->required()->unique(ignoreRecord: true)
                 ->options(array_combine(ChannelOption::PLATFORMS, ChannelOption::PLATFORMS))
-                ->helperText('ثابت يستخدمه الفرونت للأيقونة ورابط الربط.'),
-            Translations::input('name', 'الاسم'),
-            Translations::input('line', 'الوصف المختصر'),
-            Toggle::make('active')->label('معروضة')->default(true),
+                ->helperText(__('admin/channel_options.platform_help')),
+            Translations::input('name', __('admin/common.name')),
+            Translations::input('line', __('admin/channel_options.line')),
+            Toggle::make('active')->label(__('admin/common.shown'))->default(true),
         ])->columns(1);
     }
 
@@ -49,17 +61,17 @@ class ChannelOptionResource extends Resource
         return $table
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->withCount('channels'))
             ->columns([
-                TextColumn::make('name')->label('الاسم')->searchable(),
-                TextColumn::make('platform')->label('المنصة')->badge()->color('gray'),
-                TextColumn::make('line')->label('الوصف المختصر'),
-                TextColumn::make('channels_count')->label('الحسابات المربوطة')->numeric(),
-                ToggleColumn::make('active')->label('معروضة'),
+                TextColumn::make('name')->label(__('admin/common.name'))->searchable(),
+                TextColumn::make('platform')->label(__('admin/common.platform'))->badge()->color('gray'),
+                TextColumn::make('line')->label(__('admin/channel_options.line')),
+                TextColumn::make('channels_count')->label(__('admin/channel_options.channels_count'))->numeric(),
+                ToggleColumn::make('active')->label(__('admin/common.shown')),
             ])
             ->reorderable('sort')
             ->defaultSort('sort')
             ->recordActions([
-                EditAction::make()->label('تعديل'),
-                DeleteAction::make()->label('حذف'),
+                EditAction::make()->label(__('admin/common.edit')),
+                DeleteAction::make()->label(__('admin/common.delete')),
             ]);
     }
 

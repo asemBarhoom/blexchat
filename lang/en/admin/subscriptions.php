@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'annual' => 'Annual',
+    'billing' => 'Billing',
+    'create' => 'Add subscription',
+    'current_period_end' => 'Paid period ends',
+    'delete_note' => 'The user goes back to the choose-a-plan step.',
+    'model' => 'subscription',
+    'monthly' => 'Monthly',
+    'no_card' => '— no card payment',
+    'paid_by_card' => 'By card',
+    'plural' => 'Subscriptions',
+    'renews_at' => 'Renews',
+    'stripe_customer' => 'Stripe customer',
+    'stripe_customer_id' => 'Stripe customer ID',
+    'stripe_help' => 'Filled in when the user pays in Stripe. Cancel and refund from the Stripe dashboard.',
+    'stripe_subscription' => 'Stripe subscription',
+    'stripe_subscription_id' => 'Stripe subscription ID',
+    'trial_ended' => 'Trial ended (free plan)',
+    'trial_used_at' => 'Trial used on',
+    'trial_used_help' => 'Each account gets one trial. Clear it to let the user start a new one.',
+    'trialing' => 'Trial',
+    'unique' => 'This user already has a subscription. Edit it instead of adding another.',
+    'updated_at' => 'Last changed',
+];

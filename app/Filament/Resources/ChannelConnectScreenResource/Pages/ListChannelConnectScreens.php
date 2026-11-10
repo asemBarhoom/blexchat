@@ -13,7 +13,7 @@ class ListChannelConnectScreens extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('إضافة شاشة ربط'),
+            CreateAction::make()->label(__('admin/channel_screens.create')),
         ];
     }
 }
