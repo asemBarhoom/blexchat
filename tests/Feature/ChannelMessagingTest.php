@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Automation;
 use App\Models\Channel;
 use App\Models\Conversation;
 use App\Models\User;
@@ -118,3 +119,54 @@ it('simulates and answers messages on the fake driver', function (string $platfo
     $this->postJson("/api/v1/conversations/{$conversation}/messages", ['type' => 'text', 'content' => 'Hi Lulu'])->assertCreated();
     expect(Conversation::find($conversation)->messages()->pluck('content')->all())->toBe(['Hello', 'Hi Lulu']);
 })->with(['whatsapp', 'messenger', 'tiktok']);
+
+it('sends a keyword automation reply on WhatsApp with its text and button link', function () {
+    Http::fake(['graph.facebook.com/*' => Http::response(['messages' => [['id' => 'wamid.auto']]])]);
+    $channel = Channel::factory()->for($this->owner)->create(['platform' => 'whatsapp', 'account_id' => '1234567890', 'access_token' => 'channel-token', 'status' => 'active']);
+    Automation::factory()->for($this->owner)->for($channel)->create([
+        'trigger_type' => 'dm_keyword',
+        'keywords' => ['price'],
+        'actions' => [['type' => 'send_dm', 'message' => 'Here is the price list.', 'button_label' => 'Prices', 'button_url' => 'https://shop.test/prices']],
+    ]);
+
+    ($this->webhook)('whatsapp', ['object' => 'whatsapp_business_account', 'entry' => [['changes' => [['field' => 'messages', 'value' => [
+        'metadata' => ['phone_number_id' => '1234567890'],
+        'contacts' => [['wa_id' => '966501234567', 'profile' => ['name' => 'Lulu']]],
+        'messages' => [['from' => '966501234567', 'id' => 'wamid.in', 'timestamp' => '1767225600', 'type' => 'text', 'text' => ['body' => 'price?']]],
+    ]]]]]])->assertOk();
+
+    Http::assertSent(fn (Request $request): bool => $request->url() === 'https://graph.facebook.com/v21.0/1234567890/messages'
+        && str_starts_with($request->data()['text']['body'] ?? '', "Here is the price list.\n\nPrices: ")
+        && str_contains($request->data()['text']['body'], '/l/'));
+});
+
+it('retries a failed Instagram reply through Instagram and adds it to the conversation', function () {
+    $channel = Channel::factory()->for($this->owner)->create(['platform' => 'instagram', 'account_id' => 'ig-1', 'access_token' => 'ig-token', 'status' => 'active']);
+    $conversation = Conversation::factory()->for($channel)->create(['contact_platform_id' => 'igsid-1']);
+
+    Http::fake(['graph.instagram.com/*' => Http::sequence()->push(['error' => ['message' => 'Try later']], 500)->push(['message_id' => 'mid.retry'])]);
+
+    $attemptId = $this->actingAs($this->owner)
+        ->postJson("/api/v1/conversations/{$conversation->id}/messages", ['type' => 'text', 'content' => 'Back in stock'])
+        ->assertStatus(502)
+        ->json('attempt_id');
+
+    $this->postJson("/api/v1/message-delivery-attempts/{$attemptId}/retry")
+        ->assertOk()
+        ->assertJsonPath('data.status', 'sent')
+        ->assertJsonPath('data.platform_message_id', 'mid.retry')
+        ->assertJsonPath('data.message.content', 'Back in stock');
+
+    expect($conversation->messages()->pluck('content')->all())->toBe(['Back in stock'])
+        ->and($conversation->refresh()->last_message)->toBe('Back in stock');
+});
+
+it('keeps two failed sends of the same text as two attempts', function () {
+    $conversation = Conversation::factory()->for(Channel::factory()->for($this->owner)->create(['platform' => 'tiktok']))->create();
+
+    $this->actingAs($this->owner);
+    $first = $this->postJson("/api/v1/conversations/{$conversation->id}/messages", ['type' => 'text', 'content' => 'Hi'])->assertStatus(502)->json('attempt_id');
+    $second = $this->postJson("/api/v1/conversations/{$conversation->id}/messages", ['type' => 'text', 'content' => 'Hi'])->assertStatus(502)->json('attempt_id');
+
+    expect($second)->not->toBe($first);
+});
