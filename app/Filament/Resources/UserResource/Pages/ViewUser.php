@@ -15,6 +15,8 @@ class ViewUser extends ViewRecord
         return [
             EditAction::make()->label(__('admin/common.edit')),
             UserResource::withdrawInvitationAction(),
+            UserResource::renameWorkspaceAction(),
+            UserResource::deleteWorkspaceAction(),
             UserResource::deleteAction(),
         ];
     }

@@ -117,8 +117,7 @@ class WorkspaceController extends Controller
             return response()->json(['message' => __('workspaces.last'), 'code' => 'last_workspace'], 409);
         }
 
-        $workspace->teammates()->update(['team_owner_id' => null, 'workspace_id' => null]);
-        $workspace->delete();
+        $workspace->deleteWithTeam();
 
         return response()->json(['message' => __('workspaces.deleted')]);
     }

@@ -101,6 +101,7 @@ return [
     'unassigned' => 'Unassigned',
     'updated_at' => 'Last edited',
     'user' => 'User',
+    'workspace' => 'Workspace',
     'username' => 'Username',
     'view' => 'View',
     'visible' => 'Visible',

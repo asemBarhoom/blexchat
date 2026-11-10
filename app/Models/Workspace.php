@@ -91,4 +91,16 @@ class Workspace extends Model
     {
         return $record !== null && (int) $record->getAttribute('workspace_id') === $this->id;
     }
+
+    public function deleteWithTeam(): void
+    {
+        $this->teammates()->update(['team_owner_id' => null, 'workspace_id' => null]);
+        $this->delete();
+    }
+
+    /** @return array{channels:int,contacts:int,automations:int,teammates:int,invitations:int} */
+    public function resourcesCount(): array
+    {
+        return ['channels' => $this->channels()->count(), 'contacts' => $this->contacts()->count(), 'automations' => $this->automations()->count(), 'teammates' => $this->teammates()->count(), 'invitations' => $this->teamInvitations()->where('expires_at', '>', now())->count()];
+    }
 }
