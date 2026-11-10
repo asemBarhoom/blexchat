@@ -150,7 +150,7 @@ class AutomationRunner
             ->all();
 
         try {
-            $answer = $this->claude->answer($owner->business_name ?: $owner->name, $owner->business_info, $history, config('app.locale') === 'ar' ? 'Arabic' : 'English');
+            $answer = $this->claude->answer($owner->business_name ?: $owner->name, $owner->business_info, $history, $owner->preferredLocale() === 'ar' ? 'Arabic' : 'English');
         } catch (RequestException|ConnectionException $exception) {
             report($exception);
 

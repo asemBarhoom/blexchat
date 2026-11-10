@@ -61,3 +61,32 @@ it('writes the development AI handover reason in the owner’s language', functi
     expect($client->answer('Nour', 'Abayas', [['text' => 'I want a person']], 'Arabic')['reason'])->toBe('سأل عن شيء لا تغطيه معلومات النشاط (تجربة).')
         ->and($client->answer('Nour', 'Abayas', [['text' => 'I want a person']], 'English')['reason'])->toBe('Asked something the business info doesn’t cover (demo).');
 });
+
+it('remembers the language the frontend asks for, and keeps it when none is sent', function () {
+    $owner = User::factory()->create();
+    $this->actingAs($owner, 'sanctum');
+
+    $this->getJson('/api/v1/help?lang=ar')->assertOk();
+    expect($owner->fresh()->locale)->toBe('ar');
+
+    $this->getJson('/api/v1/help', ['Accept-Language' => 'en-US,en;q=0.9'])->assertOk();
+    expect($owner->fresh()->locale)->toBe('en');
+
+    $this->getJson('/api/v1/help', ['Accept-Language' => ''])->assertOk();
+    expect($owner->fresh()->locale)->toBe('en');
+});
+
+it('sends a due reminder in the owner’s own language', function (?string $saved, string $sentIn) {
+    Mail::fake();
+    $owner = User::factory()->create();
+    $owner->forceFill(['locale' => $saved])->save();
+    Conversation::factory()->for(Channel::factory()->for($owner))->create(['remind_at' => now()->subMinute()]);
+
+    $this->artisan('conversations:send-reminders')->assertSuccessful();
+
+    Mail::assertSent(ReminderDueMail::class, fn (ReminderDueMail $mail): bool => $mail->locale === $sentIn);
+})->with([
+    'English owner' => ['en', 'en'],
+    'Arabic owner' => ['ar', 'ar'],
+    'never said' => [null, 'en'],
+]);

@@ -31,7 +31,7 @@ class SendDueReminders extends Command
                     $owner = $conversation->channel?->user;
 
                     if ($owner !== null) {
-                        Mail::to($owner->email)->locale(config('app.locale'))->send(new ReminderDueMail($conversation));
+                        Mail::to($owner)->send(new ReminderDueMail($conversation));
                         $sent++;
                     }
 
