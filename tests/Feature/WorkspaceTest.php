@@ -32,6 +32,13 @@ it('works in the workspace the X-Workspace header names, else the first', functi
     $this->deleteJson("/api/v1/channels/{$this->secondChannel->id}")->assertForbidden();
 });
 
+it('names the current workspace and the saved language on the user', function () {
+    $this->actingAs($this->owner)->getJson('/api/v1/auth/me', ['X-Workspace' => $this->second->id, 'Accept-Language' => 'ar'])
+        ->assertOk()
+        ->assertJsonPath('data.workspace', ['id' => $this->second->id, 'name' => 'Bakery'])
+        ->assertJsonPath('data.locale', 'ar');
+});
+
 it('refuses a workspace that is not the owner’s', function () {
     $someoneElses = Workspace::factory()->create();
 

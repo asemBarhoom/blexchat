@@ -22,6 +22,11 @@ use OpenApi\Attributes as OA;
     new OA\Property(property: 'email', type: 'string', format: 'email', example: 'sara@nourboutique.com'),
     new OA\Property(property: 'business_name', type: 'string', nullable: true),
     new OA\Property(property: 'role', type: 'string', enum: ['owner', 'agent'], description: 'agent: a teammate, who sees only the inbox and contacts of the owner who invited them (`GET /team`)'),
+    new OA\Property(property: 'locale', type: 'string', enum: ['ar', 'en'], description: 'The language the frontend last asked for; emails and Blexchat AI use it'),
+    new OA\Property(property: 'workspace', description: 'The workspace this request worked in (the `X-Workspace` header, else the first)', properties: [
+        new OA\Property(property: 'id', type: 'integer'),
+        new OA\Property(property: 'name', type: 'string'),
+    ], type: 'object'),
     new OA\Property(property: 'email_verified_at', type: 'string', format: 'date-time'),
     new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
 ])]
