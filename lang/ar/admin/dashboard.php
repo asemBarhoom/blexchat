@@ -10,6 +10,8 @@ return [
     'channels' => 'القنوات المربوطة',
     'channels_by_platform' => 'القنوات حسب المنصة',
     'channels_note' => 'كل القنوات النشطة',
+    'checkouts_30_days' => 'جلسات الدفع (30 يوماً)',
+    'checkouts_30_days_note' => ':completed مكتملة',
     'handovers_today' => 'تحويلات لموظف اليوم',
     'handovers_today_note' => 'محادثات احتاجت موظفاً',
     'failed_deliveries_today' => 'رسائل فشل إرسالها اليوم',

@@ -2,9 +2,11 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Resources\CheckoutSessionResource;
 use App\Filament\Resources\MessageDeliveryAttemptResource;
 use App\Models\Automation;
 use App\Models\Channel;
+use App\Models\CheckoutSession;
 use App\Models\Comment;
 use App\Models\Conversation;
 use App\Models\Message;
@@ -78,6 +80,12 @@ class StatsOverviewWidget extends BaseWidget
                 ->descriptionIcon('heroicon-o-exclamation-triangle')
                 ->color('danger')
                 ->url(MessageDeliveryAttemptResource::getUrl('index', ['tableFilters' => ['status' => ['value' => 'failed']]])),
+
+            Stat::make(__('admin/dashboard.checkouts_30_days'), CheckoutSession::where('created_at', '>=', now()->subDays(30))->count())
+                ->description(__('admin/dashboard.checkouts_30_days_note', ['completed' => CheckoutSession::where('completed_at', '>=', now()->subDays(30))->count()]))
+                ->descriptionIcon('heroicon-o-shopping-cart')
+                ->color('info')
+                ->url(CheckoutSessionResource::getUrl('index')),
         ];
     }
 
