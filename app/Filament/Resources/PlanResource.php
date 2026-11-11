@@ -69,6 +69,7 @@ class PlanResource extends Resource
                     ->helperText(__('admin/plans.monthly_price_help')),
                 TextInput::make('annual_price')->label(__('admin/plans.annual_price'))->numeric()->integer()->minValue(0)->required(),
                 TextInput::make('contacts_limit')->label(__('admin/plans.contacts_limit'))->numeric()->integer()->minValue(1)->required(),
+                TextInput::make('channels_limit')->label(__('admin/plans.channels_limit'))->numeric()->integer()->minValue(1)->helperText(__('admin/plans.no_limit_help')),
                 TextInput::make('live_automations_limit')->label(__('admin/plans.live_automations_limit'))->numeric()->integer()->minValue(1)->helperText(__('admin/plans.no_limit_help')),
                 TextInput::make('teammates_limit')->label(__('admin/plans.teammates_limit'))->numeric()->integer()->minValue(1)->required()
                     ->helperText(__('admin/plans.teammates_help')),

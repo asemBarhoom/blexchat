@@ -64,6 +64,7 @@ class ChannelOAuthController extends Controller
             new OA\Response(response: 200, description: 'More than one Page: `data.pages` and `state`, then POST /api/v1/channels/oauth/messenger/pages with the chosen `page_id`'),
             new OA\Response(response: 201, description: 'Channel connected'),
             new OA\Response(response: 400, description: '`code: invalid_oauth_state` — unknown, expired or already used'),
+            new OA\Response(response: 403, description: '`code: channel_limit` with `limit`: the plan’s channels are all in use'),
             new OA\Response(response: 409, description: '`code: channel_taken` — the account is connected to another workspace'),
             new OA\Response(response: 501, description: 'Provider OAuth is not configured'),
         ]
@@ -112,6 +113,10 @@ class ChannelOAuthController extends Controller
 
         if (Channel::where('platform', $platform)->where('account_id', $accountId)->where('user_id', '!=', $user->id)->exists()) {
             return response()->json(['message' => __('channels.connect.account_taken'), 'code' => 'channel_taken'], 409);
+        }
+
+        if ($refusal = $user->channelLimitRefusal($platform, $accountId)) {
+            return response()->json($refusal, 403);
         }
 
         $channel = Channel::updateOrCreate(

@@ -78,6 +78,7 @@ class InstagramConnectionController extends Controller
                 new OA\Property(property: 'data', type: 'object'),
                 new OA\Property(property: 'meta', type: 'object', properties: [new OA\Property(property: 'reconnected', type: 'boolean')]),
             ])),
+            new OA\Response(response: 403, description: '`code: channel_limit` with `limit`: the plan’s channels are all in use'),
             new OA\Response(response: 409, description: '`account_taken`', content: new OA\JsonContent(ref: '#/components/schemas/ConnectError')),
             new OA\Response(response: 422, description: '`access_denied`, `account_ineligible`, or an invalid or expired state', content: new OA\JsonContent(ref: '#/components/schemas/ConnectError')),
             new OA\Response(response: 502, description: '`provider_error`: Instagram refused the connection', content: new OA\JsonContent(ref: '#/components/schemas/ConnectError')),
@@ -114,6 +115,10 @@ class InstagramConnectionController extends Controller
                 'account' => $account,
                 'access_request_token' => ChannelAccessRequest::tokenFor($request->user(), $takenBy),
             ]);
+        }
+
+        if ($refusal = $request->user()->channelLimitRefusal('instagram', (string) $profile['user_id'])) {
+            return response()->json($refusal, 403);
         }
 
         try {

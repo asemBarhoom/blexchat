@@ -17,6 +17,7 @@ use OpenApi\Attributes as OA;
     new OA\Property(property: 'annual_total', type: 'integer', example: 168, description: 'What one year costs: "Billed $168 yearly"'),
     new OA\Property(property: 'currency', type: 'string', enum: ['USD']),
     new OA\Property(property: 'contacts_limit', type: 'integer', example: 250, description: 'Never unlimited'),
+    new OA\Property(property: 'channels_limit', type: 'integer', nullable: true, example: 1, description: 'How many channels the owner may connect, every workspace together; null for no limit'),
     new OA\Property(property: 'live_automations_limit', type: 'integer', nullable: true, example: 3, description: 'How many automations may be live at once; null for no limit'),
     new OA\Property(property: 'workspaces_limit', type: 'integer', example: 1, description: 'How many businesses (workspaces) the owner may run'),
     new OA\Property(property: 'has_ai', type: 'boolean', description: 'Shows the "+ Blexchat AI" row'),

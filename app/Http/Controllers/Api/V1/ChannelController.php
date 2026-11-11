@@ -66,6 +66,7 @@ class ChannelController extends Controller
         ),
         responses: [
             new OA\Response(response: 201, description: 'Channel connected'),
+            new OA\Response(response: 403, description: '`code: channel_limit` with `limit` when the plan’s channels, every workspace together, are all in use (show Upgrade)'),
             new OA\Response(response: 409, description: 'Already connected'),
             new OA\Response(response: 422, description: 'Validation error'),
         ]
@@ -79,6 +80,10 @@ class ChannelController extends Controller
 
         if ($exists) {
             return response()->json(['message' => __('channels.already_connected')], 409);
+        }
+
+        if ($refusal = $request->user()->channelLimitRefusal($request->platform, $request->account_id)) {
+            return response()->json($refusal, 403);
         }
 
         $channel = $request->user()->channels()->create([

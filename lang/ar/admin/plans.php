@@ -26,6 +26,7 @@ return [
     'teammates_help' => 'صاحب الحساب يُحسب مقعداً.',
     'teammates_limit' => 'عدد المقاعد (مع صاحب الحساب)',
     'workspaces_limit' => 'عدد مساحات العمل',
+    'channels_limit' => 'عدد القنوات',
     'trial_days' => 'أيام التجربة المجانية',
     'trial_days_column' => 'أيام التجربة',
     'trial_days_help' => '0 = بدون تجربة: تُدفع الباقة من اليوم.',
