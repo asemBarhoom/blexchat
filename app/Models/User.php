@@ -249,6 +249,28 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
     }
 
     /**
+     * Why this account cannot be connected now: the plan's channels, every workspace counted
+     * together, are all in use. Null when it can, and always for an account already connected,
+     * which only reconnects.
+     *
+     * @return array{code: 'channel_limit', message: string, limit: int}|null
+     */
+    public function channelLimitRefusal(string $platform, string $accountId): ?array
+    {
+        $limit = ($this->subscription?->effectivePlan() ?? Plan::firstWhere('slug', Plan::FREE_SLUG))?->channels_limit;
+
+        if ($limit === null || $this->channels()->where('platform', $platform)->where('account_id', $accountId)->exists()) {
+            return null;
+        }
+
+        if ($this->channels()->count() >= $limit) {
+            return ['code' => 'channel_limit', 'message' => trans_choice('channels.limit', $limit, ['count' => $limit]), 'limit' => $limit];
+        }
+
+        return null;
+    }
+
+    /**
      * The sidebar's contacts meter: everyone saved against the plan's limit. People who message
      * are always saved, so an account can be over its limit, for instance after a trial ends.
      *

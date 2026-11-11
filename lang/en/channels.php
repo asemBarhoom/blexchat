@@ -23,6 +23,7 @@ return [
     ],
 
     'already_connected' => 'This account is already connected.',
+    'limit' => 'Your plan allows :count channel. Upgrade to connect more.|Your plan allows :count channels. Upgrade to connect more.',
     'disconnected' => 'Channel disconnected.',
     'oauth_not_configured' => 'Connecting this platform isn’t set up on this server yet.',
     'oauth_state_invalid' => 'The connection session expired. Try again.',

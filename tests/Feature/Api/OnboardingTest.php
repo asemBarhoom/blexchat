@@ -30,6 +30,7 @@ describe('GET /api/v1/plans', function () {
                 'annual_total' => 168,
                 'currency' => 'USD',
                 'contacts_limit' => 250,
+                'channels_limit' => null,
                 'live_automations_limit' => null,
                 'workspaces_limit' => 1,
                 'has_ai' => false,
