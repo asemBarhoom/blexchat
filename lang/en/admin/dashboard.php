@@ -10,6 +10,8 @@ return [
     'channels' => 'Connected channels',
     'channels_by_platform' => 'Channels by platform',
     'channels_note' => 'All active channels',
+    'checkouts_30_days' => 'Checkout sessions (30 days)',
+    'checkouts_30_days_note' => ':completed completed',
     'handovers_today' => 'Handovers today',
     'handovers_today_note' => 'Conversations that needed a person',
     'failed_deliveries_today' => 'Failed messages today',
