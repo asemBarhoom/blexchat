@@ -7,6 +7,7 @@ use App\Models\Channel;
 use App\Models\User;
 use App\Services\Channels\ChannelOAuthProvider;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -22,7 +23,7 @@ class ChannelOAuthController extends Controller
         return response()->json(['data' => ['pages' => Cache::get('channel-oauth:pages:'.$request->user()->id, [])]]);
     }
 
-    public function selectPage(Request $request): JsonResponse
+    public function selectPage(Request $request): JsonResponse|RedirectResponse
     {
         abort_unless(! app()->isProduction(), 501);
         $request->validate(['state' => ['required', 'string'], 'page_id' => ['required', 'string']]);
@@ -51,38 +52,75 @@ class ChannelOAuthController extends Controller
         return response()->json(['data' => ['platform' => $platform, 'state' => $state, 'authorization_url' => $url]]);
     }
 
-    #[OA\Get(path: '/api/v1/channels/oauth/{platform}/callback', summary: 'Complete a channel OAuth flow', tags: ['Channels'], parameters: [new OA\Parameter(name: 'platform', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: ['messenger', 'whatsapp', 'tiktok'])), new OA\Parameter(name: 'state', in: 'query', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 201, description: 'Channel connected'), new OA\Response(response: 400, description: 'Invalid or expired OAuth state'), new OA\Response(response: 501, description: 'Provider OAuth is not configured')])]
-    public function callback(Request $request, string $platform, ChannelOAuthProvider $provider): JsonResponse
+    #[OA\Get(
+        path: '/api/v1/channels/oauth/{platform}/callback',
+        summary: 'Complete a channel OAuth flow',
+        tags: ['Channels'],
+        parameters: [
+            new OA\Parameter(name: 'platform', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: ['messenger', 'whatsapp', 'tiktok'])),
+            new OA\Parameter(name: 'state', in: 'query', required: true, schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'More than one Page: `data.pages` and `state`, then POST /api/v1/channels/oauth/messenger/pages with the chosen `page_id`'),
+            new OA\Response(response: 201, description: 'Channel connected'),
+            new OA\Response(response: 400, description: '`code: invalid_oauth_state` — unknown, expired or already used'),
+            new OA\Response(response: 409, description: '`code: channel_taken` — the account is connected to another workspace'),
+            new OA\Response(response: 501, description: 'Provider OAuth is not configured'),
+        ]
+    )]
+    public function callback(Request $request, string $platform, ChannelOAuthProvider $provider): JsonResponse|RedirectResponse
     {
         abort_unless((config('services.channels.oauth_driver') === 'fake' && ! app()->isProduction()) || filled(config("services.{$platform}.client_id")), 501, __('channels.oauth_not_configured'));
-        $state = (string) $request->query('state');
-        $pending = Cache::pull("channel-oauth:{$state}");
-        abort_unless(is_array($pending) && $pending['platform'] === $platform, 400, 'Invalid OAuth state.');
+        $state = (string) $request->input('state');
+        // The state stays until the flow finishes: picking a Page is a second request with the same state.
+        $pending = Cache::get("channel-oauth:{$state}");
+
+        if (! is_array($pending) || $pending['platform'] !== $platform) {
+            return response()->json(['message' => __('channels.oauth_state_invalid'), 'code' => 'invalid_oauth_state'], 400);
+        }
 
         $user = User::findOrFail($pending['user_id']);
         $accountId = (string) ($request->input('page_id') ?: $request->input('phone_number_id') ?: $request->input('open_id'));
-        $accessToken = (string) $request->input('access_token', 'fake-oauth-token');
-        if (config('services.channels.oauth_driver') === 'provider') {
+        $accessToken = (string) ($pending['access_token'] ?? $request->input('access_token', 'fake-oauth-token'));
+        $pages = $pending['pages'] ?? null;
+
+        if ($pages === null && config('services.channels.oauth_driver') === 'provider') {
             $result = $provider->exchange($platform, (string) $request->query('code'));
             $accessToken = $result['access_token'];
             $accountId = (string) ($accountId ?: ($result['phone_number_id'] ?? $result['account_id'] ?? ''));
             if ($platform === 'messenger' && $accountId === '' && count($result['pages'] ?? []) > 1) {
+                // A code works once: keep its result with the state so the pick reuses it instead of asking Meta again.
+                Cache::put("channel-oauth:{$state}", [...$pending, 'access_token' => $result['access_token'], 'pages' => $result['pages']], now()->addMinutes(10));
                 Cache::put('channel-oauth:pages:'.$user->id, $result['pages'], now()->addMinutes(10));
 
                 return response()->json(['data' => ['pages' => $result['pages'], 'state' => $state]], 200);
             }
             $accountId = (string) ($accountId ?: data_get($result, 'pages.0.id'));
+            $pages = $result['pages'] ?? null;
         }
+
+        if ($pages !== null && $accountId !== '') {
+            // A Page has its own token; the account (user) token does not send its messages.
+            $page = collect($pages)->firstWhere('id', $accountId);
+            $accessToken = (string) ($page['access_token'] ?? $accessToken);
+        }
+
         if ($accountId === '' && config('services.channels.oauth_driver') === 'fake') {
             $accountId = 'fake-oauth-'.$platform.'-'.$user->id;
         }
         abort_if($accountId === '', 422, __('channels.oauth_no_account'));
-        abort_if(Channel::where('platform', $platform)->where('account_id', $accountId)->where('user_id', '!=', $user->id)->exists(), 409, 'This account is already connected to another workspace.');
+
+        if (Channel::where('platform', $platform)->where('account_id', $accountId)->where('user_id', '!=', $user->id)->exists()) {
+            return response()->json(['message' => __('channels.connect.account_taken'), 'code' => 'channel_taken'], 409);
+        }
 
         $channel = Channel::updateOrCreate(
             ['user_id' => $user->id, 'platform' => $platform, 'account_id' => $accountId],
             [...array_filter(['workspace_id' => $pending['workspace_id'] ?? null]), 'access_token' => $accessToken, 'status' => 'active', 'connected_at' => now()],
         );
+
+        Cache::forget("channel-oauth:{$state}");
+        Cache::forget('channel-oauth:pages:'.$user->id);
 
         $redirect = config('services.channels.oauth_redirect_url');
         if (filled($redirect)) {
