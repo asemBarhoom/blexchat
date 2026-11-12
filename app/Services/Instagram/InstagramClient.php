@@ -10,15 +10,29 @@ use Illuminate\Support\Facades\Http;
 use Throwable;
 
 /**
- * Instagram API with Instagram Login: account connection, comment replies and DMs.
+ * Instagram API with Instagram Login, or with Unified Login (Facebook Login for Business) when a
+ * configuration id is set, as newer Meta apps require: account connection, comment replies and DMs.
  * Reads are retried on transient failures; sends never are, so a customer cannot get a reply twice.
  */
 class InstagramClient
 {
+    /** How long a Unified Login token is treated as valid; Meta issues it without an end date. */
+    private const UNIFIED_TOKEN_SECONDS = 315360000;
+
     private const SCOPES = ['instagram_business_basic', 'instagram_business_manage_messages', 'instagram_business_manage_comments'];
 
     public function authorizationUrl(string $state): string
     {
+        if (self::usesUnifiedLogin()) {
+            return 'https://www.facebook.com/dialog/oauth?'.http_build_query([
+                'client_id' => config('services.instagram.app_id'),
+                'config_id' => config('services.instagram.config_id'),
+                'redirect_uri' => config('services.instagram.redirect_uri'),
+                'response_type' => 'code',
+                'state' => $state,
+            ]);
+        }
+
         return 'https://www.instagram.com/oauth/authorize?'.http_build_query([
             'client_id' => config('services.instagram.app_id'),
             'redirect_uri' => config('services.instagram.redirect_uri'),
@@ -35,6 +49,17 @@ class InstagramClient
      */
     public function exchangeCode(string $code): array
     {
+        if (self::usesUnifiedLogin()) {
+            $token = $this->read()->get('/oauth/access_token', [
+                'client_id' => config('services.instagram.app_id'),
+                'client_secret' => config('services.instagram.app_secret'),
+                'redirect_uri' => config('services.instagram.redirect_uri'),
+                'code' => $code,
+            ])->throw()->json();
+
+            return ['access_token' => $token['access_token'], 'expires_in' => (int) ($token['expires_in'] ?? self::UNIFIED_TOKEN_SECONDS)];
+        }
+
         $shortLived = Http::asForm()->connectTimeout(5)->timeout(15)
             ->post('https://api.instagram.com/oauth/access_token', [
                 'client_id' => config('services.instagram.app_id'),
@@ -58,6 +83,11 @@ class InstagramClient
      */
     public function refreshToken(string $token): array
     {
+        // A Unified Login token is a business system user token that does not expire on its own.
+        if (self::usesUnifiedLogin()) {
+            return ['access_token' => $token, 'expires_in' => self::UNIFIED_TOKEN_SECONDS];
+        }
+
         return $this->read()->get('https://graph.instagram.com/refresh_access_token', [
             'grant_type' => 'ig_refresh_token',
             'access_token' => $token,
@@ -72,6 +102,12 @@ class InstagramClient
      */
     public function profile(string $token): array
     {
+        if (self::usesUnifiedLogin()) {
+            $account = $this->read($token)->get('/me/assigned_instagram_accounts', ['fields' => 'id,username'])->throw()->json('data.0');
+
+            return $account === null ? [] : ['user_id' => (string) $account['id'], 'username' => $account['username']];
+        }
+
         return $this->read($token)->get('/me', [
             'fields' => 'user_id,username,account_type,profile_picture_url,followers_count',
         ])->throw()->json();
@@ -94,7 +130,7 @@ class InstagramClient
      */
     public function recentMedia(Channel $channel, int $limit = 50): array
     {
-        return $this->read($channel->access_token)->get('/me/media', [
+        return $this->read($channel->access_token)->get(self::usesUnifiedLogin() ? "/{$channel->account_id}/media" : '/me/media', [
             'fields' => 'id,caption,media_type,media_product_type,timestamp,thumbnail_url,media_url,like_count,comments_count',
             'limit' => $limit,
         ])->throw()->json('data') ?? [];
@@ -112,9 +148,9 @@ class InstagramClient
         ])->throw()->json();
     }
 
-    public function subscribeToWebhooks(string $token): void
+    public function subscribeToWebhooks(string $token, string $accountId): void
     {
-        $this->graph($token)->post('/me/subscribed_apps?subscribed_fields=comments,messages')->throw();
+        $this->graph($token)->post((self::usesUnifiedLogin() ? "/{$accountId}" : '/me').'/subscribed_apps?subscribed_fields=comments,messages')->throw();
     }
 
     public function replyToComment(Channel $channel, string $commentId, string $text): ?string
@@ -196,6 +232,11 @@ class InstagramClient
             ->json('message_id');
     }
 
+    public static function usesUnifiedLogin(): bool
+    {
+        return filled(config('services.instagram.config_id'));
+    }
+
     private function read(?string $token = null): PendingRequest
     {
         return $this->graph($token)->retry([200, 1000], 0, fn (Throwable $exception): bool => $exception instanceof ConnectionException
@@ -204,7 +245,8 @@ class InstagramClient
 
     private function graph(?string $token): PendingRequest
     {
-        $request = Http::baseUrl('https://graph.instagram.com/'.config('services.instagram.graph_version'))
+        $host = self::usesUnifiedLogin() ? 'https://graph.facebook.com/' : 'https://graph.instagram.com/';
+        $request = Http::baseUrl($host.config('services.instagram.graph_version'))
             ->acceptJson()
             ->connectTimeout(5)
             ->timeout(15);
