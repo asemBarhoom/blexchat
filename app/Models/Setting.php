@@ -17,9 +17,15 @@ class Setting extends Model
     /** The day of a free trial on which the reminder email goes out. */
     public const TRIAL_REMINDER_DAYS = 'checkout.trial_reminder_days';
 
+    public const HELP_EMAIL = 'help.email';
+
+    public const HELP_RESPONSE_TIME = 'help.response_time_hours';
+
     /** @var array<string, mixed> */
     public const DEFAULTS = [
         self::TRIAL_REMINDER_DAYS => 7,
+        self::HELP_EMAIL => null,
+        self::HELP_RESPONSE_TIME => 24,
     ];
 
     protected function casts(): array
