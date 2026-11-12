@@ -207,9 +207,8 @@ class ManageMarketingHome extends Page
                     ...$each(3, fn (int $i): array => [["composer.examples.{$i}", __('admin/home.example').($i + 1)]]),
                 ],
                 __('admin/home.social_proof_and_channels') => [
-                    ['social_proof.rating', __('admin/home.rating')], ['social_proof.count', __('admin/home.customer_count')], ['channels_label', __('admin/home.channels_title')],
+                    ['social_proof.text', __('admin/home.built_for_line')], ['channels_label', __('admin/home.channels_title')],
                     ...$each(4, fn (int $i): array => [["channels.{$i}.label", __('admin/home.channel').($i + 1)]]),
-                    ...$each(2, fn (int $i): array => [["partners.{$i}.label", __('admin/home.partner').($i + 1)]]),
                 ],
                 __('admin/home.animated_conversations') => $each(3, fn (int $i): array => [
                     ["conversations.{$i}.handle", __('admin/home.account').($i + 1)], ["conversations.{$i}.initial", __('admin/home.initial').($i + 1)],
@@ -221,8 +220,6 @@ class ManageMarketingHome extends Page
                 $image('cutout', __('admin/home.cut_out_person_photo')),
                 $url('cta.url', __('admin/automations.button_url')), $number('story.pressure.count', __('admin/home.counter_number')),
                 ...array_map(fn (int $i): TextInput => $number("story.relief.stats.{$i}.to", __('admin/home.number').($i + 1)), range(0, 2)),
-                FileUpload::make($at('social_proof.avatars'))->label(__('admin/home.customer_photos'))->image()->multiple()->reorderable()
-                    ->disk('public')->directory('marketing/home/uploads')->visibility('public')->columnSpanFull(),
                 ...array_map(fn (int $i): FileUpload => $image("conversations.{$i}.avatar", __('admin/home.conversation_photo').($i + 1)), range(0, 2)),
             ]],
             'creators' => [[__('admin/common.title') => [['label', __('admin/common.title')]]]],

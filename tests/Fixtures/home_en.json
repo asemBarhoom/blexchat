@@ -28,9 +28,9 @@
                         }
                     ],
                     "counter": "new messages",
-                    "more": "+44 more",
                     "counter_one": "new message",
-                    "counter_other": "new messages"
+                    "counter_other": "new messages",
+                    "more": "+44 more"
                 },
                 "relief": {
                     "stats": [
@@ -68,16 +68,6 @@
                 "to": "/signup"
             },
             "cutout": "storage/marketing/home/hero-person-upper.webp",
-            "social_proof": {
-                "avatars": [
-                    "storage/marketing/home/avatars/sara.webp",
-                    "storage/marketing/home/avatars/omar.webp",
-                    "storage/marketing/home/avatars/lina.webp",
-                    "storage/marketing/home/avatars/khalid.webp"
-                ],
-                "rating": "4.8/5",
-                "count": "2,000+ businesses"
-            },
             "channels": [
                 {
                     "id": "instagram",
@@ -94,16 +84,6 @@
                 {
                     "id": "messenger",
                     "label": "Messenger"
-                }
-            ],
-            "partners": [
-                {
-                    "id": "meta",
-                    "label": "Meta Business Partner"
-                },
-                {
-                    "id": "tiktok",
-                    "label": "TikTok Marketing Partner"
                 }
             ],
             "conversations": [
@@ -169,54 +149,16 @@
             "subtitle": "BLEXCHAT turns comments and DMs into customers.",
             "description": "Smart automations that sell and reply for you, 24/7.",
             "microcopy": "Free plan · No credit card required",
+            "social_proof": {
+                "text": "Built for Instagram, WhatsApp, TikTok & Messenger"
+            },
             "channels_label": "Works with"
         },
         {
             "id": "creators",
             "type": "creator_strip",
-            "label": "Loved by 1M+ creators, marketers & brands",
-            "items": [
-                {
-                    "id": "nora",
-                    "name": "Nora Al-Qahtani",
-                    "handle": "@noraqtn",
-                    "followers": "184K followers",
-                    "quote": "I stopped losing sales in my DMs.",
-                    "photo": "storage/marketing/home/creators/nora.webp"
-                },
-                {
-                    "id": "omar",
-                    "name": "Omar Bin Saleh",
-                    "handle": "@omar.fit",
-                    "followers": "92K followers",
-                    "quote": "Every comment gets an answer now.",
-                    "photo": "storage/marketing/home/creators/omar.webp"
-                },
-                {
-                    "id": "lina",
-                    "name": "Lina Mansour",
-                    "handle": "@lina.m",
-                    "followers": "310K followers",
-                    "quote": "It replies while I sleep.",
-                    "photo": "storage/marketing/home/creators/lina.webp"
-                },
-                {
-                    "id": "faisal",
-                    "name": "Faisal Otaibi",
-                    "handle": "@faisalotb",
-                    "followers": "47K followers",
-                    "quote": "Set up in a morning, paid for itself by Friday.",
-                    "photo": "storage/marketing/home/creators/faisal.webp"
-                },
-                {
-                    "id": "huda",
-                    "name": "Huda Kamal",
-                    "handle": "@hudamakes",
-                    "followers": "128K followers",
-                    "quote": "My inbox went from scary to sorted.",
-                    "photo": "storage/marketing/home/creators/huda.webp"
-                }
-            ]
+            "label": "Built for creators, brands and sellers",
+            "items": []
         },
         {
             "id": "intro",
@@ -274,15 +216,15 @@
                     },
                     "channel": "whatsapp",
                     "scene": {
-                        "avatar": "storage/marketing/home/avatars/omar.webp",
-                        "handle": "omar.fit",
+                        "avatar": "storage/marketing/home/avatars/sara.webp",
+                        "handle": "sara.styles",
                         "question": "Do you ship to Riyadh?",
                         "reply": "Yes! Free delivery across KSA 🚚",
                         "action": "Track order",
                         "seen": "Seen",
                         "lead": {
-                            "name": "Omar A.",
-                            "detail": "+966 5• ••• 4412 · omar@mail.com",
+                            "name": "Sara A.",
+                            "detail": "+966 5• ••• 4412 · sara@mail.com",
                             "tag": "Lead captured"
                         }
                     },
@@ -467,14 +409,14 @@
                 {
                     "id": "welcome",
                     "scene": {
-                        "avatar": "storage/marketing/home/avatars/omar.webp",
-                        "handle": "Omar",
+                        "avatar": "storage/marketing/home/avatars/sara.webp",
+                        "handle": "Sara",
                         "question": "Salam! Are you open today?",
-                        "reply": "Wa alaikum salam Omar! Open 10am–11pm. What can we get you?",
+                        "reply": "Wa alaikum salam Sara! Open 10am–11pm. What can we get you?",
                         "action": "See the menu",
                         "lead": {
                             "tag": "New lead saved",
-                            "name": "Omar K.",
+                            "name": "Sara K.",
                             "detail": "+971 5X XXX XXXX · WhatsApp"
                         }
                     },
@@ -523,9 +465,9 @@
                             "value": "1,284",
                             "label": "Entries collected"
                         },
-                        "handle": "nora.m",
+                        "handle": "hala.m",
                         "question": "Count me in! 🎉",
-                        "reply": "You're in, Nora! Winners are picked Friday at 8pm.",
+                        "reply": "You're in, Hala! Winners are picked Friday at 8pm.",
                         "action": "Share for 2× entries"
                     },
                     "title": "Run giveaways",
@@ -599,20 +541,20 @@
             "heading": "BLEXCHAT in numbers",
             "stats": [
                 {
-                    "value": "1.2M+",
-                    "label": "Messages automated"
+                    "value": "4",
+                    "label": "channels in one inbox"
                 },
                 {
-                    "value": "0.4s",
-                    "label": "Average reply time"
+                    "value": "24/7",
+                    "label": "automatic replies"
                 },
                 {
-                    "value": "$2M+",
-                    "label": "Revenue recovered"
+                    "value": "AR · EN",
+                    "label": "Arabic & English"
                 },
                 {
-                    "value": "2,000+",
-                    "label": "Businesses"
+                    "value": "Seconds",
+                    "label": "for every reply"
                 }
             ]
         },
@@ -976,15 +918,15 @@
         }
     },
     "not_found": {
-        "question": "Is this page still here?",
-        "replied": "Replied in 0.4s",
-        "answer": "It isn’t, but the rest of the site is. The way home is below.",
         "code": "404",
-        "title": "This page doesn’t exist.",
-        "body": "The link may be old, or the address has a typo.",
         "cta": {
             "label": "Back to the homepage",
             "to": "/"
-        }
+        },
+        "question": "Is this page still here?",
+        "replied": "Replied in 0.4s",
+        "answer": "It isn’t, but the rest of the site is. The way home is below.",
+        "title": "This page doesn’t exist.",
+        "body": "The link may be old, or the address has a typo."
     }
 }

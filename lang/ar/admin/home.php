@@ -46,6 +46,7 @@ return [
     'creator' => 'صانع محتوى',
     'creators' => 'صُنّاع المحتوى',
     'customer_badge' => 'شارة العميل',
+    'built_for_line' => 'السطر تحت الزر (القنوات المصمَّم لها)',
     'customer_count' => 'عدد العملاء',
     'customer_photos' => 'صور العملاء',
     'customer_question' => 'سؤال العميل ',
