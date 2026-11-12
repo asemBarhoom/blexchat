@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Translatable\HasTranslations;
 
 /**
@@ -79,7 +80,7 @@ class Solution extends Model
     public static function avatarUrl(?string $upload, string $handle, string $background, string $foreground): string
     {
         if ($upload) {
-            return url('storage/'.$upload);
+            return url(Storage::disk('public')->url($upload));
         }
 
         $letter = htmlspecialchars(mb_strtoupper(mb_substr(ltrim($handle, '@'), 0, 1)), ENT_XML1);

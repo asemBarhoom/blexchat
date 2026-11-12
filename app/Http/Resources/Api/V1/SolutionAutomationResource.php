@@ -6,6 +6,7 @@ use App\Models\Solution;
 use App\Models\SolutionAutomation;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * One automation of a solution page and the conversation its phone preview plays. `post` and
@@ -30,7 +31,7 @@ class SolutionAutomationResource extends JsonResource
             'link' => $this->link,
             'post' => $this->when($this->hasPost(), fn (): array => array_filter([
                 'id' => "post-{$this->id}",
-                'image' => $this->post_image ? url('storage/'.$this->post_image) : null,
+                'image' => $this->post_image ? url(Storage::disk('public')->url($this->post_image)) : null,
                 'tile' => $this->post_tile_text ? ['text' => $this->post_tile_text, 'tone' => $this->post_tile_tone] : null,
                 'caption' => $this->post_caption ?? '',
                 'likes' => $this->post_likes ?? '',
