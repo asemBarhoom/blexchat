@@ -31,7 +31,7 @@ it('serves the pricing page in Arabic with figures read from the plans', functio
         ->assertJsonPath('data.compare.0.rows.0.cells.free', 'حتى 25')
         ->assertJsonPath('data.compare.0.rows.0.cells.advanced', 'حتى 25,000')
         ->assertJsonPath('data.faq.0.answer', 'نعم. بدون بطاقة وبدون حد زمني. تحصل على قناة واحدة وما يصل إلى 25 جهة اتصال، ويمكنك البقاء عليها ما شئت.')
-        ->assertJsonPath('data.faq.5.answer', 'باقة Essential تأتي بتجربة مجانية مدتها 14 يوم. لن تدفع شيئًا حتى تنتهي التجربة، وسنذكّرك قبل انتهائها.');
+        ->assertJsonPath('data.faq.5.answer', 'باقة أساسية تأتي بتجربة مجانية مدتها 14 يوم. لن تدفع شيئًا حتى تنتهي التجربة، وسنذكّرك قبل انتهائها.');
 
     $automation = collect($response->json('data.compare.1.rows'))->keyBy('id');
     expect($automation['follow-ups']['cells'])->toBe(['free' => false, 'essential' => false, 'pro' => true, 'business' => true, 'advanced' => true])

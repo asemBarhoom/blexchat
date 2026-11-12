@@ -46,7 +46,7 @@ class OnboardingSeeder extends Seeder
         return [
             [
                 'slug' => 'free',
-                'name' => ['en' => 'Free', 'ar' => 'Free'],
+                'name' => ['en' => 'Free', 'ar' => 'مجانية'],
                 'tagline' => ['en' => 'Try it on one channel.', 'ar' => 'جرّبه على قناة واحدة.'],
                 'monthly_price' => 0,
                 'annual_price' => 0,
@@ -66,7 +66,7 @@ class OnboardingSeeder extends Seeder
             ],
             [
                 'slug' => 'essential',
-                'name' => ['en' => 'Essential', 'ar' => 'Essential'],
+                'name' => ['en' => 'Essential', 'ar' => 'أساسية'],
                 'tagline' => ['en' => 'For a growing shop or creator.', 'ar' => 'للمتاجر وصنّاع المحتوى في مرحلة النمو.'],
                 'monthly_price' => 17,
                 'annual_price' => 14,
@@ -84,7 +84,7 @@ class OnboardingSeeder extends Seeder
             ],
             [
                 'slug' => 'pro',
-                'name' => ['en' => 'Pro', 'ar' => 'Pro'],
+                'name' => ['en' => 'Pro', 'ar' => 'احترافية'],
                 'tagline' => ['en' => 'When DMs become a sales channel.', 'ar' => 'حين تصبح الرسائل الخاصة قناة مبيعات.'],
                 'monthly_price' => 39,
                 'annual_price' => 29,
@@ -102,7 +102,7 @@ class OnboardingSeeder extends Seeder
             ],
             [
                 'slug' => 'business',
-                'name' => ['en' => 'Business', 'ar' => 'Business'],
+                'name' => ['en' => 'Business', 'ar' => 'أعمال'],
                 'tagline' => ['en' => 'For teams answering at volume.', 'ar' => 'للفرق التي ترد على أعداد كبيرة من الرسائل.'],
                 'monthly_price' => 99,
                 'annual_price' => 69,
@@ -120,7 +120,7 @@ class OnboardingSeeder extends Seeder
             ],
             [
                 'slug' => 'advanced',
-                'name' => ['en' => 'Advanced', 'ar' => 'Advanced'],
+                'name' => ['en' => 'Advanced', 'ar' => 'متقدمة'],
                 'tagline' => ['en' => 'For brands and agencies at scale.', 'ar' => 'للعلامات التجارية والوكالات الكبيرة.'],
                 'monthly_price' => 199,
                 'annual_price' => 139,

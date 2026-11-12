@@ -31,7 +31,7 @@ describe('GET /api/v1/checkout', function () {
         Setting::put(Setting::TRIAL_REMINDER_DAYS, 10);
 
         $this->getJson('/api/v1/checkout?lang=ar')
-            ->assertJsonPath('data.plans.*.name', ['Essential'])
+            ->assertJsonPath('data.plans.*.name', ['أساسية'])
             ->assertJsonPath('data.trial_reminder_days', 10);
     });
 });
@@ -80,9 +80,9 @@ describe('POST /api/v1/coupons/check', function () {
         'switched off' => [fn () => Coupon::query()->update(['active' => false]), 'pro', 'coupon_invalid', 'هذا الكود غير صالح'],
         'expired' => [fn () => Coupon::query()->update(['expires_at' => now()->subMinute()]), 'pro', 'coupon_expired', 'انتهت صلاحية هذا الكود'],
         'used up' => [fn () => Coupon::query()->update(['usage_limit' => 3, 'times_used' => 3]), 'pro', 'coupon_expired', 'هذا الكود لم يعد متاحًا'],
-        'on a trial' => [fn () => null, 'essential', 'coupon_not_for_plan', 'هذا الكود لا ينطبق على باقة Essential'],
-        'on Free' => [fn () => null, 'free', 'coupon_not_for_plan', 'هذا الكود لا ينطبق على باقة Free'],
-        'other plans only' => [fn () => Coupon::firstOrFail()->plans()->sync(Plan::where('slug', 'business')->pluck('id')), 'pro', 'coupon_not_for_plan', 'هذا الكود لا ينطبق على باقة Pro'],
+        'on a trial' => [fn () => null, 'essential', 'coupon_not_for_plan', 'هذا الكود لا ينطبق على باقة أساسية'],
+        'on Free' => [fn () => null, 'free', 'coupon_not_for_plan', 'هذا الكود لا ينطبق على باقة مجانية'],
+        'other plans only' => [fn () => Coupon::firstOrFail()->plans()->sync(Plan::where('slug', 'business')->pluck('id')), 'pro', 'coupon_not_for_plan', 'هذا الكود لا ينطبق على باقة احترافية'],
     ]);
 
     it('accepts a code limited to the chosen plan', function () {
