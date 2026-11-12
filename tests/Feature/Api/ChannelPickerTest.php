@@ -26,6 +26,8 @@ it('lists the four channels the frontend shows, in order', function () {
             'name' => 'Instagram',
             'line' => 'Comments, DMs and story replies',
             'connected' => false,
+            'available' => true,
+            'pending_reason' => null,
         ]);
 });
 
