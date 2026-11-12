@@ -21,6 +21,18 @@ class ChannelOptionResource extends JsonResource
             'name' => $this->name,
             'line' => $this->line,
             'connected' => (bool) $this->connected,
+            'available' => $this->available(),
+            'pending_reason' => $this->available() ? null : trans('channels.provider_pending', ['channel' => $this->name, 'provider' => in_array($this->platform, ['messenger', 'whatsapp'], true) ? 'Meta' : 'TikTok']),
         ];
+    }
+
+    private function available(): bool
+    {
+        if ($this->platform === 'instagram') {
+            return true;
+        }
+
+        return (config('services.channels.oauth_driver') === 'fake' && ! app()->isProduction())
+            || (config('services.channels.oauth_driver') === 'provider' && filled(config("services.{$this->platform}.client_id")) && filled(config('services.channels.oauth_redirect_url')));
     }
 }

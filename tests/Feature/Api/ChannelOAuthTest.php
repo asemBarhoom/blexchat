@@ -60,10 +60,10 @@ it('reports every provider ready on the fake driver', function () {
         ->assertJsonPath('data.providers.tiktok.configured', true);
 });
 
-it('refuses to start provider OAuth until it is implemented', function () {
+it('refuses to start provider OAuth until credentials are configured', function () {
     config()->set('services.channels.oauth_driver', 'provider');
 
     $this->actingAs(User::factory()->create(), 'sanctum')
         ->getJson('/api/v1/channels/oauth/messenger/start')
-        ->assertStatus(501);
+        ->assertStatus(503)->assertJsonPath('code', 'provider_pending');
 });
