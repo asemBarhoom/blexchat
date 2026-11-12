@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Storage;
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'Home', description: 'Public marketing homepage content')]
@@ -581,7 +582,7 @@ class HomeController extends Controller
     {
         array_walk_recursive($content, function (mixed &$value): void {
             if (is_string($value) && preg_match('#^marketing/[^\s]+\.(webp|png|jpe?g|gif|avif|svg)$#i', $value)) {
-                $value = url('storage/'.$value);
+                $value = url(Storage::disk('public')->url($value));
             }
         });
 
