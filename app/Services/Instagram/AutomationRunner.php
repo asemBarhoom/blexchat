@@ -14,6 +14,7 @@ use App\Services\Channels\ChannelNotLive;
 use App\Services\Channels\MessagingClient;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -69,6 +70,7 @@ class AutomationRunner
                 }
 
                 $action = $asksToFollow ? $this->followAsk($automation) : $this->withLinkToken($action);
+                $action = $this->withBranding($channel, $action);
                 $messageId = $this->sendPrivateReply($channel, $comment->platform_comment_id, $action);
                 $conversation = Conversation::firstOrCreate(
                     ['channel_id' => $channel->id, 'platform_conversation_id' => $comment->author_platform_id],
@@ -164,6 +166,7 @@ class AutomationRunner
         }
 
         $action = ['type' => 'send_dm', 'message' => $answer['reply']];
+        $action = $this->withBranding($conversation->channel, $action);
 
         return $this->attempt($automation, $action, function () use ($conversation, $automation, $action): void {
             $messageId = $this->sendMessage($conversation->channel, $conversation->contact_platform_id, $action);
@@ -254,6 +257,7 @@ class AutomationRunner
 
             $this->attempt($automation, $action, function () use ($channel, $conversation, $automation, $action, &$dm): void {
                 $action = $this->withLinkToken($action);
+                $action = $this->withBranding($channel, $action);
                 $messageId = $this->sendMessage($channel, $conversation->contact_platform_id, $action);
                 $dm = $this->record($conversation, $automation, $action, $messageId);
             });
@@ -370,6 +374,8 @@ class AutomationRunner
      */
     private function sendText(Conversation $conversation, Automation $automation, array $action): bool
     {
+        $action = $this->withBranding($conversation->channel, $action);
+
         return $this->attempt($automation, $action, function () use ($conversation, $automation, $action): void {
             $messageId = $this->sendMessage($conversation->channel, $conversation->contact_platform_id, $action);
             $this->record($conversation, $automation, $action, $messageId);
@@ -385,6 +391,8 @@ class AutomationRunner
      */
     private function sendMessage(Channel $channel, string $recipientId, array $action): ?string
     {
+        $action = $this->withBranding($channel, $action);
+
         if (! in_array($channel->platform, MessagingClient::PLATFORMS, true)) {
             return $this->instagram->sendMessage($channel, $recipientId, $this->payload($action));
         }
@@ -399,11 +407,32 @@ class AutomationRunner
      */
     private function sendPrivateReply(Channel $channel, string $commentId, array $action): ?string
     {
+        $action = $this->withBranding($channel, $action);
+
         if (! in_array($channel->platform, MessagingClient::PLATFORMS, true)) {
             return $this->instagram->sendPrivateReply($channel, $commentId, $this->payload($action));
         }
 
         return $this->messaging->sendPrivateReply($channel, $commentId, $this->plainText($action));
+    }
+
+    /**
+     * Add the Free plan's attribution to an automated private message once.
+     * Public comment replies and human inbox messages never pass through here.
+     *
+     * @param  array<string, mixed>  $action
+     * @return array<string, mixed>
+     */
+    private function withBranding(Channel $channel, array $action): array
+    {
+        $owner = $channel->user;
+        $branding = Lang::get('inbox.branding', [], $owner->preferredLocale());
+
+        if (! $owner->sendsBranding() || blank($action['message'] ?? null) || str_ends_with(trim($action['message']), $branding)) {
+            return $action;
+        }
+
+        return [...$action, 'message' => rtrim($action['message'])."\n\n{$branding}"];
     }
 
     /**

@@ -223,6 +223,12 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
         return $this->subscription?->effectivePlan() ?? Plan::free();
     }
 
+    /** Whether automated private messages sent for this account carry Blexchat branding. */
+    public function sendsBranding(): bool
+    {
+        return $this->currentPlan()->isFree();
+    }
+
     /**
      * Why an automation on this channel cannot go live now, as the wizard's "Couldn't go live" notice
      * names it: the channel is no longer connected, or the plan's live automations are all in use.
