@@ -226,7 +226,7 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
     /** Whether automated private messages sent for this account carry Blexchat branding. */
     public function sendsBranding(): bool
     {
-        return $this->currentPlan()->isFree();
+        return (bool) ($this->subscription?->effectivePlan() ?? Plan::firstWhere('slug', Plan::FREE_SLUG))?->isFree();
     }
 
     /**
