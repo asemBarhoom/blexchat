@@ -84,6 +84,7 @@ return [
     'role' => 'Role',
     'save' => 'Save',
     'section_title' => 'Section title',
+    'sort' => 'Order',
     'sender' => 'Sender',
     'shown' => 'Shown',
     'signed_up_at' => 'Signed up',
