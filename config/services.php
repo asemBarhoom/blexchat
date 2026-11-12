@@ -47,6 +47,8 @@ return [
         'app_id' => env('INSTAGRAM_APP_ID'),
         'app_secret' => env('INSTAGRAM_APP_SECRET'),
         'redirect_uri' => env('INSTAGRAM_REDIRECT_URI'),
+        // Set for Unified Login: the Facebook Login for Business configuration id (newer Meta apps).
+        'config_id' => env('INSTAGRAM_CONFIG_ID'),
         'webhook_verify_token' => env('INSTAGRAM_WEBHOOK_VERIFY_TOKEN'),
         'graph_version' => env('INSTAGRAM_GRAPH_VERSION', 'v21.0'),
         // meta: the real Graph API. fake: a test sign-in page, demo posts, logged replies (default on local).

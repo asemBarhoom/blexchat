@@ -117,6 +117,50 @@ it('connects an Instagram account through OAuth', function () {
     Http::assertSent(fn (Request $request): bool => str_contains($request->url(), 'subscribed_apps') && str_contains($request->url(), 'comments,messages'));
 });
 
+it('connects an Instagram account through Unified Login when a configuration is set', function () {
+    config(['services.instagram.config_id' => 'config-777']);
+    Sanctum::actingAs(User::factory()->create());
+
+    $url = $this->getJson('/api/v1/channels/instagram/authorize')->assertOk()->json('data.url');
+    parse_str(parse_url($url, PHP_URL_QUERY), $query);
+
+    expect($url)->toStartWith('https://www.facebook.com/dialog/oauth?')
+        ->and($query['client_id'])->toBe('app-123')
+        ->and($query['config_id'])->toBe('config-777')
+        ->and($query)->not->toHaveKey('scope');
+
+    Http::fake([
+        'graph.facebook.com/v21.0/oauth/access_token*' => Http::response(['access_token' => 'BISU-token', 'token_type' => 'bearer']),
+        'graph.facebook.com/v21.0/me/assigned_instagram_accounts*' => Http::response(['data' => [['id' => '17840001', 'username' => 'nourboutique']]]),
+        'graph.facebook.com/v21.0/17840001/subscribed_apps*' => Http::response(['success' => true]),
+    ]);
+
+    $this->postJson('/api/v1/channels/instagram', ['code' => 'code-from-meta', 'state' => $query['state']])->assertCreated();
+
+    $channel = Channel::where('account_id', '17840001')->firstOrFail();
+
+    expect($channel->access_token)->toBe('BISU-token')
+        ->and($channel->username)->toBe('nourboutique')
+        ->and($channel->token_expires_at->isAfter(now()->addYears(5)))->toBeTrue();
+});
+
+it('refuses a Unified Login that shared no Instagram account', function () {
+    config(['services.instagram.config_id' => 'config-777']);
+    Sanctum::actingAs($user = User::factory()->create());
+    $state = Crypt::encryptString(json_encode(['user' => $user->id, 'expires' => now()->addMinutes(10)->timestamp]));
+
+    Http::fake([
+        'graph.facebook.com/v21.0/oauth/access_token*' => Http::response(['access_token' => 'BISU-token']),
+        'graph.facebook.com/v21.0/me/assigned_instagram_accounts*' => Http::response(['data' => []]),
+    ]);
+
+    $this->postJson('/api/v1/channels/instagram', ['code' => 'c', 'state' => $state])
+        ->assertUnprocessable()
+        ->assertJsonPath('code', 'account_ineligible');
+
+    expect(Channel::count())->toBe(0);
+});
+
 it('refuses a connection started by another account or too long ago', function () {
     Sanctum::actingAs(User::factory()->create());
 

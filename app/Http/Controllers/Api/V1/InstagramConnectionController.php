@@ -97,6 +97,11 @@ class InstagramConnectionController extends Controller
             return $this->providerError($exception);
         }
 
+        // Unified Login finds no account when none was shared in the Meta dialog.
+        if (! isset($profile['user_id'])) {
+            return $this->connectError(422, 'account_ineligible');
+        }
+
         $account = ['platform' => 'instagram', 'handle' => $profile['username'], 'type' => $profile['account_type'] ?? null];
 
         // Refused only when Instagram says so: an account it does not type is let through.
@@ -122,7 +127,7 @@ class InstagramConnectionController extends Controller
         }
 
         try {
-            $this->instagram->subscribeToWebhooks($token['access_token']);
+            $this->instagram->subscribeToWebhooks($token['access_token'], (string) $profile['user_id']);
         } catch (RequestException $exception) {
             return $this->providerError($exception);
         }
