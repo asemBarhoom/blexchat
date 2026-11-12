@@ -18,14 +18,18 @@ class ChannelOAuthController extends Controller
 {
     public function pages(Request $request): JsonResponse
     {
-        abort_unless(! app()->isProduction(), 501);
+        if (app()->isProduction()) {
+            return $this->providerPending('messenger');
+        }
 
         return response()->json(['data' => ['pages' => Cache::get('channel-oauth:pages:'.$request->user()->id, [])]]);
     }
 
     public function selectPage(Request $request): JsonResponse|RedirectResponse
     {
-        abort_unless(! app()->isProduction(), 501);
+        if (app()->isProduction()) {
+            return $this->providerPending('messenger');
+        }
         $request->validate(['state' => ['required', 'string'], 'page_id' => ['required', 'string']]);
 
         return $this->callback($request->merge(['platform' => 'messenger']), 'messenger', app(ChannelOAuthProvider::class));
@@ -42,8 +46,10 @@ class ChannelOAuthController extends Controller
     #[OA\Get(path: '/api/v1/channels/oauth/{platform}/start', summary: 'Start a channel OAuth flow', tags: ['Channels'], security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'platform', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: ['messenger', 'whatsapp', 'tiktok']))], responses: [new OA\Response(response: 200, description: 'OAuth state and authorization URL'), new OA\Response(response: 501, description: 'Provider OAuth is not configured')])]
     public function start(Request $request, string $platform, ChannelOAuthProvider $provider): JsonResponse
     {
-        abort_unless((config('services.channels.oauth_driver') === 'fake' && ! app()->isProduction()) || (filled(config("services.{$platform}.client_id")) && filled(config('services.channels.oauth_redirect_url'))), 501, __('channels.oauth_not_configured'));
         abort_unless(in_array($platform, ['messenger', 'whatsapp', 'tiktok'], true), 404);
+        if (! $this->providerAvailable($platform)) {
+            return $this->providerPending($platform);
+        }
         $state = Str::random(40);
         Cache::put("channel-oauth:{$state}", ['user_id' => $request->user()->id, 'workspace_id' => $request->user()->workspace()->id, 'platform' => $platform], now()->addMinutes(10));
 
@@ -71,7 +77,9 @@ class ChannelOAuthController extends Controller
     )]
     public function callback(Request $request, string $platform, ChannelOAuthProvider $provider): JsonResponse|RedirectResponse
     {
-        abort_unless((config('services.channels.oauth_driver') === 'fake' && ! app()->isProduction()) || filled(config("services.{$platform}.client_id")), 501, __('channels.oauth_not_configured'));
+        if (! $this->providerAvailable($platform)) {
+            return $this->providerPending($platform);
+        }
         $state = (string) $request->input('state');
         // The state stays until the flow finishes: picking a Page is a second request with the same state.
         $pending = Cache::get("channel-oauth:{$state}");
@@ -133,5 +141,19 @@ class ChannelOAuthController extends Controller
         }
 
         return response()->json(['data' => ['channel' => $channel->id, 'platform' => $platform, 'account_id' => $accountId]], 201);
+    }
+
+    private function providerAvailable(string $platform): bool
+    {
+        return (config('services.channels.oauth_driver') === 'fake' && ! app()->isProduction())
+            || (config('services.channels.oauth_driver') === 'provider' && filled(config("services.{$platform}.client_id")) && filled(config('services.channels.oauth_redirect_url')));
+    }
+
+    private function providerPending(string $platform): JsonResponse
+    {
+        $provider = in_array($platform, ['messenger', 'whatsapp'], true) ? 'Meta' : 'TikTok';
+        $channel = trans('channels.platforms.'.$platform);
+
+        return response()->json(['message' => trans('channels.provider_pending', ['channel' => $channel, 'provider' => $provider]), 'code' => 'provider_pending', 'platform' => $platform], 503);
     }
 }

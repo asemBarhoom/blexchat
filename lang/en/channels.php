@@ -28,6 +28,7 @@ return [
     'oauth_not_configured' => 'Connecting this platform isn’t set up on this server yet.',
     'oauth_state_invalid' => 'The connection session expired. Try again.',
     'oauth_no_account' => 'The platform didn’t send an account ID. Try again.',
+    'provider_pending' => 'Connecting :channel is waiting for :provider approval. We\'ll switch it on as soon as it lands.',
     'test_event_unsupported' => 'Only messages and comments can be simulated on :platform.',
     'not_delivered' => ':platform didn’t deliver the message. Try again in a moment.',
     'not_live' => 'Replies on :platform aren’t available yet.',

@@ -28,6 +28,7 @@ return [
     'oauth_not_configured' => 'ربط هذه المنصة غير متاح على هذا الخادم بعد.',
     'oauth_state_invalid' => 'انتهت جلسة الربط. جرّب مرة أخرى.',
     'oauth_no_account' => 'لم تُرسل المنصة معرّف الحساب. جرّب مرة أخرى.',
+    'provider_pending' => 'ربط :channel بانتظار موافقة :provider. سنفعّله فور صدورها.',
     'test_event_unsupported' => 'على :platform يمكن تجربة الرسائل والتعليقات فقط.',
     'not_delivered' => 'لم يوصل :platform الرسالة. جرّب مرة أخرى بعد قليل.',
     'not_live' => 'الرد على :platform غير متاح بعد.',

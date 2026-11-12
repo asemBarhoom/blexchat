@@ -14,6 +14,8 @@ use OpenApi\Attributes as OA;
     new OA\Property(property: 'name', type: 'string', example: 'Instagram'),
     new OA\Property(property: 'line', type: 'string', example: 'Comments, DMs and story replies'),
     new OA\Property(property: 'connected', type: 'boolean', description: 'This owner already has an account on this platform'),
+    new OA\Property(property: 'available', type: 'boolean', description: 'Whether connecting this platform is configured and available'),
+    new OA\Property(property: 'pending_reason', type: 'string', nullable: true, description: 'Translated reason when the platform is waiting for provider approval'),
 ])]
 class ChannelOptionController extends Controller
 {
