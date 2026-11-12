@@ -36,13 +36,13 @@ it('answers what no keyword matches from the business info', function () {
 
     expect(Conversation::find($conversation)->state)->toBe('automation');
     $messages = collect($this->getJson("/api/v1/conversations/{$conversation}/messages")->json('data'));
-    expect($messages->firstWhere('by_ai', true))->toMatchArray(['direction' => 'outbound', 'content' => 'Yes! Riyadh delivery takes 2–4 days.', 'by_ai' => true, 'automation_id' => $this->automation->id])
+    expect($messages->firstWhere('by_ai', true))->toMatchArray(['direction' => 'outbound', 'content' => "Yes! Riyadh delivery takes 2–4 days.\n\n⚡ Sent with Blexchat", 'by_ai' => true, 'automation_id' => $this->automation->id])
         ->and($messages->where('type', 'handover'))->toBeEmpty();
 
     Http::assertSent(fn (Request $request): bool => $request->url() === 'https://api.anthropic.com/v1/messages'
         && $request->header('x-api-key') === ['test-key']
         && str_contains($request['system'], 'Delivery in Riyadh takes 2–4 days.')
-        && str_contains($request['messages'][0]['content'], "Customer: abaya please\nBusiness: Our abayas are here\nCustomer: how long is delivery to Riyadh?")
+        && str_contains($request['messages'][0]['content'], "Customer: abaya please\nBusiness: Our abayas are here\n\n⚡ Sent with Blexchat\nCustomer: how long is delivery to Riyadh?")
         && $request['output_config']['format']['type'] === 'json_schema');
 });
 
