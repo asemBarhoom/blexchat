@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\ComparisonPoint;
-use App\Models\Creator;
 use App\Models\DemoReplyRule;
 use App\Models\FaqItem;
 use App\Models\HomeBlock;
@@ -56,21 +55,20 @@ class HomeContentSeeder extends Seeder
                 'cta' => ['label' => 'Get started free', 'url' => '/signup'],
                 'microcopy' => 'Free plan · No credit card required',
                 'cutout' => $image('hero-person-upper.webp'),
-                'social_proof' => ['rating' => '4.8/5', 'count' => '2,000+ businesses', 'avatars' => [$image('avatars/sara.webp'), $image('avatars/omar.webp'), $image('avatars/lina.webp'), $image('avatars/khalid.webp')]],
+                'social_proof' => ['text' => 'Built for Instagram, WhatsApp, TikTok & Messenger'],
                 'channels_label' => 'Works with',
                 'channels' => [['id' => 'instagram', 'label' => 'Instagram'], ['id' => 'whatsapp', 'label' => 'WhatsApp'], ['id' => 'tiktok', 'label' => 'TikTok'], ['id' => 'messenger', 'label' => 'Messenger']],
-                'partners' => [['id' => 'meta', 'label' => 'Meta Business Partner'], ['id' => 'tiktok', 'label' => 'TikTok Marketing Partner']],
                 'conversations' => [
                     ['id' => 'sara', 'channel' => 'instagram', 'handle' => 'sara.styles', 'initial' => 'S', 'avatar' => $image('avatars/sara.webp'), 'question' => 'How much is this? 😍', 'reply' => 'Hey Sara! Just sent the price to your DMs 💌', 'action' => 'View product'],
                     ['id' => 'omar', 'channel' => 'whatsapp', 'handle' => 'omar.fit', 'initial' => 'O', 'avatar' => $image('avatars/omar.webp'), 'question' => 'Do you ship to Riyadh?', 'reply' => 'Yes! Free delivery across KSA 🚚', 'action' => 'Track order'],
                     ['id' => 'lina', 'channel' => 'tiktok', 'handle' => 'lina.m', 'initial' => 'L', 'avatar' => $image('avatars/lina.webp'), 'question' => 'LINK PLEASE 🙏', 'reply' => 'Sent! Check your DMs ✨', 'action' => 'Open link', 'result' => '✓ New order · $49'],
                 ],
             ],
-            'creators' => ['id' => 'creators', 'type' => 'creator_strip', 'label' => 'Loved by 1M+ creators, marketers & brands'],
+            'creators' => ['id' => 'creators', 'type' => 'creator_strip', 'label' => 'Built for creators, brands and sellers'],
             'intro' => ['id' => 'intro', 'type' => 'intro', 'headline' => ['Scale up your best', 'conversations'], 'lead' => 'Powerful automations for every way you sell, reply and grow.'],
             'features' => ['id' => 'features', 'type' => 'vertical_slider', 'slides_label' => 'Feature slides', 'slides' => [
                 ['id' => 'comments', 'index' => '01', 'headline' => 'Turn comments into customers', 'body' => '"How much is this?" → instant reply, and the sale happens while you sleep.', 'cta' => ['label' => 'See how', 'url' => '#see-it-in-action?tab=comment'], 'phone_label' => 'blexchat.store', 'channel' => 'instagram', 'scene' => ['post' => 'New drop · 2h', 'post_photo' => $image('scenes/nora.webp'), 'comments' => [['handle' => 'sara.styles', 'text' => 'How much is this? 😍'], ['handle' => 'noura.k', 'text' => 'Is it still available?'], ['handle' => 'omar.fit', 'text' => 'Link please 🙏']], 'reply' => 'Sent you the price and the link in DMs 💌', 'action' => 'View product', 'order' => 'New order · $49']],
-                ['id' => 'dms', 'index' => '02', 'headline' => 'Never leave a DM unanswered', 'body' => 'Smart replies handle FAQs, capture phone and email, and hand over to you only when it matters.', 'cta' => ['label' => 'See how', 'url' => '#see-it-in-action?tab=faq'], 'phone_label' => 'Direct', 'channel' => 'whatsapp', 'scene' => ['handle' => 'omar.fit', 'avatar' => $image('avatars/omar.webp'), 'question' => 'Do you ship to Riyadh?', 'reply' => 'Yes! Free delivery across KSA 🚚', 'action' => 'Track order', 'seen' => 'Seen', 'lead' => ['name' => 'Omar A.', 'detail' => '+966 5• ••• 4412 · omar@mail.com', 'tag' => 'Lead captured']]],
+                ['id' => 'dms', 'index' => '02', 'headline' => 'Never leave a DM unanswered', 'body' => 'Smart replies handle FAQs, capture phone and email, and hand over to you only when it matters.', 'cta' => ['label' => 'See how', 'url' => '#see-it-in-action?tab=faq'], 'phone_label' => 'Direct', 'channel' => 'whatsapp', 'scene' => ['handle' => 'sara.styles', 'avatar' => $image('avatars/sara.webp'), 'question' => 'Do you ship to Riyadh?', 'reply' => 'Yes! Free delivery across KSA 🚚', 'action' => 'Track order', 'seen' => 'Seen', 'lead' => ['name' => 'Sara A.', 'detail' => '+966 5• ••• 4412 · sara@mail.com', 'tag' => 'Lead captured']]],
                 ['id' => 'stories', 'index' => '03', 'headline' => 'Reply to every story mention', 'body' => 'Turn reactions into conversations automatically, 24/7.', 'cta' => ['label' => 'See how', 'url' => '#try-it'], 'phone_label' => 'Your story', 'channel' => 'instagram', 'scene' => ['story' => 'Reacted to your story', 'photo' => $image('scenes/lina.webp'), 'handle' => 'lina.m', 'reaction' => '❤️', 'reply' => 'Thank you Lina! Here is the link ✨', 'action' => 'Open link']],
                 ['id' => 'channels', 'index' => '04', 'headline' => 'Grow across every channel', 'body' => 'Instagram, WhatsApp, TikTok, Messenger — one inbox, one set of automations.', 'cta' => ['label' => 'See how', 'url' => '/signup'], 'phone_label' => 'All inboxes', 'channel' => 'messenger', 'scene' => ['inbox' => 'One inbox', 'total' => '128', 'total_label' => 'conversations today', 'tiles' => [['id' => 'instagram', 'count' => '64'], ['id' => 'whatsapp', 'count' => '38'], ['id' => 'tiktok', 'count' => '19'], ['id' => 'messenger', 'count' => '7']], 'footer' => 'All answered automatically']],
             ]],
@@ -79,10 +77,10 @@ class HomeContentSeeder extends Seeder
             'before-after' => ['id' => 'before-after', 'type' => 'comparison', 'heading' => 'Your inbox: a before & after', 'before' => ['title' => 'Before BLEXCHAT — all work, no play'], 'after' => ['title' => 'After BLEXCHAT — less grind, more pay'], 'cta' => ['label' => 'Get started free', 'url' => '/signup']],
             'see-it-in-action' => ['id' => 'see-it-in-action', 'type' => 'flow_tabs', 'heading' => 'See it in action', 'lead' => 'Pick a flow — watch BLEXCHAT run it.', 'composer_placeholder' => 'Message…', 'tabs_label' => 'Flows', 'tabs' => [
                 ['id' => 'follow', 'title' => 'Say hi to new followers', 'description' => 'A warm DM the moment they follow.', 'surface' => 'Instagram · Direct', 'sr' => 'On Instagram, a new follower gets a welcome DM straight away and joins the drop list.', 'scene' => ['event' => 'sara.styles started following you', 'avatar' => $image('avatars/sara.webp'), 'reply' => "Hey Sara 👋 thanks for the follow! Want first dibs on Thursday's drop?", 'action' => 'Yes, add me', 'result' => '✓ New subscriber']],
-                ['id' => 'welcome', 'title' => 'Welcome messages', 'description' => 'Greet every first message instantly.', 'surface' => 'WhatsApp · Business', 'sr' => 'On WhatsApp, a first message is greeted instantly and the contact is saved as a lead.', 'scene' => ['handle' => 'Omar', 'question' => 'Salam! Are you open today?', 'avatar' => $image('avatars/omar.webp'), 'reply' => 'Wa alaikum salam Omar! Open 10am–11pm. What can we get you?', 'action' => 'See the menu', 'lead' => ['tag' => 'New lead saved', 'name' => 'Omar K.', 'detail' => '+971 5X XXX XXXX · WhatsApp']]],
+                ['id' => 'welcome', 'title' => 'Welcome messages', 'description' => 'Greet every first message instantly.', 'surface' => 'WhatsApp · Business', 'sr' => 'On WhatsApp, a first message is greeted instantly and the contact is saved as a lead.', 'scene' => ['handle' => 'Sara', 'question' => 'Salam! Are you open today?', 'avatar' => $image('avatars/sara.webp'), 'reply' => 'Wa alaikum salam Sara! Open 10am–11pm. What can we get you?', 'action' => 'See the menu', 'lead' => ['tag' => 'New lead saved', 'name' => 'Sara K.', 'detail' => '+971 5X XXX XXXX · WhatsApp']]],
                 ['id' => 'faq', 'title' => 'Automate FAQs', 'description' => 'Price, delivery, sizes — answered in seconds.', 'surface' => 'Instagram · Story replies', 'sr' => 'A story reply asking the price is answered in seconds and turns into an order.', 'scene' => ['event' => 'Replied to your story', 'handle' => 'lina.k', 'question' => 'How much is this? 😍', 'avatar' => $image('avatars/lina.webp'), 'reply' => "It's 180 AED — sizes S to XL, delivered in 2 days.", 'action' => 'Order now', 'result' => '✓ Order #1042 placed']],
                 ['id' => 'comment', 'title' => 'Auto-DM from comments', 'description' => 'Comment ‘LINK’ → the link lands in DMs.', 'surface' => 'Instagram · Comments → DM', 'sr' => 'Someone comments LINK under a post and the link lands in their DMs.', 'scene' => ['handle' => 'khalid.r', 'question' => 'LINK', 'avatar' => $image('avatars/khalid.webp'), 'transition' => '↓ sent to DMs', 'reply' => 'Here you go, Khalid 🔗 the full guide is one tap away.', 'action' => 'Open the link', 'result' => '✓ Link delivered in 0.4s']],
-                ['id' => 'giveaway', 'title' => 'Run giveaways', 'description' => 'Collect entries and pick winners automatically.', 'surface' => 'TikTok · Giveaway', 'sr' => 'On TikTok, every giveaway comment is confirmed as an entry and counted.', 'scene' => ['handle' => 'nora.m', 'question' => 'Count me in! 🎉', 'reply' => "You're in, Nora! Winners are picked Friday at 8pm.", 'action' => 'Share for 2× entries', 'counter' => ['channel' => 'tiktok', 'value' => '1,284', 'label' => 'Entries collected']]],
+                ['id' => 'giveaway', 'title' => 'Run giveaways', 'description' => 'Collect entries and pick winners automatically.', 'surface' => 'TikTok · Giveaway', 'sr' => 'On TikTok, every giveaway comment is confirmed as an entry and counted.', 'scene' => ['handle' => 'hala.m', 'question' => 'Count me in! 🎉', 'reply' => "You're in, Hala! Winners are picked Friday at 8pm.", 'action' => 'Share for 2× entries', 'counter' => ['channel' => 'tiktok', 'value' => '1,284', 'label' => 'Entries collected']]],
             ]],
             'try-it' => ['id' => 'try-it', 'type' => 'live_demo', 'kicker' => 'No signup needed', 'heading_lead' => "Don't take our word for it.", 'heading_mark' => 'Try it.', 'lead' => 'Write a comment like your customers do — watch BLEXCHAT answer it.', 'placeholder' => 'Write a comment…', 'bridge' => 'That flow took 0 minutes to build. Yours takes 2.', 'cta' => ['label' => 'Build your first flow', 'url' => '/signup'], 'handle' => 'you', 'initial' => 'Y', 'suggestions' => ['How much is this? 😍', 'Do you ship to Riyadh?', 'Link please 🙏']],
             'get-started' => ['id' => 'get-started', 'type' => 'steps', 'heading' => 'Live in minutes, not weeks.', 'steps' => [['number' => '01', 'name' => 'Sign up free', 'line' => 'No credit card, no calls.', 'loop' => 'tick'], ['number' => '02', 'name' => 'Connect your channels', 'line' => 'Instagram, WhatsApp, TikTok, Messenger — one tap each.', 'loop' => 'channels'], ['number' => '03', 'name' => 'Go live', 'line' => 'Pick a flow, switch it on, watch replies happen.', 'loop' => 'switch']], 'cta' => ['label' => 'Get started free', 'url' => '/signup'], 'secondary_cta' => ['label' => 'See plans', 'url' => '/pricing']],
@@ -197,17 +195,16 @@ class HomeContentSeeder extends Seeder
                 'description' => 'أتمتة ذكية تبيع وترد عنك على مدار الساعة.',
                 'cta' => ['label' => 'ابدأ مجاناً'],
                 'microcopy' => 'خطة مجانية · بدون بطاقة ائتمان',
-                'social_proof' => ['rating' => '4.8/5', 'count' => '+2,000 نشاط تجاري'],
+                'social_proof' => ['text' => 'مصمَّم لـ Instagram وWhatsApp وTikTok وMessenger'],
                 'channels_label' => 'يعمل مع',
                 'channels' => [['label' => 'إنستغرام'], ['label' => 'واتساب'], ['label' => 'تيك توك'], ['label' => 'ماسنجر']],
-                'partners' => [['label' => 'شريك أعمال معتمد من Meta'], ['label' => 'شريك تسويق معتمد من TikTok']],
                 'conversations' => [
                     ['handle' => 'sara.styles', 'initial' => 'س', 'question' => $comments['price'], 'reply' => 'هلا سارة! أرسلنا لك السعر بالخاص 💌', 'action' => 'شوفي المنتج'],
                     ['handle' => 'omar.fit', 'initial' => 'ع', 'question' => $comments['shipping'], 'reply' => 'أكيد! التوصيل مجاني لكل مناطق المملكة 🚚', 'action' => 'تتبّع الطلب'],
                     ['handle' => 'lina.m', 'initial' => 'ل', 'question' => 'الرابط لو سمحتي 🙏', 'reply' => 'أرسلناه! شيكي رسائلك ✨', 'action' => 'افتحي الرابط', 'result' => '✓ طلب جديد · 49$'],
                 ],
             ],
-            'creators' => ['label' => 'يحبه أكثر من مليون صانع محتوى ومسوّق وعلامة تجارية'],
+            'creators' => ['label' => 'مصمَّم لصنّاع المحتوى والعلامات التجارية والبائعين'],
             'intro' => ['headline' => ['ضاعف أفضل', 'محادثاتك'], 'lead' => 'أتمتة قوية لكل طريقة تبيع بها وترد وتنمو.'],
             'features' => ['slides_label' => 'شرائح الميزات', 'slides' => [
                 ['index' => '01', 'headline' => 'حوّل التعليقات إلى عملاء', 'body' => '"بكم هذي؟" ← رد فوري، والبيع يتم وأنت نايم.', 'cta' => ['label' => 'شاهد كيف'], 'phone_label' => 'blexchat.store', 'scene' => [
@@ -216,8 +213,8 @@ class HomeContentSeeder extends Seeder
                     'reply' => 'أرسلنا لك السعر والرابط بالخاص 💌', 'action' => 'شوف المنتج', 'order' => 'طلب جديد · 49$',
                 ]],
                 ['index' => '02', 'headline' => 'لا تترك رسالة بدون رد', 'body' => 'ردود ذكية تجاوب على الأسئلة المتكررة، تجمع الجوال والإيميل، وتحوّل المحادثة لك فقط عند الحاجة.', 'cta' => ['label' => 'شاهد كيف'], 'phone_label' => 'الرسائل', 'scene' => [
-                    'handle' => 'omar.fit', 'question' => $comments['shipping'], 'reply' => 'أكيد! التوصيل مجاني لكل مناطق المملكة 🚚', 'action' => 'تتبّع الطلب', 'seen' => 'شوهدت',
-                    'lead' => ['name' => 'عمر أ.', 'detail' => '+966 5• ••• 4412 · omar@mail.com', 'tag' => 'تم حفظ عميل محتمل'],
+                    'handle' => 'sara.styles', 'question' => $comments['shipping'], 'reply' => 'أكيد! التوصيل مجاني لكل مناطق المملكة 🚚', 'action' => 'تتبّع الطلب', 'seen' => 'شوهدت',
+                    'lead' => ['name' => 'سارة أ.', 'detail' => '+966 5• ••• 4412 · sara@mail.com', 'tag' => 'تم حفظ عميل محتمل'],
                 ]],
                 ['index' => '03', 'headline' => 'رد على كل إشارة في الستوري', 'body' => 'حوّل التفاعلات إلى محادثات تلقائياً، على مدار الساعة.', 'cta' => ['label' => 'شاهد كيف'], 'phone_label' => 'الستوري', 'scene' => [
                     'story' => 'تفاعل مع الستوري', 'handle' => 'lina.m', 'reaction' => '❤️', 'reply' => 'شكراً لينا! هذا الرابط ✨', 'action' => 'افتحي الرابط',
@@ -236,8 +233,8 @@ class HomeContentSeeder extends Seeder
                     'event' => 'sara.styles بدأت متابعتك', 'reply' => 'هلا سارة 👋 شكراً على المتابعة! تبين تكونين أول من يشوف تشكيلة الخميس؟', 'action' => 'إيه، ضيفيني', 'result' => '✓ مشتركة جديدة',
                 ]],
                 ['title' => 'رسائل الترحيب', 'description' => 'رحّب بكل أول رسالة فوراً.', 'surface' => 'واتساب · بزنس', 'sr' => 'على واتساب، يُرحَّب بأول رسالة فوراً ويُحفظ صاحبها كعميل محتمل.', 'scene' => [
-                    'handle' => 'عمر', 'question' => 'السلام عليكم! فاتحين اليوم؟', 'reply' => 'وعليكم السلام يا عمر! فاتحين من 10 الصبح لين 11 الليل. وش نجهّز لك؟', 'action' => 'شوف المنيو',
-                    'lead' => ['tag' => 'تم حفظ عميل جديد', 'name' => 'عمر ك.', 'detail' => '+971 5X XXX XXXX · واتساب'],
+                    'handle' => 'سارة', 'question' => 'السلام عليكم! فاتحين اليوم؟', 'reply' => 'وعليكم السلام يا سارة! فاتحين من 10 الصبح لين 11 الليل. وش نجهّز لك؟', 'action' => 'شوف المنيو',
+                    'lead' => ['tag' => 'تم حفظ عميل جديد', 'name' => 'سارة ك.', 'detail' => '+971 5X XXX XXXX · واتساب'],
                 ]],
                 ['title' => 'أتمتة الأسئلة الشائعة', 'description' => 'السعر والتوصيل والمقاسات — يُجاب عنها في ثوانٍ.', 'surface' => 'إنستغرام · ردود الستوري', 'sr' => 'رد على ستوري يسأل عن السعر يُجاب عنه في ثوانٍ ويتحوّل إلى طلب.', 'scene' => [
                     'event' => 'ردّت على الستوري', 'handle' => 'lina.k', 'question' => $comments['price'], 'reply' => 'سعرها 180 درهم — المقاسات من S إلى XL، والتوصيل خلال يومين.', 'action' => 'اطلبي الآن', 'result' => '✓ تم الطلب رقم 1042',
@@ -246,7 +243,7 @@ class HomeContentSeeder extends Seeder
                     'handle' => 'khalid.r', 'question' => 'رابط', 'transition' => '↓ أُرسل إلى الخاص', 'reply' => 'تفضّل يا خالد 🔗 الدليل كامل بضغطة وحدة.', 'action' => 'افتح الرابط', 'result' => '✓ وصل الرابط خلال 0.4 ثانية',
                 ]],
                 ['title' => 'أطلق المسابقات', 'description' => 'اجمع المشاركات واختر الفائزين تلقائياً.', 'surface' => 'تيك توك · مسابقة', 'sr' => 'على تيك توك، يُؤكَّد كل تعليق في المسابقة كمشاركة ويُحتسب.', 'scene' => [
-                    'handle' => 'nora.m', 'question' => 'أنا مشاركة! 🎉', 'reply' => 'تم تسجيلك يا نورة! نعلن الفائزين يوم الجمعة الساعة 8 مساءً.', 'action' => 'شاركي لمضاعفة فرصك',
+                    'handle' => 'hala.m', 'question' => 'أنا مشاركة! 🎉', 'reply' => 'تم تسجيلك يا هلا! نعلن الفائزين يوم الجمعة الساعة 8 مساءً.', 'action' => 'شاركي لمضاعفة فرصك',
                     'counter' => ['value' => '1,284', 'label' => 'مشاركة'],
                 ]],
             ]],
@@ -324,23 +321,10 @@ class HomeContentSeeder extends Seeder
 
     private function seedLists(): void
     {
-        $image = fn (string $path): string => 'marketing/home/'.$path;
         $t = fn (?array $pair): ?array => $pair === null ? null : ['en' => $pair[0], 'ar' => $pair[1]];
 
         foreach ([ComparisonPoint::class, HomeStat::class, FaqItem::class] as $model) {
             $model::query()->delete();
-        }
-
-        $creators = [
-            ['nora', ['Nora Al-Qahtani', 'نورة القحطاني'], '@noraqtn', ['184K followers', '184 ألف متابع'], ['I stopped losing sales in my DMs.', 'ما عدت أخسر مبيعات في الخاص.']],
-            ['omar', ['Omar Bin Saleh', 'عمر بن صالح'], '@omar.fit', ['92K followers', '92 ألف متابع'], ['Every comment gets an answer now.', 'كل تعليق صار له رد.']],
-            ['lina', ['Lina Mansour', 'لينا منصور'], '@lina.m', ['310K followers', '310 آلاف متابع'], ['It replies while I sleep.', 'يرد عني وأنا نايمة.']],
-            ['faisal', ['Faisal Otaibi', 'فيصل العتيبي'], '@faisalotb', ['47K followers', '47 ألف متابع'], ['Set up in a morning, paid for itself by Friday.', 'جهّزته في صباح واحد، وغطّى تكلفته قبل الجمعة.']],
-            ['huda', ['Huda Kamal', 'هدى كمال'], '@hudamakes', ['128K followers', '128 ألف متابع'], ['My inbox went from scary to sorted.', 'صندوق رسائلي صار مرتّباً بعد ما كان مخيفاً.']],
-        ];
-
-        foreach ($creators as $sort => [$key, $name, $handle, $followers, $quote]) {
-            Creator::updateOrCreate(['key' => $key], ['name' => $t($name), 'handle' => $handle, 'followers' => $t($followers), 'quote' => $t($quote), 'photo' => $image("creators/{$key}.webp"), 'sort' => $sort + 1, 'active' => true]);
         }
 
         $useCases = [
@@ -378,10 +362,10 @@ class HomeContentSeeder extends Seeder
         }
 
         $stats = [
-            [['1.2M+', '+1.2 مليون'], ['Messages automated', 'رسالة مؤتمتة']],
-            [['0.4s', '0.4 ث'], ['Average reply time', 'متوسط زمن الرد']],
-            [['$2M+', '+2 مليون دولار'], ['Revenue recovered', 'إيرادات مستردّة']],
-            [['2,000+', '+2,000'], ['Businesses', 'نشاط تجاري']],
+            [['4', '4'], ['channels in one inbox', 'قنوات في صندوق وارد واحد']],
+            [['24/7', '24/7'], ['automatic replies', 'ردود تلقائية']],
+            [['AR · EN', 'عربي · إنجليزي'], ['Arabic & English', 'العربية والإنجليزية']],
+            [['Seconds', 'ثوانٍ'], ['for every reply', 'لكل رد']],
         ];
 
         foreach ($stats as $sort => [$value, $label]) {

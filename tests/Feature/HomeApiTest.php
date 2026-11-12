@@ -180,12 +180,12 @@ it('sends every plural form of the hero counters for the language', function () 
         ->and($arabic['relief']['stats'][1])->toHaveKeys(['label_zero', 'label_one', 'label_two', 'label_few', 'label_many', 'label_other']);
 });
 
-it('gives hero channels and partners their brand mark', function () {
+it('gives hero channels their brand mark and claims no partnership', function () {
     $this->seed(HomeContentSeeder::class);
 
     $this->getJson('/api/v1/home')
         ->assertJsonPath('data.sections.0.channels.0', ['id' => 'instagram', 'label' => 'Instagram'])
-        ->assertJsonPath('data.sections.0.partners.0', ['id' => 'meta', 'label' => 'Meta Business Partner']);
+        ->assertJsonMissingPath('data.sections.0.partners');
 });
 
 it('returns a 404 before the homepage content is seeded', function () {

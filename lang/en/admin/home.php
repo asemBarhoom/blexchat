@@ -46,6 +46,7 @@ return [
     'creator' => 'creator',
     'creators' => 'Creators',
     'customer_badge' => 'Customer badge',
+    'built_for_line' => 'Line under the button (channels it is built for)',
     'customer_count' => 'Customer count',
     'customer_photos' => 'Customer photos',
     'customer_question' => 'Customer question ',
