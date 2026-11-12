@@ -214,5 +214,5 @@ it('shows where an owner is in onboarding on their admin page', function () {
     $this->get("/admin/users/{$owner->id}")
         ->assertOk()
         ->assertSee('ربط قناة')
-        ->assertSee('Essential');
+        ->assertSee('أساسية');
 });

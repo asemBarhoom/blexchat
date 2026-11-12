@@ -44,7 +44,7 @@ describe('GET /api/v1/plans', function () {
 
     it('answers in Arabic with ?lang=ar', function () {
         $this->getJson('/api/v1/plans?lang=ar')
-            ->assertJsonPath('data.0.name', 'Free')
+            ->assertJsonPath('data.0.name', 'مجانية')
             ->assertJsonPath('data.0.features.0', 'قناة واحدة');
     });
 
@@ -218,7 +218,7 @@ describe('POST /api/v1/onboarding/plan', function () {
         $this->postJson('/api/v1/onboarding/plan?lang=ar', ['plan' => 'essential'])
             ->assertConflict()
             ->assertJsonPath('code', 'trial_used')
-            ->assertJsonPath('message', 'لقد استخدمت فترتك التجريبية من قبل. تابع بباقة Free حاليًا.');
+            ->assertJsonPath('message', 'لقد استخدمت فترتك التجريبية من قبل. تابع بالباقة المجانية حاليًا.');
 
         expect($this->user->fresh()->subscription->plan->slug)->toBe('free');
     });
