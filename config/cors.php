@@ -25,7 +25,10 @@ return [
         ? array_values(array_filter([rtrim((string) env('FRONTEND_URL', 'https://blexchat-screens.vercel.app'), '/'), ...explode(',', (string) env('CORS_ALLOWED_ORIGINS', ''))]))
         : ['*'],
 
-    'allowed_origins_patterns' => [],
+    // The design site (blexchat-screens) and its Vercel previews, where each PR is tried before the client's site.
+    'allowed_origins_patterns' => env('APP_ENV', 'production') === 'production'
+        ? ['#^https://blexchat-screens(-[a-z0-9-]+-issas-projects-d490f2f1)?\.vercel\.app$#']
+        : [],
 
     'allowed_headers' => ['*'],
 
