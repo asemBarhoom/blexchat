@@ -31,6 +31,7 @@ return [
     'provider_pending' => 'ربط :channel بانتظار موافقة :provider. سنفعّله فور صدورها.',
     'test_event_unsupported' => 'على :platform يمكن تجربة الرسائل والتعليقات فقط.',
     'not_delivered' => 'لم يوصل :platform الرسالة. جرّب مرة أخرى بعد قليل.',
+    'outside_window' => 'لم تُرسل الرسالة: :platform يسمح بالرد خلال 24 ساعة فقط من آخر رسالة من الشخص.',
     'not_live' => 'الرد على :platform غير متاح بعد.',
     'delivery_failed_again' => 'لم تُرسل الرسالة هذه المرة أيضاً. جرّب بعد قليل.',
     'platforms' => [

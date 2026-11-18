@@ -31,6 +31,7 @@ return [
     'provider_pending' => 'Connecting :channel is waiting for :provider approval. We\'ll switch it on as soon as it lands.',
     'test_event_unsupported' => 'Only messages and comments can be simulated on :platform.',
     'not_delivered' => ':platform didn’t deliver the message. Try again in a moment.',
+    'outside_window' => 'The message wasn’t sent: :platform only allows replies within 24 hours of the person’s last message.',
     'not_live' => 'Replies on :platform aren’t available yet.',
     'delivery_failed_again' => 'The message still wasn’t sent. Try again in a moment.',
     'platforms' => [

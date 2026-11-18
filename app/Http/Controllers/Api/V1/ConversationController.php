@@ -12,6 +12,7 @@ use App\Http\Resources\Api\V1\MessageResource;
 use App\Models\Conversation;
 use App\Models\MessageDeliveryAttempt;
 use App\Services\Channels\ChannelNotLive;
+use App\Services\Channels\DeliveryFailure;
 use App\Services\Channels\MessagingClient;
 use App\Services\Instagram\InstagramClient;
 use Illuminate\Http\Client\ConnectionException;
@@ -227,11 +228,11 @@ class ConversationController extends Controller
                     InstagramClient::message($request->content, $request->button_label, $request->button_url),
                 );
             } catch (RequestException|ConnectionException $exception) {
-                $attempt = MessageDeliveryAttempt::create(['conversation_id' => $conversation->id, 'idempotency_key' => 'manual-'.Str::uuid(), 'content' => $request->content, 'type' => $request->type, 'error_code' => 'provider_error', 'error_message' => $exception->getMessage(), 'last_attempt_at' => now()]);
+                $attempt = MessageDeliveryAttempt::create(['conversation_id' => $conversation->id, 'idempotency_key' => 'manual-'.Str::uuid(), 'content' => $request->content, 'type' => $request->type, 'error_code' => DeliveryFailure::code($exception), 'error_message' => $exception->getMessage(), 'last_attempt_at' => now()]);
 
                 return response()->json([
-                    'message' => __('channels.not_delivered', ['platform' => __('channels.platforms.instagram')]),
-                    'code' => $exception instanceof ConnectionException ? 'provider_unavailable' : 'provider_rejected',
+                    'message' => DeliveryFailure::isOutsideWindow($exception) ? __('channels.outside_window', ['platform' => __('channels.platforms.instagram')]) : __('channels.not_delivered', ['platform' => __('channels.platforms.instagram')]),
+                    'code' => DeliveryFailure::isOutsideWindow($exception) ? 'outside_window' : ($exception instanceof ConnectionException ? 'provider_unavailable' : 'provider_rejected'),
                     'platform' => 'instagram',
                     'retryable' => $exception instanceof ConnectionException || ($exception instanceof RequestException && $exception->response->status() >= 500),
                     'attempt_id' => $attempt->id,
@@ -246,11 +247,19 @@ class ConversationController extends Controller
                     MessagingClient::text($request->content, $request->button_label, $request->button_url),
                 );
             } catch (RequestException|ConnectionException|ChannelNotLive $exception) {
-                $attempt = MessageDeliveryAttempt::create(['conversation_id' => $conversation->id, 'idempotency_key' => 'manual-'.Str::uuid(), 'content' => $request->content, 'type' => $request->type, 'error_code' => $exception instanceof ChannelNotLive ? 'channel_not_live' : 'provider_error', 'error_message' => $exception->getMessage(), 'last_attempt_at' => now()]);
+                $attempt = MessageDeliveryAttempt::create(['conversation_id' => $conversation->id, 'idempotency_key' => 'manual-'.Str::uuid(), 'content' => $request->content, 'type' => $request->type, 'error_code' => DeliveryFailure::code($exception), 'error_message' => $exception->getMessage(), 'last_attempt_at' => now()]);
 
                 return response()->json([
-                    'message' => __($exception instanceof ChannelNotLive ? 'channels.not_live' : 'channels.not_delivered', ['platform' => __("channels.platforms.{$conversation->channel->platform}")]),
-                    'code' => $exception instanceof ChannelNotLive ? 'channel_not_live' : ($exception instanceof ConnectionException ? 'provider_unavailable' : 'provider_rejected'),
+                    'message' => __(match (DeliveryFailure::code($exception)) {
+                        'channel_not_live' => 'channels.not_live',
+                        'outside_window' => 'channels.outside_window',
+                        default => 'channels.not_delivered',
+                    }, ['platform' => __("channels.platforms.{$conversation->channel->platform}")]),
+                    'code' => match (DeliveryFailure::code($exception)) {
+                        'channel_not_live' => 'channel_not_live',
+                        'outside_window' => 'outside_window',
+                        default => $exception instanceof ConnectionException ? 'provider_unavailable' : 'provider_rejected',
+                    },
                     'platform' => $conversation->channel->platform,
                     'retryable' => $exception instanceof ConnectionException || ($exception instanceof RequestException && $exception->response->status() >= 500),
                     'attempt_id' => $attempt->id,
