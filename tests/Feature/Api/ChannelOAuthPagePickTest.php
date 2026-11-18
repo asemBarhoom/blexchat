@@ -48,7 +48,7 @@ it('returns the Pages and connects the chosen one to the started workspace', fun
         ->assertJsonPath('data.pages.1.id', 'page-2');
 
     $this->postJson('/api/v1/channels/oauth/messenger/pages', ['state' => $state, 'page_id' => 'page-2'])
-        ->assertRedirect();
+        ->assertCreated();
 
     $channel = Channel::where('platform', 'messenger')->where('account_id', 'page-2')->sole();
 
@@ -61,7 +61,7 @@ it('does not let the state be used twice after the Page is picked', function () 
     [$owner, $state] = ($this->startMessenger)();
 
     $this->getJson("/api/v1/channels/oauth/messenger/callback?state={$state}&code=code-1")->assertOk();
-    $this->postJson('/api/v1/channels/oauth/messenger/pages', ['state' => $state, 'page_id' => 'page-2'])->assertRedirect();
+    $this->postJson('/api/v1/channels/oauth/messenger/pages', ['state' => $state, 'page_id' => 'page-2'])->assertCreated();
 
     $this->postJson('/api/v1/channels/oauth/messenger/pages', ['state' => $state, 'page_id' => 'page-1'])
         ->assertStatus(400)
@@ -75,10 +75,26 @@ it('connects straight away when there is a single Page', function () {
 
     [, $state] = ($this->startMessenger)();
 
-    $this->getJson("/api/v1/channels/oauth/messenger/callback?state={$state}&code=code-1")
-        ->assertRedirect();
+    config()->set('app.frontend_url', 'https://site.test');
+
+    // The browser comes back from Meta, so it goes on to the site's "connected" screen.
+    $this->get("/api/v1/channels/oauth/messenger/callback?state={$state}&code=code-1")
+        ->assertRedirect('https://site.test/onboarding/connected/messenger?id='.Channel::where('account_id', 'only-page')->value('id'));
 
     expect(Channel::where('account_id', 'only-page')->sole()->access_token)->toBe('only-page-token');
+});
+
+it('sends Meta the callback of the platform being connected', function () {
+    config()->set('services.channels.oauth_redirect_url', 'https://api.test/api/v1/channels/oauth/{platform}/callback');
+
+    $url = $this->actingAs(User::factory()->create(), 'sanctum')
+        ->getJson('/api/v1/channels/oauth/messenger/start')
+        ->assertOk()
+        ->json('data.authorization_url');
+
+    parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+
+    expect($query['redirect_uri'])->toBe('https://api.test/api/v1/channels/oauth/messenger/callback');
 });
 
 it('answers both errors in Arabic with their codes', function () {
