@@ -141,3 +141,21 @@ it('creates, edits, reorders and deletes FAQ items in both languages', function 
     expect(FaqItem::find($created->id))->toBeNull();
     $this->getJson('/api/v1/home')->assertJsonCount(6, 'data.sections.11.items');
 });
+
+it('turns the coming soon page off and on from the admin, and the home API follows', function () {
+    $this->getJson('/api/v1/home')->assertJsonPath('data.preview_note_enabled', true);
+
+    Livewire::test(ManageMarketingHome::class)
+        ->fillForm(['preview_note_enabled' => false])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $this->getJson('/api/v1/home')->assertJsonPath('data.preview_note_enabled', false);
+
+    Livewire::test(ManageMarketingHome::class)
+        ->assertSchemaStateSet(['preview_note_enabled' => false])
+        ->fillForm(['preview_note_enabled' => true])
+        ->call('save');
+
+    $this->getJson('/api/v1/home')->assertJsonPath('data.preview_note_enabled', true);
+});

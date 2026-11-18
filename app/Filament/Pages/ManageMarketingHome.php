@@ -5,10 +5,12 @@ namespace App\Filament\Pages;
 use App\Filament\Support\HomeContentFields;
 use App\Filament\Support\Translations;
 use App\Models\HomeBlock;
+use App\Models\Setting;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Actions;
@@ -60,7 +62,7 @@ class ManageMarketingHome extends Page
         $this->form->fill($this->blocks()->mapWithKeys(fn (HomeBlock $block): array => [$block->key => [
             'settings' => $block->settings ?? [],
             'texts' => array_replace(array_fill_keys($locales, []), $block->getTranslations('texts')),
-        ]])->all());
+        ]])->all() + ['preview_note_enabled' => (bool) Setting::get(Setting::PREVIEW_NOTE_ENABLED)]);
     }
 
     public function form(Schema $schema): Schema
@@ -68,6 +70,10 @@ class ManageMarketingHome extends Page
         return $schema
             ->statePath('data')
             ->components([
+                Section::make(__('admin/home.preview_note'))->schema([
+                    Toggle::make('preview_note_enabled')->label(__('admin/home.preview_note_enabled'))
+                        ->helperText(__('admin/home.preview_note_enabled_help')),
+                ]),
                 // Only the blocks that are seeded: a block added later has no tab until its seeder runs.
                 Tabs::make('blocks')->persistTabInQueryString()->tabs(array_map(
                     fn (string $key): Tab => $this->blockTab($key, ...$this->definition($key)),
@@ -111,6 +117,8 @@ class ManageMarketingHome extends Page
             $block->settings = $this->merge($block->settings ?? [], $edited['settings'] ?? []);
             $block->save();
         }
+
+        Setting::put(Setting::PREVIEW_NOTE_ENABLED, (bool) ($state['preview_note_enabled'] ?? true));
 
         Notification::make()->title(__('admin/home.home_page_content_saved'))->success()->send();
     }

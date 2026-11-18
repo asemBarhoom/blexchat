@@ -928,5 +928,6 @@
         "answer": "It isn’t, but the rest of the site is. The way home is below.",
         "title": "This page doesn’t exist.",
         "body": "The link may be old, or the address has a typo."
-    }
+    },
+    "preview_note_enabled": true
 }
