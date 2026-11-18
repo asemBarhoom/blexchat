@@ -1,11 +1,17 @@
 <?php
 
+use App\Http\Middleware\HideApiDocumentation;
 use L5Swagger\CustomBuilderInterface;
 use L5Swagger\CustomGeneratorInterface;
 use L5Swagger\Generator;
 use OpenApi\scan;
 
 return [
+    /*
+     * Production hides the documentation (404) unless this is true.
+     */
+    'public_in_production' => (bool) env('L5_SWAGGER_PUBLIC_IN_PRODUCTION', false),
+
     'default' => 'default',
     'documentations' => [
         'default' => [
@@ -77,10 +83,10 @@ return [
              *   'api' => ['auth:sanctum'],
              */
             'middleware' => [
-                'api' => [],
-                'asset' => [],
-                'docs' => [],
-                'oauth2_callback' => [],
+                'api' => [HideApiDocumentation::class],
+                'asset' => [HideApiDocumentation::class],
+                'docs' => [HideApiDocumentation::class],
+                'oauth2_callback' => [HideApiDocumentation::class],
             ],
 
             /*
