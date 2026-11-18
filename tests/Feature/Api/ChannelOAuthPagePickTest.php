@@ -45,7 +45,8 @@ it('returns the Pages and connects the chosen one to the started workspace', fun
         ->assertOk()
         ->assertJsonPath('data.state', $state)
         ->assertJsonCount(2, 'data.pages')
-        ->assertJsonPath('data.pages.1.id', 'page-2');
+        ->assertJsonPath('data.pages.1.id', 'page-2')
+        ->assertJsonMissingPath('data.pages.0.access_token');
 
     $this->postJson('/api/v1/channels/oauth/messenger/pages', ['state' => $state, 'page_id' => 'page-2'])
         ->assertCreated();
@@ -125,4 +126,24 @@ it('keeps the person’s Facebook id on the connected Page for Meta’s deletion
     $this->actingAs($owner, 'sanctum')->postJson('/api/v1/channels/oauth/messenger/pages', ['state' => $state, 'page_id' => 'page-2']);
 
     expect(Channel::where('account_id', 'page-2')->sole()->meta_user_id)->toBe('fb-person-1');
+});
+
+it('sends the browser to the site to pick a Page, and lets it pick in production', function () {
+    config()->set('app.frontend_url', 'https://site.test');
+    [$owner, $state] = ($this->startMessenger)();
+    app()->detectEnvironment(fn (): string => 'production');
+
+    $this->get("/api/v1/channels/oauth/messenger/callback?state={$state}&code=code-1")
+        ->assertRedirect("https://site.test/onboarding/connect/messenger/pages?state={$state}");
+
+    $this->actingAs($owner, 'sanctum')
+        ->getJson('/api/v1/channels/oauth/messenger/pages')
+        ->assertOk()
+        ->assertJsonCount(2, 'data')
+        ->assertJsonPath('data.1', ['id' => 'page-2', 'name' => 'Two']);
+
+    $this->postJson('/api/v1/channels/oauth/messenger/pages', ['state' => $state, 'page_id' => 'page-1'])
+        ->assertCreated();
+
+    expect(Channel::where('account_id', 'page-1')->sole()->user_id)->toBe($owner->id);
 });

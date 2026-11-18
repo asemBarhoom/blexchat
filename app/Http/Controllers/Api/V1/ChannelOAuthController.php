@@ -18,18 +18,11 @@ class ChannelOAuthController extends Controller
 {
     public function pages(Request $request): JsonResponse
     {
-        if (app()->isProduction()) {
-            return $this->providerPending('messenger');
-        }
-
-        return response()->json(['data' => ['pages' => Cache::get('channel-oauth:pages:'.$request->user()->id, [])]]);
+        return response()->json(['data' => self::publicPages(Cache::get('channel-oauth:pages:'.$request->user()->id, []))]);
     }
 
     public function selectPage(Request $request): JsonResponse|RedirectResponse
     {
-        if (app()->isProduction()) {
-            return $this->providerPending('messenger');
-        }
         $request->validate(['state' => ['required', 'string'], 'page_id' => ['required', 'string']]);
 
         return $this->callback($request->merge(['platform' => 'messenger']), 'messenger', app(ChannelOAuthProvider::class));
@@ -104,7 +97,12 @@ class ChannelOAuthController extends Controller
                 Cache::put("channel-oauth:{$state}", [...$pending, 'access_token' => $result['access_token'], 'pages' => $result['pages'], 'meta_user_id' => $metaUserId], now()->addMinutes(10));
                 Cache::put('channel-oauth:pages:'.$user->id, $result['pages'], now()->addMinutes(10));
 
-                return response()->json(['data' => ['pages' => $result['pages'], 'state' => $state]], 200);
+                if (! $request->expectsJson()) {
+                    // Back from Meta in the browser: the site shows the Pages to pick from.
+                    return redirect()->away(rtrim((string) config('app.frontend_url'), '/').'/onboarding/connect/messenger/pages?'.http_build_query(['state' => $state]));
+                }
+
+                return response()->json(['data' => ['pages' => self::publicPages($result['pages']), 'state' => $state]], 200);
             }
             $accountId = (string) ($accountId ?: data_get($result, 'pages.0.id'));
             $pages = $result['pages'] ?? null;
@@ -157,6 +155,17 @@ class ChannelOAuthController extends Controller
         $channel = trans('channels.platforms.'.$platform);
 
         return response()->json(['message' => trans('channels.provider_pending', ['channel' => $channel, 'provider' => $provider]), 'code' => 'provider_pending', 'platform' => $platform], 503);
+    }
+
+    /**
+     * The Pages as the browser may see them: each Page's own token stays on the server.
+     *
+     * @param  array<int, array<string, mixed>>  $pages
+     * @return list<array{id: string, name: string}>
+     */
+    private static function publicPages(array $pages): array
+    {
+        return collect($pages)->map(fn (array $page): array => ['id' => (string) $page['id'], 'name' => (string) ($page['name'] ?? '')])->values()->all();
     }
 
     /**
