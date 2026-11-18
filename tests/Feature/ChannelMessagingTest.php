@@ -3,6 +3,7 @@
 use App\Models\Automation;
 use App\Models\Channel;
 use App\Models\Conversation;
+use App\Models\MessageDeliveryAttempt;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
@@ -170,3 +171,21 @@ it('keeps two failed sends of the same text as two attempts', function () {
 
     expect($second)->not->toBe($first);
 });
+
+it('says plainly when Meta refuses a reply outside the 24-hour window', function (string $platform, array $error) {
+    Http::fake(['graph.facebook.com/*' => Http::response(['error' => $error], 400)]);
+    $channel = Channel::factory()->for($this->owner)->create(['platform' => $platform, 'account_id' => '1234567890', 'access_token' => 'channel-token', 'status' => 'active']);
+    $conversation = Conversation::factory()->for($channel)->create(['contact_platform_id' => '966501234567']);
+
+    $this->actingAs($this->owner)
+        ->postJson("/api/v1/conversations/{$conversation->id}/messages", ['type' => 'text', 'content' => 'Hi'])
+        ->assertStatus(502)
+        ->assertJsonPath('code', 'outside_window')
+        ->assertJsonPath('retryable', false)
+        ->assertJsonPath('message', __('channels.outside_window', ['platform' => __("channels.platforms.{$platform}")]));
+
+    expect(MessageDeliveryAttempt::where('conversation_id', $conversation->id)->sole()->error_code)->toBe('outside_window');
+})->with([
+    'messenger' => ['messenger', ['message' => 'This message is sent outside of allowed window.', 'code' => 10, 'error_subcode' => 2018278]],
+    'whatsapp' => ['whatsapp', ['message' => 'Re-engagement message', 'code' => 131047]],
+]);
