@@ -48,3 +48,11 @@ it('refuses a signed request that was not signed with our app secret', function 
 
     expect($channel->fresh())->not->toBeNull()->and($channel->fresh()->status)->toBe('active');
 })->with(['/api/v1/webhooks/meta/deauthorize', '/api/v1/webhooks/meta/data-deletion']);
+
+it('finds channels connected through Facebook Login by the person’s Facebook id', function () {
+    $channel = Channel::factory()->for(User::factory())->create(['platform' => 'messenger', 'account_id' => 'page-1', 'meta_user_id' => 'fb-person-1']);
+
+    $this->postJson('/api/v1/webhooks/meta/data-deletion', ['signed_request' => metaSignedRequest('fb-person-1', 'meta-secret')])->assertOk();
+
+    expect(Channel::find($channel->id))->toBeNull();
+});

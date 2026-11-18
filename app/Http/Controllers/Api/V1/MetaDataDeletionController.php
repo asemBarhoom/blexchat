@@ -12,8 +12,8 @@ use Illuminate\Support\Str;
 
 /**
  * Meta's two required callbacks for App Review. Meta identifies the person by the `user_id` in the
- * signed request; a channel matches when its account id is that id (Instagram Login gives the
- * Instagram account id).
+ * signed request: with Instagram Login it is the channel's account id, with Facebook Login (Messenger,
+ * WhatsApp, Instagram through Unified Login) the person's Facebook id stored when they connected.
  */
 class MetaDataDeletionController extends Controller
 {
@@ -58,6 +58,6 @@ class MetaDataDeletionController extends Controller
      */
     private function channels(array $payload): Builder
     {
-        return Channel::whereIn('platform', ['instagram', 'messenger', 'whatsapp'])->where('account_id', (string) $payload['user_id']);
+        return Channel::whereIn('platform', ['instagram', 'messenger', 'whatsapp'])->where(fn (Builder $query): Builder => $query->where('account_id', (string) $payload['user_id'])->orWhere('meta_user_id', (string) $payload['user_id']));
     }
 }

@@ -18,6 +18,7 @@ class Channel extends Model
         'user_id',
         'platform',
         'account_id',
+        'meta_user_id',
         'username',
         'profile_picture',
         'access_token',

@@ -98,14 +98,14 @@ class InstagramClient
      * `user_id` is the professional account id that webhooks report as the entry id. `account_type`
      * is BUSINESS or MEDIA_CREATOR for the professional accounts that can connect.
      *
-     * @return array{user_id: string, username: string, account_type?: string, profile_picture_url?: string, followers_count?: int}
+     * @return array{user_id: string, username: string, meta_user_id?: string|null, account_type?: string, profile_picture_url?: string, followers_count?: int}
      */
     public function profile(string $token): array
     {
         if (self::usesUnifiedLogin()) {
             $account = $this->read($token)->get('/me/assigned_instagram_accounts', ['fields' => 'id,username'])->throw()->json('data.0');
 
-            return $account === null ? [] : ['user_id' => (string) $account['id'], 'username' => $account['username']];
+            return $account === null ? [] : ['user_id' => (string) $account['id'], 'username' => $account['username'], 'meta_user_id' => self::metaUserId($this->read($token))];
         }
 
         return $this->read($token)->get('/me', [
@@ -230,6 +230,17 @@ class InstagramClient
             ->post("/{$channel->account_id}/messages", ['recipient' => $recipient, 'message' => $message])
             ->throw()
             ->json('message_id');
+    }
+
+    /**
+     * The person's app-scoped Facebook id, kept so Meta's deletion callbacks can find their channels.
+     * Best effort: a channel still connects when Meta does not answer.
+     */
+    public static function metaUserId(PendingRequest $request): ?string
+    {
+        $id = rescue(fn () => $request->get('/me', ['fields' => 'id'])->throw()->json('id'), report: false);
+
+        return is_scalar($id) && $id !== '' ? (string) $id : null;
     }
 
     public static function usesUnifiedLogin(): bool

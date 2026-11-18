@@ -92,14 +92,16 @@ class ChannelOAuthController extends Controller
         $accountId = (string) ($request->input('page_id') ?: $request->input('phone_number_id') ?: $request->input('open_id'));
         $accessToken = (string) ($pending['access_token'] ?? $request->input('access_token', 'fake-oauth-token'));
         $pages = $pending['pages'] ?? null;
+        $metaUserId = $pending['meta_user_id'] ?? null;
 
         if ($pages === null && self::driver() === 'provider') {
             $result = $provider->exchange($platform, (string) $request->query('code'));
             $accessToken = $result['access_token'];
+            $metaUserId = $result['meta_user_id'] ?? null;
             $accountId = (string) ($accountId ?: ($result['phone_number_id'] ?? $result['account_id'] ?? ''));
             if ($platform === 'messenger' && $accountId === '' && count($result['pages'] ?? []) > 1) {
                 // A code works once: keep its result with the state so the pick reuses it instead of asking Meta again.
-                Cache::put("channel-oauth:{$state}", [...$pending, 'access_token' => $result['access_token'], 'pages' => $result['pages']], now()->addMinutes(10));
+                Cache::put("channel-oauth:{$state}", [...$pending, 'access_token' => $result['access_token'], 'pages' => $result['pages'], 'meta_user_id' => $metaUserId], now()->addMinutes(10));
                 Cache::put('channel-oauth:pages:'.$user->id, $result['pages'], now()->addMinutes(10));
 
                 return response()->json(['data' => ['pages' => $result['pages'], 'state' => $state]], 200);
@@ -129,7 +131,7 @@ class ChannelOAuthController extends Controller
 
         $channel = Channel::updateOrCreate(
             ['user_id' => $user->id, 'platform' => $platform, 'account_id' => $accountId],
-            [...array_filter(['workspace_id' => $pending['workspace_id'] ?? null]), 'access_token' => $accessToken, 'status' => 'active', 'connected_at' => now()],
+            [...array_filter(['workspace_id' => $pending['workspace_id'] ?? null, 'meta_user_id' => $metaUserId]), 'access_token' => $accessToken, 'status' => 'active', 'connected_at' => now()],
         );
 
         Cache::forget("channel-oauth:{$state}");
