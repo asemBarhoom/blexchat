@@ -21,11 +21,15 @@ class Setting extends Model
 
     public const HELP_RESPONSE_TIME = 'help.response_time_hours';
 
+    /** Whether the site's "coming soon" note page is live and linked. */
+    public const PREVIEW_NOTE_ENABLED = 'site.preview_note_enabled';
+
     /** @var array<string, mixed> */
     public const DEFAULTS = [
         self::TRIAL_REMINDER_DAYS => 7,
         self::HELP_EMAIL => null,
         self::HELP_RESPONSE_TIME => 24,
+        self::PREVIEW_NOTE_ENABLED => true,
     ];
 
     protected function casts(): array

@@ -9,6 +9,7 @@ use App\Models\DemoReplyRule;
 use App\Models\FaqItem;
 use App\Models\HomeBlock;
 use App\Models\HomeStat;
+use App\Models\Setting;
 use App\Models\UseCase;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -401,6 +402,7 @@ class HomeController extends Controller
             'navigation' => $blocks->has('navigation') ? $this->block($blocks['navigation']) : null,
             'footer' => $blocks->has('footer') ? $this->block($blocks['footer']) : null,
             'not_found' => $blocks->has('not_found') ? $this->block($blocks['not_found']) : null,
+            'preview_note_enabled' => (bool) Setting::get(Setting::PREVIEW_NOTE_ENABLED),
         ];
 
         return response()
