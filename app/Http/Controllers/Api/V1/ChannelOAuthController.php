@@ -137,9 +137,9 @@ class ChannelOAuthController extends Controller
         Cache::forget("channel-oauth:{$state}");
         Cache::forget('channel-oauth:pages:'.$user->id);
 
-        $redirect = config('services.channels.oauth_redirect_url');
-        if (filled($redirect)) {
-            return redirect()->away($redirect.'?'.http_build_query(['platform' => $platform, 'id' => $channel->id]));
+        if (filled(config('services.channels.oauth_redirect_url')) && ! $request->expectsJson()) {
+            // The browser came back from the provider: on to the site's "connected" screen.
+            return redirect()->away(rtrim((string) config('app.frontend_url'), '/')."/onboarding/connected/{$platform}?".http_build_query(['id' => $channel->id]));
         }
 
         return response()->json(['data' => ['channel' => $channel->id, 'platform' => $platform, 'account_id' => $accountId]], 201);
