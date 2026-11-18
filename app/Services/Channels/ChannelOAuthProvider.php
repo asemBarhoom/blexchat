@@ -2,6 +2,7 @@
 
 namespace App\Services\Channels;
 
+use App\Services\Instagram\InstagramClient;
 use Illuminate\Support\Facades\Http;
 
 class ChannelOAuthProvider
@@ -27,9 +28,17 @@ class ChannelOAuthProvider
         if ($platform === 'messenger') {
             $pages = Http::withToken($token)->get('https://graph.facebook.com/'.config('services.meta.graph_version').'/me/accounts', ['fields' => 'id,name,access_token'])->throw()->json('data', []);
 
-            return ['access_token' => $token, 'pages' => $pages];
+            return ['access_token' => $token, 'pages' => $pages, 'meta_user_id' => $this->metaUserId($token)];
         }
 
-        return ['access_token' => $token, 'waba_id' => null, 'phone_number_id' => null];
+        return ['access_token' => $token, 'waba_id' => null, 'phone_number_id' => null, 'meta_user_id' => $this->metaUserId($token)];
+    }
+
+    /**
+     * The person's app-scoped Facebook id, kept so Meta's deletion callbacks can find their channels.
+     */
+    private function metaUserId(string $token): ?string
+    {
+        return InstagramClient::metaUserId(Http::withToken($token)->baseUrl('https://graph.facebook.com/'.config('services.meta.graph_version')));
     }
 }

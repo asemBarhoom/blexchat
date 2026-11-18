@@ -22,6 +22,7 @@ beforeEach(function () {
     Http::fake([
         'graph.facebook.com/*/oauth/access_token*' => Http::response(['access_token' => 'user-token']),
         'graph.facebook.com/*/me/accounts*' => fn () => Http::response(['data' => $this->pages]),
+        'graph.facebook.com/*/me?*' => Http::response(['id' => 'fb-person-1']),
     ]);
 
     /** @return array{0: User, 1: string} */
@@ -99,4 +100,13 @@ it('answers both errors in Arabic with their codes', function () {
         ->assertStatus(409)
         ->assertJsonPath('code', 'channel_taken')
         ->assertJsonPath('message', $arabic['connect']['account_taken']);
+});
+
+it('keeps the person’s Facebook id on the connected Page for Meta’s deletion callbacks', function () {
+    [$owner, $state] = ($this->startMessenger)();
+
+    $this->getJson("/api/v1/channels/oauth/messenger/callback?state={$state}&code=code-1")->assertOk();
+    $this->actingAs($owner, 'sanctum')->postJson('/api/v1/channels/oauth/messenger/pages', ['state' => $state, 'page_id' => 'page-2']);
+
+    expect(Channel::where('account_id', 'page-2')->sole()->meta_user_id)->toBe('fb-person-1');
 });

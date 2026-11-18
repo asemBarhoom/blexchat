@@ -137,6 +137,7 @@ class InstagramConnectionController extends Controller
             [
                 'workspace_id' => $request->user()->workspace()->id,
                 'username' => $profile['username'],
+                'meta_user_id' => $profile['meta_user_id'] ?? null,
                 'profile_picture' => $profile['profile_picture_url'] ?? null,
                 'followers' => $profile['followers_count'] ?? 0,
                 'access_token' => $token['access_token'],
