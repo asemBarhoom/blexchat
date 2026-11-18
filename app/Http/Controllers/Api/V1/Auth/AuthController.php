@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Auth\DeleteAccountRequest;
 use App\Http\Requests\Api\Auth\UpdateProfileRequest;
 use App\Http\Resources\Api\V1\UserResource;
+use App\Services\Auth\AccountDeletion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
@@ -103,5 +105,15 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => __('auth.signed_out')]);
+    }
+
+    /**
+     * Deletes the signed-in account and everything it owns. It cannot be undone.
+     */
+    public function destroy(DeleteAccountRequest $request, AccountDeletion $deletion): JsonResponse
+    {
+        $deletion->delete($request->user());
+
+        return response()->json(['message' => __('auth.account_deleted')]);
     }
 }

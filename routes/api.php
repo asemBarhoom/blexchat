@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\V1\InstagramWebhookController;
 use App\Http\Controllers\Api\V1\LegalPageController;
 use App\Http\Controllers\Api\V1\MessageDeliveryAttemptController;
 use App\Http\Controllers\Api\V1\MetaChannelWebhookController;
+use App\Http\Controllers\Api\V1\MetaDataDeletionController;
 use App\Http\Controllers\Api\V1\OnboardingController;
 use App\Http\Controllers\Api\V1\PlanController;
 use App\Http\Controllers\Api\V1\PricingController;
@@ -77,6 +78,8 @@ Route::post('v1/webhooks/instagram', [InstagramWebhookController::class, 'receiv
 Route::get('v1/webhooks/{platform}', [MetaChannelWebhookController::class, 'verify'])->whereIn('platform', ['whatsapp', 'messenger'])->name('webhooks.meta.verify');
 Route::post('v1/webhooks/{platform}', [MetaChannelWebhookController::class, 'receive'])->whereIn('platform', ['whatsapp', 'messenger'])->name('webhooks.meta');
 Route::post('v1/webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
+Route::post('v1/webhooks/meta/deauthorize', [MetaDataDeletionController::class, 'deauthorize'])->name('webhooks.meta.deauthorize');
+Route::post('v1/webhooks/meta/data-deletion', [MetaDataDeletionController::class, 'dataDeletion'])->name('webhooks.meta.data-deletion');
 
 // Sign up / sign in (W01, W04), check email (W02), one more step (W03): passwordless, by emailed link or Google
 Route::prefix('v1/auth')->name('auth.')->middleware('throttle:30,1')->group(function () {
@@ -98,6 +101,7 @@ Route::middleware(['auth:sanctum', ResolveWorkspace::class, EnsureAccountOwner::
     // The signed-in account, and sign out
     Route::get('auth/me', [AuthController::class, 'me'])->name('auth.me');
     Route::patch('auth/me', [AuthController::class, 'update'])->name('auth.me.update');
+    Route::delete('auth/me', [AuthController::class, 'destroy'])->name('auth.me.destroy');
     Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
     // Onboarding after sign-up: progress, the survey (W08) and the plan (W09); channels connect below

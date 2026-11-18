@@ -47,7 +47,8 @@ class SetApiLocale
     {
         $user = $request->user();
 
-        if ($user instanceof User && $user->locale !== $locale) {
+        // A user deleted by this request (DELETE auth/me) must not be saved back.
+        if ($user instanceof User && $user->exists && $user->locale !== $locale) {
             $user->forceFill(['locale' => $locale])->saveQuietly();
         }
     }
