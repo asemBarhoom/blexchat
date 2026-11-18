@@ -38,7 +38,7 @@ class ChannelOAuthController extends Controller
     #[OA\Get(path: '/api/v1/channels/oauth/status', summary: 'OAuth provider readiness', security: [['sanctum' => []]], tags: ['Channels'], responses: [new OA\Response(response: 200, description: 'Provider configuration status')])]
     public function status(): JsonResponse
     {
-        $driver = (string) config('services.channels.oauth_driver');
+        $driver = self::driver();
 
         return response()->json(['data' => ['driver' => $driver, 'providers' => collect(['messenger', 'whatsapp', 'tiktok'])->mapWithKeys(fn (string $platform): array => [$platform => ['configured' => $driver !== 'provider' || filled(config("services.{$platform}.client_id"))]])->all()]]);
     }
@@ -53,7 +53,7 @@ class ChannelOAuthController extends Controller
         $state = Str::random(40);
         Cache::put("channel-oauth:{$state}", ['user_id' => $request->user()->id, 'workspace_id' => $request->user()->workspace()->id, 'platform' => $platform], now()->addMinutes(10));
 
-        $url = config('services.channels.oauth_driver') === 'fake' ? url("/api/v1/channels/oauth/{$platform}/callback?state={$state}") : $provider->authorizationUrl($platform, $state);
+        $url = self::driver() === 'fake' ? url("/api/v1/channels/oauth/{$platform}/callback?state={$state}") : $provider->authorizationUrl($platform, $state);
 
         return response()->json(['data' => ['platform' => $platform, 'state' => $state, 'authorization_url' => $url]]);
     }
@@ -93,7 +93,7 @@ class ChannelOAuthController extends Controller
         $accessToken = (string) ($pending['access_token'] ?? $request->input('access_token', 'fake-oauth-token'));
         $pages = $pending['pages'] ?? null;
 
-        if ($pages === null && config('services.channels.oauth_driver') === 'provider') {
+        if ($pages === null && self::driver() === 'provider') {
             $result = $provider->exchange($platform, (string) $request->query('code'));
             $accessToken = $result['access_token'];
             $accountId = (string) ($accountId ?: ($result['phone_number_id'] ?? $result['account_id'] ?? ''));
@@ -114,7 +114,7 @@ class ChannelOAuthController extends Controller
             $accessToken = (string) ($page['access_token'] ?? $accessToken);
         }
 
-        if ($accountId === '' && config('services.channels.oauth_driver') === 'fake') {
+        if ($accountId === '' && self::driver() === 'fake') {
             $accountId = 'fake-oauth-'.$platform.'-'.$user->id;
         }
         abort_if($accountId === '', 422, __('channels.oauth_no_account'));
@@ -145,8 +145,8 @@ class ChannelOAuthController extends Controller
 
     private function providerAvailable(string $platform): bool
     {
-        return (config('services.channels.oauth_driver') === 'fake' && ! app()->isProduction())
-            || (config('services.channels.oauth_driver') === 'provider' && filled(config("services.{$platform}.client_id")) && filled(config('services.channels.oauth_redirect_url')));
+        return (self::driver() === 'fake' && ! app()->isProduction())
+            || (self::driver() === 'provider' && filled(config("services.{$platform}.client_id")) && filled(config('services.channels.oauth_redirect_url')));
     }
 
     private function providerPending(string $platform): JsonResponse
@@ -155,5 +155,13 @@ class ChannelOAuthController extends Controller
         $channel = trans('channels.platforms.'.$platform);
 
         return response()->json(['message' => trans('channels.provider_pending', ['channel' => $channel, 'provider' => $provider]), 'code' => 'provider_pending', 'platform' => $platform], 503);
+    }
+
+    /**
+     * The fake sign-in connects channels without the platform, so production always uses the real one.
+     */
+    private static function driver(): string
+    {
+        return app()->isProduction() ? 'provider' : (string) config('services.channels.oauth_driver');
     }
 }
