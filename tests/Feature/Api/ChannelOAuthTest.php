@@ -67,3 +67,13 @@ it('refuses to start provider OAuth until credentials are configured', function 
         ->getJson('/api/v1/channels/oauth/messenger/start')
         ->assertStatus(503)->assertJsonPath('code', 'provider_pending');
 });
+
+it('never uses the fake channel sign-in in production', function () {
+    app()->detectEnvironment(fn () => 'production');
+    config()->set('services.channels.oauth_driver', 'fake');
+    config()->set('services.messenger.client_id', null);
+    $user = User::factory()->create();
+
+    $this->actingAs($user, 'sanctum')->getJson('/api/v1/channels/oauth/status')->assertJsonPath('data.driver', 'provider');
+    $this->actingAs($user, 'sanctum')->getJson('/api/v1/channels/oauth/messenger/start')->assertStatus(503);
+});
