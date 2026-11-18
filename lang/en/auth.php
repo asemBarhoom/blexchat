@@ -38,4 +38,5 @@ return [
     'google_failed' => 'Google sign-in didn’t finish. Try again, or continue with email.',
     'signed_out' => 'You are signed out.',
 
+    'account_deleted' => 'Your account and its data were deleted.',
 ];
