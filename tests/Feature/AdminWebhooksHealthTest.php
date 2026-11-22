@@ -39,3 +39,28 @@ it('shows health checks, provider readiness and no secret values', function (): 
         ->assertSee(__('admin/webhooks.not_configured'))
         ->assertDontSee('do-not-render');
 });
+
+it('reports production email as degraded until a real mailer is configured', function (): void {
+    app()->instance('env', 'production');
+    config(['mail.default' => 'log']);
+
+    $this->getJson('/api/v1/health')
+        ->assertOk()
+        ->assertJsonPath('status', 'degraded')
+        ->assertJsonPath('checks.mail', false);
+});
+
+it('reports a configured production email provider without exposing its key', function (): void {
+    app()->instance('env', 'production');
+    config([
+        'mail.default' => 'postmark',
+        'mail.from.address' => 'hello@blexchat.com',
+        'services.postmark.key' => 'server-secret',
+    ]);
+
+    $this->getJson('/api/v1/health')
+        ->assertOk()
+        ->assertJsonPath('status', 'ok')
+        ->assertJsonPath('checks.mail', 'postmark')
+        ->assertDontSee('server-secret');
+});

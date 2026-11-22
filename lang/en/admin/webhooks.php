@@ -11,6 +11,7 @@ return [
     'failed' => 'Failed',
     'health' => 'System health',
     'queue' => 'Queue',
+    'mail' => 'Outbound email',
     'scheduler' => 'Scheduler',
     'channel_driver' => 'Channel driver',
     'configured' => 'Configured',

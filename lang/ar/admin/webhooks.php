@@ -11,6 +11,7 @@ return [
     'failed' => 'فاشل',
     'health' => 'صحة النظام',
     'queue' => 'قائمة الانتظار',
+    'mail' => 'البريد الصادر',
     'scheduler' => 'المجدول',
     'channel_driver' => 'مشغّل القنوات',
     'configured' => 'مهيّأ',
