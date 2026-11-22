@@ -2,6 +2,7 @@
 
 use App\Models\Channel;
 use App\Models\User;
+use App\Services\Channels\ChannelOAuthProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -76,4 +77,10 @@ it('never uses the fake channel sign-in in production', function () {
 
     $this->actingAs($user, 'sanctum')->getJson('/api/v1/channels/oauth/status')->assertJsonPath('data.driver', 'provider');
     $this->actingAs($user, 'sanctum')->getJson('/api/v1/channels/oauth/messenger/start')->assertStatus(503);
+});
+
+it('asks Facebook for the Page permissions that reading and replying to comments need', function () {
+    parse_str((string) parse_url(app(ChannelOAuthProvider::class)->authorizationUrl('messenger', 'state'), PHP_URL_QUERY), $query);
+
+    expect(explode(',', $query['scope']))->toContain('pages_messaging', 'pages_manage_metadata', 'pages_read_engagement', 'pages_manage_engagement');
 });
