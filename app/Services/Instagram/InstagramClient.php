@@ -7,6 +7,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
@@ -103,7 +104,7 @@ class InstagramClient
     public function profile(string $token): array
     {
         if (self::usesUnifiedLogin()) {
-            $account = $this->read($token)->get('/me/assigned_instagram_accounts', ['fields' => 'id,username'])->throw()->json('data.0');
+            $account = $this->pickSharedAccount($token, $this->read($token)->get('/me/assigned_instagram_accounts', ['fields' => 'id,username'])->throw()->json('data') ?? []);
 
             if ($account === null) {
                 return [];
@@ -164,6 +165,75 @@ class InstagramClient
     public function subscribeToWebhooks(string $token, string $accountId): void
     {
         $this->graph($token)->post((self::usesUnifiedLogin() ? "/{$accountId}" : '/me').'/subscribed_apps?subscribed_fields=comments,messages')->throw();
+
+        if (self::usesUnifiedLogin()) {
+            $this->subscribeLinkedPage($token, $accountId);
+        }
+    }
+
+    /**
+     * With Facebook Login, Meta delivers an Instagram account's comment and message webhooks only once
+     * the app is installed on the Facebook Page the account is linked to. Best effort: an account with
+     * no linked Page, or a Page that refuses, still connects, and the reason is logged.
+     */
+    private function subscribeLinkedPage(string $token, string $accountId): void
+    {
+        $pages = rescue(fn () => $this->read($token)->get('/me/accounts', [
+            'fields' => 'id,access_token,instagram_business_account',
+            'limit' => 100,
+        ])->throw()->json('data'), [], report: false) ?? [];
+
+        $page = collect($pages)->first(fn ($page): bool => is_array($page)
+            && (string) data_get($page, 'instagram_business_account.id') === $accountId);
+
+        if ($page === null || blank($page['access_token'] ?? null)) {
+            Log::warning('Instagram account has no linked Facebook Page the app can subscribe to; its webhooks will not arrive.', ['account_id' => $accountId]);
+
+            return;
+        }
+
+        rescue(fn () => $this->graph($page['access_token'])->post("/{$page['id']}/subscribed_apps", ['subscribed_fields' => 'feed'])->throw());
+    }
+
+    /**
+     * The account the person picked in Meta's dialog. Meta lists every account the business has shared
+     * with the app, so the token's own grants (`granular_scopes`) narrow it to one when they can; when
+     * they cannot, the first account is used, as before.
+     *
+     * @param  list<array{id: string, username: string}>  $accounts
+     * @return array{id: string, username: string}|null
+     */
+    private function pickSharedAccount(string $token, array $accounts): ?array
+    {
+        if (count($accounts) < 2) {
+            return $accounts[0] ?? null;
+        }
+
+        $granted = $this->grantedInstagramIds($token);
+        $picked = array_values(array_filter($accounts, fn (array $account): bool => in_array((string) $account['id'], $granted, true)));
+
+        return count($picked) === 1 ? $picked[0] : $accounts[0];
+    }
+
+    /**
+     * The Instagram account ids this token's grants name, from Meta's token debugger. Best effort.
+     *
+     * @return list<string>
+     */
+    private function grantedInstagramIds(string $token): array
+    {
+        $scopes = rescue(fn () => $this->read()->get('/debug_token', [
+            'input_token' => $token,
+            'access_token' => config('services.instagram.app_id').'|'.config('services.instagram.app_secret'),
+        ])->throw()->json('data.granular_scopes'), [], report: false) ?? [];
+
+        return collect($scopes)
+            ->filter(fn ($scope): bool => is_array($scope) && str_starts_with((string) ($scope['scope'] ?? ''), 'instagram'))
+            ->flatMap(fn (array $scope): array => (array) ($scope['target_ids'] ?? []))
+            ->map(fn ($id): string => (string) $id)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     public function replyToComment(Channel $channel, string $commentId, string $text): ?string
