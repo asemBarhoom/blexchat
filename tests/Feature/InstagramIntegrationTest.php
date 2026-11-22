@@ -133,6 +133,7 @@ it('connects an Instagram account through Unified Login when a configuration is 
         'graph.facebook.com/v21.0/oauth/access_token*' => Http::response(['access_token' => 'BISU-token', 'token_type' => 'bearer']),
         'graph.facebook.com/v21.0/me/assigned_instagram_accounts*' => Http::response(['data' => [['id' => '17840001', 'username' => 'nourboutique']]]),
         'graph.facebook.com/v21.0/17840001/subscribed_apps*' => Http::response(['success' => true]),
+        'graph.facebook.com/v21.0/17840001?*' => Http::response(['profile_picture_url' => 'https://scontent.cdninstagram.com/v/'.str_repeat('a', 400), 'followers_count' => 5321]),
         'graph.facebook.com/v21.0/me?*' => Http::response(['id' => 'fb-person-1']),
     ]);
 
@@ -143,6 +144,8 @@ it('connects an Instagram account through Unified Login when a configuration is 
     expect($channel->access_token)->toBe('BISU-token')
         ->and($channel->username)->toBe('nourboutique')
         ->and($channel->meta_user_id)->toBe('fb-person-1')
+        ->and($channel->followers)->toBe(5321)
+        ->and(strlen($channel->profile_picture))->toBeGreaterThan(400)
         ->and($channel->token_expires_at->isAfter(now()->addYears(5)))->toBeTrue();
 });
 

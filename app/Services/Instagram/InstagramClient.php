@@ -105,7 +105,20 @@ class InstagramClient
         if (self::usesUnifiedLogin()) {
             $account = $this->read($token)->get('/me/assigned_instagram_accounts', ['fields' => 'id,username'])->throw()->json('data.0');
 
-            return $account === null ? [] : ['user_id' => (string) $account['id'], 'username' => $account['username'], 'meta_user_id' => self::metaUserId($this->read($token))];
+            if ($account === null) {
+                return [];
+            }
+
+            // Best effort: the account still connects when Meta does not return its picture or follower count.
+            $details = rescue(fn () => $this->read($token)->get("/{$account['id']}", ['fields' => 'profile_picture_url,followers_count'])->throw()->json(), [], report: false);
+
+            return array_filter([
+                'user_id' => (string) $account['id'],
+                'username' => $account['username'],
+                'meta_user_id' => self::metaUserId($this->read($token)),
+                'profile_picture_url' => $details['profile_picture_url'] ?? null,
+                'followers_count' => isset($details['followers_count']) ? (int) $details['followers_count'] : null,
+            ], fn ($value): bool => $value !== null);
         }
 
         return $this->read($token)->get('/me', [

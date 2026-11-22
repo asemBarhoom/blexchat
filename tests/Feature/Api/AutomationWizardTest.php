@@ -112,6 +112,17 @@ describe('GET /api/v1/channels/{channel}/posts', function () {
         Http::assertSent(fn (Request $request): bool => $request->hasHeader('Authorization', 'Bearer IGAA'));
     });
 
+    it('keeps the long thumbnail links that Instagram’s CDN gives', function () {
+        $instagram = Channel::factory()->create(['user_id' => $this->owner->id, 'platform' => 'instagram', 'status' => 'active', 'access_token' => 'IGAA']);
+        $thumbnail = 'https://scontent.cdninstagram.com/v/t51.2885-15/'.str_repeat('x', 600);
+        Http::fake(['graph.instagram.com/v21.0/me/media*' => Http::response(['data' => [['id' => 'm9', 'media_type' => 'IMAGE', 'media_url' => $thumbnail, 'thumbnail_url' => $thumbnail]]])]);
+
+        $this->actingAs($this->owner, 'sanctum')->getJson("/api/v1/channels/{$instagram->id}/posts")
+            ->assertOk()
+            ->assertJsonPath('meta.synced', true)
+            ->assertJsonPath('data.0.thumbnail_url', $thumbnail);
+    });
+
     it('marks the channel as needing a reconnect when Instagram rejects its token', function () {
         $instagram = Channel::factory()->create(['user_id' => $this->owner->id, 'platform' => 'instagram', 'status' => 'active', 'access_token' => 'IGAA']);
         Http::fake(['graph.instagram.com/v21.0/me/media*' => Http::response(['error' => ['message' => 'Invalid OAuth access token', 'code' => 190]], 401)]);
