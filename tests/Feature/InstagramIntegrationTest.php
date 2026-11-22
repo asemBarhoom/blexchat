@@ -227,6 +227,40 @@ it('adds the account not connected yet when Meta’s grants name every shared ac
     expect(Channel::where('user_id', $user->id)->pluck('account_id')->sort()->values()->all())->toBe(['17840001', '17840002']);
 });
 
+it('reconnects the account linked to the Facebook Page shared with it when every shared account is connected', function () {
+    config(['services.instagram.config_id' => 'config-777']);
+    Sanctum::actingAs($user = User::factory()->create());
+    Channel::factory()->for($user)->create(['platform' => 'instagram', 'account_id' => '17840001', 'username' => 'nourboutique']);
+    Channel::factory()->for($user)->create(['platform' => 'instagram', 'account_id' => '17840002', 'username' => 'qabasbooks', 'access_token' => 'old-token']);
+    $state = Crypt::encryptString(json_encode(['user' => $user->id, 'expires' => now()->addMinutes(10)->timestamp]));
+
+    Http::fake([
+        'graph.facebook.com/v21.0/oauth/access_token*' => Http::response(['access_token' => 'BISU-token']),
+        'graph.facebook.com/v21.0/me/assigned_instagram_accounts*' => Http::response(['data' => [
+            ['id' => '17840001', 'username' => 'nourboutique'],
+            ['id' => '17840002', 'username' => 'qabasbooks'],
+        ]]),
+        'graph.facebook.com/v21.0/debug_token*' => Http::response(['data' => ['granular_scopes' => [
+            ['scope' => 'instagram_basic', 'target_ids' => ['17840001', '17840002']],
+        ]]]),
+        'graph.facebook.com/v21.0/me/accounts*' => Http::response(['data' => [
+            ['id' => '5550002', 'access_token' => 'page-token', 'instagram_business_account' => ['id' => '17840002']],
+        ]]),
+        'graph.facebook.com/v21.0/17840002/subscribed_apps*' => Http::response(['success' => true]),
+        'graph.facebook.com/v21.0/5550002/subscribed_apps' => Http::response(['success' => true]),
+        'graph.facebook.com/v21.0/17840002?*' => Http::response([]),
+        'graph.facebook.com/v21.0/me?*' => Http::response(['id' => 'fb-person-1']),
+    ]);
+
+    $this->postJson('/api/v1/channels/instagram', ['code' => 'c', 'state' => $state])
+        ->assertCreated()
+        ->assertJsonPath('meta.reconnected', true);
+
+    expect(Channel::where('account_id', '17840002')->first()->access_token)->toBe('BISU-token');
+    Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/5550002/subscribed_apps'));
+    Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), '/17840001/subscribed_apps'));
+});
+
 it('installs the app on the Facebook Page linked to the account, so Meta sends its webhooks', function () {
     config(['services.instagram.config_id' => 'config-777']);
     Sanctum::actingAs($user = User::factory()->create());

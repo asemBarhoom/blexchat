@@ -182,13 +182,7 @@ class InstagramClient
      */
     private function subscribeLinkedPage(string $token, string $accountId): void
     {
-        $pages = rescue(fn () => $this->read($token)->get('/me/accounts', [
-            'fields' => 'id,access_token,instagram_business_account',
-            'limit' => 100,
-        ])->throw()->json('data'), [], report: false) ?? [];
-
-        $page = collect($pages)->first(fn ($page): bool => is_array($page)
-            && (string) data_get($page, 'instagram_business_account.id') === $accountId);
+        $page = collect($this->sharedPages($token))->first(fn (array $page): bool => (string) data_get($page, 'instagram_business_account.id') === $accountId);
 
         if ($page === null || blank($page['access_token'] ?? null)) {
             Log::warning('Instagram account has no linked Facebook Page the app can subscribe to; its webhooks will not arrive.', ['account_id' => $accountId]);
@@ -200,10 +194,27 @@ class InstagramClient
     }
 
     /**
+     * The Facebook Pages the person shared with the app, with each Page's token and linked Instagram
+     * account. Best effort: empty when Meta refuses or the login shared no Page.
+     *
+     * @return list<array{id: string, access_token?: string, instagram_business_account?: array{id: string}}>
+     */
+    private function sharedPages(string $token): array
+    {
+        $pages = rescue(fn () => $this->read($token)->get('/me/accounts', [
+            'fields' => 'id,access_token,instagram_business_account',
+            'limit' => 100,
+        ])->throw()->json('data'), [], report: false) ?? [];
+
+        return array_values(array_filter((array) $pages, fn ($page): bool => is_array($page)));
+    }
+
+    /**
      * The account the person picked in Meta's dialog. Meta lists every account the business has shared
      * with the app, so the token's own grants (`granular_scopes`) narrow the list when they can. When
-     * several remain, one the person has not connected yet is taken (adding a second account); when all
-     * are connected, the first, as before.
+     * several remain, one linked to a Facebook Page shared in this login is preferred (the Page the
+     * person picked with it), then one the person has not connected yet (adding a second account);
+     * otherwise the first, as before.
      *
      * @param  list<array{id: string, username: string}>  $accounts
      * @param  list<string>  $connectedAccountIds
@@ -217,6 +228,16 @@ class InstagramClient
 
         $granted = $this->grantedInstagramIds($token);
         $candidates = array_values(array_filter($accounts, fn (array $account): bool => in_array((string) $account['id'], $granted, true))) ?: $accounts;
+
+        if (count($candidates) === 1) {
+            return $candidates[0];
+        }
+
+        $pageLinkedIds = collect($this->sharedPages($token))
+            ->map(fn (array $page): string => (string) data_get($page, 'instagram_business_account.id'))
+            ->filter()
+            ->all();
+        $candidates = array_values(array_filter($candidates, fn (array $account): bool => in_array((string) $account['id'], $pageLinkedIds, true))) ?: $candidates;
 
         if (count($candidates) === 1) {
             return $candidates[0];
