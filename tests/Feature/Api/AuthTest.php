@@ -224,6 +224,39 @@ describe('Google sign-in', function () {
             ->and(json_decode(Crypt::decryptString($query['state']), true)['purpose'])->toBe('google');
     });
 
+    it('returns Google to the allowed frontend that started sign-in, never an untrusted origin', function () {
+        config([
+            'services.google.client_id' => 'client-123',
+            'cors.allowed_origins' => ['https://client.example.com'],
+            'cors.allowed_origins_patterns' => ['#^https://blexchat-screens\.vercel\.app$#'],
+        ]);
+
+        $allowedUrl = $this->withHeader('Origin', 'https://blexchat-screens.vercel.app')->getJson('/api/v1/auth/google')->assertOk()->json('data.url');
+        $untrustedUrl = $this->withHeader('Origin', 'https://evil.example.com')->getJson('/api/v1/auth/google')->assertOk()->json('data.url');
+        parse_str(parse_url($allowedUrl, PHP_URL_QUERY), $allowedQuery);
+        parse_str(parse_url($untrustedUrl, PHP_URL_QUERY), $untrustedQuery);
+
+        expect($allowedQuery['redirect_uri'])->toBe('https://blexchat-screens.vercel.app/verify/confirm')
+            ->and(json_decode(Crypt::decryptString($allowedQuery['state']), true)['redirect_uri'])->toBe('https://blexchat-screens.vercel.app/verify/confirm')
+            ->and($untrustedQuery['redirect_uri'])->toBe(config('app.frontend_url').'/verify/confirm')
+            ->and($untrustedQuery['redirect_uri'])->not->toContain('evil.example.com');
+    });
+
+    it('trades the Google code with the frontend redirect URI that started the flow', function () {
+        config(['cors.allowed_origins' => ['https://blexchat-screens.vercel.app']]);
+        Http::fake([
+            'oauth2.googleapis.com/token' => Http::response(['access_token' => 'google-token']),
+            'openidconnect.googleapis.com/*' => Http::response(['sub' => 'g-7', 'email' => 'sara@gmail.com', 'email_verified' => true, 'name' => 'Sara']),
+        ]);
+
+        $url = $this->withHeader('Origin', 'https://blexchat-screens.vercel.app')->getJson('/api/v1/auth/google')->json('data.url');
+        parse_str(parse_url($url, PHP_URL_QUERY), $query);
+        $this->postJson('/api/v1/auth/google', ['code' => 'auth-code', 'state' => $query['state']])->assertOk();
+
+        Http::assertSent(fn ($request): bool => $request->url() === 'https://oauth2.googleapis.com/token'
+            && $request['redirect_uri'] === 'https://blexchat-screens.vercel.app/verify/confirm');
+    });
+
     it('signs in on the API callback when Google is set to return there', function () {
         $callback = url('/api/v1/auth/google/callback');
         config(['services.google.redirect_uri' => $callback]);

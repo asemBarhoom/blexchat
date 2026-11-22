@@ -26,10 +26,15 @@ beforeEach(function () {
     ]);
 
     /** @return array{0: User, 1: string} */
-    $this->startMessenger = function (): array {
+    $this->startMessenger = function (?string $origin = null): array {
         $owner = User::factory()->create();
 
-        $state = $this->actingAs($owner, 'sanctum')
+        $request = $this->actingAs($owner, 'sanctum');
+        if ($origin !== null) {
+            $request->withHeader('Origin', $origin);
+        }
+
+        $state = $request
             ->getJson('/api/v1/channels/oauth/messenger/start')
             ->assertOk()
             ->json('data.state');
@@ -83,6 +88,24 @@ it('connects straight away when there is a single Page', function () {
         ->assertRedirect('https://site.test/onboarding/connected/messenger?id='.Channel::where('account_id', 'only-page')->value('id'));
 
     expect(Channel::where('account_id', 'only-page')->sole()->access_token)->toBe('only-page-token');
+});
+
+it('returns channel OAuth to the allowed frontend that started it', function () {
+    config([
+        'app.frontend_url' => 'https://client.example.com',
+        'cors.allowed_origins' => ['https://client.example.com'],
+        'cors.allowed_origins_patterns' => ['#^https://blexchat-screens\.vercel\.app$#'],
+    ]);
+    $this->pages = [['id' => 'only-page', 'name' => 'Only', 'access_token' => 'only-page-token']];
+
+    [, $allowedState] = ($this->startMessenger)('https://blexchat-screens.vercel.app');
+    $this->get("/api/v1/channels/oauth/messenger/callback?state={$allowedState}&code=code-1")
+        ->assertRedirect('https://blexchat-screens.vercel.app/onboarding/connected/messenger?id='.Channel::where('account_id', 'only-page')->value('id'));
+
+    $this->pages = [['id' => 'second-page', 'name' => 'Second', 'access_token' => 'second-page-token']];
+    [, $untrustedState] = ($this->startMessenger)('https://evil.example.com');
+    $this->get("/api/v1/channels/oauth/messenger/callback?state={$untrustedState}&code=code-2")
+        ->assertRedirect('https://client.example.com/onboarding/connected/messenger?id='.Channel::where('account_id', 'second-page')->value('id'));
 });
 
 it('sends Meta the callback of the platform being connected', function () {
