@@ -34,10 +34,14 @@ class ChannelOAuthController extends Controller
     {
         $driver = self::driver();
 
-        return response()->json(['data' => ['driver' => $driver, 'providers' => collect(['messenger', 'whatsapp', 'tiktok'])->mapWithKeys(fn (string $platform): array => [$platform => ['configured' => $driver !== 'provider' || ChannelOAuthProvider::configured($platform)]])->all()]]);
+        return response()->json(['data' => ['driver' => $driver, 'providers' => collect(['messenger', 'whatsapp', 'tiktok'])->mapWithKeys(fn (string $platform): array => [$platform => [
+            'configured' => $driver !== 'provider' || ChannelOAuthProvider::configured($platform),
+            'login_configured' => $driver !== 'provider' || ChannelOAuthProvider::credentialsConfigured($platform),
+            'messaging_available' => $driver !== 'provider' || ChannelOAuthProvider::messagingAvailable($platform),
+        ]])->all()]]);
     }
 
-    #[OA\Get(path: '/api/v1/channels/oauth/{platform}/start', summary: 'Start a channel OAuth flow', tags: ['Channels'], security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'platform', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: ['messenger', 'whatsapp', 'tiktok']))], responses: [new OA\Response(response: 200, description: 'OAuth state and authorization URL'), new OA\Response(response: 501, description: 'Provider OAuth is not configured')])]
+    #[OA\Get(path: '/api/v1/channels/oauth/{platform}/start', summary: 'Start a channel OAuth flow', tags: ['Channels'], security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'platform', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: ['messenger', 'whatsapp', 'tiktok']))], responses: [new OA\Response(response: 200, description: 'OAuth state and authorization URL'), new OA\Response(response: 503, description: 'Provider credentials or messaging approval are pending')])]
     public function start(Request $request, string $platform, ChannelOAuthProvider $provider): JsonResponse
     {
         abort_unless(in_array($platform, ['messenger', 'whatsapp', 'tiktok'], true), 404);
@@ -71,7 +75,7 @@ class ChannelOAuthController extends Controller
             new OA\Response(response: 400, description: '`code: invalid_oauth_state` — unknown, expired or already used'),
             new OA\Response(response: 403, description: '`code: channel_limit` with `limit`: the plan’s channels are all in use'),
             new OA\Response(response: 409, description: '`code: channel_taken` — the account is connected to another workspace'),
-            new OA\Response(response: 501, description: 'Provider OAuth is not configured'),
+            new OA\Response(response: 503, description: 'Provider credentials or messaging approval are pending'),
         ]
     )]
     public function callback(Request $request, string $platform, ChannelOAuthProvider $provider): JsonResponse|RedirectResponse

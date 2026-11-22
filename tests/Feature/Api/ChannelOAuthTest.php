@@ -48,7 +48,9 @@ it('reports provider readiness from the configured credentials', function () {
         ->assertJsonPath('data.driver', 'provider')
         ->assertJsonPath('data.providers.messenger.configured', false)
         ->assertJsonPath('data.providers.whatsapp.configured', false)
-        ->assertJsonPath('data.providers.tiktok.configured', true);
+        ->assertJsonPath('data.providers.tiktok.configured', false)
+        ->assertJsonPath('data.providers.tiktok.login_configured', true)
+        ->assertJsonPath('data.providers.tiktok.messaging_available', false);
 });
 
 it('reports every provider ready on the fake driver', function () {
@@ -82,6 +84,21 @@ it('refuses to start provider OAuth until credentials are configured', function 
     $this->actingAs(User::factory()->create(), 'sanctum')
         ->getJson('/api/v1/channels/oauth/messenger/start')
         ->assertStatus(503)->assertJsonPath('code', 'provider_pending');
+});
+
+it('keeps TikTok pending when Login Kit is configured but messaging is not available', function () {
+    config([
+        'services.channels.oauth_driver' => 'provider',
+        'services.channels.oauth_redirect_url' => 'https://api.test/oauth/{platform}',
+        'services.tiktok.client_id' => 'tiktok-app-id',
+        'services.tiktok.client_secret' => 'tiktok-secret',
+    ]);
+
+    $this->actingAs(User::factory()->create(), 'sanctum')
+        ->getJson('/api/v1/channels/oauth/tiktok/start')
+        ->assertStatus(503)
+        ->assertJsonPath('code', 'provider_pending')
+        ->assertJsonPath('platform', 'tiktok');
 });
 
 it('never uses the fake channel sign-in in production', function () {

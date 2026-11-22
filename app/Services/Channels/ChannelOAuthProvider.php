@@ -10,8 +10,22 @@ class ChannelOAuthProvider
 {
     public static function configured(string $platform): bool
     {
+        return self::credentialsConfigured($platform) && self::messagingAvailable($platform);
+    }
+
+    public static function credentialsConfigured(string $platform): bool
+    {
         return filled(config("services.{$platform}.client_id"))
             && ($platform !== 'whatsapp' || filled(config('services.whatsapp.config_id')));
+    }
+
+    /**
+     * TikTok Login Kit can connect an account, but it does not grant the Messaging or Comment APIs.
+     * Change this only with the real send, comment and webhook implementation after TikTok approval.
+     */
+    public static function messagingAvailable(string $platform): bool
+    {
+        return $platform !== 'tiktok';
     }
 
     /**
