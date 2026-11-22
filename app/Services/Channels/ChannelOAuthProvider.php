@@ -22,7 +22,7 @@ class ChannelOAuthProvider
         if ($platform === 'tiktok') {
             return 'https://www.tiktok.com/v2/auth/authorize/?'.http_build_query(['client_key' => config('services.tiktok.client_id'), 'scope' => 'user.info.basic,video.list', 'response_type' => 'code', 'redirect_uri' => $redirect, 'state' => $state]);
         }
-        $scope = $platform === 'whatsapp' ? 'business_management,whatsapp_business_management,whatsapp_business_messaging' : 'pages_show_list,pages_manage_metadata,pages_messaging';
+        $scope = $platform === 'whatsapp' ? 'business_management,whatsapp_business_management,whatsapp_business_messaging' : 'pages_show_list,pages_manage_metadata,pages_messaging,pages_read_engagement,pages_manage_engagement';
 
         return 'https://www.facebook.com/dialog/oauth?'.http_build_query(['client_id' => config("services.{$platform}.client_id"), 'redirect_uri' => $redirect, 'state' => $state, 'scope' => $scope]);
     }
