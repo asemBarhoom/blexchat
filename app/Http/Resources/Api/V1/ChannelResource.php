@@ -16,7 +16,7 @@ class ChannelResource extends JsonResource
             'profile_picture' => $this->profile_picture,
             'followers' => $this->followers,
             'status' => $this->status,
-            'needs_reconnect' => $this->status === 'expired',
+            'needs_reconnect' => $this->needsReconnect(),
             'connected_at' => $this->connected_at?->toIso8601String(),
         ];
     }

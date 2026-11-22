@@ -21,6 +21,7 @@ class PostResource extends JsonResource
             'platform_post_id' => $this->platform_post_id,
             'caption' => $this->caption,
             'thumbnail_url' => $this->thumbnail_url,
+            'permalink' => $this->permalink,
             'media_type' => $this->media_type,
             'likes' => $this->like_count,
             'comments' => $this->comment_count,

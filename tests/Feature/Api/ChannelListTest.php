@@ -42,7 +42,8 @@ describe('GET /api/v1/channels', function () {
                 'connected_at' => $instagram->connected_at->toIso8601String(),
                 'token_expires_at' => null,
             ])
-            ->assertJsonPath('data.1.status', 'expired');
+            ->assertJsonPath('data.1.status', 'expired')
+            ->assertJsonPath('data.1.needs_reconnect', true);
     });
 
     it('returns an empty list before the first channel connects', function () {
