@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Auth\FrontendUrl;
 use Database\Factories\LoginLinkFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -90,36 +91,12 @@ class LoginLink extends Model
      */
     public function url(string $token, ?string $origin = null): string
     {
-        $site = self::isAllowedOrigin($origin) ? $origin : config('app.frontend_url');
+        $site = FrontendUrl::fromOrigin($origin);
 
         return rtrim($site, '/').'/verify/confirm?'.http_build_query(array_filter([
             'token' => $token,
             'mode' => $this->mode === 'signin' ? 'signin' : null,
         ]));
-    }
-
-    /**
-     * Only the sites CORS lets call the API (the client's site, blexchat-screens and its previews).
-     */
-    public static function isAllowedOrigin(?string $origin): bool
-    {
-        if (blank($origin) || ! preg_match('#^https://[a-z0-9.-]+$#i', $origin)) {
-            return false;
-        }
-
-        $origin = rtrim($origin, '/');
-
-        if (in_array($origin, array_map(fn (string $allowed): string => rtrim($allowed, '/'), config('cors.allowed_origins', [])), true)) {
-            return true;
-        }
-
-        foreach (config('cors.allowed_origins_patterns', []) as $pattern) {
-            if (preg_match($pattern, $origin)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private static function hash(string $token): string

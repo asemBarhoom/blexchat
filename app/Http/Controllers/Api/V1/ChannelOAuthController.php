@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Channel;
 use App\Models\User;
+use App\Services\Auth\FrontendUrl;
 use App\Services\Channels\ChannelOAuthProvider;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -44,7 +45,12 @@ class ChannelOAuthController extends Controller
             return $this->providerPending($platform);
         }
         $state = Str::random(40);
-        Cache::put("channel-oauth:{$state}", ['user_id' => $request->user()->id, 'workspace_id' => $request->user()->workspace()->id, 'platform' => $platform], now()->addMinutes(10));
+        Cache::put("channel-oauth:{$state}", [
+            'user_id' => $request->user()->id,
+            'workspace_id' => $request->user()->workspace()->id,
+            'platform' => $platform,
+            'frontend_url' => FrontendUrl::fromOrigin($request->header('Origin')),
+        ], now()->addMinutes(10));
 
         $url = self::driver() === 'fake' ? url("/api/v1/channels/oauth/{$platform}/callback?state={$state}") : $provider->authorizationUrl($platform, $state);
 
@@ -81,6 +87,7 @@ class ChannelOAuthController extends Controller
             return response()->json(['message' => __('channels.oauth_state_invalid'), 'code' => 'invalid_oauth_state'], 400);
         }
 
+        $frontendUrl = $pending['frontend_url'] ?? rtrim((string) config('app.frontend_url'), '/');
         $user = User::findOrFail($pending['user_id']);
         $accountId = (string) ($request->input('page_id') ?: $request->input('phone_number_id') ?: $request->input('open_id'));
         $accessToken = (string) ($pending['access_token'] ?? $request->input('access_token', 'fake-oauth-token'));
@@ -99,7 +106,7 @@ class ChannelOAuthController extends Controller
 
                 if (! $request->expectsJson()) {
                     // Back from Meta in the browser: the site shows the Pages to pick from.
-                    return redirect()->away(rtrim((string) config('app.frontend_url'), '/').'/onboarding/connect/messenger/pages?'.http_build_query(['state' => $state]));
+                    return redirect()->away($frontendUrl.'/onboarding/connect/messenger/pages?'.http_build_query(['state' => $state]));
                 }
 
                 return response()->json(['data' => ['pages' => self::publicPages($result['pages']), 'state' => $state]], 200);
@@ -137,7 +144,7 @@ class ChannelOAuthController extends Controller
 
         if (filled(config('services.channels.oauth_redirect_url')) && ! $request->expectsJson()) {
             // The browser came back from the provider: on to the site's "connected" screen.
-            return redirect()->away(rtrim((string) config('app.frontend_url'), '/')."/onboarding/connected/{$platform}?".http_build_query(['id' => $channel->id]));
+            return redirect()->away($frontendUrl."/onboarding/connected/{$platform}?".http_build_query(['id' => $channel->id]));
         }
 
         return response()->json(['data' => ['channel' => $channel->id, 'platform' => $platform, 'account_id' => $accountId]], 201);

@@ -7,10 +7,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Auth\GoogleSignInRequest;
 use App\Http\Resources\Api\V1\AuthSessionResource;
 use App\Models\User;
+use App\Services\Auth\FrontendUrl;
 use App\Services\Auth\GoogleClient;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use OpenApi\Attributes as OA;
 
@@ -26,7 +28,7 @@ class GoogleController extends Controller
         description: <<<'MD'
             Send the visitor to `url`. Google returns them, with `code` and `state` in the query, to the redirect URI this server is set to:
 
-            - **Frontend** (default, `FRONTEND_URL/verify/confirm`): that page posts both to **POST /api/v1/auth/google** within 15 minutes. If Google returns `error` instead, show "Google sign-in didn’t finish".
+            - **Frontend** (default): Google returns to `/verify/confirm` on the allowed site that started sign-in, falling back to `FRONTEND_URL`; that page posts both to **POST /api/v1/auth/google** within 15 minutes. If Google returns `error` instead, show "Google sign-in didn’t finish".
             - **This API** (`GOOGLE_REDIRECT_URI=…/api/v1/auth/google/callback`, for testing without the frontend): Google lands on **GET /api/v1/auth/google/callback**, which signs in and shows the token as JSON.
             MD,
         tags: ['Authentication'],
@@ -34,14 +36,17 @@ class GoogleController extends Controller
             new OA\Property(property: 'data', type: 'object', properties: [new OA\Property(property: 'url', type: 'string', format: 'uri')]),
         ]))],
     )]
-    public function redirect(): JsonResponse
+    public function redirect(Request $request): JsonResponse
     {
+        $redirectUri = config('services.google.redirect_uri')
+            ?: FrontendUrl::fromOrigin($request->header('Origin')).'/verify/confirm';
         $state = Crypt::encryptString(json_encode([
             'purpose' => 'google',
             'expires' => now()->addMinutes(15)->timestamp,
+            'redirect_uri' => $redirectUri,
         ]));
 
-        return response()->json(['data' => ['url' => $this->google->authorizationUrl($state)]]);
+        return response()->json(['data' => ['url' => $this->google->authorizationUrl($state, $redirectUri)]]);
     }
 
     #[OA\Post(
@@ -90,7 +95,7 @@ class GoogleController extends Controller
     private function signInWithGoogle(GoogleSignInRequest $request): JsonResponse
     {
         try {
-            $profile = $this->google->profile($request->string('code'));
+            $profile = $this->google->profile($request->string('code'), $request->redirectUri());
         } catch (ConnectionException|RequestException) {
             $profile = null;
         }

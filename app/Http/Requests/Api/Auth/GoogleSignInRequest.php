@@ -9,6 +9,20 @@ use Illuminate\Validation\Validator;
 
 class GoogleSignInRequest extends FormRequest
 {
+    /**
+     * The redirect URI is signed inside Google's encrypted state so the token exchange uses the URI that started the flow.
+     */
+    public function redirectUri(): ?string
+    {
+        try {
+            $state = json_decode(Crypt::decryptString((string) $this->input('state')), true, flags: JSON_THROW_ON_ERROR);
+        } catch (DecryptException|\JsonException) {
+            return null;
+        }
+
+        return is_string($state['redirect_uri'] ?? null) ? $state['redirect_uri'] : null;
+    }
+
     public function authorize(): bool
     {
         return true;
