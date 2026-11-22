@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Api\V1;
 
 use App\Models\ChannelOption;
+use App\Services\Channels\ChannelOAuthProvider;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -33,6 +34,6 @@ class ChannelOptionResource extends JsonResource
         }
 
         return (config('services.channels.oauth_driver') === 'fake' && ! app()->isProduction())
-            || (config('services.channels.oauth_driver') === 'provider' && filled(config("services.{$this->platform}.client_id")) && filled(config('services.channels.oauth_redirect_url')));
+            || (config('services.channels.oauth_driver') === 'provider' && ChannelOAuthProvider::configured($this->platform) && filled(config('services.channels.oauth_redirect_url')));
     }
 }

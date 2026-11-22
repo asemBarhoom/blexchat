@@ -104,6 +104,7 @@ return [
     'whatsapp' => [
         'client_id' => env('META_APP_ID'),
         'client_secret' => env('META_APP_SECRET'),
+        'config_id' => env('WHATSAPP_CONFIG_ID'),
     ],
 
     'tiktok' => [

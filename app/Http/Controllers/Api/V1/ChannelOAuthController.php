@@ -34,7 +34,7 @@ class ChannelOAuthController extends Controller
     {
         $driver = self::driver();
 
-        return response()->json(['data' => ['driver' => $driver, 'providers' => collect(['messenger', 'whatsapp', 'tiktok'])->mapWithKeys(fn (string $platform): array => [$platform => ['configured' => $driver !== 'provider' || filled(config("services.{$platform}.client_id"))]])->all()]]);
+        return response()->json(['data' => ['driver' => $driver, 'providers' => collect(['messenger', 'whatsapp', 'tiktok'])->mapWithKeys(fn (string $platform): array => [$platform => ['configured' => $driver !== 'provider' || ChannelOAuthProvider::configured($platform)]])->all()]]);
     }
 
     #[OA\Get(path: '/api/v1/channels/oauth/{platform}/start', summary: 'Start a channel OAuth flow', tags: ['Channels'], security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'platform', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: ['messenger', 'whatsapp', 'tiktok']))], responses: [new OA\Response(response: 200, description: 'OAuth state and authorization URL'), new OA\Response(response: 501, description: 'Provider OAuth is not configured')])]
@@ -166,7 +166,7 @@ class ChannelOAuthController extends Controller
     private function providerAvailable(string $platform): bool
     {
         return (self::driver() === 'fake' && ! app()->isProduction())
-            || (self::driver() === 'provider' && filled(config("services.{$platform}.client_id")) && filled(config('services.channels.oauth_redirect_url')));
+            || (self::driver() === 'provider' && ChannelOAuthProvider::configured($platform) && filled(config('services.channels.oauth_redirect_url')));
     }
 
     private function providerPending(string $platform): JsonResponse
