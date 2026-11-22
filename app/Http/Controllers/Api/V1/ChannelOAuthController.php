@@ -87,6 +87,10 @@ class ChannelOAuthController extends Controller
             return response()->json(['message' => __('channels.oauth_state_invalid'), 'code' => 'invalid_oauth_state'], 400);
         }
 
+        if ($request->filled('page_id') && (int) $pending['user_id'] !== (int) $request->user()?->id) {
+            return response()->json(['message' => __('channels.oauth_state_invalid'), 'code' => 'invalid_oauth_state'], 400);
+        }
+
         $frontendUrl = $pending['frontend_url'] ?? rtrim((string) config('app.frontend_url'), '/');
         $user = User::findOrFail($pending['user_id']);
         $accountId = (string) ($request->input('page_id') ?: $request->input('phone_number_id') ?: $request->input('open_id'));
@@ -118,6 +122,11 @@ class ChannelOAuthController extends Controller
         if ($pages !== null && $accountId !== '') {
             // A Page has its own token; the account (user) token does not send its messages.
             $page = collect($pages)->firstWhere('id', $accountId);
+
+            if ($platform === 'messenger' && $page === null) {
+                return response()->json(['message' => __('channels.oauth_no_account'), 'code' => 'account_ineligible'], 422);
+            }
+
             $accessToken = (string) ($page['access_token'] ?? $accessToken);
         }
 
@@ -132,6 +141,10 @@ class ChannelOAuthController extends Controller
 
         if ($refusal = $user->channelLimitRefusal($platform, $accountId)) {
             return response()->json($refusal, 403);
+        }
+
+        if ($platform === 'messenger' && self::driver() === 'provider') {
+            $provider->subscribeMessengerPage($accountId, $accessToken);
         }
 
         $channel = Channel::updateOrCreate(

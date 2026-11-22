@@ -44,6 +44,20 @@ class ChannelOAuthProvider
     }
 
     /**
+     * Install the app on the connected Page so Meta delivers Messenger messages and feed events.
+     */
+    public function subscribeMessengerPage(string $pageId, string $pageToken): void
+    {
+        Http::withToken($pageToken)
+            ->connectTimeout(5)
+            ->timeout(15)
+            ->post('https://graph.facebook.com/'.config('services.meta.graph_version')."/{$pageId}/subscribed_apps", [
+                'subscribed_fields' => 'messages,feed',
+            ])
+            ->throw();
+    }
+
+    /**
      * The person's app-scoped Facebook id, kept so Meta's deletion callbacks can find their channels.
      */
     private function metaUserId(string $token): ?string
