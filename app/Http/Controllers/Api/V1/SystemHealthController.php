@@ -46,12 +46,19 @@ class SystemHealthController extends Controller
 
         return match (config('mail.default')) {
             'log', 'array' => false,
-            'smtp' => filled(config('mail.mailers.smtp.host')) && $this->fromAddressReady(),
+            'smtp' => $this->smtpReady() && $this->fromAddressReady(),
             'resend' => filled(config('services.resend.key')) && $this->fromAddressReady(),
             'postmark' => filled(config('services.postmark.key')) && $this->fromAddressReady(),
             'ses', 'ses-v2' => filled(config('services.ses.key')) && filled(config('services.ses.secret')) && $this->fromAddressReady(),
-            default => $this->fromAddressReady(),
+            default => false,
         };
+    }
+
+    private function smtpReady(): bool
+    {
+        $host = strtolower((string) config('mail.mailers.smtp.host'));
+
+        return filled($host) && ! in_array($host, ['127.0.0.1', 'localhost'], true);
     }
 
     private function fromAddressReady(): bool

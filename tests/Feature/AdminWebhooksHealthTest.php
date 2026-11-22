@@ -50,6 +50,19 @@ it('reports production email as degraded until a real mailer is configured', fun
         ->assertJsonPath('checks.mail', false);
 });
 
+it('does not treat the default local smtp host as production ready', function (): void {
+    app()->instance('env', 'production');
+    config([
+        'mail.default' => 'smtp',
+        'mail.mailers.smtp.host' => '127.0.0.1',
+        'mail.from.address' => 'hello@blexchat.com',
+    ]);
+
+    $this->getJson('/api/v1/health')
+        ->assertOk()
+        ->assertJsonPath('checks.mail', false);
+});
+
 it('reports a configured production email provider without exposing its key', function (): void {
     app()->instance('env', 'production');
     config([
