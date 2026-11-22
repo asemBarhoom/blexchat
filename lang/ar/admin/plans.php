@@ -2,6 +2,8 @@
 
 return [
     'active' => 'معروضة للبيع',
+    'ai_replies_limit' => 'ردود Blexchat AI / الشهر',
+    'ai_replies_limit_help' => '0 يعطّل ردود الذكاء الاصطناعي لهذه الباقة.',
     'annual_column' => 'سنوي / شهر',
     'annual_price' => 'السعر الشهري بالدفع السنوي ($)',
     'contacts_limit' => 'حد جهات الاتصال',

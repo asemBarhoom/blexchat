@@ -28,10 +28,12 @@ it('allows an admin to save team seats and conversation assignment', function ()
         ->callAction(TestAction::make('edit')->table($pro), [
             'teammates_limit' => 5,
             'has_assignment' => true,
+            'ai_replies_limit' => 300,
         ])
         ->assertHasNoFormErrors();
 
     expect($pro->fresh())
         ->teammates_limit->toBe(5)
-        ->has_assignment->toBeTrue();
+        ->has_assignment->toBeTrue()
+        ->ai_replies_limit->toBe(300);
 });

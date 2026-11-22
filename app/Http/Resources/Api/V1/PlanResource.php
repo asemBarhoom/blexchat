@@ -29,6 +29,7 @@ class PlanResource extends JsonResource
             'live_automations_limit' => $this->live_automations_limit,
             'workspaces_limit' => $this->workspaces_limit,
             'has_ai' => $this->has_ai,
+            'ai_replies_limit' => $this->ai_replies_limit,
             'has_email_capture' => $this->has_email_capture,
             'features' => $this->features ?? [],
             'trial_days' => $this->trial_days,

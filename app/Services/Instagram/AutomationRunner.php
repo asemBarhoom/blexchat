@@ -3,6 +3,7 @@
 namespace App\Services\Instagram;
 
 use App\Jobs\SendAutomationFollowUp;
+use App\Models\AiUsage;
 use App\Models\Automation;
 use App\Models\Channel;
 use App\Models\Comment;
@@ -141,6 +142,14 @@ class AutomationRunner
             return false;
         }
 
+        $usage = AiUsage::reserve($owner, $conversation, $automation);
+
+        if ($usage === null) {
+            $conversation->handOver('ai_limit');
+
+            return true;
+        }
+
         $history = $conversation->messages()
             ->whereIn('direction', ['inbound', 'outbound'])
             ->latest('id')
@@ -154,10 +163,13 @@ class AutomationRunner
         try {
             $answer = $this->claude->answer($owner->business_name ?: $owner->name, $owner->business_info, $history, $owner->preferredLocale() === 'ar' ? 'Arabic' : 'English');
         } catch (RequestException|ConnectionException $exception) {
+            $usage->fail();
             report($exception);
 
             return false;
         }
+
+        $usage->complete($answer['usage']['model'], $answer['usage']['input_tokens'], $answer['usage']['output_tokens']);
 
         if ($answer['handover']) {
             $conversation->handOver('ai_unsure', $answer['reason']);

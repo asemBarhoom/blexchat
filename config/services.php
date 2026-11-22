@@ -126,6 +126,9 @@ return [
         'key' => env('ANTHROPIC_API_KEY'),
         'model' => env('ANTHROPIC_MODEL', 'claude-opus-5-5'),
         'driver' => env('ANTHROPIC_DRIVER', env('APP_ENV', 'production') === 'local' ? 'fake' : 'claude'),
+        // USD per million tokens. Keep current for the selected model so usage can estimate spend.
+        'input_cost_per_million' => (float) env('ANTHROPIC_INPUT_COST_PER_MILLION', 0),
+        'output_cost_per_million' => (float) env('ANTHROPIC_OUTPUT_COST_PER_MILLION', 0),
     ],
 
     'slack' => [

@@ -2,6 +2,8 @@
 
 return [
     'active' => 'On sale',
+    'ai_replies_limit' => 'Blexchat AI replies / month',
+    'ai_replies_limit_help' => '0 disables AI replies for this plan.',
     'annual_column' => 'Yearly / month',
     'annual_price' => 'Monthly price, billed yearly ($)',
     'contacts_limit' => 'Contacts limit',

@@ -26,6 +26,8 @@ class FakeClaudeClient extends ClaudeClient
             ? ['handover' => true, 'reply' => '', 'reason' => $ownerLanguage === 'Arabic' ? 'سأل عن شيء لا تغطيه معلومات النشاط (تجربة).' : 'Asked something the business info doesn’t cover (demo).']
             : ['handover' => false, 'reply' => Str::limit(Str::before(trim($businessInfo), "\n"), 300), 'reason' => ''];
 
+        $answer['usage'] = ['model' => 'fake', 'input_tokens' => 0, 'output_tokens' => 0];
+
         Log::info('Blexchat AI (fake) answered', ['question' => $question, ...$answer]);
 
         return $answer;
