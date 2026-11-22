@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Http\Controllers\Api\V1\ChannelOAuthController;
 use App\Http\Controllers\Api\V1\SystemHealthController;
+use App\Models\User;
 use App\Models\WebhookEvent;
 use Filament\Pages\Page;
 
@@ -52,5 +53,25 @@ class SystemHealth extends Page
     public function schedulerReady(): bool
     {
         return app()->bound('Illuminate\\Console\\Scheduling\\Schedule');
+    }
+
+    /**
+     * Read-only launch checks. These expose readiness, never secret values.
+     *
+     * @return array<string, bool>
+     */
+    public function launchChecks(): array
+    {
+        return [
+            'production_environment' => app()->isProduction(),
+            'debug_disabled' => ! config('app.debug'),
+            'instagram_live' => config('services.instagram.driver') !== 'fake' && ! config('services.instagram.allow_fake'),
+            'payments_live' => config('services.payments.driver') !== 'fake' && ! config('services.payments.allow_fake'),
+            'messaging_live' => config('services.channels.driver') !== 'fake',
+            'oauth_live' => config('services.channels.oauth_driver') !== 'fake',
+            'ai_live' => config('services.anthropic.driver') !== 'fake' && filled(config('services.anthropic.key')),
+            'frontend_https' => str_starts_with((string) config('app.frontend_url'), 'https://'),
+            'demo_accounts_absent' => ! User::whereIn('email', ['admin@blexchat.test', 'nour@nourboutique.com'])->exists(),
+        ];
     }
 }

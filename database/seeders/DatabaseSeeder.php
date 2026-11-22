@@ -12,16 +12,6 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        // System admin for the Filament panel; is_admin is not mass-assignable, so it is set explicitly.
-        User::firstOrCreate(
-            ['email' => 'admin@blexchat.test'],
-            [
-                'name' => 'مدير النظام',
-                'password' => bcrypt('Admin@2025!'),
-            ]
-        )->forceFill(['is_admin' => true, 'email_verified_at' => now()])->save();
-
-        // @nourboutique demo data: the frontend's sample fashion boutique (neutral Arabic, USD)
         $this->call([
             HomeContentSeeder::class,
             SolutionSeeder::class,
@@ -38,6 +28,22 @@ class DatabaseSeeder extends Seeder
             AlignmentItemSeeder::class,
             ChannelOptionSeeder::class,
             FirstMoveSeeder::class,
+        ]);
+
+        if (app()->isProduction()) {
+            return;
+        }
+
+        // Local and test environments get an admin and the frontend's sample boutique.
+        User::firstOrCreate(
+            ['email' => 'admin@blexchat.test'],
+            [
+                'name' => 'مدير النظام',
+                'password' => bcrypt('Admin@2025!'),
+            ]
+        )->forceFill(['is_admin' => true, 'email_verified_at' => now()])->save();
+
+        $this->call([
             UserSeeder::class,
             ChannelSeeder::class,
             PostSeeder::class,

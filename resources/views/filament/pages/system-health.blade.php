@@ -33,5 +33,18 @@
                 @endforeach
             </div>
         </x-filament::section>
+
+        <x-filament::section class="md:col-span-2" :heading="__('admin/webhooks.launch_readiness')">
+            <div class="grid gap-3 md:grid-cols-3">
+                @foreach ($this->launchChecks() as $check => $ready)
+                    <div>
+                        <span class="font-medium">{{ __('admin/webhooks.' . $check) }}</span><br>
+                        <x-filament::badge :color="$ready ? 'success' : 'danger'">
+                            {{ $ready ? __('admin/webhooks.ready') : __('admin/webhooks.action_required') }}
+                        </x-filament::badge>
+                    </div>
+                @endforeach
+            </div>
+        </x-filament::section>
     </div>
 </x-filament-panels::page>
