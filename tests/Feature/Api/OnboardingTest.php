@@ -21,6 +21,7 @@ describe('GET /api/v1/plans', function () {
             ->assertOk()
             ->assertJsonPath('data.*.id', ['free', 'essential', 'pro', 'business', 'advanced'])
             ->assertJsonPath('data.*.has_email_capture', [false, false, true, true, true])
+            ->assertJsonPath('data.*.ai_replies_limit', [0, 0, 250, 1500, 5000])
             ->assertJsonPath('data.1', [
                 'id' => 'essential',
                 'name' => 'Essential',
@@ -34,6 +35,7 @@ describe('GET /api/v1/plans', function () {
                 'live_automations_limit' => null,
                 'workspaces_limit' => 1,
                 'has_ai' => false,
+                'ai_replies_limit' => 0,
                 'has_email_capture' => false,
                 'features' => ['All four channels', 'Unlimited automations', 'No Blexchat branding'],
                 'trial_days' => 14,

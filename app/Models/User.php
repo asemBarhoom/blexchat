@@ -102,6 +102,35 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
     }
 
     /**
+     * Every Claude request reserved or completed for this account.
+     *
+     * @return HasMany<AiUsage, $this>
+     */
+    public function aiUsages(): HasMany
+    {
+        return $this->hasMany(AiUsage::class);
+    }
+
+    /**
+     * @return array{used: int, limit: int, remaining: int, resets_at: string}
+     */
+    public function aiUsage(): array
+    {
+        $limit = (int) $this->currentPlan()->ai_replies_limit;
+        $used = $this->aiUsages()
+            ->where('status', AiUsage::STATUS_COMPLETED)
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->count();
+
+        return [
+            'used' => $used,
+            'limit' => $limit,
+            'remaining' => max(0, $limit - $used),
+            'resets_at' => now()->addMonthNoOverflow()->startOfMonth()->toIso8601String(),
+        ];
+    }
+
+    /**
      * The businesses this owner runs (BE-11).
      *
      * @return HasMany<Workspace, $this>

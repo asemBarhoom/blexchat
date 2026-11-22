@@ -37,7 +37,7 @@ class ClaudeClient
     /**
      * @param  list<array{from: 'customer'|'business', text: string}>  $history  oldest first, the customer's latest last
      * @param  string  $ownerLanguage  the language of the reason the owner reads, e.g. "English"
-     * @return array{handover: bool, reply: string, reason: string}
+     * @return array{handover: bool, reply: string, reason: string, usage: array{model: string, input_tokens: int, output_tokens: int}}
      */
     public function answer(string $businessName, string $businessInfo, array $history, string $ownerLanguage): array
     {
@@ -60,11 +60,17 @@ class ClaudeClient
         $text = collect($response->json('content', []))->firstWhere('type', 'text')['text'] ?? null;
         $answer = $response->json('stop_reason') === 'end_turn' && is_string($text) ? json_decode($text, true) : null;
 
+        $usage = [
+            'model' => (string) $response->json('model', config('services.anthropic.model')),
+            'input_tokens' => (int) $response->json('usage.input_tokens', 0),
+            'output_tokens' => (int) $response->json('usage.output_tokens', 0),
+        ];
+
         if (! is_array($answer) || ! is_bool($answer['handover'] ?? null) || ($answer['handover'] === false && blank($answer['reply'] ?? null))) {
-            return ['handover' => true, 'reply' => '', 'reason' => ''];
+            return ['handover' => true, 'reply' => '', 'reason' => '', 'usage' => $usage];
         }
 
-        return ['handover' => $answer['handover'], 'reply' => trim((string) $answer['reply']), 'reason' => trim((string) ($answer['reason'] ?? ''))];
+        return ['handover' => $answer['handover'], 'reply' => trim((string) $answer['reply']), 'reason' => trim((string) ($answer['reason'] ?? '')), 'usage' => $usage];
     }
 
     private function instructions(string $businessName, string $businessInfo, string $ownerLanguage): string

@@ -6,6 +6,7 @@ return [
     'handover' => [
         'unmatched' => 'سأل عن شيء لا تجيب عنه الأتمتة.',
         'ai_unsure' => 'لم يكن Blexchat AI متأكداً من الإجابة.',
+        'ai_limit' => 'وصل Blexchat AI إلى حد الردود لهذا الشهر.',
     ],
 
     // Setting a reminder on Free (the Reminders folder is a paid feature).

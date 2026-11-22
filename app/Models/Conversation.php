@@ -36,7 +36,7 @@ class Conversation extends Model
     public const AWAITING = ['follow', 'email_question', 'email'];
 
     /** Why an automation hands a conversation over; each has a text in lang/{locale}/inbox.php. */
-    public const HANDOVER_REASONS = ['unmatched', 'ai_unsure'];
+    public const HANDOVER_REASONS = ['unmatched', 'ai_unsure', 'ai_limit'];
 
     protected $fillable = [
         'channel_id',

@@ -14,6 +14,12 @@ use OpenApi\Attributes as OA;
     new OA\Property(property: 'business_info', type: 'string', nullable: true, maxLength: 5000, example: 'We sell abayas in sizes 36–48. Delivery in Riyadh takes 2–4 days, 25 SAR. Exchanges within 7 days, unworn.', description: 'What Blexchat AI answers from: products, sizes, prices, delivery, policies, hours. It answers nothing this does not say; it hands the conversation over instead.'),
     new OA\Property(property: 'included', type: 'boolean', example: true, description: 'The plan includes Blexchat AI (`has_ai`); otherwise show Upgrade'),
     new OA\Property(property: 'live', type: 'boolean', example: true, description: 'The AI engine is set up on the server; while false nothing is answered and conversations are handed over as before'),
+    new OA\Property(property: 'usage', properties: [
+        new OA\Property(property: 'used', type: 'integer', example: 42),
+        new OA\Property(property: 'limit', type: 'integer', example: 250),
+        new OA\Property(property: 'remaining', type: 'integer', example: 208),
+        new OA\Property(property: 'resets_at', type: 'string', format: 'date-time'),
+    ], type: 'object'),
 ])]
 class AiSettingsController extends Controller
 {
@@ -65,6 +71,7 @@ class AiSettingsController extends Controller
             'business_info' => $user->business_info,
             'included' => (bool) $user->currentPlan()->has_ai,
             'live' => $claude->available(),
+            'usage' => $user->aiUsage(),
         ]]);
     }
 }
