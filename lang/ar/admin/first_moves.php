@@ -15,5 +15,5 @@ return [
     'template_help' => 'اختياري: مفتاح قالب يفتح به المعالج.',
     'trigger_comment' => 'تعليق على منشور',
     'trigger_help' => 'الخطوة التي يبدأ منها معالج الأتمتة.',
-    'trigger_story' => 'رد على ستوري',
+    'trigger_story' => 'رد على قصة',
 ];

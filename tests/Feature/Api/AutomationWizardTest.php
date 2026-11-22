@@ -112,6 +112,24 @@ describe('GET /api/v1/channels/{channel}/posts', function () {
         Http::assertSent(fn (Request $request): bool => $request->hasHeader('Authorization', 'Bearer IGAA'));
     });
 
+    it('marks the channel as needing a reconnect when Instagram rejects its token', function () {
+        $instagram = Channel::factory()->create(['user_id' => $this->owner->id, 'platform' => 'instagram', 'status' => 'active', 'access_token' => 'IGAA']);
+        Http::fake(['graph.instagram.com/v21.0/me/media*' => Http::response(['error' => ['message' => 'Invalid OAuth access token', 'code' => 190]], 401)]);
+
+        $this->actingAs($this->owner, 'sanctum')->getJson("/api/v1/channels/{$instagram->id}/posts")->assertOk()->assertJsonPath('meta.synced', false);
+
+        expect($instagram->fresh()->status)->toBe('expired');
+    });
+
+    it('keeps the channel active when Instagram fails for another reason', function () {
+        $instagram = Channel::factory()->create(['user_id' => $this->owner->id, 'platform' => 'instagram', 'status' => 'active', 'access_token' => 'IGAA']);
+        Http::fake(['graph.instagram.com/v21.0/me/media*' => Http::response(['error' => ['message' => 'Rate limited', 'code' => 4]], 400)]);
+
+        $this->actingAs($this->owner, 'sanctum')->getJson("/api/v1/channels/{$instagram->id}/posts")->assertOk()->assertJsonPath('meta.synced', false);
+
+        expect($instagram->fresh()->status)->toBe('active');
+    });
+
     it('refuses another account’s channel', function () {
         $this->actingAs($this->owner, 'sanctum')->getJson('/api/v1/channels/'.Channel::factory()->create()->id.'/posts')->assertForbidden();
     });

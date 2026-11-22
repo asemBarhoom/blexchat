@@ -16,7 +16,7 @@ return [
     'inactive_only' => 'المعطّلة فقط',
     'model' => 'أتمتة',
     'reply_comment' => 'رد على التعليق',
-    'story_mention' => 'ذكر في ستوري',
+    'story_mention' => 'ذكر في قصة',
     'trashed' => 'المحذوفة',
     'trigger_type' => 'نوع المشغّل',
     'turn_off' => 'أوقفها',

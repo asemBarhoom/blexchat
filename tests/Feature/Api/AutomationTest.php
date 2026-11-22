@@ -33,6 +33,18 @@ describe('GET /api/v1/automations', function () {
             ->assertJsonPath('meta.total', 2);
     });
 
+    it('also finds automations by their keywords, in Arabic too', function () {
+        $user = User::factory()->create();
+        $channel = Channel::factory()->create(['user_id' => $user->id]);
+        Automation::factory()->create(['user_id' => $user->id, 'channel_id' => $channel->id, 'name' => 'Comment reply', 'keywords' => ['السعر', 'كم']]);
+        Automation::factory()->create(['user_id' => $user->id, 'channel_id' => $channel->id, 'name' => 'Story reply', 'keywords' => ['link']]);
+
+        $this->actingAs($user, 'sanctum')->getJson('/api/v1/automations?search=السعر')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.name', 'Comment reply');
+    });
+
     it('searches names ignoring case, and counts the live ones whatever the status filter', function () {
         $user = User::factory()->create();
         $channel = Channel::factory()->create(['user_id' => $user->id]);

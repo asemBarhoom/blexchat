@@ -34,6 +34,7 @@ class ConnectedChannelResource extends JsonResource
             'profile_picture' => $this->imageUrl($this->profile_picture),
             'followers' => $this->followers,
             'status' => $this->status,
+            'needs_reconnect' => $this->status === 'expired',
             'connected_at' => $this->connected_at?->toIso8601String(),
             'token_expires_at' => $this->token_expires_at?->toIso8601String(),
             $this->mergeWhen($this->forScreen, fn (): array => [

@@ -27,6 +27,7 @@ use OpenApi\Attributes as OA;
     new OA\Property(property: 'profile_picture', type: 'string', format: 'uri', nullable: true),
     new OA\Property(property: 'followers', type: 'integer', example: 12400),
     new OA\Property(property: 'status', type: 'string', enum: ['active', 'inactive', 'expired']),
+    new OA\Property(property: 'needs_reconnect', type: 'boolean', description: 'true when Meta rejected the token: show Reconnect instead of Connected'),
     new OA\Property(property: 'connected_at', type: 'string', format: 'date-time', nullable: true),
     new OA\Property(property: 'token_expires_at', type: 'string', format: 'date-time', nullable: true),
     new OA\Property(property: 'screen', ref: '#/components/schemas/ChannelConnectedScreen', nullable: true, description: 'Null when the admin has no copy for this platform or switched it off'),

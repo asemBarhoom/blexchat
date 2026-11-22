@@ -19,7 +19,7 @@ class LoginLinkMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public LoginLink $link, public string $token) {}
+    public function __construct(public LoginLink $link, public string $token, public ?string $origin = null) {}
 
     public function envelope(): Envelope
     {
@@ -30,7 +30,7 @@ class LoginLinkMail extends Mailable
     {
         return new Content(markdown: 'mail.login-link', with: [
             ...$this->texts(),
-            'url' => $this->link->url($this->token),
+            'url' => $this->link->url($this->token, $this->origin),
         ]);
     }
 
