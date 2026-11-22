@@ -99,12 +99,16 @@ class InstagramClient
      * `user_id` is the professional account id that webhooks report as the entry id. `account_type`
      * is BUSINESS or MEDIA_CREATOR for the professional accounts that can connect.
      *
+     * `$connectedAccountIds`: the person's Instagram accounts already connected, so that, among several
+     * shared accounts Meta's grants cannot tell apart, a new one is connected rather than one they have.
+     *
+     * @param  list<string>  $connectedAccountIds
      * @return array{user_id: string, username: string, meta_user_id?: string|null, account_type?: string, profile_picture_url?: string, followers_count?: int}
      */
-    public function profile(string $token): array
+    public function profile(string $token, array $connectedAccountIds = []): array
     {
         if (self::usesUnifiedLogin()) {
-            $account = $this->pickSharedAccount($token, $this->read($token)->get('/me/assigned_instagram_accounts', ['fields' => 'id,username'])->throw()->json('data') ?? []);
+            $account = $this->pickSharedAccount($token, $this->read($token)->get('/me/assigned_instagram_accounts', ['fields' => 'id,username'])->throw()->json('data') ?? [], $connectedAccountIds);
 
             if ($account === null) {
                 return [];
@@ -197,22 +201,30 @@ class InstagramClient
 
     /**
      * The account the person picked in Meta's dialog. Meta lists every account the business has shared
-     * with the app, so the token's own grants (`granular_scopes`) narrow it to one when they can; when
-     * they cannot, the first account is used, as before.
+     * with the app, so the token's own grants (`granular_scopes`) narrow the list when they can. When
+     * several remain, one the person has not connected yet is taken (adding a second account); when all
+     * are connected, the first, as before.
      *
      * @param  list<array{id: string, username: string}>  $accounts
+     * @param  list<string>  $connectedAccountIds
      * @return array{id: string, username: string}|null
      */
-    private function pickSharedAccount(string $token, array $accounts): ?array
+    private function pickSharedAccount(string $token, array $accounts, array $connectedAccountIds = []): ?array
     {
         if (count($accounts) < 2) {
             return $accounts[0] ?? null;
         }
 
         $granted = $this->grantedInstagramIds($token);
-        $picked = array_values(array_filter($accounts, fn (array $account): bool => in_array((string) $account['id'], $granted, true)));
+        $candidates = array_values(array_filter($accounts, fn (array $account): bool => in_array((string) $account['id'], $granted, true))) ?: $accounts;
 
-        return count($picked) === 1 ? $picked[0] : $accounts[0];
+        if (count($candidates) === 1) {
+            return $candidates[0];
+        }
+
+        $notConnected = array_values(array_filter($candidates, fn (array $account): bool => ! in_array((string) $account['id'], $connectedAccountIds, true)));
+
+        return $notConnected[0] ?? $candidates[0];
     }
 
     /**

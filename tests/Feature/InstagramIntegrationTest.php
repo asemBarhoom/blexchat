@@ -201,6 +201,32 @@ it('keeps the first shared account when Meta’s grants do not single one out', 
     expect(Channel::pluck('account_id')->all())->toBe(['17840001']);
 });
 
+it('adds the account not connected yet when Meta’s grants name every shared account', function () {
+    config(['services.instagram.config_id' => 'config-777']);
+    Sanctum::actingAs($user = User::factory()->create());
+    Channel::factory()->for($user)->create(['platform' => 'instagram', 'account_id' => '17840001', 'username' => 'nourboutique']);
+    $state = Crypt::encryptString(json_encode(['user' => $user->id, 'expires' => now()->addMinutes(10)->timestamp]));
+
+    Http::fake([
+        'graph.facebook.com/v21.0/oauth/access_token*' => Http::response(['access_token' => 'BISU-token']),
+        'graph.facebook.com/v21.0/me/assigned_instagram_accounts*' => Http::response(['data' => [
+            ['id' => '17840001', 'username' => 'nourboutique'],
+            ['id' => '17840002', 'username' => 'qabasbooks'],
+        ]]),
+        'graph.facebook.com/v21.0/debug_token*' => Http::response(['data' => ['granular_scopes' => [
+            ['scope' => 'instagram_basic', 'target_ids' => ['17840001', '17840002']],
+        ]]]),
+        'graph.facebook.com/v21.0/17840002/subscribed_apps*' => Http::response(['success' => true]),
+        'graph.facebook.com/v21.0/me/accounts*' => Http::response(['data' => []]),
+        'graph.facebook.com/v21.0/17840002?*' => Http::response([]),
+        'graph.facebook.com/v21.0/me?*' => Http::response(['id' => 'fb-person-1']),
+    ]);
+
+    $this->postJson('/api/v1/channels/instagram', ['code' => 'c', 'state' => $state])->assertCreated();
+
+    expect(Channel::where('user_id', $user->id)->pluck('account_id')->sort()->values()->all())->toBe(['17840001', '17840002']);
+});
+
 it('installs the app on the Facebook Page linked to the account, so Meta sends its webhooks', function () {
     config(['services.instagram.config_id' => 'config-777']);
     Sanctum::actingAs($user = User::factory()->create());
