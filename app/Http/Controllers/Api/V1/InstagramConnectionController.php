@@ -92,7 +92,10 @@ class InstagramConnectionController extends Controller
 
         try {
             $token = $this->instagram->exchangeCode($request->string('code'));
-            $profile = $this->instagram->profile($token['access_token']);
+            $profile = $this->instagram->profile(
+                $token['access_token'],
+                $request->user()->channels()->where('platform', 'instagram')->pluck('account_id')->map(fn ($id): string => (string) $id)->all(),
+            );
         } catch (RequestException $exception) {
             return $this->providerError($exception);
         }

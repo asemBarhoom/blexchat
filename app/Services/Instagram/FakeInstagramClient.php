@@ -64,7 +64,7 @@ class FakeInstagramClient extends InstagramClient
     /**
      * One test account per owner, so two owners never collide on "already connected".
      */
-    public function profile(string $token): array
+    public function profile(string $token, array $connectedAccountIds = []): array
     {
         [$kind, $userId] = array_pad(explode('-', Str::after($token, self::TOKEN_PREFIX), 2), 2, '0');
 
