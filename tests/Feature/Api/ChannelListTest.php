@@ -38,6 +38,7 @@ describe('GET /api/v1/channels', function () {
                 'profile_picture' => url('/storage/avatars/sara.webp'),
                 'followers' => 12400,
                 'status' => 'active',
+                'needs_reconnect' => false,
                 'connected_at' => $instagram->connected_at->toIso8601String(),
                 'token_expires_at' => null,
             ])

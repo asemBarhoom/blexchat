@@ -100,7 +100,7 @@ class SolutionSeeder extends Seeder
                 'art' => ['replied_in' => 'تم الرد خلال 0.4 ثانية'],
                 'automations' => ['title' => 'ثلاث أتمتات للبداية'],
                 'trigger' => [
-                    'comment' => 'تعليق', 'dm' => 'رسالة خاصة', 'story' => 'رد على ستوري',
+                    'comment' => 'تعليق', 'dm' => 'رسالة خاصة', 'story' => 'رد على قصة',
                     'every_comment' => 'كل تعليق', 'every_dm' => 'كل رسالة أولى', 'every_story' => 'كل رد',
                     'keyword' => 'الكلمة', 'keywords' => 'الكلمات', 'or' => 'أو',
                 ],
@@ -187,8 +187,8 @@ class SolutionSeeder extends Seeder
                         $this->tile('رابط', 'pink', '٢٬٤١٨'),
                     ),
                     $this->automation(
-                        ['Story replies, answered', 'ردود الستوري تُجاب'],
-                        ['Anyone who replies to a story gets your code and the way to use it.', 'كل من يرد على الستوري يستلم كودك وطريقة استخدامه.'],
+                        ['Story replies, answered', 'ردود القصة تُجاب'],
+                        ['Anyone who replies to a story gets your code and the way to use it.', 'كل من يرد على القصة يستلم كودك وطريقة استخدامه.'],
                         'story', [], 'كم الخصم؟',
                         'حيّاك! 💜 هذا كود الخصم MASHAEL15، تستخدمينه عند الدفع. والمنتجات هنا:',
                         'تسوّقي الآن', 'mashaelmoves.com/picks',
@@ -235,8 +235,8 @@ class SolutionSeeder extends Seeder
                         ['image' => 'marketing/home/creators/huda.webp', 'caption' => 'عباية الشتاء وصلت ✨ اكتبي «السعر» بالتعليقات ونرسل لك التفاصيل بالخاص', 'likes' => '١٬٢٠٤'],
                     ),
                     $this->automation(
-                        ['Offers from your stories', 'العروض من الستوري'],
-                        ['A reply to a story gets the offer and the page to buy it from.', 'من يرد على الستوري يستلم العرض والصفحة التي يشتري منها.'],
+                        ['Offers from your stories', 'العروض من القصة'],
+                        ['A reply to a story gets the offer and the page to buy it from.', 'من يرد على القصة يستلم العرض والصفحة التي يشتري منها.'],
                         'story', [], 'كم سعرها؟ 😍',
                         'حيّاك! 🤍 خصم ٢٠٪ على كل العبايات لين الأحد. تسوّقي العرض من هنا:',
                         'تسوّقي الآن', 'nourboutique.com/sale',
@@ -290,8 +290,8 @@ class SolutionSeeder extends Seeder
                         'احجز طاولتك', 'sidracafe.com/book',
                     ),
                     $this->automation(
-                        ["Today's offer from stories", 'عرض اليوم من الستوري'],
-                        ["A reply to your story gets today's offer and where to order it.", 'من يرد على الستوري يستلم عرض اليوم ومكان طلبه.'],
+                        ["Today's offer from stories", 'عرض اليوم من القصة'],
+                        ["A reply to your story gets today's offer and where to order it.", 'من يرد على القصة يستلم عرض اليوم ومكان طلبه.'],
                         'story', [], 'كم سعر العرض؟',
                         'يا هلا! ☕ عرض اليوم: قهوة وحلا بـ ٢٩ ريال لين الساعة ١٠. اطلبه من هنا:',
                         'اطلب العرض', 'sidracafe.com/offer',
@@ -389,7 +389,7 @@ class SolutionSeeder extends Seeder
                     ),
                     $this->automation(
                         ['Your own new business', 'عملاء جدد لوكالتك'],
-                        ["Replies to the agency's stories get your packages and a call.", 'من يرد على ستوري الوكالة يستلم باقاتك وموعد مكالمة.'],
+                        ["Replies to the agency's stories get your packages and a call.", 'من يرد على قصة الوكالة يستلم باقاتك وموعد مكالمة.'],
                         'story', [], 'أبي أعرف باقاتكم',
                         'يا هلا! 👋 هذي باقات مدار لإدارة الحسابات، واختر الوقت اللي يناسبك لمكالمة تعريفية:',
                         'احجز مكالمة', 'madar.agency/call',
@@ -437,7 +437,7 @@ class SolutionSeeder extends Seeder
                     ),
                     $this->automation(
                         ['Book a viewing', 'احجز معاينة'],
-                        ['A reply to a property story gets the times you can show it.', 'من يرد على ستوري عقار يستلم الأوقات المتاحة للمعاينة.'],
+                        ['A reply to a property story gets the times you can show it.', 'من يرد على قصة عقار يستلم الأوقات المتاحة للمعاينة.'],
                         'story', [], 'متى أقدر أشوفها؟',
                         'يا هلا! 🏠 المعاينة متاحة طول الأسبوع. اختر اليوم والوقت اللي يناسبك:',
                         'احجز معاينة', 'daralmarsa.com/viewing',
@@ -485,7 +485,7 @@ class SolutionSeeder extends Seeder
                     ),
                     $this->automation(
                         ['A free lesson first', 'درس مجاني أولاً'],
-                        ['A reply to your story gets the start date and a lesson to try.', 'من يرد على الستوري يستلم موعد البداية ودرساً للتجربة.'],
+                        ['A reply to your story gets the start date and a lesson to try.', 'من يرد على القصة يستلم موعد البداية ودرساً للتجربة.'],
                         'story', [], 'متى تبدأ الدورة؟',
                         'يا هلا! 📚 الدورة تبدأ أول الشهر. جرّب درس مجاني قبل ما تسجّل:',
                         'الدرس المجاني', 'bayanacademy.com/free-lesson',

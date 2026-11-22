@@ -10,13 +10,14 @@ class ChannelResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'              => $this->id,
-            'platform'        => $this->platform,
-            'username'        => $this->username,
+            'id' => $this->id,
+            'platform' => $this->platform,
+            'username' => $this->username,
             'profile_picture' => $this->profile_picture,
-            'followers'       => $this->followers,
-            'status'          => $this->status,
-            'connected_at'    => $this->connected_at?->toIso8601String(),
+            'followers' => $this->followers,
+            'status' => $this->status,
+            'needs_reconnect' => $this->status === 'expired',
+            'connected_at' => $this->connected_at?->toIso8601String(),
         ];
     }
 }

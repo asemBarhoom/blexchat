@@ -56,6 +56,19 @@ describe('POST /api/v1/auth/email-link', function () {
         expect(LoginLink::sole()->token_hash)->not->toContain(Mail::sent(LoginLinkMail::class)->first()->token);
     });
 
+    it('sends the link back to an allowed site that asked for it, and never to any other site', function () {
+        config(['cors.allowed_origins' => ['https://client.example.com'], 'cors.allowed_origins_patterns' => ['#^https://blexchat-screens\.vercel\.app$#']]);
+
+        $this->withHeader('Origin', 'https://blexchat-screens.vercel.app')->postJson('/api/v1/auth/email-link', ['email' => 'a@example.com'])->assertAccepted();
+        $this->withHeader('Origin', 'https://evil.example.com')->postJson('/api/v1/auth/email-link', ['email' => 'b@example.com'])->assertAccepted();
+
+        Mail::assertSent(LoginLinkMail::class, fn (LoginLinkMail $mail): bool => $mail->hasTo('a@example.com')
+            && str_contains($mail->render(), 'https://blexchat-screens.vercel.app/verify/confirm?token='.$mail->token));
+        Mail::assertSent(LoginLinkMail::class, fn (LoginLinkMail $mail): bool => $mail->hasTo('b@example.com')
+            && str_contains($mail->render(), config('app.frontend_url').'/verify/confirm?token='.$mail->token)
+            && ! str_contains($mail->render(), 'evil.example.com'));
+    });
+
     it('writes the sign-in email in the sign-in voice, and in Arabic when asked', function () {
         $this->postJson('/api/v1/auth/email-link?lang=ar', ['email' => 'nour@example.com', 'mode' => 'signin'])->assertAccepted();
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\PostCollection;
 use App\Models\Channel;
 use App\Models\Post;
+use App\Services\Channels\DeliveryFailure;
 use App\Services\Instagram\InstagramClient;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
@@ -80,7 +81,11 @@ class ChannelPostController extends Controller
             }
 
             return true;
-        } catch (RequestException|ConnectionException) {
+        } catch (RequestException|ConnectionException $exception) {
+            if (DeliveryFailure::isTokenRejected($exception)) {
+                $channel->update(['status' => 'expired']);
+            }
+
             return false;
         }
     }

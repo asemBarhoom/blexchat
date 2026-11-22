@@ -59,7 +59,7 @@ class AutomationController extends Controller
             new OA\Parameter(name: 'channel_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['active', 'inactive'])),
             new OA\Parameter(name: 'folder_id', in: 'query', required: false, description: 'Only the automations in this folder', schema: new OA\Schema(type: 'integer')),
-            new OA\Parameter(name: 'search', in: 'query', required: false, description: 'Automations whose name contains this text, ignoring case', schema: new OA\Schema(type: 'string', maxLength: 100)),
+            new OA\Parameter(name: 'search', in: 'query', required: false, description: 'Automations whose name or one of whose keywords contains this text, ignoring case', schema: new OA\Schema(type: 'string', maxLength: 100)),
             new OA\Parameter(name: 'trashed', in: 'query', required: false, description: 'true lists the Trash (S5.3) instead, last deleted first; each has `trashed_at` and `purges_at`', schema: new OA\Schema(type: 'boolean', default: false)),
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
@@ -83,7 +83,12 @@ class AutomationController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->whereLike('name', '%'.mb_substr(trim($request->string('search')), 0, 100).'%');
+            $term = mb_substr(trim($request->string('search')), 0, 100);
+
+            // Keywords are stored as JSON, which may escape non-ASCII text, so both spellings are matched.
+            $query->where(fn ($matches) => $matches->whereLike('name', "%{$term}%")
+                ->orWhereLike('keywords', "%{$term}%")
+                ->orWhereLike('keywords', '%'.trim(json_encode($term), '"').'%'));
         }
 
         $live = (clone $query)->where('active', true)->count();

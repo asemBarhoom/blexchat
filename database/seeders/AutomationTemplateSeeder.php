@@ -13,9 +13,9 @@ use Illuminate\Database\Seeder;
  */
 class AutomationTemplateSeeder extends Seeder
 {
-    private const SAMPLE_LINK = 'https://nourboutique.com/abaya-winter';
+    private const SAMPLE_LINK = 'https://example.com/product';
 
-    private const SHOP_LINK = 'https://nourboutique.com/shop';
+    private const SHOP_LINK = 'https://example.com';
 
     private const PUBLIC_REPLY = ['en' => 'We sent you the details in DM 💌', 'ar' => 'أرسلنا لك التفاصيل بالخاص 💌'];
 
@@ -45,8 +45,8 @@ class AutomationTemplateSeeder extends Seeder
                 'keywords' => ['en' => ['price'], 'ar' => ['السعر']],
                 'public_reply' => self::PUBLIC_REPLY,
                 'dm_text' => [
-                    'en' => 'Hi there! 👋 Here is the winter abaya you asked about — 249 SAR. Sizes and ordering here:',
-                    'ar' => 'هلا والله! 👋 هذي عباية الشتاء اللي سألتِ عنها — ٢٤٩ ريال. المقاسات والطلب من هنا:',
+                    'en' => 'Hi there! 👋 Thanks for your comment! Here are the details and the price:',
+                    'ar' => 'أهلًا! 👋 شكرًا لتعليقك، هذه التفاصيل والسعر:',
                 ],
                 'dm_button' => ['en' => 'See the product', 'ar' => 'شوفي المنتج'],
                 'link_url' => self::SAMPLE_LINK,
@@ -60,7 +60,7 @@ class AutomationTemplateSeeder extends Seeder
                 'match' => 'any',
                 'dm_text' => [
                     'en' => 'So glad you replied 💜 Here is the piece from the story, with price and sizes:',
-                    'ar' => 'يسعدنا ردّك 💜 هذه القطعة التي في الستوري، بالسعر والمقاسات:',
+                    'ar' => 'يسعدنا ردّك 💜 هذه القطعة التي في القصة، بالسعر والمقاسات:',
                 ],
                 'dm_button' => ['en' => 'See the piece', 'ar' => 'شاهدي القطعة'],
                 'link_url' => self::SAMPLE_LINK,
@@ -124,7 +124,7 @@ class AutomationTemplateSeeder extends Seeder
                 'match' => 'any',
                 'dm_text' => [
                     'en' => 'So glad you replied 💜 Here is the piece from the story, with price and sizes:',
-                    'ar' => 'يسعدنا ردّك 💜 هذه القطعة التي في الستوري، بالسعر والمقاسات:',
+                    'ar' => 'يسعدنا ردّك 💜 هذه القطعة التي في القصة، بالسعر والمقاسات:',
                 ],
                 'dm_button' => ['en' => 'See the piece', 'ar' => 'شاهدي القطعة'],
                 'link_url' => self::SAMPLE_LINK,
@@ -229,7 +229,7 @@ class AutomationTemplateSeeder extends Seeder
                     'ar' => 'أهلًا بكِ! 💜 سجّلي في قائمة الانتظار ونخبركِ فور توفّره:',
                 ],
                 'dm_button' => ['en' => 'Sign me up', 'ar' => 'سجّليني'],
-                'link_url' => 'https://nourboutique.com/waitlist',
+                'link_url' => 'https://example.com/waitlist',
             ],
         ];
     }

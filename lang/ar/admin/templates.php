@@ -33,6 +33,6 @@ return [
     'trigger_ad' => 'إعلان المراسلة',
     'trigger_comment' => 'تعليق على منشور أو ريل',
     'trigger_dm' => 'رسالة خاصة',
-    'trigger_story' => 'رد على ستوري',
+    'trigger_story' => 'رد على قصة',
     'wizard_fill' => 'ما يملؤه في المعالج',
 ];

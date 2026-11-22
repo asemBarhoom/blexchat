@@ -30,7 +30,7 @@ class LoginLinkController extends Controller
         summary: 'Email a sign-in link (sign up and sign in)',
         description: <<<'MD'
             Sign-up and sign-in are passwordless: this emails a link to the address, whether or not it has an account yet.
-            The link opens `FRONTEND_URL/verify/confirm?token=…` (with `&mode=signin` when signing in); that page posts the token to **POST /api/v1/auth/email-link/verify**.
+            The link opens `/verify/confirm?token=…` (with `&mode=signin` when signing in) on the site that sent the request (its `Origin`, when that site is allowed to call the API), else on `FRONTEND_URL`; that page posts the token to **POST /api/v1/auth/email-link/verify**.
 
             - A link works **once, for 15 minutes**.
             - Another link to the same address can be sent after **59 seconds** (`resend_after`); earlier, the answer is 429 `resend_too_soon` with `retry_after`.
@@ -79,7 +79,7 @@ class LoginLinkController extends Controller
         RateLimiter::hit($limiterKey, self::WINDOW_MINUTES * 60);
 
         [$link, $token] = LoginLink::issue($email, $request->mode());
-        Mail::to($email)->locale(App::getLocale())->send(new LoginLinkMail($link, $token));
+        Mail::to($email)->locale(App::getLocale())->send(new LoginLinkMail($link, $token, $request->header('Origin')));
 
         return response()->json([
             'message' => __('auth.link.sent'),
@@ -88,7 +88,7 @@ class LoginLinkController extends Controller
                 'mode' => $link->mode,
                 'expires_in' => LoginLink::LIFETIME_MINUTES * 60,
                 'resend_after' => LoginLink::RESEND_AFTER_SECONDS,
-                ...(! App::isProduction() && config('auth.expose_login_links')) ? ['dev_link' => $link->url($token), 'dev_token' => $token] : [],
+                ...(! App::isProduction() && config('auth.expose_login_links')) ? ['dev_link' => $link->url($token, $request->header('Origin')), 'dev_token' => $token] : [],
             ],
         ], 202);
     }

@@ -10,6 +10,6 @@ return [
     'followers' => 'المتابعون',
     'inactive' => 'غير نشطة',
     'model' => 'قناة',
-    'story' => 'ستوري',
+    'story' => 'قصة',
     'username' => 'اسم الحساب',
 ];

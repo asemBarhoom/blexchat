@@ -31,7 +31,7 @@ return [
     'no_words_every_reply' => 'بلا كلمات: كل رد',
     'or_between_words' => 'أو (بين الكلمات)',
     'or_write_a_card_text_instead_of_the_imag' => 'أو اكتب نص بطاقة بدلاً من الصورة.',
-    'post_or_story_optional' => 'المنشور أو الستوري (اختياري)',
+    'post_or_story_optional' => 'المنشور أو القصة (اختياري)',
     'pricing_link' => 'رابط الأسعار',
     'reply_speed_badge_on_the_image' => 'شارة سرعة الرد في الصورة',
     'sample_business' => 'النشاط التجريبي',

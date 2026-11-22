@@ -27,6 +27,19 @@ class DeliveryFailure
         };
     }
 
+    /**
+     * Meta no longer accepts the channel's token (OAuth error 190, or a 401), so it must be connected again.
+     */
+    public static function isTokenRejected(Throwable $exception): bool
+    {
+        if (! $exception instanceof RequestException) {
+            return false;
+        }
+
+        return $exception->response->status() === 401
+            || (int) $exception->response->json('error.code', 0) === 190;
+    }
+
     public static function isOutsideWindow(Throwable $exception): bool
     {
         if (! $exception instanceof RequestException) {
