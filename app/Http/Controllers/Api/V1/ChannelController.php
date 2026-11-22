@@ -32,6 +32,7 @@ class ChannelController extends Controller
                     new OA\Property(property: 'profile_picture', type: 'string', format: 'uri', nullable: true),
                     new OA\Property(property: 'followers', type: 'integer', example: 12400),
                     new OA\Property(property: 'status', type: 'string', enum: ['active', 'inactive', 'expired']),
+                    new OA\Property(property: 'needs_reconnect', type: 'boolean', description: 'The token was refused or ran out: show “Reconnect”'),
                     new OA\Property(property: 'connected_at', type: 'string', format: 'date-time', nullable: true),
                     new OA\Property(property: 'token_expires_at', type: 'string', format: 'date-time', nullable: true),
                 ])),

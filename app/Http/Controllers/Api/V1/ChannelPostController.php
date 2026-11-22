@@ -10,6 +10,7 @@ use App\Services\Instagram\InstagramClient;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use OpenApi\Attributes as OA;
 
 class ChannelPostController extends Controller
@@ -19,7 +20,7 @@ class ChannelPostController extends Controller
     #[OA\Get(
         path: '/api/v1/channels/{channel}/posts',
         summary: 'The account’s posts and reels, for “Pick a post” (W11)',
-        description: 'Newest first. An active Instagram channel is refreshed from Instagram first; when that fails the posts already known are returned and `meta.synced` is false. An empty list is the “No posts yet” state.',
+        description: 'Newest first. An active Instagram channel is refreshed from Instagram first; when that fails the posts already known are returned and `meta.synced` is false. When Instagram refused the token itself the channel turns `expired` and `meta.needs_reconnect` is true: show “Reconnect” instead of “Try again”. An empty list is the “No posts yet” state.',
         security: [['sanctum' => []]],
         tags: ['Automation wizard'],
         parameters: [
@@ -34,6 +35,7 @@ class ChannelPostController extends Controller
                     new OA\Property(property: 'platform_post_id', type: 'string'),
                     new OA\Property(property: 'caption', type: 'string', nullable: true),
                     new OA\Property(property: 'thumbnail_url', type: 'string', nullable: true),
+                    new OA\Property(property: 'permalink', type: 'string', format: 'uri', nullable: true, description: 'The post on Instagram'),
                     new OA\Property(property: 'media_type', type: 'string', nullable: true, enum: ['image', 'video', 'carousel', 'reel']),
                     new OA\Property(property: 'likes', type: 'integer', nullable: true, example: 1204, description: 'Like count, for the phone preview'),
                     new OA\Property(property: 'posted_at', type: 'string', format: 'date-time', nullable: true),
@@ -43,6 +45,7 @@ class ChannelPostController extends Controller
                     new OA\Property(property: 'page', type: 'integer'),
                     new OA\Property(property: 'per_page', type: 'integer'),
                     new OA\Property(property: 'synced', type: 'boolean', description: 'Whether Instagram was reached just now'),
+                    new OA\Property(property: 'needs_reconnect', type: 'boolean', description: 'The channel must be connected again before it can sync'),
                 ]),
             ])),
             new OA\Response(response: 401, description: 'Missing, revoked or unknown token'),
@@ -59,6 +62,7 @@ class ChannelPostController extends Controller
         return new PostCollection(
             Post::where('channel_id', $channel->id)->orderByDesc('posted_at')->orderByDesc('id')->paginate($perPage),
             $synced,
+            $channel->needsReconnect(),
         );
     }
 
@@ -80,7 +84,21 @@ class ChannelPostController extends Controller
             }
 
             return true;
-        } catch (RequestException|ConnectionException) {
+        } catch (RequestException $exception) {
+            Log::warning('Instagram posts sync failed', [
+                'channel_id' => $channel->id,
+                'status' => $exception->response->status(),
+                'error' => InstagramClient::errorMessage($exception),
+            ]);
+
+            if (InstagramClient::refusedToken($exception)) {
+                $channel->update(['status' => 'expired']);
+            }
+
+            return false;
+        } catch (ConnectionException $exception) {
+            Log::warning('Instagram posts sync failed', ['channel_id' => $channel->id, 'error' => $exception->getMessage()]);
+
             return false;
         }
     }

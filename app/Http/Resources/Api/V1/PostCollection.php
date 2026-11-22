@@ -9,7 +9,7 @@ class PostCollection extends ResourceCollection
 {
     public $collects = PostResource::class;
 
-    public function __construct(mixed $resource, private bool $synced)
+    public function __construct(mixed $resource, private bool $synced, private bool $needsReconnect = false)
     {
         parent::__construct($resource);
     }
@@ -26,6 +26,7 @@ class PostCollection extends ResourceCollection
                 'page' => $this->currentPage(),
                 'per_page' => $this->perPage(),
                 'synced' => $this->synced,
+                'needs_reconnect' => $this->needsReconnect,
             ],
         ];
     }

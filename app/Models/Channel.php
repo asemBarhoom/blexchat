@@ -39,6 +39,14 @@ class Channel extends Model
         ];
     }
 
+    /**
+     * Whether the owner must connect the account again: the platform refused its token, or the token ran out.
+     */
+    public function needsReconnect(): bool
+    {
+        return $this->status === 'expired' || ($this->token_expires_at?->isPast() ?? false);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

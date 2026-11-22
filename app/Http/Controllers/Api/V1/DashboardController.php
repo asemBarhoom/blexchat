@@ -38,6 +38,7 @@ class DashboardController extends Controller
                         new OA\Property(property: 'username', type: 'string', nullable: true),
                         new OA\Property(property: 'profile_picture', type: 'string', format: 'uri', nullable: true),
                         new OA\Property(property: 'status', type: 'string', enum: ['active', 'inactive', 'expired']),
+                        new OA\Property(property: 'needs_reconnect', type: 'boolean', description: 'Show “Reconnect” on the channel'),
                         new OA\Property(property: 'followers', type: 'integer'),
                     ])),
                     new OA\Property(property: 'automations', type: 'array', items: new OA\Items(properties: [
@@ -119,6 +120,7 @@ class DashboardController extends Controller
                 'username' => $channel->username,
                 'profile_picture' => $this->imageUrl($channel->profile_picture),
                 'status' => $channel->status,
+                'needs_reconnect' => $channel->needsReconnect(),
                 'followers' => $channel->followers,
             ])->values(),
             'automations' => $automations->values(),

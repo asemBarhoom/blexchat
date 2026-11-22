@@ -114,24 +114,24 @@ class InstagramClient
     }
 
     /**
-     * @return array{caption?: string, media_product_type?: string, media_type?: string, timestamp?: string, thumbnail_url?: string, media_url?: string, like_count?: int, comments_count?: int}
+     * @return array{caption?: string, media_product_type?: string, media_type?: string, timestamp?: string, thumbnail_url?: string, media_url?: string, permalink?: string, like_count?: int, comments_count?: int}
      */
     public function media(Channel $channel, string $mediaId): array
     {
         return $this->read($channel->access_token)->get("/{$mediaId}", [
-            'fields' => 'caption,media_type,media_product_type,timestamp,thumbnail_url,media_url,like_count,comments_count',
+            'fields' => 'caption,media_type,media_product_type,timestamp,thumbnail_url,media_url,permalink,like_count,comments_count',
         ])->throw()->json();
     }
 
     /**
      * The account's latest posts and reels, newest first.
      *
-     * @return list<array{id: string, caption?: string, media_product_type?: string, media_type?: string, timestamp?: string, thumbnail_url?: string, media_url?: string, like_count?: int, comments_count?: int}>
+     * @return list<array{id: string, caption?: string, media_product_type?: string, media_type?: string, timestamp?: string, thumbnail_url?: string, media_url?: string, permalink?: string, like_count?: int, comments_count?: int}>
      */
     public function recentMedia(Channel $channel, int $limit = 50): array
     {
         return $this->read($channel->access_token)->get(self::usesUnifiedLogin() ? "/{$channel->account_id}/media" : '/me/media', [
-            'fields' => 'id,caption,media_type,media_product_type,timestamp,thumbnail_url,media_url,like_count,comments_count',
+            'fields' => 'id,caption,media_type,media_product_type,timestamp,thumbnail_url,media_url,permalink,like_count,comments_count',
             'limit' => $limit,
         ])->throw()->json('data') ?? [];
     }
@@ -190,6 +190,15 @@ class InstagramClient
         return $response->json('error.message')
             ?? $response->json('error_message')
             ?? (str($response->body())->trim()->limit(200)->toString() ?: null);
+    }
+
+    /**
+     * Whether Instagram refused the token itself (expired, revoked or the app removed), so only
+     * connecting the account again helps. Meta reports it as error code 190 or a plain 401.
+     */
+    public static function refusedToken(RequestException $exception): bool
+    {
+        return $exception->response->status() === 401 || (int) $exception->response->json('error.code') === 190;
     }
 
     /**

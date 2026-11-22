@@ -97,7 +97,7 @@ describe('GET /api/v1/channels/{channel}/posts', function () {
     it('brings in the latest posts from Instagram, and still answers when Instagram fails', function () {
         $instagram = Channel::factory()->create(['user_id' => $this->owner->id, 'platform' => 'instagram', 'status' => 'active', 'access_token' => 'IGAA']);
         Http::fake(['graph.instagram.com/v21.0/me/media*' => Http::sequence()
-            ->push(['data' => [['id' => 'm1', 'caption' => 'ريل جديد', 'media_type' => 'VIDEO', 'media_product_type' => 'REELS', 'thumbnail_url' => 'https://cdn.example.com/m1.jpg', 'like_count' => 1204, 'comments_count' => 4, 'timestamp' => '2026-11-01T10:00:00+0000']]])
+            ->push(['data' => [['id' => 'm1', 'caption' => 'ريل جديد', 'media_type' => 'VIDEO', 'media_product_type' => 'REELS', 'thumbnail_url' => 'https://cdn.example.com/m1.jpg', 'permalink' => 'https://www.instagram.com/reel/m1/', 'like_count' => 1204, 'comments_count' => 4, 'timestamp' => '2026-11-01T10:00:00+0000']]])
             ->push(['error' => ['message' => 'Expired']], 400)]);
 
         $this->actingAs($this->owner, 'sanctum')->getJson("/api/v1/channels/{$instagram->id}/posts")
@@ -105,11 +105,32 @@ describe('GET /api/v1/channels/{channel}/posts', function () {
             ->assertJsonPath('meta.synced', true)
             ->assertJsonPath('data.0.platform_post_id', 'm1')
             ->assertJsonPath('data.0.media_type', 'reel')
+            ->assertJsonPath('data.0.permalink', 'https://www.instagram.com/reel/m1/')
             ->assertJsonPath('data.0.likes', 1204)
             ->assertJsonPath('data.0.comments', 4);
 
-        $this->getJson("/api/v1/channels/{$instagram->id}/posts")->assertOk()->assertJsonPath('meta.synced', false)->assertJsonPath('meta.total', 1);
+        $this->getJson("/api/v1/channels/{$instagram->id}/posts")
+            ->assertOk()
+            ->assertJsonPath('meta.synced', false)
+            ->assertJsonPath('meta.needs_reconnect', false)
+            ->assertJsonPath('meta.total', 1);
         Http::assertSent(fn (Request $request): bool => $request->hasHeader('Authorization', 'Bearer IGAA'));
+        expect($instagram->fresh()->status)->toBe('active');
+    });
+
+    it('asks for a reconnect when Instagram refuses the token, and stops asking Instagram', function () {
+        $instagram = Channel::factory()->create(['user_id' => $this->owner->id, 'platform' => 'instagram', 'status' => 'active', 'access_token' => 'IGAA']);
+        Http::fake(['graph.instagram.com/v21.0/me/media*' => Http::response(['error' => ['message' => 'Error validating access token', 'type' => 'OAuthException', 'code' => 190]], 400)]);
+
+        $this->actingAs($this->owner, 'sanctum')->getJson("/api/v1/channels/{$instagram->id}/posts")
+            ->assertOk()
+            ->assertJsonPath('meta.synced', false)
+            ->assertJsonPath('meta.needs_reconnect', true);
+
+        expect($instagram->fresh()->status)->toBe('expired');
+
+        $this->getJson("/api/v1/channels/{$instagram->id}/posts")->assertOk()->assertJsonPath('meta.needs_reconnect', true);
+        Http::assertSentCount(1);
     });
 
     it('refuses another account’s channel', function () {
