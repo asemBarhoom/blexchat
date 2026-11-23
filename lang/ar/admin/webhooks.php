@@ -12,6 +12,7 @@ return [
     'health' => 'صحة النظام',
     'queue' => 'قائمة الانتظار',
     'mail' => 'البريد الصادر',
+    'payments' => 'المدفوعات',
     'scheduler' => 'المجدول',
     'channel_driver' => 'مشغّل القنوات',
     'configured' => 'مهيّأ',

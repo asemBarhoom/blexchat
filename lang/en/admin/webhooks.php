@@ -12,6 +12,7 @@ return [
     'health' => 'System health',
     'queue' => 'Queue',
     'mail' => 'Outbound email',
+    'payments' => 'Payments',
     'scheduler' => 'Scheduler',
     'channel_driver' => 'Channel driver',
     'configured' => 'Configured',

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\ChannelOAuthController;
 use App\Http\Controllers\Api\V1\SystemHealthController;
 use App\Models\User;
 use App\Models\WebhookEvent;
+use App\Services\Stripe\StripeClient;
 use Filament\Pages\Page;
 
 class SystemHealth extends Page
@@ -66,7 +67,7 @@ class SystemHealth extends Page
             'production_environment' => app()->isProduction(),
             'debug_disabled' => ! config('app.debug'),
             'instagram_live' => config('services.instagram.driver') !== 'fake' && ! config('services.instagram.allow_fake'),
-            'payments_live' => config('services.payments.driver') !== 'fake' && ! config('services.payments.allow_fake'),
+            'payments_live' => StripeClient::isReadyForProduction(),
             'messaging_live' => config('services.channels.driver') !== 'fake',
             'oauth_live' => config('services.channels.oauth_driver') !== 'fake',
             'ai_live' => config('services.anthropic.driver') !== 'fake' && filled(config('services.anthropic.key')),

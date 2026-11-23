@@ -69,6 +69,10 @@ it('reports a configured production email provider without exposing its key', fu
         'mail.default' => 'postmark',
         'mail.from.address' => 'hello@blexchat.com',
         'services.postmark.key' => 'server-secret',
+        'services.payments.driver' => 'stripe',
+        'services.stripe.secret' => 'sk_live_configured',
+        'services.stripe.webhook_secret' => 'whsec_configured',
+        'services.stripe.currency' => 'usd',
     ]);
 
     $this->getJson('/api/v1/health')
@@ -76,4 +80,50 @@ it('reports a configured production email provider without exposing its key', fu
         ->assertJsonPath('status', 'ok')
         ->assertJsonPath('checks.mail', 'postmark')
         ->assertDontSee('server-secret');
+});
+
+it('reports production payments as degraded when fake or test Stripe is configured', function (array $paymentConfig): void {
+    app()->instance('env', 'production');
+    config($paymentConfig);
+
+    $this->getJson('/api/v1/health')
+        ->assertOk()
+        ->assertJsonPath('status', 'degraded')
+        ->assertJsonPath('checks.payments', false);
+})->with([
+    'fake payments' => [[
+        'services.payments.driver' => 'fake',
+        'services.payments.allow_fake' => true,
+    ]],
+    'Stripe test mode' => [[
+        'services.payments.driver' => 'stripe',
+        'services.payments.allow_fake' => false,
+        'services.stripe.secret' => 'sk_test_configured',
+        'services.stripe.webhook_secret' => 'whsec_configured',
+        'services.stripe.currency' => 'usd',
+    ]],
+    'missing webhook secret' => [[
+        'services.payments.driver' => 'stripe',
+        'services.payments.allow_fake' => false,
+        'services.stripe.secret' => 'sk_live_configured',
+        'services.stripe.webhook_secret' => null,
+        'services.stripe.currency' => 'usd',
+    ]],
+]);
+
+it('reports live Stripe payments ready without exposing either secret', function (): void {
+    app()->instance('env', 'production');
+    config([
+        'services.payments.driver' => 'stripe',
+        'services.payments.allow_fake' => false,
+        'services.stripe.secret' => 'sk_live_server-secret',
+        'services.stripe.webhook_secret' => 'whsec_server-secret',
+        'services.stripe.currency' => 'usd',
+    ]);
+
+    $this->getJson('/api/v1/health')
+        ->assertOk()
+        ->assertJsonPath('checks.payments', 'stripe')
+        ->assertDontSee('sk_live_server-secret')
+        ->assertDontSee('whsec_server-secret');
 });

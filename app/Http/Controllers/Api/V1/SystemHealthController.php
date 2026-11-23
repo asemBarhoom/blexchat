@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Services\Stripe\StripeClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -13,9 +14,9 @@ class SystemHealthController extends Controller
     #[OA\Get(
         path: '/api/v1/health',
         summary: 'System health',
-        description: 'Database, cache, queue and outbound email readiness for uptime checks and the status page.',
+        description: 'Database, cache, queue, outbound email and payment readiness for uptime checks and the status page.',
         tags: ['Health'],
-        responses: [new OA\Response(response: 200, description: '`status` is `ok` or `degraded`; `checks` has `database`, `cache`, `queue` and `mail`')]
+        responses: [new OA\Response(response: 200, description: '`status` is `ok` or `degraded`; `checks` has `database`, `cache`, `queue`, `mail` and `payments`')]
     )]
     public function __invoke(): JsonResponse
     {
@@ -24,6 +25,7 @@ class SystemHealthController extends Controller
             'cache' => $this->check(fn () => Cache::put('health:check', true, 5) && Cache::get('health:check') === true),
             'queue' => config('queue.default'),
             'mail' => $this->mailReady() ? config('mail.default') : false,
+            'payments' => $this->paymentsReady() ? config('services.payments.driver') : false,
         ];
 
         return response()->json(['status' => collect($checks)->every(fn ($value) => $value === true || is_string($value)) ? 'ok' : 'degraded', 'checks' => $checks]);
@@ -67,5 +69,10 @@ class SystemHealthController extends Controller
 
         return filter_var($address, FILTER_VALIDATE_EMAIL) !== false
             && ! str_ends_with(strtolower($address), '@example.com');
+    }
+
+    private function paymentsReady(): bool
+    {
+        return ! app()->isProduction() || StripeClient::isReadyForProduction();
     }
 }

@@ -19,6 +19,19 @@ class StripeClient
     }
 
     /**
+     * Launch readiness is stricter than checkout availability: production needs live charges,
+     * signed renewal webhooks and a valid three-letter Stripe currency.
+     */
+    public static function isReadyForProduction(): bool
+    {
+        return config('services.payments.driver') === 'stripe'
+            && ! config('services.payments.allow_fake')
+            && str_starts_with((string) config('services.stripe.secret'), 'sk_live_')
+            && str_starts_with((string) config('services.stripe.webhook_secret'), 'whsec_')
+            && preg_match('/^[a-z]{3}$/', (string) config('services.stripe.currency')) === 1;
+    }
+
+    /**
      * @param  array<string, mixed>  $params
      * @return array<string, mixed>
      */
