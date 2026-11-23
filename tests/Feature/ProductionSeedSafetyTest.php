@@ -30,6 +30,9 @@ it('shows failed launch checks without exposing configured secrets', function ()
         'services.channels.oauth_driver' => 'fake',
         'services.anthropic.driver' => 'claude',
         'services.anthropic.key' => 'never-render-this-key',
+        'app.error_monitoring_provider' => null,
+        'app.backup_restore_verified_at' => null,
+        'app.client_admin_email' => null,
     ]);
     $this->actingAs(User::factory()->admin()->create());
 
@@ -47,5 +50,44 @@ it('shows failed launch checks without exposing configured secrets', function ()
         'oauth_live' => false,
         'ai_live' => true,
         'frontend_https' => false,
+        'error_monitoring_ready' => false,
+        'backup_restore_verified' => false,
+        'client_admin_ready' => false,
     ]);
 });
+
+it('verifies production operations without exposing the client admin email', function (): void {
+    config([
+        'app.error_monitoring_provider' => 'cloud',
+        'app.backup_restore_verified_at' => '2026-11-19T15:23:13Z',
+        'app.client_admin_email' => 'client-admin@example.org',
+    ]);
+    User::factory()->admin()->create(['email' => 'client-admin@example.org']);
+    $this->actingAs(User::factory()->admin()->create());
+
+    $component = Livewire::test(SystemHealth::class)
+        ->assertSee(__('admin/webhooks.error_monitoring_ready'))
+        ->assertSee(__('admin/webhooks.backup_restore_verified'))
+        ->assertSee(__('admin/webhooks.client_admin_ready'))
+        ->assertDontSee('client-admin@example.org');
+
+    expect($component->instance()->launchChecks())->toMatchArray([
+        'error_monitoring_ready' => true,
+        'backup_restore_verified' => true,
+        'client_admin_ready' => true,
+    ]);
+});
+
+it('requires a verified password-protected admin matching the configured client email', function (array $attributes): void {
+    config(['app.client_admin_email' => 'client-admin@example.org']);
+    User::factory()->create(['email' => 'client-admin@example.org', ...$attributes]);
+    $this->actingAs(User::factory()->admin()->create());
+
+    $checks = Livewire::test(SystemHealth::class)->instance()->launchChecks();
+
+    expect($checks['client_admin_ready'])->toBeFalse();
+})->with([
+    'not an admin' => [['is_admin' => false]],
+    'unverified' => [['is_admin' => true, 'email_verified_at' => null]],
+    'no password' => [['is_admin' => true, 'password' => null]],
+]);

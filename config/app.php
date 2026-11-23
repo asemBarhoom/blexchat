@@ -67,6 +67,14 @@ return [
     'frontend_url' => env('FRONTEND_URL', 'https://blexchat-screens.vercel.app'),
 
     /*
+    | Production operations evidence. These values are not secrets; they let the admin-only
+    | health page verify the external Cloud setup that application code cannot inspect itself.
+    */
+    'error_monitoring_provider' => env('ERROR_MONITORING_PROVIDER'),
+    'backup_restore_verified_at' => env('BACKUP_RESTORE_VERIFIED_AT'),
+    'client_admin_email' => env('CLIENT_ADMIN_EMAIL'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------

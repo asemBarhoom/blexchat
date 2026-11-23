@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\WebhookEvent;
 use App\Services\Stripe\StripeClient;
 use Filament\Pages\Page;
+use Illuminate\Support\Carbon;
 
 class SystemHealth extends Page
 {
@@ -73,6 +74,45 @@ class SystemHealth extends Page
             'ai_live' => config('services.anthropic.driver') !== 'fake' && filled(config('services.anthropic.key')),
             'frontend_https' => str_starts_with((string) config('app.frontend_url'), 'https://'),
             'demo_accounts_absent' => ! User::whereIn('email', ['admin@blexchat.test', 'nour@nourboutique.com'])->exists(),
+            'error_monitoring_ready' => $this->errorMonitoringReady(),
+            'backup_restore_verified' => $this->backupRestoreVerified(),
+            'client_admin_ready' => $this->clientAdminReady(),
         ];
+    }
+
+    private function errorMonitoringReady(): bool
+    {
+        return match (config('app.error_monitoring_provider')) {
+            'cloud' => true,
+            'nightwatch' => (bool) config('nightwatch.enabled') && filled(config('nightwatch.token')),
+            default => false,
+        };
+    }
+
+    private function backupRestoreVerified(): bool
+    {
+        if (blank(config('app.backup_restore_verified_at'))) {
+            return false;
+        }
+
+        try {
+            $verifiedAt = Carbon::parse(config('app.backup_restore_verified_at'));
+
+            return $verifiedAt->isPast();
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    private function clientAdminReady(): bool
+    {
+        $email = config('app.client_admin_email');
+
+        return filled($email) && User::query()
+            ->where('email', $email)
+            ->where('is_admin', true)
+            ->whereNotNull('email_verified_at')
+            ->whereNotNull('password')
+            ->exists();
     }
 }

@@ -30,6 +30,7 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\Rules\Password;
 
 class UserResource extends Resource
 {
@@ -87,7 +88,8 @@ class UserResource extends Resource
             Section::make(__('admin/users.panel'))->schema([
                 Toggle::make('is_admin')->label(__('admin/users.is_admin'))->live(),
                 // Owners sign in without a password; only an admin needs one, for this panel.
-                TextInput::make('password')->label(__('admin/users.password'))->password()->revealable()->minLength(8)
+                TextInput::make('password')->label(__('admin/users.password'))->password()->revealable()
+                    ->rule(Password::min(12)->mixedCase()->numbers()->symbols())
                     ->dehydrated(fn (?string $state): bool => filled($state))
                     ->required(fn (Get $get, string $operation): bool => $operation === 'create' && $get('is_admin'))
                     ->helperText(fn (string $operation): string => $operation === 'edit' ? __('admin/users.password_keep') : __('admin/users.password_admins_only'))

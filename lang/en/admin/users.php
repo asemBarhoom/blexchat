@@ -31,7 +31,7 @@ return [
     'open_invitations' => 'Open invitations',
     'panel' => 'Admin panel',
     'password' => 'Password',
-    'password_admins_only' => 'Only admins need one.',
+    'password_admins_only' => 'Only admins need one. Use at least 12 characters with upper- and lowercase letters, a number and a symbol.',
     'password_keep' => 'Leave empty to keep the current one.',
     'plan' => 'Plan',
     'plural' => 'Users',

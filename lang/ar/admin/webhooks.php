@@ -33,4 +33,7 @@ return [
     'ai_live' => 'مشغّل ومفتاح AI حقيقيان',
     'frontend_https' => 'رابط الواجهة HTTPS',
     'demo_accounts_absent' => 'حسابات التجربة محذوفة',
+    'error_monitoring_ready' => 'مراقبة الأخطاء مهيأة',
+    'backup_restore_verified' => 'تم التحقق من استرجاع النسخة الاحتياطية',
+    'client_admin_ready' => 'حساب أدمن العميل جاهز',
 ];

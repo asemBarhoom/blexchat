@@ -33,4 +33,7 @@ return [
     'ai_live' => 'Real AI driver and key',
     'frontend_https' => 'HTTPS frontend URL',
     'demo_accounts_absent' => 'Demo accounts removed',
+    'error_monitoring_ready' => 'Error monitoring configured',
+    'backup_restore_verified' => 'Backup restore verified',
+    'client_admin_ready' => 'Client admin account ready',
 ];

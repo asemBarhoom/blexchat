@@ -79,11 +79,16 @@ it('creates a shop owner without a password, and an admin only with one', functi
         ->assertHasFormErrors(['password' => 'required']);
 
     Livewire::test(CreateUser::class)
-        ->fillForm(['email' => 'staff@example.com', 'is_admin' => true, 'password' => 'Str0ngPass!'])
+        ->fillForm(['email' => 'staff@example.com', 'is_admin' => true, 'password' => 'weakpassword'])
+        ->call('create')
+        ->assertHasFormErrors(['password']);
+
+    Livewire::test(CreateUser::class)
+        ->fillForm(['email' => 'staff@example.com', 'is_admin' => true, 'password' => 'StrongAdmin#2026'])
         ->call('create')
         ->assertHasNoFormErrors();
 
-    expect(Hash::check('Str0ngPass!', User::where('email', 'staff@example.com')->firstOrFail()->password))->toBeTrue();
+    expect(Hash::check('StrongAdmin#2026', User::where('email', 'staff@example.com')->firstOrFail()->password))->toBeTrue();
 });
 
 it('edits a user and keeps the password when left empty', function () {
