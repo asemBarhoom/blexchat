@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\DB;
 #[Description('Inventory or remove the two legacy seeded QA accounts')]
 class CleanupQaData extends Command
 {
+    /** @var array<int, string> */
+    protected $aliases = ['app:clean-qa-data'];
+
     /** @var array<string, array{name: string, business: ?string, admin: bool}> */
     private const CANDIDATES = [
         'admin@blexchat.test' => ['name' => 'مدير النظام', 'business' => null, 'admin' => true],
