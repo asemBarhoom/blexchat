@@ -4,6 +4,7 @@ namespace App\Http\Resources\Api\V1;
 
 use App\Models\Channel;
 use App\Models\ChannelConnectedScreen;
+use App\Services\Channels\ChannelOAuthProvider;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
@@ -35,6 +36,9 @@ class ConnectedChannelResource extends JsonResource
             'followers' => $this->followers,
             'status' => $this->status,
             'needs_reconnect' => $this->needsReconnect(),
+            'content_reading_available' => ChannelOAuthProvider::contentReadingAvailable($this->platform),
+            'messaging_available' => ChannelOAuthProvider::messagingAvailable($this->platform),
+            'comment_automation_available' => ChannelOAuthProvider::commentAutomationAvailable($this->platform),
             'connected_at' => $this->connected_at?->toIso8601String(),
             'token_expires_at' => $this->token_expires_at?->toIso8601String(),
             $this->mergeWhen($this->forScreen, fn (): array => [

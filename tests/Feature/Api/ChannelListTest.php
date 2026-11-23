@@ -39,11 +39,16 @@ describe('GET /api/v1/channels', function () {
                 'followers' => 12400,
                 'status' => 'active',
                 'needs_reconnect' => false,
+                'content_reading_available' => true,
+                'messaging_available' => true,
+                'comment_automation_available' => true,
                 'connected_at' => $instagram->connected_at->toIso8601String(),
                 'token_expires_at' => null,
             ])
             ->assertJsonPath('data.1.status', 'expired')
-            ->assertJsonPath('data.1.needs_reconnect', true);
+            ->assertJsonPath('data.1.needs_reconnect', true)
+            ->assertJsonPath('data.1.messaging_available', false)
+            ->assertJsonPath('data.1.comment_automation_available', false);
     });
 
     it('returns an empty list before the first channel connects', function () {

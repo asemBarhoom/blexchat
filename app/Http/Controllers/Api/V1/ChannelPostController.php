@@ -8,6 +8,7 @@ use App\Models\Channel;
 use App\Models\Post;
 use App\Services\Channels\DeliveryFailure;
 use App\Services\Instagram\InstagramClient;
+use App\Services\TikTok\TikTokClient;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ use OpenApi\Attributes as OA;
 
 class ChannelPostController extends Controller
 {
-    public function __construct(private InstagramClient $instagram) {}
+    public function __construct(private InstagramClient $instagram, private TikTokClient $tiktok) {}
 
     #[OA\Get(
         path: '/api/v1/channels/{channel}/posts',
@@ -72,24 +73,28 @@ class ChannelPostController extends Controller
      */
     private function sync(Channel $channel): bool
     {
-        if ($channel->platform !== 'instagram' || $channel->status !== 'active') {
+        if (! in_array($channel->platform, ['instagram', 'tiktok'], true) || $channel->status !== 'active') {
             return false;
         }
 
         try {
-            foreach ($this->instagram->recentMedia($channel) as $media) {
+            $mediaItems = $channel->platform === 'tiktok'
+                ? $this->tiktok->recentVideos($channel)
+                : $this->instagram->recentMedia($channel);
+
+            foreach ($mediaItems as $media) {
                 Post::updateOrCreate(
                     ['channel_id' => $channel->id, 'platform_post_id' => $media['id']],
-                    Post::attributesFromInstagram($media),
+                    $channel->platform === 'tiktok' ? Post::attributesFromTikTok($media) : Post::attributesFromInstagram($media),
                 );
             }
 
             return true;
         } catch (RequestException|ConnectionException $exception) {
-            Log::warning('Instagram posts sync failed', [
+            Log::warning(ucfirst($channel->platform).' posts sync failed', [
                 'channel_id' => $channel->id,
                 'status' => $exception instanceof RequestException ? $exception->response->status() : null,
-                'error' => $exception instanceof RequestException ? InstagramClient::errorMessage($exception) : $exception->getMessage(),
+                'error' => $exception instanceof RequestException && $channel->platform === 'instagram' ? InstagramClient::errorMessage($exception) : $exception->getMessage(),
             ]);
 
             if (DeliveryFailure::isTokenRejected($exception)) {

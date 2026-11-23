@@ -41,6 +41,7 @@ it('reports provider readiness from the configured credentials', function () {
     config()->set('services.whatsapp.client_id', null);
     config()->set('services.whatsapp.config_id', null);
     config()->set('services.tiktok.client_id', 'tiktok-app-id');
+    config()->set('services.tiktok.client_secret', 'tiktok-secret');
 
     $this->actingAs(User::factory()->create(), 'sanctum')
         ->getJson('/api/v1/channels/oauth/status')
@@ -48,9 +49,12 @@ it('reports provider readiness from the configured credentials', function () {
         ->assertJsonPath('data.driver', 'provider')
         ->assertJsonPath('data.providers.messenger.configured', false)
         ->assertJsonPath('data.providers.whatsapp.configured', false)
-        ->assertJsonPath('data.providers.tiktok.configured', false)
+        ->assertJsonPath('data.providers.tiktok.configured', true)
         ->assertJsonPath('data.providers.tiktok.login_configured', true)
-        ->assertJsonPath('data.providers.tiktok.messaging_available', false);
+        ->assertJsonPath('data.providers.tiktok.account_connection_available', true)
+        ->assertJsonPath('data.providers.tiktok.content_reading_available', true)
+        ->assertJsonPath('data.providers.tiktok.messaging_available', false)
+        ->assertJsonPath('data.providers.tiktok.comment_automation_available', false);
 });
 
 it('reports every provider ready on the fake driver', function () {
@@ -86,7 +90,7 @@ it('refuses to start provider OAuth until credentials are configured', function 
         ->assertStatus(503)->assertJsonPath('code', 'provider_pending');
 });
 
-it('keeps TikTok pending when Login Kit is configured but messaging is not available', function () {
+it('starts TikTok Login Kit while messaging and comment automation stay unavailable', function () {
     config([
         'services.channels.oauth_driver' => 'provider',
         'services.channels.oauth_redirect_url' => 'https://api.test/oauth/{platform}',
@@ -96,9 +100,35 @@ it('keeps TikTok pending when Login Kit is configured but messaging is not avail
 
     $this->actingAs(User::factory()->create(), 'sanctum')
         ->getJson('/api/v1/channels/oauth/tiktok/start')
-        ->assertStatus(503)
-        ->assertJsonPath('code', 'provider_pending')
-        ->assertJsonPath('platform', 'tiktok');
+        ->assertOk()
+        ->assertJsonPath('data.platform', 'tiktok')
+        ->assertJsonPath('data.authorization_url', fn (string $url): bool => str_starts_with($url, 'https://www.tiktok.com/v2/auth/authorize/'));
+});
+
+it('connects a real TikTok account using the token open id and profile', function () {
+    config([
+        'services.channels.oauth_driver' => 'provider',
+        'services.channels.oauth_redirect_url' => 'https://api.test/oauth/{platform}',
+        'services.tiktok.client_id' => 'tiktok-app-id',
+        'services.tiktok.client_secret' => 'tiktok-secret',
+    ]);
+    Http::fake([
+        'open.tiktokapis.com/v2/oauth/token/' => Http::response(['access_token' => 'tt-access', 'refresh_token' => 'tt-refresh', 'open_id' => 'tt-open-id', 'expires_in' => 86400]),
+        'open.tiktokapis.com/v2/user/info/*' => Http::response(['data' => ['user' => ['open_id' => 'tt-open-id', 'display_name' => 'Nour', 'avatar_url' => 'https://cdn.example/avatar.jpg']]]),
+    ]);
+    $owner = User::factory()->create();
+    $state = $this->actingAs($owner, 'sanctum')->getJson('/api/v1/channels/oauth/tiktok/start')->json('data.state');
+
+    $this->getJson("/api/v1/channels/oauth/tiktok/callback?state={$state}&code=oauth-code")
+        ->assertCreated()
+        ->assertJsonPath('data.account_id', 'tt-open-id');
+
+    $channel = Channel::where('platform', 'tiktok')->sole();
+    expect($channel->account_id)->toBe('tt-open-id')
+        ->and($channel->username)->toBe('Nour')
+        ->and($channel->profile_picture)->toBe('https://cdn.example/avatar.jpg')
+        ->and($channel->refresh_token)->toBe('tt-refresh')
+        ->and($channel->token_expires_at)->not->toBeNull();
 });
 
 it('never uses the fake channel sign-in in production', function () {

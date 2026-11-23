@@ -10,12 +10,13 @@ class ChannelOAuthProvider
 {
     public static function configured(string $platform): bool
     {
-        return self::credentialsConfigured($platform) && self::messagingAvailable($platform);
+        return self::credentialsConfigured($platform);
     }
 
     public static function credentialsConfigured(string $platform): bool
     {
         return filled(config("services.{$platform}.client_id"))
+            && ($platform !== 'tiktok' || filled(config('services.tiktok.client_secret')))
             && ($platform !== 'whatsapp' || filled(config('services.whatsapp.config_id')));
     }
 
@@ -24,6 +25,16 @@ class ChannelOAuthProvider
      * Change this only with the real send, comment and webhook implementation after TikTok approval.
      */
     public static function messagingAvailable(string $platform): bool
+    {
+        return $platform !== 'tiktok';
+    }
+
+    public static function contentReadingAvailable(string $platform): bool
+    {
+        return $platform === 'instagram' || ($platform === 'tiktok' && self::credentialsConfigured($platform));
+    }
+
+    public static function commentAutomationAvailable(string $platform): bool
     {
         return $platform !== 'tiktok';
     }
@@ -57,11 +68,25 @@ class ChannelOAuthProvider
         return 'https://www.facebook.com/dialog/oauth?'.http_build_query(['client_id' => config("services.{$platform}.client_id"), 'redirect_uri' => $redirect, 'state' => $state, 'scope' => 'pages_show_list,pages_manage_metadata,pages_messaging,pages_read_engagement,pages_manage_engagement']);
     }
 
-    /** @return array{access_token:string, account_id?:string, pages?:list<array<string,mixed>>, waba_id?:string, phone_number_id?:string} */
+    /** @return array{access_token:string, refresh_token?:string, account_id?:string, username?:string, profile_picture?:string, expires_in?:int, pages?:list<array<string,mixed>>, waba_id?:string, phone_number_id?:string} */
     public function exchange(string $platform, string $code): array
     {
         if ($platform === 'tiktok') {
-            return Http::asForm()->post('https://open.tiktokapis.com/v2/oauth/token/', ['client_key' => config('services.tiktok.client_id'), 'client_secret' => config('services.tiktok.client_secret'), 'code' => $code, 'grant_type' => 'authorization_code', 'redirect_uri' => self::redirectUri($platform)])->throw()->json();
+            $token = Http::asForm()->post('https://open.tiktokapis.com/v2/oauth/token/', ['client_key' => config('services.tiktok.client_id'), 'client_secret' => config('services.tiktok.client_secret'), 'code' => $code, 'grant_type' => 'authorization_code', 'redirect_uri' => self::redirectUri($platform)])->throw()->json();
+            $profile = rescue(
+                fn (): array => Http::withToken($token['access_token'])->get('https://open.tiktokapis.com/v2/user/info/', [
+                    'fields' => 'open_id,display_name,avatar_url',
+                ])->throw()->json('data.user', []),
+                [],
+                report: false,
+            );
+
+            return [
+                ...$token,
+                'account_id' => (string) ($profile['open_id'] ?? $token['open_id'] ?? ''),
+                'username' => $profile['display_name'] ?? null,
+                'profile_picture' => $profile['avatar_url'] ?? null,
+            ];
         }
         $token = $this->graph()->get('oauth/access_token', ['client_id' => config("services.{$platform}.client_id"), 'client_secret' => config("services.{$platform}.client_secret"), 'redirect_uri' => self::redirectUri($platform), 'code' => $code])->throw()->json('access_token');
         if ($platform === 'messenger') {

@@ -37,7 +37,10 @@ class ChannelOAuthController extends Controller
         return response()->json(['data' => ['driver' => $driver, 'providers' => collect(['messenger', 'whatsapp', 'tiktok'])->mapWithKeys(fn (string $platform): array => [$platform => [
             'configured' => $driver !== 'provider' || ChannelOAuthProvider::configured($platform),
             'login_configured' => $driver !== 'provider' || ChannelOAuthProvider::credentialsConfigured($platform),
-            'messaging_available' => $driver !== 'provider' || ChannelOAuthProvider::messagingAvailable($platform),
+            'account_connection_available' => $driver !== 'provider' || ChannelOAuthProvider::configured($platform),
+            'content_reading_available' => $driver !== 'provider' || ChannelOAuthProvider::contentReadingAvailable($platform),
+            'messaging_available' => ChannelOAuthProvider::messagingAvailable($platform),
+            'comment_automation_available' => ChannelOAuthProvider::commentAutomationAvailable($platform),
         ]])->all()]]);
     }
 
@@ -101,11 +104,18 @@ class ChannelOAuthController extends Controller
         $accessToken = (string) ($pending['access_token'] ?? $request->input('access_token', 'fake-oauth-token'));
         $pages = $pending['pages'] ?? null;
         $metaUserId = $pending['meta_user_id'] ?? null;
+        $channelDetails = [];
 
         if ($pages === null && self::driver() === 'provider') {
             $result = $provider->exchange($platform, (string) $request->query('code'));
             $accessToken = $result['access_token'];
             $metaUserId = $result['meta_user_id'] ?? null;
+            $channelDetails = array_filter([
+                'username' => $result['username'] ?? null,
+                'profile_picture' => $result['profile_picture'] ?? null,
+                'refresh_token' => $result['refresh_token'] ?? null,
+                'token_expires_at' => isset($result['expires_in']) ? now()->addSeconds((int) $result['expires_in']) : null,
+            ]);
             $accountId = (string) ($accountId ?: ($result['phone_number_id'] ?? $result['account_id'] ?? ''));
             if ($platform === 'messenger' && $accountId === '' && count($result['pages'] ?? []) > 1) {
                 // A code works once: keep its result with the state so the pick reuses it instead of asking Meta again.
@@ -153,7 +163,7 @@ class ChannelOAuthController extends Controller
 
         $channel = Channel::updateOrCreate(
             ['user_id' => $user->id, 'platform' => $platform, 'account_id' => $accountId],
-            [...array_filter(['workspace_id' => $pending['workspace_id'] ?? null, 'meta_user_id' => $metaUserId]), 'access_token' => $accessToken, 'status' => 'active', 'connected_at' => now()],
+            [...array_filter(['workspace_id' => $pending['workspace_id'] ?? null, 'meta_user_id' => $metaUserId]), ...$channelDetails, 'access_token' => $accessToken, 'status' => 'active', 'connected_at' => now()],
         );
 
         Cache::forget("channel-oauth:{$state}");

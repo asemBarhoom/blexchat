@@ -22,18 +22,20 @@ class Channel extends Model
         'username',
         'profile_picture',
         'access_token',
+        'refresh_token',
         'token_expires_at',
         'followers',
         'status',
         'connected_at',
     ];
 
-    protected $hidden = ['access_token'];
+    protected $hidden = ['access_token', 'refresh_token'];
 
     protected function casts(): array
     {
         return [
             'access_token' => 'encrypted',
+            'refresh_token' => 'encrypted',
             'token_expires_at' => 'datetime',
             'followers' => 'integer',
             'connected_at' => 'datetime',

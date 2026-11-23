@@ -118,6 +118,55 @@ describe('GET /api/v1/channels/{channel}/posts', function () {
         expect($instagram->fresh()->status)->toBe('active');
     });
 
+    it('brings in TikTok videos through the read-only Display API capability', function () {
+        $tiktok = Channel::factory()->create(['user_id' => $this->owner->id, 'platform' => 'tiktok', 'status' => 'active', 'access_token' => 'TTAA']);
+        Http::fake(['open.tiktokapis.com/v2/video/list/*' => Http::response(['data' => ['videos' => [[
+            'id' => 'tt-video-1',
+            'video_description' => 'New collection',
+            'cover_image_url' => 'https://cdn.example.com/cover.jpg',
+            'share_url' => 'https://www.tiktok.com/@nour/video/1',
+            'create_time' => 1793527200,
+            'like_count' => 501,
+            'comment_count' => 23,
+        ]]]])]);
+
+        $this->actingAs($this->owner, 'sanctum')->getJson("/api/v1/channels/{$tiktok->id}/posts")
+            ->assertOk()
+            ->assertJsonPath('meta.synced', true)
+            ->assertJsonPath('data.0.platform_post_id', 'tt-video-1')
+            ->assertJsonPath('data.0.media_type', 'video')
+            ->assertJsonPath('data.0.caption', 'New collection')
+            ->assertJsonPath('data.0.likes', 501)
+            ->assertJsonPath('data.0.comments', 23);
+
+        Http::assertSent(fn (Request $request): bool => $request->hasHeader('Authorization', 'Bearer TTAA'));
+    });
+
+    it('refreshes an expired TikTok Login Kit token before listing videos', function () {
+        $tiktok = Channel::factory()->create([
+            'user_id' => $this->owner->id,
+            'platform' => 'tiktok',
+            'status' => 'active',
+            'access_token' => 'expired-token',
+            'refresh_token' => 'refresh-token',
+            'token_expires_at' => now()->subMinute(),
+        ]);
+        Http::fake([
+            'open.tiktokapis.com/v2/oauth/token/' => Http::response(['access_token' => 'new-token', 'refresh_token' => 'new-refresh', 'expires_in' => 86400]),
+            'open.tiktokapis.com/v2/video/list/*' => Http::response(['data' => ['videos' => []]]),
+        ]);
+
+        $this->actingAs($this->owner, 'sanctum')->getJson("/api/v1/channels/{$tiktok->id}/posts")
+            ->assertOk()
+            ->assertJsonPath('meta.synced', true)
+            ->assertJsonPath('meta.needs_reconnect', false);
+
+        expect($tiktok->fresh()->access_token)->toBe('new-token')
+            ->and($tiktok->fresh()->refresh_token)->toBe('new-refresh');
+        Http::assertSent(fn (Request $request): bool => $request->url() === 'https://open.tiktokapis.com/v2/oauth/token/' && $request['grant_type'] === 'refresh_token');
+        Http::assertSent(fn (Request $request): bool => str_contains($request->url(), '/v2/video/list/') && $request->hasHeader('Authorization', 'Bearer new-token'));
+    });
+
     it('asks for a reconnect when Instagram refuses the token, and stops asking Instagram', function () {
         $instagram = Channel::factory()->create(['user_id' => $this->owner->id, 'platform' => 'instagram', 'status' => 'active', 'access_token' => 'IGAA']);
         Http::fake(['graph.instagram.com/v21.0/me/media*' => Http::response(['error' => ['message' => 'Error validating access token', 'type' => 'OAuthException', 'code' => 190]], 400)]);
