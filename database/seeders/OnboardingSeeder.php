@@ -81,7 +81,7 @@ class OnboardingSeeder extends Seeder
                     'en' => ['All four channels', 'Unlimited automations', 'No Blexchat branding', 'Follow-ups and email capture', 'Inbox for 3 teammates'],
                     'ar' => ['القنوات الأربع كلها', 'أتمتات غير محدودة', 'بدون شعار Blexchat', 'رسائل المتابعة وجمع البريد الإلكتروني', 'صندوق الوارد لـ 3 من أعضاء الفريق'],
                 ],
-                'trial_days' => 14,
+                'trial_days' => 0,
                 'is_recommended' => true,
             ],
             [

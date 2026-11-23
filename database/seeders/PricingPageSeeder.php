@@ -241,6 +241,7 @@ class PricingPageSeeder extends Seeder
                     'en' => '{trial_plan} comes with {trial_days} days free. You are not charged until the trial ends, and we remind you before it does.',
                     'ar' => 'باقة {trial_plan} تأتي بتجربة مجانية مدتها {trial_days} يوم. لن تدفع شيئًا حتى تنتهي التجربة، وسنذكّرك قبل انتهائها.',
                 ],
+                'active' => false,
             ],
         ];
     }

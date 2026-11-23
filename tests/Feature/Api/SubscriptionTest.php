@@ -30,11 +30,11 @@ it('requires a token', function (string $method) {
 
 describe('GET /api/v1/subscription', function () {
     it('returns the current plan as the onboarding does', function () {
-        subscribeOwner($this->user, 'essential', 'trialing', 'annual');
+        subscribeOwner($this->user, 'pro', 'trialing', 'annual');
 
         $this->actingAs($this->user)->getJson('/api/v1/subscription')
             ->assertOk()
-            ->assertJsonPath('data.plan.id', 'essential')
+            ->assertJsonPath('data.plan.id', 'pro')
             ->assertJsonPath('data.billing_period', 'annual')
             ->assertJsonPath('data.status', 'trialing')
             ->assertJsonPath('data.trial_days_left', 14);
@@ -49,7 +49,7 @@ describe('GET /api/v1/subscription', function () {
 
 describe('POST /api/v1/subscription', function () {
     it('moves to Free at once, ending the trial', function () {
-        subscribeOwner($this->user, 'essential', 'trialing');
+        subscribeOwner($this->user, 'pro', 'trialing');
 
         $this->actingAs($this->user)->postJson('/api/v1/subscription', ['plan' => 'free'])
             ->assertOk()
@@ -59,37 +59,41 @@ describe('POST /api/v1/subscription', function () {
     });
 
     it('starts the trial of a plan sold with one', function () {
+        Plan::where('slug', 'pro')->update(['trial_days' => 14]);
         subscribeOwner($this->user, 'free');
 
-        $this->actingAs($this->user)->postJson('/api/v1/subscription', ['plan' => 'essential'])
+        $this->actingAs($this->user)->postJson('/api/v1/subscription', ['plan' => 'pro'])
             ->assertOk()
-            ->assertJsonPath('data.plan.id', 'essential')
+            ->assertJsonPath('data.plan.id', 'pro')
             ->assertJsonPath('data.status', 'trialing');
     });
 
     it('switches the billing period alone, keeping the plan and its trial clock', function () {
-        $subscription = subscribeOwner($this->user, 'essential', 'trialing');
+        Plan::where('slug', 'pro')->update(['trial_days' => 14]);
+        $subscription = subscribeOwner($this->user, 'pro', 'trialing');
         $endsAt = $subscription->trial_ends_at->toIso8601String();
         $this->travel(2)->days();
 
         $this->actingAs($this->user)->postJson('/api/v1/subscription', ['billing' => 'annual'])
             ->assertOk()
-            ->assertJsonPath('data.plan.id', 'essential')
+            ->assertJsonPath('data.plan.id', 'pro')
             ->assertJsonPath('data.billing_period', 'annual')
             ->assertJsonPath('data.trial_ends_at', $endsAt);
     });
 
     it('keeps the current billing period when only the plan changes', function () {
+        Plan::where('slug', 'pro')->update(['trial_days' => 14]);
         subscribeOwner($this->user, 'free', billing: 'annual');
 
-        $this->actingAs($this->user)->postJson('/api/v1/subscription', ['plan' => 'essential'])
+        $this->actingAs($this->user)->postJson('/api/v1/subscription', ['plan' => 'pro'])
             ->assertJsonPath('data.billing_period', 'annual');
     });
 
     it('refuses a second trial', function () {
-        subscribeOwner($this->user, 'essential', 'trialEnded');
+        Plan::where('slug', 'pro')->update(['trial_days' => 14]);
+        subscribeOwner($this->user, 'pro', 'trialEnded');
 
-        $this->actingAs($this->user)->postJson('/api/v1/subscription?lang=ar', ['plan' => 'essential'])
+        $this->actingAs($this->user)->postJson('/api/v1/subscription?lang=ar', ['plan' => 'pro'])
             ->assertStatus(409)
             ->assertExactJson(['code' => 'trial_used', 'message' => __('subscription.trial_used', locale: 'ar')]);
     });
@@ -118,7 +122,8 @@ describe('POST /api/v1/subscription', function () {
 
 describe('DELETE /api/v1/subscription', function () {
     it('cancels back to Free, keeping the billing period and the used trial', function () {
-        subscribeOwner($this->user, 'essential', 'trialing', 'annual');
+        Plan::where('slug', 'pro')->update(['trial_days' => 14]);
+        subscribeOwner($this->user, 'pro', 'trialing', 'annual');
 
         $this->actingAs($this->user)->deleteJson('/api/v1/subscription?lang=ar')
             ->assertOk()
@@ -127,7 +132,7 @@ describe('DELETE /api/v1/subscription', function () {
             ->assertJsonPath('data.billing_period', 'annual')
             ->assertJsonPath('data.status', 'active');
 
-        $this->postJson('/api/v1/subscription', ['plan' => 'essential'])->assertStatus(409);
+        $this->postJson('/api/v1/subscription', ['plan' => 'pro'])->assertStatus(409);
     });
 
     it('puts an account with no plan yet on Free', function () {

@@ -19,7 +19,7 @@ describe('GET /api/v1/checkout', function () {
     it('serves the tiers, the trial reminder day and the annual saving without signing in', function () {
         $this->getJson('/api/v1/checkout')
             ->assertOk()
-            ->assertJsonPath('data.plans.*.id', ['essential', 'pro', 'business'])
+            ->assertJsonPath('data.plans.*.id', ['pro', 'business'])
             ->assertJsonPath('data.trial_reminder_days', 7)
             ->assertJsonPath('data.annual_saving_up_to', 30)
             ->assertJsonPath('data.coupons_on_trial', false);
@@ -31,7 +31,7 @@ describe('GET /api/v1/checkout', function () {
         Setting::put(Setting::TRIAL_REMINDER_DAYS, 10);
 
         $this->getJson('/api/v1/checkout?lang=ar')
-            ->assertJsonPath('data.plans.*.name', ['أساسية'])
+            ->assertJsonPath('data.plans.*.name', [])
             ->assertJsonPath('data.trial_reminder_days', 10);
     });
 });
@@ -80,7 +80,7 @@ describe('POST /api/v1/coupons/check', function () {
         'switched off' => [fn () => Coupon::query()->update(['active' => false]), 'pro', 'coupon_invalid', 'هذا الكود غير صالح'],
         'expired' => [fn () => Coupon::query()->update(['expires_at' => now()->subMinute()]), 'pro', 'coupon_expired', 'انتهت صلاحية هذا الكود'],
         'used up' => [fn () => Coupon::query()->update(['usage_limit' => 3, 'times_used' => 3]), 'pro', 'coupon_expired', 'هذا الكود لم يعد متاحًا'],
-        'on a trial' => [fn () => null, 'essential', 'coupon_not_for_plan', 'هذا الكود لا ينطبق على باقة أساسية'],
+        'on a trial' => [fn () => Plan::where('slug', 'pro')->update(['trial_days' => 14]), 'pro', 'coupon_not_for_plan', 'هذا الكود لا ينطبق على باقة احترافية'],
         'on Free' => [fn () => null, 'free', 'coupon_not_for_plan', 'هذا الكود لا ينطبق على باقة مجانية'],
         'other plans only' => [fn () => Coupon::firstOrFail()->plans()->sync(Plan::where('slug', 'business')->pluck('id')), 'pro', 'coupon_not_for_plan', 'هذا الكود لا ينطبق على باقة احترافية'],
     ]);

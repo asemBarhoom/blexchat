@@ -81,6 +81,8 @@ it('needs at least one tier and a reminder day', function () {
 });
 
 it('keeps the reminder day before the end of the shortest trial', function () {
+    Plan::where('slug', 'pro')->update(['trial_days' => 14]);
+
     Livewire::test(ManageCheckoutSettings::class)
         ->fillForm(['trial_reminder_days' => 14])
         ->call('save')

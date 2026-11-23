@@ -52,7 +52,7 @@ it('creates a comparison row with a cell per plan and shows it on the page', fun
 
     $rows = collect($this->getJson('/api/v1/pricing?lang=ar')->json('data.compare.2.rows'))->keyBy('id');
     expect($rows['audit-log'])->toBe(['id' => 'audit-log', 'label' => 'سجل التغييرات', 'cells' => [
-        'free' => false, 'essential' => false, 'pro' => false, 'business' => true, 'advanced' => '25,000 سجل',
+        'free' => false, 'pro' => false, 'business' => true, 'advanced' => '25,000 سجل',
     ]]);
 });
 
@@ -108,6 +108,8 @@ it('creates, edits and deletes a comparison group', function () {
 });
 
 it('creates and deletes a pricing question', function () {
+    Plan::where('slug', 'pro')->update(['trial_days' => 14]);
+
     Livewire::test(ManagePricingFaqItems::class)
         ->callAction(CreateAction::class, [
             'question' => ['en' => 'Do you offer refunds?', 'ar' => 'هل تستردون المبلغ؟'],
@@ -116,7 +118,7 @@ it('creates and deletes a pricing question', function () {
         ])
         ->assertHasNoFormErrors();
 
-    $this->getJson('/api/v1/pricing')->assertJsonPath('data.faq.6.answer', 'Within 14 days.');
+    $this->getJson('/api/v1/pricing')->assertJsonPath('data.faq.5.answer', 'Within 14 days.');
 
     $item = PricingFaqItem::query()->latest('id')->firstOrFail();
     Livewire::test(ManagePricingFaqItems::class)->callAction(TestAction::make('delete')->table($item));

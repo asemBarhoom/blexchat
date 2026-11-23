@@ -19,29 +19,16 @@ describe('GET /api/v1/plans', function () {
     it('lists the plan ladder the frontend shows, in order, without signing in', function () {
         $this->getJson('/api/v1/plans')
             ->assertOk()
-            ->assertJsonPath('data.*.id', ['free', 'essential', 'pro', 'business', 'advanced'])
-            ->assertJsonPath('data.*.has_email_capture', [false, false, true, true, true])
-            ->assertJsonPath('data.*.ai_replies_limit', [0, 0, 250, 1500, 5000])
-            ->assertJsonPath('data.1', [
-                'id' => 'essential',
-                'name' => 'Essential',
-                'tagline' => 'For a growing shop or creator.',
-                'monthly_price' => 17,
-                'annual_price' => 14,
-                'annual_total' => 168,
-                'currency' => 'USD',
-                'contacts_limit' => 250,
-                'channels_limit' => null,
-                'live_automations_limit' => null,
-                'workspaces_limit' => 1,
-                'has_ai' => false,
-                'ai_replies_limit' => 0,
-                'has_email_capture' => false,
-                'features' => ['All four channels', 'Unlimited automations', 'No Blexchat branding'],
-                'trial_days' => 14,
-                'is_free' => false,
-                'is_recommended' => true,
-            ]);
+            ->assertJsonPath('data.*.id', ['free', 'pro', 'business', 'advanced'])
+            ->assertJsonPath('data.*.has_email_capture', [false, true, true, true])
+            ->assertJsonPath('data.*.ai_replies_limit', [0, 250, 1500, 5000])
+            ->assertJsonPath('data.1.name', 'Pro')
+            ->assertJsonPath('data.1.monthly_price', 39)
+            ->assertJsonPath('data.1.annual_price', 29)
+            ->assertJsonPath('data.1.trial_days', 0)
+            ->assertJsonPath('data.1.is_recommended', true)
+            ->assertJsonPath('data.1.is_free', false)
+            ->assertJsonPath('data.1.features', ['All four channels', 'Unlimited automations', 'No Blexchat branding', 'Follow-ups and email capture', 'Inbox for 3 teammates']);
     });
 
     it('answers in Arabic with ?lang=ar', function () {
@@ -53,7 +40,7 @@ describe('GET /api/v1/plans', function () {
     it('hides plans taken off sale', function () {
         Plan::where('slug', 'advanced')->update(['active' => false]);
 
-        $this->getJson('/api/v1/plans')->assertJsonCount(4, 'data');
+        $this->getJson('/api/v1/plans')->assertJsonCount(3, 'data');
     });
 });
 
@@ -195,10 +182,11 @@ describe('POST /api/v1/onboarding/plan', function () {
 
     it('starts the free trial on the plan sold with one, with no card', function () {
         $this->freezeTime();
+        Plan::where('slug', 'pro')->update(['trial_days' => 14]);
 
-        $this->actingAs($this->user)->postJson('/api/v1/onboarding/plan', ['plan' => 'essential', 'billing' => 'annual'])
+        $this->actingAs($this->user)->postJson('/api/v1/onboarding/plan', ['plan' => 'pro', 'billing' => 'annual'])
             ->assertOk()
-            ->assertJsonPath('data.plan.id', 'essential')
+            ->assertJsonPath('data.plan.id', 'pro')
             ->assertJsonPath('data.billing_period', 'annual')
             ->assertJsonPath('data.status', 'trialing')
             ->assertJsonPath('data.trial_ends_at', now()->addDays(14)->toIso8601String())
@@ -214,10 +202,11 @@ describe('POST /api/v1/onboarding/plan', function () {
     });
 
     it('gives each account one trial only', function () {
-        $this->actingAs($this->user)->postJson('/api/v1/onboarding/plan', ['plan' => 'essential'])->assertOk();
+        Plan::where('slug', 'pro')->update(['trial_days' => 14]);
+        $this->actingAs($this->user)->postJson('/api/v1/onboarding/plan', ['plan' => 'pro'])->assertOk();
         $this->postJson('/api/v1/onboarding/plan', ['plan' => 'free'])->assertOk();
 
-        $this->postJson('/api/v1/onboarding/plan?lang=ar', ['plan' => 'essential'])
+        $this->postJson('/api/v1/onboarding/plan?lang=ar', ['plan' => 'pro'])
             ->assertConflict()
             ->assertJsonPath('code', 'trial_used')
             ->assertJsonPath('message', 'لقد استخدمت فترتك التجريبية من قبل. تابع بالباقة المجانية حاليًا.');
@@ -226,23 +215,24 @@ describe('POST /api/v1/onboarding/plan', function () {
     });
 
     it('keeps the trial clock when the plan being tried is picked again', function () {
-        $this->actingAs($this->user)->postJson('/api/v1/onboarding/plan', ['plan' => 'essential']);
+        Plan::where('slug', 'pro')->update(['trial_days' => 14]);
+        $this->actingAs($this->user)->postJson('/api/v1/onboarding/plan', ['plan' => 'pro']);
         $endsAt = $this->user->fresh()->subscription->trial_ends_at;
 
         $this->travel(3)->days();
 
-        $this->postJson('/api/v1/onboarding/plan', ['plan' => 'essential'])
+        $this->postJson('/api/v1/onboarding/plan', ['plan' => 'pro'])
             ->assertOk()
             ->assertJsonPath('data.trial_ends_at', $endsAt->toIso8601String())
             ->assertJsonPath('data.trial_days_left', 11);
     });
 
     it('drops the account to Free once the trial has run out', function () {
-        Subscription::factory()->for($this->user)->trialEnded()->create(['plan_id' => Plan::where('slug', 'essential')->value('id')]);
+        Subscription::factory()->for($this->user)->trialEnded()->create(['plan_id' => Plan::where('slug', 'pro')->value('id')]);
 
         $this->actingAs($this->user)->getJson('/api/v1/onboarding')
             ->assertJsonPath('data.subscription.plan.id', 'free')
-            ->assertJsonPath('data.subscription.chosen_plan', 'essential')
+            ->assertJsonPath('data.subscription.chosen_plan', 'pro')
             ->assertJsonPath('data.subscription.status', 'trial_ended')
             ->assertJsonPath('data.subscription.trial_days_left', null);
     });

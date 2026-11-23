@@ -41,10 +41,10 @@ it('creates, edits and deletes a plan in both languages', function () {
         ->assertHasNoFormErrors();
 
     $plan = Plan::where('slug', 'starter')->firstOrFail();
-    expect($plan->sort)->toBe(5)
+    expect($plan->sort)->toBe(4)
         ->and($plan->getTranslations('features'))->toBe(['en' => ['2 channels'], 'ar' => ['قناتان']]);
 
-    $this->getJson('/api/v1/plans?lang=ar')->assertJsonPath('data.5.name', 'البداية')->assertJsonPath('data.5.trial_days', 10);
+    $this->getJson('/api/v1/plans?lang=ar')->assertJsonPath('data.4.name', 'البداية')->assertJsonPath('data.4.trial_days', 10);
 
     Livewire::test(ManagePlans::class)
         ->callAction(TestAction::make('edit')->table($plan), ['monthly_price' => 12])
@@ -56,13 +56,13 @@ it('creates, edits and deletes a plan in both languages', function () {
 });
 
 it('keeps Free and plans with subscribers from being deleted', function () {
-    $essential = Plan::where('slug', 'essential')->firstOrFail();
-    Subscription::factory()->create(['plan_id' => $essential->id]);
+    $pro = Plan::where('slug', 'pro')->firstOrFail();
+    Subscription::factory()->create(['plan_id' => $pro->id]);
 
     Livewire::test(ManagePlans::class)
         ->assertActionHidden(TestAction::make('delete')->table(Plan::free()))
-        ->assertActionHidden(TestAction::make('delete')->table($essential))
-        ->assertActionVisible(TestAction::make('delete')->table(Plan::where('slug', 'pro')->firstOrFail()));
+        ->assertActionHidden(TestAction::make('delete')->table($pro))
+        ->assertActionVisible(TestAction::make('delete')->table(Plan::where('slug', 'advanced')->firstOrFail()));
 });
 
 it('creates a survey question with its options and shows it to owners', function () {
@@ -176,12 +176,12 @@ it('creates, edits and deletes a survey answer, one per question and owner', fun
 
 it('creates, edits and deletes a subscription, one per owner', function () {
     $owner = User::factory()->create();
-    $essential = Plan::where('slug', 'essential')->firstOrFail();
+    $pro = Plan::where('slug', 'pro')->firstOrFail();
 
     Livewire::test(ManageSubscriptions::class)
         ->callAction(CreateAction::class, [
             'user_id' => $owner->id,
-            'plan_id' => $essential->id,
+            'plan_id' => $pro->id,
             'billing_period' => 'annual',
             'status' => 'trialing',
             'trial_ends_at' => now()->addDays(10)->toDateTimeString(),
@@ -209,10 +209,10 @@ it('creates, edits and deletes a subscription, one per owner', function () {
 
 it('shows where an owner is in onboarding on their admin page', function () {
     $owner = User::factory()->create();
-    Subscription::factory()->for($owner)->trialing()->create(['plan_id' => Plan::where('slug', 'essential')->value('id')]);
+    Subscription::factory()->for($owner)->trialing()->create(['plan_id' => Plan::where('slug', 'pro')->value('id')]);
 
     $this->get("/admin/users/{$owner->id}")
         ->assertOk()
         ->assertSee('ربط قناة')
-        ->assertSee('أساسية');
+        ->assertSee('احترافية');
 });

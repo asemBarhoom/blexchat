@@ -106,13 +106,13 @@ describe('POST /api/v1/checkout/session', function () {
     });
 
     it('takes a coupon on the trial plan once it is paid for', function () {
-        Subscription::factory()->for($this->user)->trialEnded()->create(['plan_id' => Plan::where('slug', 'essential')->value('id')]);
+        Subscription::factory()->for($this->user)->trialEnded()->create(['plan_id' => Plan::where('slug', 'pro')->value('id')]);
         Http::fake(stripeSessionCreated());
 
         Sanctum::actingAs($this->user);
-        $this->postJson('/api/v1/checkout/session', ['plan' => 'essential', 'coupon' => 'BLEX20'])
+        $this->postJson('/api/v1/checkout/session', ['plan' => 'pro', 'coupon' => 'BLEX20'])
             ->assertCreated()
-            ->assertJsonPath('data.amount_total', 13.6);
+            ->assertJsonPath('data.amount_total', 31.2);
     });
 
     it('refuses a coupon that does not apply before calling Stripe', function () {
@@ -196,18 +196,19 @@ describe('POST /api/v1/onboarding/plan with Stripe set up', function () {
     });
 
     it('sends the trial plan to payment once the account has had its trial', function () {
-        Subscription::factory()->for($this->user)->trialEnded()->create(['plan_id' => Plan::where('slug', 'essential')->value('id')]);
+        Subscription::factory()->for($this->user)->trialEnded()->create(['plan_id' => Plan::where('slug', 'pro')->value('id')]);
         Http::fake(stripeSessionCreated());
 
-        $this->actingAs($this->user)->postJson('/api/v1/onboarding/plan', ['plan' => 'essential', 'billing' => 'annual'])
+        $this->actingAs($this->user)->postJson('/api/v1/onboarding/plan', ['plan' => 'pro', 'billing' => 'annual'])
             ->assertAccepted()
-            ->assertJsonPath('data.amount_total', 168);
+            ->assertJsonPath('data.amount_total', 348);
     });
 
     it('still starts the first trial with no card', function () {
+        Plan::where('slug', 'pro')->update(['trial_days' => 14]);
         Http::fake();
 
-        $this->actingAs($this->user)->postJson('/api/v1/onboarding/plan', ['plan' => 'essential'])
+        $this->actingAs($this->user)->postJson('/api/v1/onboarding/plan', ['plan' => 'pro'])
             ->assertOk()
             ->assertJsonPath('data.status', 'trialing');
 
@@ -265,12 +266,12 @@ describe('/api/v1/subscription with Stripe set up', function () {
 });
 
 it('lets the coupon check price the trial plan once the trial was used', function () {
-    Subscription::factory()->for($this->user)->trialEnded()->create(['plan_id' => Plan::where('slug', 'essential')->value('id')]);
+    Subscription::factory()->for($this->user)->trialEnded()->create(['plan_id' => Plan::where('slug', 'pro')->value('id')]);
 
     Sanctum::actingAs($this->user);
-    $this->postJson('/api/v1/coupons/check', ['code' => 'BLEX20', 'plan' => 'essential'])
+    $this->postJson('/api/v1/coupons/check', ['code' => 'BLEX20', 'plan' => 'pro'])
         ->assertOk()
-        ->assertJsonPath('data.price', 13.6);
+        ->assertJsonPath('data.price', 31.2);
 });
 
 describe('POST /api/v1/webhooks/stripe', function () {
@@ -288,7 +289,7 @@ describe('POST /api/v1/webhooks/stripe', function () {
 
     it('puts the paid plan in place once, however often Stripe reports it', function () {
         $this->freezeTime();
-        Subscription::factory()->for($this->user)->trialEnded()->create(['plan_id' => Plan::where('slug', 'essential')->value('id')]);
+        Subscription::factory()->for($this->user)->trialEnded()->create(['plan_id' => Plan::where('slug', 'pro')->value('id')]);
         openSession($this->user, 'pro', ['billing_period' => 'annual', 'coupon_id' => Coupon::where('code', 'BLEX20')->value('id')]);
         $periodEnd = now()->addYear()->startOfSecond();
         Http::fake(['api.stripe.com/v1/subscriptions/sub_1' => Http::response(['id' => 'sub_1', 'items' => ['data' => [['current_period_end' => $periodEnd->timestamp]]]])]);
