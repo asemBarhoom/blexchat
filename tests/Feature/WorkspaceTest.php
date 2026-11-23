@@ -65,6 +65,16 @@ it('forbids selecting another owner’s workspace', function () {
         ->assertJsonPath('code', 'workspace_forbidden');
 });
 
+it('forbids a teammate from switching the workspace they were assigned to', function () {
+    $teammate = User::factory()->create([
+        'team_owner_id' => $this->owner->id,
+        'workspace_id' => $this->first->id,
+    ]);
+
+    $this->actingAs($teammate)->postJson("/api/v1/workspaces/{$this->first->id}/switch")
+        ->assertForbidden();
+});
+
 it('requires authentication to select a workspace', function () {
     $this->postJson("/api/v1/workspaces/{$this->second->id}/switch")->assertUnauthorized();
 });
