@@ -124,27 +124,29 @@ class WorkspaceController extends Controller
 
     #[OA\Post(
         path: '/api/v1/workspaces/{id}/switch',
-        summary: 'Switch to a workspace (BE-11)',
-        description: 'Sets the workspace as active for the user session context and returns its details.',
+        summary: 'Select a workspace for the next requests',
+        description: 'Only an owner may select one of their own workspaces. The client sends the returned id in the `X-Workspace` header on subsequent requests.',
         security: [['sanctum' => []]],
         tags: ['Workspaces'],
         parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
         responses: [
-            new OA\Response(response: 200, description: 'Switched', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/Workspace')])),
-            new OA\Response(response: 404, description: 'Not your workspace'),
+            new OA\Response(response: 200, description: 'Selected workspace', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/Workspace')])),
+            new OA\Response(response: 403, description: 'Not one of the owner\'s workspaces'),
         ],
     )]
     public function switch(Request $request, Workspace $workspace): JsonResponse
     {
         $user = $request->user();
-        abort_unless($workspace->owner_id === $user->id, 404);
+        if ($user->isTeammate() || $workspace->owner_id !== $user->id) {
+            return response()->json([
+                'message' => __('workspaces.switch_forbidden'),
+                'code' => 'workspace_forbidden',
+            ], 403);
+        }
 
         $user->useWorkspace((string) $workspace->id);
 
-        return response()->json([
-            'data' => $this->present($workspace->loadCount('channels'), $user),
-            'message' => __('workspaces.switched', ['name' => $workspace->name]),
-        ]);
+        return response()->json(['data' => $this->present($workspace->loadCount('channels'), $user)]);
     }
 
     /**

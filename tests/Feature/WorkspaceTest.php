@@ -46,16 +46,27 @@ it('refuses a workspace that is not the owner’s', function () {
         ->assertNotFound()->assertJsonPath('code', 'workspace_not_found');
 });
 
-it('switches to a workspace and sets it as current', function () {
+it('lets an owner select one of their workspaces for the next requests', function () {
     $this->actingAs($this->owner)->postJson("/api/v1/workspaces/{$this->second->id}/switch")
         ->assertOk()
         ->assertJsonPath('data.id', $this->second->id)
-        ->assertJsonPath('data.name', 'Bakery')
         ->assertJsonPath('data.current', true);
 
+    $this->getJson('/api/v1/channels', ['X-Workspace' => $this->second->id])
+        ->assertOk()
+        ->assertJsonPath('data.0.id', $this->secondChannel->id);
+});
+
+it('forbids selecting another owner’s workspace', function () {
     $someoneElses = Workspace::factory()->create();
-    $this->postJson("/api/v1/workspaces/{$someoneElses->id}/switch")
-        ->assertNotFound();
+
+    $this->actingAs($this->owner)->postJson("/api/v1/workspaces/{$someoneElses->id}/switch")
+        ->assertForbidden()
+        ->assertJsonPath('code', 'workspace_forbidden');
+});
+
+it('requires authentication to select a workspace', function () {
+    $this->postJson("/api/v1/workspaces/{$this->second->id}/switch")->assertUnauthorized();
 });
 
 it('keeps contacts apart per workspace, the plan’s usage counting them all', function () {

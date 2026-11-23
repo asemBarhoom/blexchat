@@ -25,7 +25,7 @@
 | BE-08 | TikTok: messages in the inbox on the fake driver; real replies answer 502 until TikTok opens its API | `MessagingClient`, `ChannelTestEventController` |
 | BE-09 | Messenger: webhook `/webhooks/messenger`, inbox replies sent | `MessagingClient`, `ProcessMetaChannelWebhook` |
 | BE-10 | Team: invite by email, seats per plan (1/1/3/10/25), teammates (role `agent`) see the inbox and contacts only, assignment on Business and Advanced | `TeamController`, `EnsureAccountOwner`, `TeamInvitationMail` |
-| BE-11 | Multiple workspaces and switching: `POST /api/v1/workspaces/{workspace}/switch` and `X-Workspace` header | `WorkspaceController.php`, `WorkspaceTest.php` |
+| BE-11 | Many workspaces: an owner selects an owned workspace with `POST /workspaces/{workspace}/switch`, then sends its id in `X-Workspace`; other owners and teammates are forbidden | `WorkspaceController`, `ResolveWorkspace` |
 | BE-12 | Blexchat AI (Claude) answers what no keyword matches, from the owner's business info | `ClaudeClient`, `AutomationRunner::answerWithAi`, `/ai/settings` |
 | BE-13 | When unsure, the AI hands over with a one-line reason (`message.reason`) | `Conversation::handOver`, `MessageResource` |
 | BE-14 | `GET /automations?search=` and `meta.live` | `AutomationController.php` |
