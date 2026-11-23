@@ -33,6 +33,18 @@ describe('GET /api/v1/automations', function () {
             ->assertJsonPath('meta.total', 2);
     });
 
+    it('includes channel object in automation resource when loaded', function () {
+        $user = User::factory()->create();
+        $channel = Channel::factory()->for($user)->create(['platform' => 'instagram', 'username' => 'test.boutique']);
+        $automation = Automation::factory()->for($user)->for($channel)->create();
+
+        $this->actingAs($user, 'sanctum')->getJson('/api/v1/automations')
+            ->assertOk()
+            ->assertJsonPath('data.0.channel.id', $channel->id)
+            ->assertJsonPath('data.0.channel.platform', 'instagram')
+            ->assertJsonPath('data.0.channel.username', 'test.boutique');
+    });
+
     it('also finds automations by their keywords, in Arabic too', function () {
         $user = User::factory()->create();
         $channel = Channel::factory()->create(['user_id' => $user->id]);

@@ -230,6 +230,23 @@ describe('the inbox folders', function () {
         $this->patchJson("/api/v1/conversations/{$conversation->id}", ['labels' => range(1, 11)])->assertJsonValidationErrors('labels');
     });
 
+    it('synchronizes conversation labels and contact tags bi-directionally', function () {
+        $user = User::factory()->create();
+        $channel = Channel::factory()->for($user)->create();
+        $contact = Contact::factory()->for($channel)->create(['user_id' => $user->id, 'workspace_id' => $channel->workspace_id, 'tags' => ['Existing']]);
+        $conversation = Conversation::factory()->for($channel)->create(['contact_id' => $contact->id]);
+
+        $this->actingAs($user, 'sanctum')->patchJson("/api/v1/conversations/{$conversation->id}", ['labels' => ['VIP', 'Lead']])
+            ->assertOk();
+
+        expect($contact->refresh()->tags)->toContain('VIP', 'Lead', 'Existing');
+
+        $this->patchJson("/api/v1/contacts/{$contact->id}", ['tags' => ['Customer', 'Active']])
+            ->assertOk();
+
+        expect($conversation->refresh()->labels)->toEqual(['Customer', 'Active']);
+    });
+
     it('lists the oldest conversations first on request', function () {
         $user = User::factory()->create();
         $channel = Channel::factory()->for($user)->create();

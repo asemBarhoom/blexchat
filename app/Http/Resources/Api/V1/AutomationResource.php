@@ -17,6 +17,13 @@ class AutomationResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'channel_id' => $this->channel_id,
+            'channel' => $this->whenLoaded('channel', fn (): ?array => $this->channel ? [
+                'id' => $this->channel->id,
+                'platform' => $this->channel->platform,
+                'username' => $this->channel->username,
+                'name' => $this->channel->name,
+                'avatar_url' => $this->channel->avatar_url,
+            ] : null),
             'automation_folder_id' => $this->automation_folder_id,
             'trigger_type' => $this->trigger_type,
             'kind' => $this->kind(),

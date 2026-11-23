@@ -136,7 +136,7 @@ class AutomationController extends Controller
     {
         abort_unless($request->user()->workspace()->holds($automation), 403);
 
-        $automation = Automation::withListFigures()->with('post')->findOrFail($automation->id);
+        $automation = Automation::withListFigures()->with(['post', 'channel'])->findOrFail($automation->id);
 
         return response()->json(['data' => new AutomationResource($automation)]);
     }

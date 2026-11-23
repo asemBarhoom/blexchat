@@ -143,6 +143,13 @@ class ConversationController extends Controller
             'labels' => $request->has('labels') ? $request->validated('labels') : null,
         ], fn (mixed $value): bool => $value !== null));
 
+        if ($request->has('labels') && $conversation->contact !== null) {
+            $labels = (array) $request->validated('labels');
+            $contactTags = (array) ($conversation->contact->tags ?? []);
+            $merged = array_values(array_unique(array_filter([...$contactTags, ...$labels])));
+            $conversation->contact->update(['tags' => $merged]);
+        }
+
         if ($request->has('remind_at')) {
             // A new reminder is emailed again when it comes.
             $conversation->update(['remind_at' => $request->validated('remind_at'), 'reminded_at' => null]);

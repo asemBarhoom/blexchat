@@ -254,7 +254,12 @@ class ContactController extends Controller
     {
         abort_unless($request->user()->workspace()->holds($contact), 404);
 
-        $contact->update($request->contactAttributes());
+        $attributes = $request->contactAttributes();
+        $contact->update($attributes);
+
+        if ($request->has('tags') && is_array($attributes['tags'] ?? null)) {
+            $contact->conversations()->get()->each->update(['labels' => $attributes['tags']]);
+        }
 
         return response()->json(['data' => new ContactResource($contact->load('sourceAutomation'))]);
     }
