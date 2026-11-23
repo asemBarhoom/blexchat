@@ -145,8 +145,8 @@ class PricingPageSeeder extends Seeder
      */
     private function compare(): array
     {
-        $everyPlan = fn (bool|array $cell): array => array_fill_keys(['free', 'essential', 'pro', 'business', 'advanced'], $cell);
-        $byPlan = fn (bool|array ...$cells): array => array_combine(['free', 'essential', 'pro', 'business', 'advanced'], $cells);
+        $everyPlan = fn (bool|array $cell): array => array_fill_keys(['free', 'pro', 'business', 'advanced'], $cell);
+        $byPlan = fn (bool|array ...$cells): array => array_combine(['free', 'pro', 'business', 'advanced'], $cells);
         $text = fn (string $en, string $ar): array => ['en' => $en, 'ar' => $ar];
 
         return [
@@ -164,7 +164,7 @@ class PricingPageSeeder extends Seeder
                 'rows' => [
                     ['key' => 'replies', 'label' => $text('Comment and DM replies', 'الرد على التعليقات والرسائل الخاصة'), 'cells' => $everyPlan(true)],
                     ['key' => 'automations', 'label' => $text('Automations', 'الأتمتات'), 'cells' => [...$everyPlan($text('Unlimited', 'بلا حدود')), 'free' => $text('3', '3')]],
-                    ['key' => 'follow-ups', 'label' => $text('Follow-ups and email capture', 'رسائل المتابعة وجمع البريد الإلكتروني'), 'cells' => $byPlan(false, false, true, true, true)],
+                    ['key' => 'follow-ups', 'label' => $text('Follow-ups and email capture', 'رسائل المتابعة وجمع البريد الإلكتروني'), 'cells' => $byPlan(false, true, true, true)],
                     ['key' => 'ai', 'label' => $text('Blexchat AI', 'Blexchat AI'), 'source' => 'has_ai'],
                     ['key' => 'no-branding', 'label' => $text('No Blexchat branding', 'بدون شعار Blexchat'), 'source' => 'paid'],
                 ],
@@ -173,9 +173,9 @@ class PricingPageSeeder extends Seeder
                 'key' => 'team',
                 'title' => $text('Team', 'الفريق'),
                 'rows' => [
-                    ['key' => 'teammates', 'label' => $text('Inbox teammates', 'أعضاء الفريق في صندوق الوارد'), 'cells' => $byPlan($text('1', '1'), $text('1', '1'), $text('3', '3'), $text('10', '10'), $text('25', '25'))],
-                    ['key' => 'roles', 'label' => $text('Team roles and assignment', 'أدوار الفريق وتوزيع المحادثات'), 'cells' => $byPlan(false, false, false, true, true)],
-                    ['key' => 'many-accounts', 'label' => $text('Many accounts, one seat', 'حسابات كثيرة بمستخدم واحد'), 'cells' => $byPlan(false, false, false, false, true)],
+                    ['key' => 'teammates', 'label' => $text('Inbox teammates', 'أعضاء الفريق في صندوق الوارد'), 'cells' => $byPlan($text('1', '1'), $text('3', '3'), $text('10', '10'), $text('25', '25'))],
+                    ['key' => 'roles', 'label' => $text('Team roles and assignment', 'أدوار الفريق وتوزيع المحادثات'), 'cells' => $byPlan(false, false, true, true)],
+                    ['key' => 'many-accounts', 'label' => $text('Many accounts, one seat', 'حسابات كثيرة بمستخدم واحد'), 'cells' => $byPlan(false, false, false, true)],
                 ],
             ],
             [
@@ -185,11 +185,10 @@ class PricingPageSeeder extends Seeder
                     ['key' => 'help', 'label' => $text('Help', 'المساعدة'), 'cells' => $byPlan(
                         $text('Email', 'البريد الإلكتروني'),
                         $text('Email', 'البريد الإلكتروني'),
-                        $text('Email', 'البريد الإلكتروني'),
                         $text('Priority', 'دعم بأولوية'),
                         $text('Priority', 'دعم بأولوية'),
                     )],
-                    ['key' => 'onboarding-call', 'label' => $text('Onboarding call', 'مكالمة الإعداد الأولي'), 'cells' => $byPlan(false, false, false, false, true)],
+                    ['key' => 'onboarding-call', 'label' => $text('Onboarding call', 'مكالمة الإعداد الأولي'), 'cells' => $byPlan(false, false, false, true)],
                 ],
             ],
         ];

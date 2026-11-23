@@ -18,7 +18,7 @@ class CheckoutSeeder extends Seeder
     {
         Coupon::updateOrCreate(['code' => 'BLEX20'], ['percent_off' => 20, 'active' => true]);
 
-        Plan::whereIn('slug', ['essential', 'pro', 'business'])->update(['in_checkout' => true]);
+        Plan::whereIn('slug', ['pro', 'business'])->update(['in_checkout' => true]);
 
         Setting::firstOrCreate(['key' => Setting::TRIAL_REMINDER_DAYS], ['value' => Setting::DEFAULTS[Setting::TRIAL_REMINDER_DAYS]]);
     }

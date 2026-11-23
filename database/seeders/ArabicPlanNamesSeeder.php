@@ -14,7 +14,6 @@ class ArabicPlanNamesSeeder extends Seeder
     /** @var array<string, string> */
     public const NAMES = [
         'free' => 'مجانية',
-        'essential' => 'أساسية',
         'pro' => 'احترافية',
         'business' => 'أعمال',
         'advanced' => 'متقدمة',
