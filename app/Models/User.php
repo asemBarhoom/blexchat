@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Channels\ChannelOAuthProvider;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Contracts\Translation\HasLocalePreference;
@@ -260,10 +261,11 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
 
     /**
      * Why an automation on this channel cannot go live now, as the wizard's "Couldn't go live" notice
-     * names it: the channel is no longer connected, or the plan's live automations are all in use.
+     * names it: the channel is no longer connected, its platform does not yet support messaging/replies,
+     * or the plan's live automations are all in use.
      * Null when it can. `$automation` is the one going live, left out of the count.
      *
-     * @return array{code: 'channel_disconnected'|'live_limit', message: string, channel?: string, limit?: int}|null
+     * @return array{code: 'channel_disconnected'|'channel_not_live'|'live_limit', message: string, channel?: string, limit?: int}|null
      */
     public function goLiveRefusal(Channel $channel, ?Automation $automation = null): ?array
     {
@@ -271,6 +273,12 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
             $name = Contact::PLATFORMS[$channel->platform] ?? ucfirst($channel->platform);
 
             return ['code' => 'channel_disconnected', 'message' => __('automation.channel_disconnected', ['channel' => $name]), 'channel' => $channel->platform];
+        }
+
+        if (! ChannelOAuthProvider::messagingAvailable($channel->platform) && ! ChannelOAuthProvider::commentAutomationAvailable($channel->platform)) {
+            $platformName = trans('channels.platforms.'.$channel->platform);
+
+            return ['code' => 'channel_not_live', 'message' => __('channels.not_live', ['platform' => $platformName]), 'channel' => $channel->platform];
         }
 
         $limit = ($this->subscription?->effectivePlan() ?? Plan::firstWhere('slug', Plan::FREE_SLUG))?->live_automations_limit;

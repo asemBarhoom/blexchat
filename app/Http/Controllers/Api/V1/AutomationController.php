@@ -20,8 +20,8 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Automations', description: 'Create and manage keyword-triggered automation rules')]
 #[OA\Schema(schema: 'GoLiveRefusal', required: ['message', 'code'], properties: [
     new OA\Property(property: 'message', type: 'string', example: 'Couldn’t go live: your plan allows 3 live automations. Stop one, or upgrade.'),
-    new OA\Property(property: 'code', type: 'string', enum: ['channel_disconnected', 'live_limit']),
-    new OA\Property(property: 'channel', type: 'string', example: 'instagram', description: 'channel_disconnected only: the platform to reconnect'),
+    new OA\Property(property: 'code', type: 'string', enum: ['channel_disconnected', 'channel_not_live', 'live_limit']),
+    new OA\Property(property: 'channel', type: 'string', example: 'instagram', description: 'channel_disconnected or channel_not_live: the platform affected'),
     new OA\Property(property: 'limit', type: 'integer', example: 3, description: 'live_limit only: how many may be live on the plan'),
 ])]
 #[OA\Schema(schema: 'WizardAnswers', required: ['name', 'channel_id', 'kind', 'trigger', 'dm_text'], properties: [

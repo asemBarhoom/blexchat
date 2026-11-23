@@ -348,6 +348,37 @@ describe('going live (W15 "Couldn’t go live")', function () {
         $this->postJson('/api/v1/automations/wizard', wizardAnswers())->assertCreated();
     });
 
+    it('refuses an automation on a platform whose messaging is not yet live (TikTok)', function () {
+        $tikTokChannel = Channel::factory()->create([
+            'user_id' => $this->owner->id,
+            'workspace_id' => $this->owner->workspaces()->first()->id,
+            'platform' => 'tiktok',
+            'status' => 'active',
+        ]);
+        $post = Post::factory()->create(['channel_id' => $tikTokChannel->id]);
+
+        $this->actingAs($this->owner, 'sanctum')->postJson('/api/v1/automations/wizard', wizardAnswers([
+            'channel_id' => $tikTokChannel->id,
+            'post_id' => $post->id,
+        ]))
+            ->assertUnprocessable()
+            ->assertJsonPath('code', 'channel_not_live')
+            ->assertJsonPath('channel', 'tiktok');
+        expect(Automation::count())->toBe(0);
+
+        $automation = Automation::factory()->create([
+            'user_id' => $this->owner->id,
+            'workspace_id' => $this->owner->workspaces()->first()->id,
+            'channel_id' => $tikTokChannel->id,
+            'active' => false,
+        ]);
+
+        $this->patchJson("/api/v1/automations/{$automation->id}/toggle", ['active' => true])
+            ->assertUnprocessable()
+            ->assertJsonPath('code', 'channel_not_live')
+            ->assertJsonPath('channel', 'tiktok');
+    });
+
     it('keeps Free to its live automations, counting only the live ones', function () {
         Plan::factory()->free()->create();
         Automation::factory()->count(3)->create(['user_id' => $this->owner->id, 'channel_id' => $this->channel->id, 'active' => true]);
