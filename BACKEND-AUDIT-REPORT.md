@@ -73,8 +73,8 @@
   - `app/Http/Controllers/Api/V1/ConversationController.php`:
     - عند تحديث `labels` للمحادثة، يتم دمج هذه التصنيفات وتحديث `tags` الخاصة بجهة الاتصال المرتبطة تلقائياً.
   - `app/Http/Controllers/Api/V1/ContactController.php`:
-    - عند تحديث `tags` لجهة الاتصال، يتم تحديث `labels` لجميع المحادثات التابعة لها لحظياً.
-  - `tests/Feature/Api/ConversationTest.php`: إضافة فحص:
+    - عند تحديث `tags` لجهة الاتصال، يتم دمج هذه الوسوم (Union merge عبر array_unique) مع تصنيفات كافة المحادثات التابعة لها لحظياً لمنع مسح أي تصنيفات سابقة للمحادثة.
+  - `tests/Feature/Api/ConversationTest.php`: إضافة فحص وتغطية كاملة للدمج الثنائي في الاتجاهين:
     - `it_synchronizes_conversation_labels_and_contact_tags_bi_directionally`
   - `tests/Feature/Api/AutomationTest.php`: فحص ظهور كائن `channel` في استجابة الأتمتة.
 

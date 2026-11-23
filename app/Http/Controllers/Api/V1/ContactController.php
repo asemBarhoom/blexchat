@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Contact\UpdateContactRequest;
 use App\Http\Resources\Api\V1\ContactCollection;
 use App\Http\Resources\Api\V1\ContactResource;
 use App\Models\Contact;
+use App\Models\Conversation;
 use App\Models\Message;
 use App\Services\Contacts\ContactImporter;
 use Illuminate\Database\Eloquent\Builder;
@@ -258,7 +259,12 @@ class ContactController extends Controller
         $contact->update($attributes);
 
         if ($request->has('tags') && is_array($attributes['tags'] ?? null)) {
-            $contact->conversations()->get()->each->update(['labels' => $attributes['tags']]);
+            $newTags = array_values(array_filter((array) $attributes['tags']));
+            $contact->conversations()->get()->each(function (Conversation $conversation) use ($newTags): void {
+                $existingLabels = (array) ($conversation->labels ?? []);
+                $merged = array_values(array_unique(array_filter([...$existingLabels, ...$newTags])));
+                $conversation->update(['labels' => $merged]);
+            });
         }
 
         return response()->json(['data' => new ContactResource($contact->load('sourceAutomation'))]);

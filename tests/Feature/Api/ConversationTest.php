@@ -244,7 +244,7 @@ describe('the inbox folders', function () {
         $this->patchJson("/api/v1/contacts/{$contact->id}", ['tags' => ['Customer', 'Active']])
             ->assertOk();
 
-        expect($conversation->refresh()->labels)->toEqual(['Customer', 'Active']);
+        expect($conversation->refresh()->labels)->toContain('VIP', 'Lead', 'Customer', 'Active');
     });
 
     it('lists the oldest conversations first on request', function () {
