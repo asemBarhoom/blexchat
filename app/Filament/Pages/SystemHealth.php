@@ -42,7 +42,7 @@ class SystemHealth extends Page
         $this->health = app(SystemHealthController::class)->__invoke()->getData(true);
         $this->oauth = app(ChannelOAuthController::class)->status()->getData(true)['data']['providers'] ?? [];
 
-        foreach (['instagram', 'whatsapp', 'messenger', 'stripe'] as $provider) {
+        foreach (['instagram', 'whatsapp', 'messenger', 'tiktok', 'stripe'] as $provider) {
             $this->lastWebhooks[$provider] = WebhookEvent::where('provider', $provider)->latest('created_at')->value('created_at');
         }
     }
