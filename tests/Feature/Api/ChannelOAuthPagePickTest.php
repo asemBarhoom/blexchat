@@ -153,6 +153,25 @@ it('returns channel OAuth to the allowed frontend that started it', function () 
         ->assertRedirect('https://client.example.com/onboarding/connected/messenger?id='.Channel::where('account_id', 'second-page')->value('id'));
 });
 
+it('finds the Page shared through a business portfolio when Meta lists no Pages for the person', function () {
+    $this->pages = [];
+    Http::fake([
+        'graph.facebook.com/*/debug_token*' => Http::response(['data' => ['granular_scopes' => [
+            ['scope' => 'pages_messaging', 'target_ids' => ['business-page']],
+            ['scope' => 'pages_show_list', 'target_ids' => ['business-page']],
+        ]]]),
+        'graph.facebook.com/*/business-page?*' => Http::response(['id' => 'business-page', 'name' => 'Business', 'access_token' => 'business-page-token']),
+    ]);
+
+    [, $state] = ($this->startMessenger)();
+
+    config()->set('app.frontend_url', 'https://site.test');
+
+    $this->get("/api/v1/channels/oauth/messenger/callback?state={$state}&code=code-1")->assertRedirect();
+
+    expect(Channel::where('account_id', 'business-page')->sole()->access_token)->toBe('business-page-token');
+});
+
 it('sends Meta the callback of the platform being connected', function () {
     config()->set('services.channels.oauth_redirect_url', 'https://api.test/api/v1/channels/oauth/{platform}/callback');
 

@@ -92,7 +92,7 @@ class ChannelOAuthProvider
         if ($platform === 'messenger') {
             $pages = $this->graph($token)->get('me/accounts', ['fields' => 'id,name,access_token'])->throw()->json('data', []);
 
-            return ['access_token' => $token, 'pages' => $pages, 'meta_user_id' => $this->metaUserId($token)];
+            return ['access_token' => $token, 'pages' => $pages ?: $this->grantedPages($token), 'meta_user_id' => $this->metaUserId($token)];
         }
 
         [$wabaId, $phoneNumberId, $username] = $this->whatsappAccount($token);
@@ -112,6 +112,31 @@ class ChannelOAuthProvider
                 'subscribed_fields' => 'messages,feed',
             ])
             ->throw();
+    }
+
+    /**
+     * The Pages the person picked in Meta's dialog, read from the token's own grants. `me/accounts`
+     * leaves out Pages the person reaches through a business portfolio, so it can come back empty
+     * even though a Page was shared; each granted Page is then asked for its own name and token.
+     *
+     * @return list<array{id: string, name: string, access_token: string}>
+     */
+    private function grantedPages(string $token): array
+    {
+        $scopes = rescue(fn () => $this->graph()->get('debug_token', [
+            'input_token' => $token,
+            'access_token' => config('services.meta.app_id').'|'.config('services.meta.app_secret'),
+        ])->throw()->json('data.granular_scopes'), [], report: false) ?? [];
+
+        return collect($scopes)
+            ->filter(fn ($scope): bool => is_array($scope) && in_array($scope['scope'] ?? null, ['pages_messaging', 'pages_show_list'], true))
+            ->flatMap(fn (array $scope): array => (array) ($scope['target_ids'] ?? []))
+            ->map(fn ($id): string => (string) $id)
+            ->unique()
+            ->map(fn (string $id): ?array => rescue(fn () => $this->graph($token)->get($id, ['fields' => 'id,name,access_token'])->throw()->json(), null, report: false))
+            ->filter(fn ($page): bool => is_array($page) && filled($page['id'] ?? null) && filled($page['access_token'] ?? null))
+            ->values()
+            ->all();
     }
 
     /**
