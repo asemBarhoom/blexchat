@@ -174,7 +174,7 @@ class HomeContentSeeder extends Seeder
 
         return [
             'hero' => [
-                'headline_rotations' => [['اوصل', 'للملايين'], ['بِع في', 'كل رسالة'], ['رُد على', 'الجميع']],
+                'headline_rotations' => [['أوصل', 'للملايين'], ['بِع في', 'كل رسالة'], ['رُد على', 'الجميع']],
                 'handwriting' => 'تلقائياً.',
                 'story' => [
                     'pressure' => ['counter' => 'رسالة جديدة', 'counter_zero' => 'رسالة جديدة', 'counter_one' => 'رسالة جديدة', 'counter_two' => 'رسالتان جديدتان', 'counter_few' => 'رسائل جديدة', 'counter_many' => 'رسالة جديدة', 'counter_other' => 'رسالة جديدة', 'more' => '+44 أخرى', 'chips' => [
