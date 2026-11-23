@@ -158,6 +158,7 @@ Route::middleware(['auth:sanctum', ResolveWorkspace::class, EnsureAccountOwner::
     Route::patch('automations/{automation}/ai', [AutomationController::class, 'ai'])->name('automations.ai'); // Blexchat AI, on plans that include it
 
     // Workspaces (BE-11): the businesses an owner runs; X-Workspace picks one per request
+    Route::post('workspaces/{workspace}/switch', [WorkspaceController::class, 'switch'])->name('workspaces.switch');
     Route::apiResource('workspaces', WorkspaceController::class)->except('show');
 
     // Automation folders: the list's Create folder, rename and delete; automations move with PATCH automations/{id}

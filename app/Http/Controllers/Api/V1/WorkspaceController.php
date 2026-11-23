@@ -122,6 +122,31 @@ class WorkspaceController extends Controller
         return response()->json(['message' => __('workspaces.deleted')]);
     }
 
+    #[OA\Post(
+        path: '/api/v1/workspaces/{id}/switch',
+        summary: 'Switch to a workspace (BE-11)',
+        description: 'Sets the workspace as active for the user session context and returns its details.',
+        security: [['sanctum' => []]],
+        tags: ['Workspaces'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Switched', content: new OA\JsonContent(properties: [new OA\Property(property: 'data', ref: '#/components/schemas/Workspace')])),
+            new OA\Response(response: 404, description: 'Not your workspace'),
+        ],
+    )]
+    public function switch(Request $request, Workspace $workspace): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($workspace->owner_id === $user->id, 404);
+
+        $user->useWorkspace((string) $workspace->id);
+
+        return response()->json([
+            'data' => $this->present($workspace->loadCount('channels'), $user),
+            'message' => __('workspaces.switched', ['name' => $workspace->name]),
+        ]);
+    }
+
     /**
      * @return array{id: int, name: string, channels_count: int, current: bool}
      */

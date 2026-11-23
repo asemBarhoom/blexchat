@@ -46,6 +46,18 @@ it('refuses a workspace that is not the owner’s', function () {
         ->assertNotFound()->assertJsonPath('code', 'workspace_not_found');
 });
 
+it('switches to a workspace and sets it as current', function () {
+    $this->actingAs($this->owner)->postJson("/api/v1/workspaces/{$this->second->id}/switch")
+        ->assertOk()
+        ->assertJsonPath('data.id', $this->second->id)
+        ->assertJsonPath('data.name', 'Bakery')
+        ->assertJsonPath('data.current', true);
+
+    $someoneElses = Workspace::factory()->create();
+    $this->postJson("/api/v1/workspaces/{$someoneElses->id}/switch")
+        ->assertNotFound();
+});
+
 it('keeps contacts apart per workspace, the plan’s usage counting them all', function () {
     Contact::factory()->for($this->owner)->create(['workspace_id' => $this->second->id]);
     Contact::factory()->for($this->owner)->create();
