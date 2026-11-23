@@ -31,10 +31,12 @@ it('blocks non-admins from the webhook resource and health page', function (): v
 it('shows health checks, provider readiness and no secret values', function (): void {
     config(['services.channels.oauth_driver' => 'provider', 'services.channels.driver' => 'fake', 'services.messenger.client_id' => 'configured', 'services.whatsapp.client_id' => null, 'services.tiktok.client_id' => null, 'services.channels.oauth_redirect_url' => 'https://example.test/callback']);
     WebhookEvent::factory()->create(['provider' => 'instagram', 'payload' => ['access_token' => 'do-not-render']]);
+    WebhookEvent::factory()->create(['provider' => 'tiktok']);
     $this->actingAs(User::factory()->admin()->create());
 
     Livewire::test(SystemHealth::class)
         ->assertSee('Messenger')
+        ->assertSee('TikTok')
         ->assertSee(__('admin/webhooks.configured'))
         ->assertSee(__('admin/webhooks.not_configured'))
         ->assertDontSee('do-not-render');

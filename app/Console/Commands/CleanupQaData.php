@@ -8,7 +8,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
-#[Signature('qa:cleanup {--execute} {--force} {--backup-reference=}')]
+#[Signature('qa:cleanup {--execute} {--force} {--backup-reference=}', aliases: ['app:clean-qa-data'])]
 #[Description('Inventory or remove the two legacy seeded QA accounts')]
 class CleanupQaData extends Command
 {

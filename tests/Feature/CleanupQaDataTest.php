@@ -15,6 +15,16 @@ it('inventories the exact QA accounts without changing data', function () {
     $this->assertDatabaseHas('users', ['id' => $qa->id]);
 });
 
+it('supports the legacy cleanup command name with the same dry-run guard', function () {
+    $qa = User::factory()->create(['email' => 'nour@nourboutique.com', 'name' => 'Nour', 'business_name' => 'Nour Boutique', 'is_admin' => false]);
+
+    $this->artisan('app:clean-qa-data')
+        ->expectsOutputToContain('Dry run only. No data was changed.')
+        ->assertSuccessful();
+
+    $this->assertDatabaseHas('users', ['id' => $qa->id]);
+});
+
 it('refuses a matching email when operational data is not seeded QA data', function () {
     $qa = User::factory()->create(['email' => 'nour@nourboutique.com', 'name' => 'Nour', 'business_name' => 'Nour Boutique', 'is_admin' => false]);
     Channel::factory()->create(['user_id' => $qa->id, 'platform' => 'instagram', 'account_id' => 'a-real-account']);

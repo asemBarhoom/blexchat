@@ -27,9 +27,9 @@
         @endforeach
 
         <x-filament::section class="md:col-span-2" :heading="__('admin/webhooks.last_webhook')">
-            <div class="grid gap-3 md:grid-cols-5">
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 @foreach ($lastWebhooks as $provider => $time)
-                    <div><span class="font-medium">{{ ucfirst($provider) }}</span><br><span class="text-sm text-gray-500">{{ $time ? \Illuminate\Support\Carbon::parse($time)->diffForHumans() : __('admin/webhooks.none') }}</span></div>
+                    <div><span class="font-medium">{{ $provider === 'tiktok' ? 'TikTok' : ucfirst($provider) }}</span><br><span class="text-sm text-gray-500">{{ $time ? \Illuminate\Support\Carbon::parse($time)->diffForHumans() : __('admin/webhooks.none') }}</span></div>
                 @endforeach
             </div>
         </x-filament::section>

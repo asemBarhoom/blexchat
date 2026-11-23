@@ -69,6 +69,7 @@ it('has every homepage text in Arabic', function () {
         ->assertJsonPath('meta.fallback', false)
         ->assertJsonPath('data.sections.0.subtitle', 'بلكس تشات يحوّل التعليقات والرسائل إلى عملاء.')
         ->assertJsonPath('data.sections.0.story.relief.stats.2.to', 3)
+        ->assertJsonPath('data.sections.0.headline_rotations.0.0', 'أوصل')
         ->assertJsonPath('data.sections.3.slides.0.cta.label', 'شاهد كيف');
 });
 
