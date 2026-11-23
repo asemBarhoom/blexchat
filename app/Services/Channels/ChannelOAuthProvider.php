@@ -95,9 +95,9 @@ class ChannelOAuthProvider
             return ['access_token' => $token, 'pages' => $pages, 'meta_user_id' => $this->metaUserId($token)];
         }
 
-        [$wabaId, $phoneNumberId] = $this->whatsappAccount($token);
+        [$wabaId, $phoneNumberId, $username] = $this->whatsappAccount($token);
 
-        return ['access_token' => $token, 'waba_id' => $wabaId, 'phone_number_id' => $phoneNumberId, 'meta_user_id' => $this->metaUserId($token)];
+        return ['access_token' => $token, 'waba_id' => $wabaId, 'phone_number_id' => $phoneNumberId, 'username' => $username, 'meta_user_id' => $this->metaUserId($token)];
     }
 
     /**
@@ -122,7 +122,7 @@ class ChannelOAuthProvider
         return InstagramClient::metaUserId($this->graph($token));
     }
 
-    /** @return array{0: ?string, 1: ?string} */
+    /** @return array{0: ?string, 1: ?string, 2: ?string} */
     private function whatsappAccount(string $token): array
     {
         $debug = $this->graph()->get('debug_token', [
@@ -134,21 +134,24 @@ class ChannelOAuthProvider
             ->firstWhere('scope', 'whatsapp_business_management')['target_ids'][0] ?? null;
 
         if (! is_scalar($wabaId) || $wabaId === '') {
-            return [null, null];
+            return [null, null, null];
         }
 
         $wabaId = (string) $wabaId;
-        $phoneNumberId = $this->graph($token)->get("{$wabaId}/phone_numbers", [
+        $phoneData = $this->graph($token)->get("{$wabaId}/phone_numbers", [
             'fields' => 'id,display_phone_number,verified_name',
-        ])->throw()->json('data.0.id');
+        ])->throw()->json('data.0', []);
+
+        $phoneNumberId = $phoneData['id'] ?? null;
+        $username = $phoneData['verified_name'] ?? $phoneData['display_phone_number'] ?? null;
 
         if (! is_scalar($phoneNumberId) || $phoneNumberId === '') {
-            return [$wabaId, null];
+            return [$wabaId, null, null];
         }
 
         $this->graph($token)->post("{$wabaId}/subscribed_apps")->throw();
 
-        return [$wabaId, (string) $phoneNumberId];
+        return [$wabaId, (string) $phoneNumberId, is_string($username) && $username !== '' ? $username : null];
     }
 
     private function graph(?string $token = null): PendingRequest

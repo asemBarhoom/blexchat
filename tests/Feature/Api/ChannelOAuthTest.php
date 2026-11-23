@@ -192,9 +192,44 @@ it('discovers and subscribes the WhatsApp number returned by Embedded Signup', f
         'access_token' => 'business-token',
         'waba_id' => 'waba-1',
         'phone_number_id' => 'phone-1',
+        'username' => '+970 59 000 0000',
         'meta_user_id' => 'meta-user-1',
     ]);
     Http::assertSent(fn (Request $request): bool => $request->url() === 'https://graph.facebook.com/v21.0/waba-1/subscribed_apps'
         && $request->method() === 'POST'
         && $request->hasHeader('Authorization', 'Bearer business-token'));
+});
+
+it('connects a real WhatsApp account through Embedded Signup callback', function () {
+    config([
+        'services.channels.oauth_driver' => 'provider',
+        'services.channels.oauth_redirect_url' => 'https://api.test/oauth/{platform}',
+        'services.meta.app_id' => 'meta-app',
+        'services.meta.app_secret' => 'meta-secret',
+        'services.meta.graph_version' => 'v21.0',
+        'services.whatsapp.client_id' => 'meta-app',
+        'services.whatsapp.client_secret' => 'meta-secret',
+        'services.whatsapp.config_id' => 'wa-config',
+    ]);
+    Http::fake([
+        'graph.facebook.com/v21.0/oauth/access_token*' => Http::response(['access_token' => 'business-token']),
+        'graph.facebook.com/v21.0/debug_token*' => Http::response(['data' => ['granular_scopes' => [
+            ['scope' => 'whatsapp_business_management', 'target_ids' => ['waba-22']],
+        ]]]),
+        'graph.facebook.com/v21.0/waba-22/phone_numbers*' => Http::response(['data' => [['id' => 'phone-22', 'display_phone_number' => '+966 50 123 4567', 'verified_name' => 'Blexchat Store']]]),
+        'graph.facebook.com/v21.0/waba-22/subscribed_apps' => Http::response(['success' => true]),
+        'graph.facebook.com/v21.0/me*' => Http::response(['id' => 'meta-user-22']),
+    ]);
+    $owner = User::factory()->create();
+    $state = $this->actingAs($owner, 'sanctum')->getJson('/api/v1/channels/oauth/whatsapp/start')->json('data.state');
+
+    $this->getJson("/api/v1/channels/oauth/whatsapp/callback?state={$state}&code=oauth-code")
+        ->assertCreated()
+        ->assertJsonPath('data.account_id', 'phone-22');
+
+    $channel = Channel::where('platform', 'whatsapp')->sole();
+    expect($channel->account_id)->toBe('phone-22')
+        ->and($channel->username)->toBe('Blexchat Store')
+        ->and($channel->status)->toBe('active')
+        ->and($channel->meta_user_id)->toBe('meta-user-22');
 });
