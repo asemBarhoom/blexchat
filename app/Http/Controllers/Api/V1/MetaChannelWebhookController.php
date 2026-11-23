@@ -32,13 +32,17 @@ class MetaChannelWebhookController extends Controller
     public function verify(Request $request): Response
     {
         $expected = (string) config('services.meta.webhook_verify_token');
-        $valid = $request->query('hub_mode') === 'subscribe'
+        $mode = $request->query('hub_mode') ?? $request->query('hub.mode') ?? $request->input('hub_mode') ?? $request->input('hub.mode');
+        $token = $request->query('hub_verify_token') ?? $request->query('hub.verify_token') ?? $request->input('hub_verify_token') ?? $request->input('hub.verify_token');
+        $challenge = $request->query('hub_challenge') ?? $request->query('hub.challenge') ?? $request->input('hub_challenge') ?? $request->input('hub.challenge');
+
+        $valid = $mode === 'subscribe'
             && $expected !== ''
-            && hash_equals($expected, (string) $request->query('hub_verify_token'));
+            && hash_equals($expected, (string) $token);
 
         abort_unless($valid, 403);
 
-        return response((string) $request->query('hub_challenge'));
+        return response((string) $challenge);
     }
 
     #[OA\Post(
