@@ -101,7 +101,7 @@ class ChannelOAuthProvider
     }
 
     /**
-     * Install the app on the connected Page so Meta delivers Messenger messages and feed events.
+     * Install the app on the connected Page so Meta delivers messages, postbacks and feed events.
      */
     public function subscribeMessengerPage(string $pageId, string $pageToken): void
     {
@@ -109,7 +109,7 @@ class ChannelOAuthProvider
             ->connectTimeout(5)
             ->timeout(15)
             ->post('https://graph.facebook.com/'.config('services.meta.graph_version')."/{$pageId}/subscribed_apps", [
-                'subscribed_fields' => 'messages,feed',
+                'subscribed_fields' => 'messages,messaging_postbacks,feed',
             ])
             ->throw();
     }

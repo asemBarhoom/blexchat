@@ -67,7 +67,7 @@ it('returns the Pages and connects the chosen one to the started workspace', fun
 
     Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/page-2/subscribed_apps')
         && $request->hasHeader('Authorization', 'Bearer page-token-2')
-        && $request['subscribed_fields'] === 'messages,feed');
+        && $request['subscribed_fields'] === 'messages,messaging_postbacks,feed');
 });
 
 it('refuses a Page that was not returned by Meta', function () {
