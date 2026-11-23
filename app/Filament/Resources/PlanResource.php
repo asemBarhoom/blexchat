@@ -65,9 +65,11 @@ class PlanResource extends Resource
             Translations::input('tagline', __('admin/plans.tagline'), required: false),
 
             Section::make(__('admin/plans.pricing'))->schema([
-                TextInput::make('monthly_price')->label(__('admin/plans.monthly_price'))->numeric()->integer()->minValue(0)->required()
+                TextInput::make('monthly_price')->label(__('admin/plans.monthly_price'))->numeric()->integer()
+                    ->minValue(fn (?Plan $record): int => $record?->slug === Plan::FREE_SLUG ? 0 : 1)->required()
                     ->helperText(__('admin/plans.monthly_price_help')),
-                TextInput::make('annual_price')->label(__('admin/plans.annual_price'))->numeric()->integer()->minValue(0)->required(),
+                TextInput::make('annual_price')->label(__('admin/plans.annual_price'))->numeric()->integer()
+                    ->minValue(fn (?Plan $record): int => $record?->slug === Plan::FREE_SLUG ? 0 : 1)->required(),
                 TextInput::make('contacts_limit')->label(__('admin/plans.contacts_limit'))->numeric()->integer()->minValue(1)->required(),
                 TextInput::make('channels_limit')->label(__('admin/plans.channels_limit'))->numeric()->integer()->minValue(1)->helperText(__('admin/plans.no_limit_help')),
                 TextInput::make('live_automations_limit')->label(__('admin/plans.live_automations_limit'))->numeric()->integer()->minValue(1)->helperText(__('admin/plans.no_limit_help')),

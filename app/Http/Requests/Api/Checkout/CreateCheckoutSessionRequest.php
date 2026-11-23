@@ -19,9 +19,11 @@ class CreateCheckoutSessionRequest extends FormRequest
      */
     public function rules(): array
     {
+        $priceColumn = $this->billing() === 'annual' ? 'annual_price' : 'monthly_price';
+
         return [
-            // Paid plans on sale only: Free never goes through a payment page.
-            'plan' => ['required', 'string', Rule::exists(Plan::class, 'slug')->where('active', true)->where(fn (Builder $query) => $query->where('monthly_price', '>', 0))],
+            // Paid plans on sale only: Free and a period without a configured price never reach Stripe.
+            'plan' => ['required', 'string', Rule::exists(Plan::class, 'slug')->where('active', true)->where(fn (Builder $query) => $query->where($priceColumn, '>', 0))],
             'billing' => ['sometimes', 'string', Rule::in(Plan::BILLING_PERIODS)],
             'coupon' => ['nullable', 'string', 'max:50'],
         ];

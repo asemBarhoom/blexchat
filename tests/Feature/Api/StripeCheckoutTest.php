@@ -134,6 +134,21 @@ describe('POST /api/v1/checkout/session', function () {
             ->assertJsonValidationErrors('plan');
     });
 
+    it('refuses a billing period without a configured price before calling Stripe', function (string $billing, array $prices) {
+        Plan::where('slug', 'pro')->update($prices);
+        Http::fake();
+
+        Sanctum::actingAs($this->user);
+        $this->postJson('/api/v1/checkout/session', ['plan' => 'pro', 'billing' => $billing])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('plan');
+
+        Http::assertNothingSent();
+    })->with([
+        'monthly' => ['monthly', ['monthly_price' => 0]],
+        'annual' => ['annual', ['annual_price' => 0]],
+    ]);
+
     it('refuses a second payment for the plan already paid by card', function () {
         Subscription::factory()->for($this->user)->create(['plan_id' => Plan::where('slug', 'pro')->value('id'), 'stripe_subscription_id' => 'sub_1']);
 

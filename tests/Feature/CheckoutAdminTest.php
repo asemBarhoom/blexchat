@@ -90,3 +90,9 @@ it('keeps the reminder day before the end of the shortest trial', function () {
         ->callAction(TestAction::make('edit')->table(Plan::where('slug', 'pro')->firstOrFail()), ['trial_days' => 7])
         ->assertHasFormErrors(['trial_days']);
 });
+
+it('requires both billing prices for paid plans', function (string $field) {
+    Livewire::test(ManagePlans::class)
+        ->callAction(TestAction::make('edit')->table(Plan::where('slug', 'pro')->firstOrFail()), [$field => 0])
+        ->assertHasFormErrors([$field => 'min']);
+})->with(['monthly_price', 'annual_price']);
