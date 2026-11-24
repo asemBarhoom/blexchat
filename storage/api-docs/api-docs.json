@@ -370,8 +370,21 @@
                     "Authentication"
                 ],
                 "summary": "Start signing up or in with Google",
-                "description": "Send the visitor to `url`. Google returns them, with `code` and `state` in the query, to the redirect URI this server is set to:\n\n- **Frontend** (default, `FRONTEND_URL/verify/confirm`): that page posts both to **POST /api/v1/auth/google** within 15 minutes. If Google returns `error` instead, show \"Google sign-in didn’t finish\".\n- **This API** (`GOOGLE_REDIRECT_URI=…/api/v1/auth/google/callback`, for testing without the frontend): Google lands on **GET /api/v1/auth/google/callback**, which signs in and shows the token as JSON.",
+                "description": "Send the visitor to `url`. Google returns them, with `code` and `state` in the query, to the redirect URI this server is set to:\n\n- **Frontend** (default): Google returns to `/verify/confirm` on the allowed site that started sign-in, falling back to `FRONTEND_URL`; that page posts both to **POST /api/v1/auth/google** within 15 minutes. If Google returns `error` instead, show \"Google sign-in didn’t finish\".\n- **This API** (`GOOGLE_REDIRECT_URI=…/api/v1/auth/google/callback`, for testing without the frontend): Google lands on **GET /api/v1/auth/google/callback**, which signs in and shows the token as JSON.",
                 "operationId": "f80be1c9e9f27352d3c428b51eee11b5",
+                "parameters": [
+                    {
+                        "name": "ref",
+                        "in": "query",
+                        "description": "The referral code from `?ref=` the visitor arrived with; a new account is given to its owner when sign-up finishes",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 32
+                        },
+                        "example": "K7Q2M9XP"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Google consent URL",
@@ -534,7 +547,7 @@
                     "Authentication"
                 ],
                 "summary": "Email a sign-in link (sign up and sign in)",
-                "description": "Sign-up and sign-in are passwordless: this emails a link to the address, whether or not it has an account yet.\nThe link opens `FRONTEND_URL/verify/confirm?token=…` (with `&mode=signin` when signing in); that page posts the token to **POST /api/v1/auth/email-link/verify**.\n\n- A link works **once, for 15 minutes**.\n- Another link to the same address can be sent after **59 seconds** (`resend_after`); earlier, the answer is 429 `resend_too_soon` with `retry_after`.\n- After 5 links in 15 minutes the answer is 429 `too_many_attempts` (\"Too many attempts. Try again in a few minutes.\").\n- `mode` only changes the email's wording: `signup` (default) \"Confirm your email\", `signin` \"Your sign-in link\".\n\n**Development servers only:** with `AUTH_EXPOSE_LOGIN_LINKS=true` the response also carries `dev_link` and `dev_token`, so the flow can be tested without an inbox. Never present in production.",
+                "description": "Sign-up and sign-in are passwordless: this emails a link to the address, whether or not it has an account yet.\nThe link opens `/verify/confirm?token=…` (with `&mode=signin` when signing in) on the site that sent the request (its `Origin`, when that site is allowed to call the API), else on `FRONTEND_URL`; that page posts the token to **POST /api/v1/auth/email-link/verify**.\n\n- A link works **once, for 15 minutes**.\n- Another link to the same address can be sent after **59 seconds** (`resend_after`); earlier, the answer is 429 `resend_too_soon` with `retry_after`.\n- After 5 links in 15 minutes the answer is 429 `too_many_attempts` (\"Too many attempts. Try again in a few minutes.\").\n- `mode` only changes the email's wording: `signup` (default) \"Confirm your email\", `signin` \"Your sign-in link\".\n\n**Development servers only:** with `AUTH_EXPOSE_LOGIN_LINKS=true` the response also carries `dev_link` and `dev_token`, so the flow can be tested without an inbox. Never present in production.",
                 "operationId": "5525adb786a4a45061a773c1abc48804",
                 "parameters": [
                     {
@@ -575,6 +588,12 @@
                                             "signup",
                                             "signin"
                                         ]
+                                    },
+                                    "ref": {
+                                        "description": "The referral code from `?ref=` the visitor arrived with. Kept with the link, so it counts even when the link is opened on another device. Only a new account is given to the referrer; an unknown code is ignored.",
+                                        "type": "string",
+                                        "example": "K7Q2M9XP",
+                                        "maxLength": 32
                                     }
                                 },
                                 "type": "object"
@@ -695,6 +714,11 @@
                                     "token": {
                                         "description": "The `token` query value of the emailed link",
                                         "type": "string"
+                                    },
+                                    "ref": {
+                                        "description": "A referral code, used only when the link was sent without one",
+                                        "type": "string",
+                                        "maxLength": 32
                                     }
                                 },
                                 "type": "object"
@@ -809,7 +833,7 @@
                     {
                         "name": "search",
                         "in": "query",
-                        "description": "Automations whose name contains this text, ignoring case",
+                        "description": "Automations whose name or one of whose keywords contains this text, ignoring case",
                         "required": false,
                         "schema": {
                             "type": "string",
@@ -1882,6 +1906,10 @@
                                                             "expired"
                                                         ]
                                                     },
+                                                    "needs_reconnect": {
+                                                        "description": "The token was refused or ran out: show “Reconnect”",
+                                                        "type": "boolean"
+                                                    },
                                                     "connected_at": {
                                                         "type": "string",
                                                         "format": "date-time",
@@ -1957,6 +1985,9 @@
                 "responses": {
                     "201": {
                         "description": "Channel connected"
+                    },
+                    "403": {
+                        "description": "`code: channel_limit` with `limit` when the plan’s channels, every workspace together, are all in use (show Upgrade)"
                     },
                     "409": {
                         "description": "Already connected"
@@ -2081,8 +2112,8 @@
                     "200": {
                         "description": "OAuth state and authorization URL"
                     },
-                    "501": {
-                        "description": "Provider OAuth is not configured"
+                    "503": {
+                        "description": "Provider credentials or messaging approval are pending"
                     }
                 },
                 "security": [
@@ -2123,14 +2154,23 @@
                     }
                 ],
                 "responses": {
+                    "200": {
+                        "description": "More than one Page: `data.pages` and `state`, then POST /api/v1/channels/oauth/messenger/pages with the chosen `page_id`"
+                    },
                     "201": {
                         "description": "Channel connected"
                     },
                     "400": {
-                        "description": "Invalid or expired OAuth state"
+                        "description": "`code: invalid_oauth_state` — unknown, expired or already used"
                     },
-                    "501": {
-                        "description": "Provider OAuth is not configured"
+                    "403": {
+                        "description": "`code: channel_limit` with `limit`: the plan’s channels are all in use"
+                    },
+                    "409": {
+                        "description": "`code: channel_taken` — the account is connected to another workspace"
+                    },
+                    "503": {
+                        "description": "Provider credentials or messaging approval are pending"
                     }
                 }
             }
@@ -2196,7 +2236,7 @@
                     "Automation wizard"
                 ],
                 "summary": "The account’s posts and reels, for “Pick a post” (W11)",
-                "description": "Newest first. An active Instagram channel is refreshed from Instagram first; when that fails the posts already known are returned and `meta.synced` is false. An empty list is the “No posts yet” state.",
+                "description": "Newest first. An active Instagram channel is refreshed from Instagram first; when that fails the posts already known are returned and `meta.synced` is false. When Instagram refused the token itself the channel turns `expired` and `meta.needs_reconnect` is true: show “Reconnect” instead of “Try again”. An empty list is the “No posts yet” state.",
                 "operationId": "4d9fa309b8f832e497c52e48c219674d",
                 "parameters": [
                     {
@@ -2253,6 +2293,12 @@
                                                         "type": "string",
                                                         "nullable": true
                                                     },
+                                                    "permalink": {
+                                                        "description": "The post on Instagram",
+                                                        "type": "string",
+                                                        "format": "uri",
+                                                        "nullable": true
+                                                    },
                                                     "media_type": {
                                                         "type": "string",
                                                         "nullable": true,
@@ -2291,6 +2337,10 @@
                                                 },
                                                 "synced": {
                                                     "description": "Whether Instagram was reached just now",
+                                                    "type": "boolean"
+                                                },
+                                                "needs_reconnect": {
+                                                    "description": "The channel must be connected again before it can sync",
                                                     "type": "boolean"
                                                 }
                                             },
@@ -3782,6 +3832,10 @@
                                                                     "expired"
                                                                 ]
                                                             },
+                                                            "needs_reconnect": {
+                                                                "description": "Show “Reconnect” on the channel",
+                                                                "type": "boolean"
+                                                            },
                                                             "followers": {
                                                                 "type": "integer"
                                                             }
@@ -4020,7 +4074,52 @@
                 "operationId": "df202b1b0bf5755576d385c1b897fc4f",
                 "responses": {
                     "200": {
-                        "description": "Help articles and support links"
+                        "description": "Help articles and support links",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "articles": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "category": {
+                                                                "type": "string"
+                                                            },
+                                                            "question": {
+                                                                "type": "string"
+                                                            },
+                                                            "answer": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "support": {
+                                                    "properties": {
+                                                        "email": {
+                                                            "type": "string"
+                                                        },
+                                                        "response_time_hours": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4325,6 +4424,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "`code: channel_limit` with `limit`: the plan’s channels are all in use"
+                    },
                     "409": {
                         "description": "`account_taken`",
                         "content": {
@@ -4522,7 +4624,7 @@
                     "Conversations"
                 ],
                 "summary": "Retry a failed delivery",
-                "description": "Safe to call twice: an attempt already sent answers `idempotent: true` and sends nothing. `attempts` counts the sends made for it, starting at 1.",
+                "description": "Safe to call twice: an attempt already sent answers `idempotent: true` and sends nothing. `attempts` counts the sends made for it, starting at 1. A send that goes through is added to the conversation like any reply, and comes back as `data.message`.",
                 "operationId": "817f80d2393c24ff5c1dcbccc9284d3e",
                 "parameters": [
                     {
@@ -4537,7 +4639,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Sent, or already sent; `data` has `attempt_id`, `status`, `attempts` and `platform_message_id`"
+                        "description": "Sent, or already sent; `data` has `attempt_id`, `status`, `attempts`, `platform_message_id` and, on the send that went through, `message`"
                     },
                     "403": {
                         "description": "The conversation belongs to another account"
@@ -4827,6 +4929,318 @@
                 }
             }
         },
+        "/api/v1/referrals": {
+            "get": {
+                "tags": [
+                    "Referrals"
+                ],
+                "summary": "The owner’s referral link and earnings (D-7)",
+                "description": "The link to share, the rules, and what it has earned so far. Money is in the currency’s units. While the program is closed `enabled` is false: show what was earned, but not the link.",
+                "operationId": "23769e448b4468d7fd6746a63eb66b55",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The referral screen",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "properties": {
+                                                        "enabled": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "code": {
+                                                            "type": "string",
+                                                            "example": "K7Q2M9XP"
+                                                        },
+                                                        "link": {
+                                                            "type": "string",
+                                                            "format": "uri",
+                                                            "example": "https://blexchat.com/?ref=K7Q2M9XP"
+                                                        },
+                                                        "payout_method": {
+                                                            "description": "How and when referrers are paid",
+                                                            "type": "string",
+                                                            "nullable": true
+                                                        },
+                                                        "stats": {
+                                                            "properties": {
+                                                                "signed_up": {
+                                                                    "description": "Accounts created through the link",
+                                                                    "type": "integer"
+                                                                },
+                                                                "subscribed": {
+                                                                    "description": "Of those, how many pay for a plan now",
+                                                                    "type": "integer"
+                                                                },
+                                                                "earned": {
+                                                                    "description": "Every commission so far: pending + paid_out",
+                                                                    "type": "number"
+                                                                },
+                                                                "pending": {
+                                                                    "description": "Earned, not paid out yet",
+                                                                    "type": "number"
+                                                                },
+                                                                "paid_out": {
+                                                                    "type": "number"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "commissions": {
+                                                            "description": "The latest 20, newest first",
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "payment": {
+                                                                        "description": "What the customer paid",
+                                                                        "type": "number",
+                                                                        "example": 29
+                                                                    },
+                                                                    "rate": {
+                                                                        "description": "The rate when it was paid",
+                                                                        "type": "number",
+                                                                        "example": 20
+                                                                    },
+                                                                    "amount": {
+                                                                        "type": "number",
+                                                                        "example": 5.8
+                                                                    },
+                                                                    "currency": {
+                                                                        "type": "string",
+                                                                        "example": "usd"
+                                                                    },
+                                                                    "status": {
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "pending",
+                                                                            "paid"
+                                                                        ]
+                                                                    },
+                                                                    "created_at": {
+                                                                        "type": "string",
+                                                                        "format": "date-time"
+                                                                    },
+                                                                    "paid_at": {
+                                                                        "type": "string",
+                                                                        "format": "date-time",
+                                                                        "nullable": true
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                {
+                                                    "$ref": "#/components/schemas/ReferralTerms"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing, revoked or unknown token"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/referral-program": {
+            "get": {
+                "tags": [
+                    "Referrals"
+                ],
+                "summary": "The public referral program page (/referral)",
+                "description": "The page's copy and the commission rules, all set in the admin. No authentication.\n\n- 404 while the program is closed: hide the page, and drop links to `/referral` (GET /home leaves them out then, and says `referral_program_enabled: false`).\n- The rate, the rules, the days and the top earning in the copy are filled in already; `terms`, `rate`, `commission` and `earnings` are there for anything the page draws itself.\n- **Tracking:** keep `ref` from `/?ref=CODE` for `cookie_days`, and send it as `ref` to POST /auth/email-link, or as `?ref=` to GET /auth/google. Only a new account counts.",
+                "operationId": "0835ff5bdf3bf7d76524f1d908f34c51",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "en",
+                            "enum": [
+                                "en",
+                                "ar"
+                            ]
+                        },
+                        "example": "ar"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The page",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "properties": {
+                                                        "title": {
+                                                            "type": "string",
+                                                            "example": "Earn by sharing Blexchat"
+                                                        },
+                                                        "lead": {
+                                                            "type": "string"
+                                                        },
+                                                        "steps": {
+                                                            "description": "How it works, in order",
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "title": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "text": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "benefits": {
+                                                            "description": "Why join",
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "title": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "text": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "earnings_heading": {
+                                                            "type": "string",
+                                                            "example": "What one sale earns you"
+                                                        },
+                                                        "earnings": {
+                                                            "description": "One row per plan on the payment page, worked out from today’s prices and rate",
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "plan": {
+                                                                        "type": "string",
+                                                                        "example": "pro"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "Pro"
+                                                                    },
+                                                                    "monthly": {
+                                                                        "description": "Earned on a monthly payment",
+                                                                        "type": "number",
+                                                                        "example": 7.8
+                                                                    },
+                                                                    "annual": {
+                                                                        "description": "Earned on a yearly payment",
+                                                                        "type": "number",
+                                                                        "example": 69.6
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "faq": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "question": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "answer": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "cta": {
+                                                            "$ref": "#/components/schemas/Cta"
+                                                        },
+                                                        "payout_method": {
+                                                            "description": "How and when referrers are paid",
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                {
+                                                    "$ref": "#/components/schemas/ReferralTerms"
+                                                }
+                                            ]
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "locale": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "en",
+                                                        "ar"
+                                                    ]
+                                                },
+                                                "fallback": {
+                                                    "description": "True when a text is not translated yet and is served in English",
+                                                    "type": "boolean"
+                                                },
+                                                "available_locales": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The program is closed"
+                    }
+                }
+            }
+        },
         "/api/v1/solutions": {
             "get": {
                 "tags": [
@@ -5021,7 +5435,7 @@
                     "Webhooks"
                 ],
                 "summary": "Receive Stripe payment events",
-                "description": "Stripe calls this; requests are authenticated by the `Stripe-Signature` header (HMAC-SHA256 with\nSTRIPE_WEBHOOK_SECRET, at most 5 minutes old), not a user. Events handled:\n\n- `checkout.session.completed`: the plan paid for is put in place.\n- `invoice.paid`: a renewal; the paid period moves on.\n- `customer.subscription.deleted`: the card plan ended; the account is on Free again.\n- `checkout.session.expired`: the payment page closed unpaid.\n\nStripe may send an event more than once; handling it again changes nothing. Other events are acknowledged and ignored.",
+                "description": "Stripe calls this; requests are authenticated by the `Stripe-Signature` header (HMAC-SHA256 with\nSTRIPE_WEBHOOK_SECRET, at most 5 minutes old), not a user. Events handled:\n\n- `checkout.session.completed`: the plan paid for is put in place, and a referred customer's payment earns their referrer's commission.\n- `invoice.paid`: a renewal; the paid period moves on, and a referred customer's renewal (`billing_reason: subscription_cycle`) earns a commission when the program's rules count it.\n- `customer.subscription.deleted`: the card plan ended; the account is on Free again.\n- `checkout.session.expired`: the payment page closed unpaid.\n\nStripe may send an event more than once; handling it again changes nothing. Other events are acknowledged and ignored.",
                 "operationId": "5aefb72a08ba896c9783387b7c41e3ec",
                 "responses": {
                     "200": {
@@ -5624,11 +6038,11 @@
                     "Health"
                 ],
                 "summary": "System health",
-                "description": "Database, cache and queue readiness for uptime checks and the status page.",
+                "description": "Database, cache, queue, outbound email and payment readiness for uptime checks and the status page.",
                 "operationId": "e7a0c35d0969226d7c7eb61ada8bbf8a",
                 "responses": {
                     "200": {
-                        "description": "`status` is `ok` or `degraded`; `checks` has `database`, `cache` and `queue`"
+                        "description": "`status` is `ok` or `degraded`; `checks` has `database`, `cache`, `queue`, `mail` and `payments`"
                     }
                 }
             }
@@ -5862,6 +6276,257 @@
                     }
                 ]
             }
+        },
+        "/api/v1/workspaces": {
+            "get": {
+                "tags": [
+                    "Workspaces"
+                ],
+                "summary": "The owner’s workspaces (BE-11)",
+                "description": "Each business an owner runs. Send the chosen one’s id as the `X-Workspace` header on every request; without it the first workspace is used. The plan and its limits cover every workspace together.",
+                "operationId": "bc407c86240418a5683d458d2efb23fc",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Workspace"
+                                            }
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "used": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "limit": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Workspaces"
+                ],
+                "summary": "Add a workspace",
+                "operationId": "6a5cbee2446f30a752364ff3138c00dd",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 80
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Workspace"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "`code: workspace_limit` when the plan’s workspaces are all in use (show Upgrade)"
+                    },
+                    "422": {
+                        "description": "No name",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/workspaces/{id}": {
+            "delete": {
+                "tags": [
+                    "Workspaces"
+                ],
+                "summary": "Delete a workspace and everything in it",
+                "description": "Its channels, automations, folders, contacts and invitations go with it; its teammates lose access. The only workspace cannot be deleted.",
+                "operationId": "8c36d6b2bb5db056222f5e7c04f69d98",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted"
+                    },
+                    "404": {
+                        "description": "Not your workspace"
+                    },
+                    "409": {
+                        "description": "`code: last_workspace`"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Workspaces"
+                ],
+                "summary": "Rename a workspace",
+                "operationId": "9cd0e408c2051166dc84c0a2d5f38254",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 80
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Renamed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Workspace"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Not your workspace"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/workspaces/{id}/switch": {
+            "post": {
+                "tags": [
+                    "Workspaces"
+                ],
+                "summary": "Select a workspace for the next requests",
+                "description": "Only an owner may select one of their own workspaces. The client sends the returned id in the `X-Workspace` header on subsequent requests.",
+                "operationId": "0b3febc0b365510fd89d5268ec663458",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Selected workspace",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Workspace"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Not one of the owner's workspaces"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -5884,6 +6549,27 @@
                         "description": "The AI engine is set up on the server; while false nothing is answered and conversations are handed over as before",
                         "type": "boolean",
                         "example": true
+                    },
+                    "usage": {
+                        "properties": {
+                            "used": {
+                                "type": "integer",
+                                "example": 42
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "example": 250
+                            },
+                            "remaining": {
+                                "type": "integer",
+                                "example": 208
+                            },
+                            "resets_at": {
+                                "type": "string",
+                                "format": "date-time"
+                            }
+                        },
+                        "type": "object"
                     }
                 },
                 "type": "object"
@@ -5938,6 +6624,26 @@
                             "owner",
                             "agent"
                         ]
+                    },
+                    "locale": {
+                        "description": "The language the frontend last asked for; emails and Blexchat AI use it",
+                        "type": "string",
+                        "enum": [
+                            "ar",
+                            "en"
+                        ]
+                    },
+                    "workspace": {
+                        "description": "The workspace this request worked in (the `X-Workspace` header, else the first)",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
                     },
                     "email_verified_at": {
                         "type": "string",
@@ -6136,11 +6842,12 @@
                         "type": "string",
                         "enum": [
                             "channel_disconnected",
+                            "channel_not_live",
                             "live_limit"
                         ]
                     },
                     "channel": {
-                        "description": "channel_disconnected only: the platform to reconnect",
+                        "description": "channel_disconnected or channel_not_live: the platform affected",
                         "type": "string",
                         "example": "instagram"
                     },
@@ -6602,6 +7309,15 @@
                     "connected": {
                         "description": "This owner already has an account on this platform",
                         "type": "boolean"
+                    },
+                    "available": {
+                        "description": "Whether connecting this platform is configured and available",
+                        "type": "boolean"
+                    },
+                    "pending_reason": {
+                        "description": "Translated reason when the platform is waiting for provider approval",
+                        "type": "string",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -6793,6 +7509,10 @@
                             "inactive",
                             "expired"
                         ]
+                    },
+                    "needs_reconnect": {
+                        "description": "true when Meta rejected the token: show Reconnect instead of Connected",
+                        "type": "boolean"
                     },
                     "connected_at": {
                         "type": "string",
@@ -7711,6 +8431,27 @@
                                         "tint",
                                         "ink"
                                     ]
+                                },
+                                "photo": {
+                                    "description": "Cut into the card’s shape; null shows the shape alone",
+                                    "type": "string",
+                                    "format": "uri",
+                                    "nullable": true
+                                },
+                                "bubble": {
+                                    "description": "A customer’s question and the automatic answer, shown inside the shape; null when either text is empty",
+                                    "properties": {
+                                        "question": {
+                                            "type": "string",
+                                            "example": "How much is the abaya?"
+                                        },
+                                        "answer": {
+                                            "type": "string",
+                                            "example": "SAR 349, and here’s the order link 🛍️"
+                                        }
+                                    },
+                                    "type": "object",
+                                    "nullable": true
                                 }
                             },
                             "type": "object"
@@ -8123,6 +8864,10 @@
                                 ]
                             }
                         ]
+                    },
+                    "referral_program_enabled": {
+                        "description": "Whether the referral program is open. While it is closed, its links (to /referral) are left out of `navigation` and `footer`, and GET /referral-program answers 404",
+                        "type": "boolean"
                     }
                 },
                 "type": "object"
@@ -8586,11 +9331,22 @@
                         "type": "integer",
                         "example": 250
                     },
+                    "channels_limit": {
+                        "description": "How many channels the owner may connect, every workspace together; null for no limit",
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
                     "live_automations_limit": {
                         "description": "How many automations may be live at once; null for no limit",
                         "type": "integer",
                         "example": 3,
                         "nullable": true
+                    },
+                    "workspaces_limit": {
+                        "description": "How many businesses (workspaces) the owner may run",
+                        "type": "integer",
+                        "example": 1
                     },
                     "has_ai": {
                         "description": "Shows the \"+ Blexchat AI\" row",
@@ -8742,6 +9498,53 @@
                     },
                     "answer": {
                         "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "ReferralTerms": {
+                "description": "The commission rules, as set in the admin",
+                "properties": {
+                    "rate": {
+                        "description": "Percent of each counted payment",
+                        "type": "number",
+                        "example": 20
+                    },
+                    "terms": {
+                        "description": "The rules as one phrase in the requested language",
+                        "type": "string",
+                        "example": "20% of their first payment"
+                    },
+                    "commission": {
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "first_payment",
+                                    "recurring"
+                                ]
+                            },
+                            "months": {
+                                "description": "recurring only: the months after the first payment that earn; 0 for as long as the customer pays. Null for first_payment",
+                                "type": "integer",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "cookie_days": {
+                        "description": "How long to keep `ref` from a visit before sign-up",
+                        "type": "integer",
+                        "example": 30
+                    },
+                    "currency": {
+                        "type": "string",
+                        "example": "usd"
+                    },
+                    "min_payout": {
+                        "description": "Least a referrer must have earned before a payout; 0 for none",
+                        "type": "number",
+                        "example": 0
                     }
                 },
                 "type": "object"
@@ -9472,6 +10275,27 @@
                     }
                 },
                 "type": "object"
+            },
+            "Workspace": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 4
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Lina’s Bakery"
+                    },
+                    "channels_count": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "current": {
+                        "description": "The workspace this request worked in",
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
             }
         },
         "securitySchemes": {
@@ -9549,12 +10373,20 @@
             "description": "Help"
         },
         {
+            "name": "Referrals",
+            "description": "Referrals"
+        },
+        {
             "name": "Health",
             "description": "Health"
         },
         {
             "name": "Team",
             "description": "Team"
+        },
+        {
+            "name": "Workspaces",
+            "description": "Workspaces"
         }
     ]
 }

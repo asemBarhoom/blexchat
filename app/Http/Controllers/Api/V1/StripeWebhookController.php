@@ -18,8 +18,8 @@ class StripeWebhookController extends Controller
             Stripe calls this; requests are authenticated by the `Stripe-Signature` header (HMAC-SHA256 with
             STRIPE_WEBHOOK_SECRET, at most 5 minutes old), not a user. Events handled:
 
-            - `checkout.session.completed`: the plan paid for is put in place.
-            - `invoice.paid`: a renewal; the paid period moves on.
+            - `checkout.session.completed`: the plan paid for is put in place, and a referred customer's payment earns their referrer's commission.
+            - `invoice.paid`: a renewal; the paid period moves on, and a referred customer's renewal (`billing_reason: subscription_cycle`) earns a commission when the program's rules count it.
             - `customer.subscription.deleted`: the card plan ended; the account is on Free again.
             - `checkout.session.expired`: the payment page closed unpaid.
 
