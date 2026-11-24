@@ -28,7 +28,7 @@ describe('GET /api/v1/plans', function () {
             ->assertJsonPath('data.1.trial_days', 0)
             ->assertJsonPath('data.1.is_recommended', true)
             ->assertJsonPath('data.1.is_free', false)
-            ->assertJsonPath('data.1.features', ['All four channels', 'Unlimited automations', 'No Blexchat branding', 'Follow-ups and email capture', 'Inbox for 3 teammates']);
+            ->assertJsonPath('data.1.features', ['All four channels', 'Unlimited automations, no Blexchat branding', 'Follow-ups and email capture', 'Inbox for 3 teammates']);
     });
 
     it('answers in Arabic with ?lang=ar', function () {
