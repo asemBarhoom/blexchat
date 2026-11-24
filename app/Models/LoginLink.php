@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
  * @property Carbon $expires_at
  * @property Carbon|null $used_at
  */
-#[Fillable(['email', 'token_hash', 'mode', 'expires_at', 'used_at'])]
+#[Fillable(['email', 'token_hash', 'mode', 'referral_code', 'expires_at', 'used_at'])]
 class LoginLink extends Model
 {
     /** @use HasFactory<LoginLinkFactory> */
@@ -45,7 +45,7 @@ class LoginLink extends Model
      *
      * @return array{0: self, 1: string}
      */
-    public static function issue(string $email, string $mode): array
+    public static function issue(string $email, string $mode, ?string $referralCode = null): array
     {
         $token = Str::random(64);
 
@@ -53,6 +53,7 @@ class LoginLink extends Model
             'email' => $email,
             'token_hash' => self::hash($token),
             'mode' => $mode,
+            'referral_code' => $referralCode,
             'expires_at' => now()->addMinutes(self::LIFETIME_MINUTES),
         ]);
 

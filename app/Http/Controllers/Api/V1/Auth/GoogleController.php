@@ -9,6 +9,7 @@ use App\Http\Resources\Api\V1\AuthSessionResource;
 use App\Models\User;
 use App\Services\Auth\FrontendUrl;
 use App\Services\Auth\GoogleClient;
+use App\Services\Referrals\ReferralProgram;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +21,7 @@ class GoogleController extends Controller
 {
     use RespondsWithAuthErrors;
 
-    public function __construct(private GoogleClient $google) {}
+    public function __construct(private GoogleClient $google, private ReferralProgram $referrals) {}
 
     #[OA\Get(
         path: '/api/v1/auth/google',
@@ -32,6 +33,7 @@ class GoogleController extends Controller
             - **This API** (`GOOGLE_REDIRECT_URI=…/api/v1/auth/google/callback`, for testing without the frontend): Google lands on **GET /api/v1/auth/google/callback**, which signs in and shows the token as JSON.
             MD,
         tags: ['Authentication'],
+        parameters: [new OA\Parameter(name: 'ref', in: 'query', required: false, description: 'The referral code from `?ref=` the visitor arrived with; a new account is given to its owner when sign-up finishes', schema: new OA\Schema(type: 'string', maxLength: 32), example: 'K7Q2M9XP')],
         responses: [new OA\Response(response: 200, description: 'Google consent URL', content: new OA\JsonContent(properties: [
             new OA\Property(property: 'data', type: 'object', properties: [new OA\Property(property: 'url', type: 'string', format: 'uri')]),
         ]))],
@@ -44,6 +46,7 @@ class GoogleController extends Controller
             'purpose' => 'google',
             'expires' => now()->addMinutes(15)->timestamp,
             'redirect_uri' => $redirectUri,
+            'ref' => is_string($request->query('ref')) ? substr($request->query('ref'), 0, 32) : null,
         ]));
 
         return response()->json(['data' => ['url' => $this->google->authorizationUrl($state, $redirectUri)]]);
@@ -107,6 +110,10 @@ class GoogleController extends Controller
         [$user, $isNew] = User::signInWithEmail($profile['email'], $profile['name'] ?? null);
         $user->google_id ??= $profile['sub'];
         $user->save();
+
+        if ($isNew) {
+            $this->referrals->attribute($user, $request->referralCode());
+        }
 
         return (new AuthSessionResource($user, $user->createToken('api')->plainTextToken, $isNew))->response()->setStatusCode(200);
     }

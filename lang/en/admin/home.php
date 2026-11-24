@@ -87,6 +87,7 @@ return [
     'link' => 'Link ',
     'link_3_url' => 'Link 3 URL',
     'link_4_url' => 'Link 4 URL',
+    'link_5_url' => 'Link 5 URL',
     'link_text' => 'Link text',
     'live_demo_replies' => 'Live demo replies',
     'made_for_line' => '"Made for" line',

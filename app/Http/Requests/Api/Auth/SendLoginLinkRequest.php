@@ -23,6 +23,8 @@ class SendLoginLinkRequest extends FormRequest
             // The same check as the frontend's form, which wants a full address like name@yourbrand.com.
             'email' => ['required', 'string', 'email', 'max:255', 'regex:/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/'],
             'mode' => ['sometimes', 'string', Rule::in(LoginLink::MODES)],
+            // A referral code the visitor arrived with; an unknown one is ignored rather than refused.
+            'ref' => ['sometimes', 'nullable', 'string', 'max:32'],
         ];
     }
 
@@ -34,5 +36,10 @@ class SendLoginLinkRequest extends FormRequest
     public function mode(): string
     {
         return $this->input('mode', 'signup');
+    }
+
+    public function referralCode(): ?string
+    {
+        return $this->filled('ref') ? (string) $this->input('ref') : null;
     }
 }

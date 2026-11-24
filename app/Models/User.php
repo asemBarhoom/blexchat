@@ -217,7 +217,62 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'inbox_accepting_new' => 'boolean',
+            'referred_at' => 'datetime',
         ];
+    }
+
+    /**
+     * The owner whose referral link brought this account in.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function referrer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'referred_by_user_id');
+    }
+
+    /**
+     * The accounts that signed up through this owner's referral link.
+     *
+     * @return HasMany<User, $this>
+     */
+    public function referrals(): HasMany
+    {
+        return $this->hasMany(User::class, 'referred_by_user_id');
+    }
+
+    /**
+     * @return HasMany<ReferralCommission, $this>
+     */
+    public function referralCommissions(): HasMany
+    {
+        return $this->hasMany(ReferralCommission::class, 'referrer_id');
+    }
+
+    /**
+     * The code in this owner's referral link, given out the first time it is asked for.
+     * Upper case without look-alike characters (0/O, 1/I), so it survives being read aloud or retyped.
+     */
+    public function referralCode(): string
+    {
+        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+        while ($this->referral_code === null) {
+            $code = implode('', array_map(fn (): string => $alphabet[random_int(0, strlen($alphabet) - 1)], range(1, 8)));
+
+            if (! self::where('referral_code', $code)->exists()) {
+                $this->forceFill(['referral_code' => $code])->save();
+            }
+        }
+
+        return $this->referral_code;
+    }
+
+    public static function findByReferralCode(?string $code): ?self
+    {
+        $code = Str::upper(trim((string) $code));
+
+        return $code === '' ? null : self::where('referral_code', $code)->first();
     }
 
     public function channels(): HasMany

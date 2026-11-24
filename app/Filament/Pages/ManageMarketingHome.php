@@ -299,7 +299,7 @@ class ManageMarketingHome extends Page
             ]],
             'navigation' => [[
                 __('admin/home.bar') => [
-                    ...$each(4, fn (int $i): array => [["items.{$i}.label", __('admin/home.link').($i + 1)]]),
+                    ...$each(5, fn (int $i): array => [["items.{$i}.label", __('admin/home.link').($i + 1)]]),
                     ['sign_in.label', __('admin/home.sign_in_button')], ['get_started.label', __('admin/common.get_started_button')], ['get_started_mobile.label', __('admin/home.mobile_get_started_button')],
                     ['aria.main', __('admin/home.screen_reader_label_for_the_bar')], ['aria.mobile', __('admin/home.screen_reader_label_on_mobile')], ['aria.open_menu', __('admin/home.open_menu_label')], ['aria.close_menu', __('admin/home.close_menu_label')],
                 ],
@@ -313,7 +313,7 @@ class ManageMarketingHome extends Page
                     ...$each(8, fn (int $i): array => [["menus.solutions.items.{$i}.title", __('admin/home.solution').($i + 1)], ["menus.solutions.items.{$i}.desc", __('admin/home.solution_description').($i + 1)]]),
                 ],
             ], [
-                $url('items.2.url', __('admin/home.link_3_url')), $url('items.3.url', __('admin/home.link_4_url')),
+                $url('items.2.url', __('admin/home.link_3_url')), $url('items.3.url', __('admin/home.link_4_url')), $url('items.4.url', __('admin/home.link_5_url')),
                 $url('sign_in.url', __('admin/home.sign_in_link')), $url('get_started.url', __('admin/home.get_started_link')), $url('get_started_mobile.url', __('admin/home.mobile_get_started_link')),
                 ...array_map(fn (int $i): TextInput => $url("menus.product.items.{$i}.url", __('admin/home.product_item_link').($i + 1)), range(0, 4)),
                 ...array_map(fn (int $i): TextInput => $url("menus.solutions.items.{$i}.url", __('admin/home.solution_link').($i + 1)), range(0, 7)),
@@ -326,13 +326,13 @@ class ManageMarketingHome extends Page
                     ['legal.0.label', __('admin/common.privacy_link')], ['legal.1.label', __('admin/auth_screens.legal_terms')],
                     ['aria.footer', __('admin/home.screen_reader_label_for_the_footer')], ['aria.home', __('admin/home.home_link_label')],
                 ],
-                ...collect([[0, __('admin/home.product_column'), 3], [1, __('admin/home.solutions_column'), 4], [2, __('admin/home.account_column'), 2]])->mapWithKeys(fn (array $column): array => [$column[1] => [
+                ...collect([[0, __('admin/home.product_column'), 3], [1, __('admin/home.solutions_column'), 4], [2, __('admin/home.account_column'), 3]])->mapWithKeys(fn (array $column): array => [$column[1] => [
                     ["columns.{$column[0]}.title", __('admin/common.title')],
                     ...$each($column[2], fn (int $i): array => [["columns.{$column[0]}.links.{$i}.label", __('admin/home.link').($i + 1)]]),
                 ]])->all(),
             ], [
                 $url('cta.url', __('admin/automations.button_url')), $url('legal.0.url', __('admin/home.privacy_page_link')), $url('legal.1.url', __('admin/home.terms_page_link')),
-                ...collect([[0, 3], [1, 4], [2, 2]])->flatMap(fn (array $column): array => array_map(
+                ...collect([[0, 3], [1, 4], [2, 3]])->flatMap(fn (array $column): array => array_map(
                     fn (int $i): TextInput => $url("columns.{$column[0]}.links.{$i}.url", __('admin/home.column_link').($column[0] + 1).' — '.($i + 1)),
                     range(0, $column[1] - 1),
                 ))->all(),

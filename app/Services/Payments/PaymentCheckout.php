@@ -7,6 +7,7 @@ use App\Models\Coupon;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Services\Referrals\ReferralProgram;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\DB;
  */
 class PaymentCheckout
 {
-    public function __construct(private PaymentGateway $gateway) {}
+    public function __construct(private PaymentGateway $gateway, private ReferralProgram $referrals) {}
 
     public function isAvailable(): bool
     {
@@ -155,6 +156,16 @@ class PaymentCheckout
         }
 
         $subscription->update(['status' => 'active', 'current_period_end' => $periodEnd ?? $subscription->current_period_end]);
+
+        // The first invoice is counted with its checkout session; renewals earn their referral commission here.
+        if (($invoice['billing_reason'] ?? null) === 'subscription_cycle' && is_string($invoice['id'] ?? null)) {
+            rescue(fn () => $this->referrals->recordPayment(
+                $subscription->user,
+                (int) ($invoice['amount_paid'] ?? 0),
+                (string) ($invoice['currency'] ?? $this->referrals->currency()),
+                'invoice:'.$invoice['id'],
+            ), report: true);
+        }
     }
 
     /**
@@ -191,16 +202,21 @@ class PaymentCheckout
 
     /**
      * Puts the paid plan in place and counts the coupon, once even when Stripe and the success page
-     * report the payment at the same moment. A paid plan it replaces is cancelled with the provider.
+     * report the payment at the same moment. A paid plan it replaces is cancelled with the provider,
+     * and the payment earns the customer's referrer their commission.
      */
     private function complete(CheckoutSession $session, string $subscriptionId, Carbon $periodEnd): void
     {
-        $replaced = DB::transaction(function () use ($session, $subscriptionId, $periodEnd): ?string {
+        $completed = false;
+
+        $replaced = DB::transaction(function () use ($session, $subscriptionId, $periodEnd, &$completed): ?string {
             $session = CheckoutSession::whereKey($session->id)->lockForUpdate()->first();
 
             if ($session->isComplete()) {
                 return null;
             }
+
+            $completed = true;
 
             $current = $session->user->subscription;
             $replaced = $current?->stripe_subscription_id !== $subscriptionId ? $current?->stripe_subscription_id : null;
@@ -218,6 +234,13 @@ class PaymentCheckout
 
             return $replaced;
         });
+
+        if (! $completed) {
+            return;
+        }
+
+        // Counted after the plan is in place, so a problem here never undoes the payment.
+        rescue(fn () => $this->referrals->recordPayment($session->user, $session->amount_total, $session->currency, 'checkout:'.$session->stripe_session_id), report: true);
 
         // The new plan is paid either way; a failed cancel is reported, not retried.
         if ($replaced !== null) {

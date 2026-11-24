@@ -92,6 +92,7 @@ class HomeContentSeeder extends Seeder
                     ['id' => 'solutions', 'label' => 'Solutions', 'menu' => 'solutions'],
                     ['id' => 'agencies', 'label' => 'Agencies', 'url' => '/solutions/agencies'],
                     ['id' => 'pricing', 'label' => 'Pricing', 'url' => '/pricing'],
+                    ['id' => 'referral', 'label' => 'Referral program', 'url' => '/referral'],
                 ],
                 'menus' => [
                     'product' => ['heading' => 'Automate every conversation', 'items' => [
@@ -123,7 +124,7 @@ class HomeContentSeeder extends Seeder
                 'columns' => [
                     ['title' => 'Product', 'links' => [['label' => 'Features', 'url' => '#features'], ['label' => 'Pricing', 'url' => '/pricing'], ['label' => 'Blexchat AI', 'url' => '#try-it']]],
                     ['title' => 'Solutions', 'links' => [['label' => 'Creators', 'url' => '/solutions/creators'], ['label' => 'E-commerce', 'url' => '/solutions/e-commerce'], ['label' => 'Restaurants', 'url' => '/solutions/restaurants'], ['label' => 'Agencies', 'url' => '/solutions/agencies']]],
-                    ['title' => 'Account', 'links' => [['label' => 'Sign up', 'url' => '/signup'], ['label' => 'Sign in', 'url' => '/signin']]],
+                    ['title' => 'Account', 'links' => [['label' => 'Sign up', 'url' => '/signup'], ['label' => 'Sign in', 'url' => '/signin'], ['label' => 'Referral program', 'url' => '/referral']]],
                 ],
                 'made_for' => 'Made for',
                 'made_for_sr' => 'Made for creators, brands, sellers and agencies',
@@ -131,6 +132,32 @@ class HomeContentSeeder extends Seeder
                 'copyright' => '© 2026 BLEXCHAT',
                 'legal' => [['id' => 'privacy', 'label' => 'Privacy', 'url' => '/legal/privacy'], ['id' => 'terms', 'label' => 'Terms', 'url' => '/legal/terms']],
                 'aria' => ['footer' => 'Footer', 'home' => 'Blexchat home'],
+            ],
+            // The /referral page, edited on the admin's referral program page. Placeholders like {rate} are filled in when served.
+            'referral_program' => [
+                'title' => 'Earn up to {up_to} for every customer you bring',
+                'lead' => 'Share your Blexchat link with your audience. When someone signs up through it and pays for a plan, you earn {terms}.',
+                'cta' => ['label' => 'Get your link', 'url' => '/signup'],
+                'steps' => [
+                    ['title' => 'Sign up', 'text' => 'Create a free Blexchat account. Your link is waiting under Referrals.'],
+                    ['title' => 'Share your link', 'text' => 'Put it in your bio, your stories or your DMs. A visit through it counts for {cookie_days} days.'],
+                    ['title' => 'Earn', 'text' => 'When someone you sent pays for a plan, you earn {terms}.'],
+                ],
+                'benefits' => [
+                    ['title' => '{rate}% commission', 'text' => 'On every plan, monthly or yearly.'],
+                    ['title' => '{cookie_days}-day window', 'text' => 'Visitors who come back and sign up later still count for you.'],
+                    ['title' => 'Paid every month', 'text' => 'Your earnings are paid out at the start of each month.'],
+                    ['title' => 'Your own dashboard', 'text' => 'See sign-ups, paying customers and earnings as they happen.'],
+                ],
+                'earnings_heading' => 'What one sale earns you',
+                'faq' => [
+                    ['question' => 'Who can join?', 'answer' => 'Anyone with a Blexchat account, on any plan, including Free.'],
+                    ['question' => 'How much can I earn?', 'answer' => 'You earn {terms}, with no limit on how many customers you bring.'],
+                    ['question' => 'How and when am I paid?', 'answer' => '{payout_method}'],
+                    ['question' => 'How long does my link count?', 'answer' => 'For {cookie_days} days after someone opens it, as long as they sign up in the same browser.'],
+                    ['question' => 'Can I use my own link?', 'answer' => 'No. Only new accounts count, and never your own.'],
+                ],
+                'payout_method' => 'Earnings are paid by bank transfer at the start of each month.',
             ],
             'not_found' => [
                 'question' => 'Is this page still here?',
@@ -264,7 +291,7 @@ class HomeContentSeeder extends Seeder
             'numbers' => ['heading' => 'بلكس تشات بالأرقام'],
             'faq' => ['heading' => 'أسئلة وأجوبة.'],
             'navigation' => [
-                'items' => [['label' => 'المنتج'], ['label' => 'الحلول'], ['label' => 'الوكالات'], ['label' => 'الأسعار']],
+                'items' => [['label' => 'المنتج'], ['label' => 'الحلول'], ['label' => 'الوكالات'], ['label' => 'الأسعار'], ['label' => 'برنامج الإحالة']],
                 'menus' => [
                     'product' => ['heading' => 'أتمتة لكل محادثة', 'items' => [
                         ['title' => 'Instagram', 'desc' => 'حوّل التعليقات والرسائل الخاصة إلى عملاء'],
@@ -295,7 +322,7 @@ class HomeContentSeeder extends Seeder
                 'columns' => [
                     ['title' => 'المنتج', 'links' => [['label' => 'المزايا'], ['label' => 'الأسعار'], ['label' => 'Blexchat AI']]],
                     ['title' => 'الحلول', 'links' => [['label' => 'صنّاع المحتوى'], ['label' => 'التجارة الإلكترونية'], ['label' => 'المطاعم'], ['label' => 'الوكالات']]],
-                    ['title' => 'الحساب', 'links' => [['label' => 'إنشاء حساب'], ['label' => 'تسجيل الدخول']]],
+                    ['title' => 'الحساب', 'links' => [['label' => 'إنشاء حساب'], ['label' => 'تسجيل الدخول'], ['label' => 'برنامج الإحالة']]],
                 ],
                 'made_for' => 'صُمّم من أجل',
                 'made_for_sr' => 'صُمّم من أجل صنّاع المحتوى والعلامات التجارية والبائعين والوكالات',
@@ -303,6 +330,31 @@ class HomeContentSeeder extends Seeder
                 'copyright' => '© 2026 BLEXCHAT',
                 'legal' => [['label' => 'الخصوصية'], ['label' => 'الشروط']],
                 'aria' => ['footer' => 'تذييل الصفحة', 'home' => 'الصفحة الرئيسية لـ Blexchat'],
+            ],
+            'referral_program' => [
+                'title' => 'اربح حتى {up_to} عن كل عميل تُحضره',
+                'lead' => 'شارك رابط Blexchat الخاص بك مع جمهورك. عندما يسجّل أحدهم من خلاله ويدفع مقابل باقة، تربح {terms}.',
+                'cta' => ['label' => 'احصل على رابطك'],
+                'steps' => [
+                    ['title' => 'سجّل', 'text' => 'أنشئ حسابًا مجانيًا في Blexchat، وستجد رابطك في صفحة الإحالات.'],
+                    ['title' => 'شارك رابطك', 'text' => 'ضعه في البايو أو القصص أو الرسائل. الزيارة من خلاله تُحسب لمدة {cookie_days} يومًا.'],
+                    ['title' => 'اربح', 'text' => 'عندما يدفع أي شخص أرسلته مقابل باقة، تربح {terms}.'],
+                ],
+                'benefits' => [
+                    ['title' => 'عمولة {rate}%', 'text' => 'على كل الباقات، شهرية أو سنوية.'],
+                    ['title' => 'مهلة {cookie_days} يومًا', 'text' => 'من يعود ويسجّل لاحقًا يُحسب لك أيضًا.'],
+                    ['title' => 'دفعات كل شهر', 'text' => 'تُحوَّل أرباحك في بداية كل شهر.'],
+                    ['title' => 'لوحتك الخاصة', 'text' => 'تابع التسجيلات والعملاء الدافعين والأرباح أولًا بأول.'],
+                ],
+                'earnings_heading' => 'كم تربح من كل عملية بيع',
+                'faq' => [
+                    ['question' => 'من يمكنه الانضمام؟', 'answer' => 'أي شخص لديه حساب في Blexchat، على أي باقة، بما فيها المجانية.'],
+                    ['question' => 'كم يمكنني أن أربح؟', 'answer' => 'تربح {terms}، بدون حد لعدد العملاء الذين تُحضرهم.'],
+                    ['question' => 'كيف ومتى أستلم أرباحي؟', 'answer' => '{payout_method}'],
+                    ['question' => 'إلى متى يُحسب رابطي؟', 'answer' => 'لمدة {cookie_days} يومًا بعد فتح الرابط، بشرط أن يسجّل من نفس المتصفح.'],
+                    ['question' => 'هل يمكنني استخدام رابطي لنفسي؟', 'answer' => 'لا. تُحسب الحسابات الجديدة فقط، وليس حسابك أنت.'],
+                ],
+                'payout_method' => 'تُحوَّل الأرباح بتحويل بنكي في بداية كل شهر.',
             ],
             'not_found' => [
                 'question' => 'هل ما زالت هذه الصفحة موجودة؟',

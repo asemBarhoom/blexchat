@@ -23,6 +23,22 @@ class GoogleSignInRequest extends FormRequest
         return is_string($state['redirect_uri'] ?? null) ? $state['redirect_uri'] : null;
     }
 
+    /**
+     * The referral code sign-up started with (kept in the state), or one sent when finishing.
+     */
+    public function referralCode(): ?string
+    {
+        try {
+            $state = json_decode(Crypt::decryptString((string) $this->input('state')), true, flags: JSON_THROW_ON_ERROR);
+        } catch (DecryptException|\JsonException) {
+            $state = [];
+        }
+
+        $code = $state['ref'] ?? $this->input('ref');
+
+        return is_string($code) && $code !== '' ? $code : null;
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -36,6 +52,8 @@ class GoogleSignInRequest extends FormRequest
         return [
             'code' => ['required', 'string'],
             'state' => ['required', 'string'],
+            // A referral code the visitor arrived with; an unknown one is ignored rather than refused.
+            'ref' => ['sometimes', 'nullable', 'string', 'max:32'],
         ];
     }
 

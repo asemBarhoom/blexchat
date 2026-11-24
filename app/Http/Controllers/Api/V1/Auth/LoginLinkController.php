@@ -10,6 +10,7 @@ use App\Http\Resources\Api\V1\AuthSessionResource;
 use App\Mail\LoginLinkMail;
 use App\Models\LoginLink;
 use App\Models\User;
+use App\Services\Referrals\ReferralProgram;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Mail;
@@ -44,6 +45,7 @@ class LoginLinkController extends Controller
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['email'], properties: [
             new OA\Property(property: 'email', type: 'string', format: 'email', maxLength: 255, example: 'sara@nourboutique.com'),
             new OA\Property(property: 'mode', type: 'string', enum: ['signup', 'signin'], default: 'signup'),
+            new OA\Property(property: 'ref', type: 'string', maxLength: 32, example: 'K7Q2M9XP', description: 'The referral code from `?ref=` the visitor arrived with. Kept with the link, so it counts even when the link is opened on another device. Only a new account is given to the referrer; an unknown code is ignored.'),
         ])),
         responses: [
             new OA\Response(response: 202, description: 'Link sent', content: new OA\JsonContent(properties: [
@@ -78,7 +80,7 @@ class LoginLinkController extends Controller
 
         RateLimiter::hit($limiterKey, self::WINDOW_MINUTES * 60);
 
-        [$link, $token] = LoginLink::issue($email, $request->mode());
+        [$link, $token] = LoginLink::issue($email, $request->mode(), $request->referralCode());
         Mail::to($email)->locale(App::getLocale())->send(new LoginLinkMail($link, $token, $request->header('Origin')));
 
         return response()->json([
@@ -108,6 +110,7 @@ class LoginLinkController extends Controller
         parameters: [new OA\Parameter(name: 'lang', in: 'query', required: false, description: 'Language of the texts in the response, and of the email where one is sent. Takes precedence over Accept-Language. Defaults to en.', schema: new OA\Schema(type: 'string', default: 'en', enum: ['en', 'ar']), example: 'ar')],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['token'], properties: [
             new OA\Property(property: 'token', type: 'string', description: 'The `token` query value of the emailed link'),
+            new OA\Property(property: 'ref', type: 'string', maxLength: 32, description: 'A referral code, used only when the link was sent without one'),
         ])),
         responses: [
             new OA\Response(response: 200, description: 'Signed in', content: new OA\JsonContent(properties: [
@@ -123,7 +126,7 @@ class LoginLinkController extends Controller
             new OA\Response(response: 422, description: 'Token missing', content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')),
         ],
     )]
-    public function verify(VerifyLoginLinkRequest $request): JsonResponse
+    public function verify(VerifyLoginLinkRequest $request, ReferralProgram $referrals): JsonResponse
     {
         $link = LoginLink::findByToken($request->string('token'));
 
@@ -137,6 +140,10 @@ class LoginLinkController extends Controller
         }
 
         [$user, $isNew] = User::signInWithEmail($link->email);
+
+        if ($isNew) {
+            $referrals->attribute($user, $link->referral_code ?? $request->input('ref'));
+        }
 
         return (new AuthSessionResource($user, $user->createToken('api')->plainTextToken, $isNew))->response()->setStatusCode(200);
     }

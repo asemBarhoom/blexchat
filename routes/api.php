@@ -36,6 +36,8 @@ use App\Http\Controllers\Api\V1\MetaDataDeletionController;
 use App\Http\Controllers\Api\V1\OnboardingController;
 use App\Http\Controllers\Api\V1\PlanController;
 use App\Http\Controllers\Api\V1\PricingController;
+use App\Http\Controllers\Api\V1\ReferralController;
+use App\Http\Controllers\Api\V1\ReferralProgramController;
 use App\Http\Controllers\Api\V1\SolutionController;
 use App\Http\Controllers\Api\V1\StatsController;
 use App\Http\Controllers\Api\V1\StripeWebhookController;
@@ -68,6 +70,7 @@ Route::get('v1/checkout', CheckoutController::class)->name('api.v1.checkout');
 // Marketing site: PricingPage (copy, plan comparison, FAQ)
 Route::get('v1/pricing', PricingController::class)->name('api.v1.pricing');
 Route::get('v1/help', HelpController::class)->name('api.v1.help');
+Route::get('v1/referral-program', ReferralProgramController::class)->name('api.v1.referral-program'); // the public /referral page
 Route::get('v1/health', SystemHealthController::class)->name('api.v1.health');
 
 // Meta calls these; requests are authenticated by their signature, not a user
@@ -112,6 +115,8 @@ Route::middleware(['auth:sanctum', ResolveWorkspace::class, EnsureAccountOwner::
     Route::post('onboarding/plan', [SubscriptionController::class, 'store'])->name('onboarding.plan');
 
     // The plan after onboarding: read it, switch plan or billing period, cancel back to Free
+    Route::get('referrals', ReferralController::class)->name('referrals'); // D-7: the owner's link and earnings
+
     Route::get('subscription', [SubscriptionController::class, 'show'])->name('subscription.show');
     Route::post('subscription', [SubscriptionController::class, 'update'])->name('subscription.update');
     Route::delete('subscription', [SubscriptionController::class, 'destroy'])->name('subscription.destroy');

@@ -11,6 +11,7 @@ use App\Models\HomeBlock;
 use App\Models\HomeStat;
 use App\Models\Setting;
 use App\Models\UseCase;
+use App\Services\Referrals\ReferralProgram;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
@@ -273,6 +274,7 @@ use OpenApi\Attributes as OA;
     new OA\Property(property: 'navigation', ref: '#/components/schemas/SiteNavigation', nullable: true),
     new OA\Property(property: 'footer', ref: '#/components/schemas/SiteFooter', nullable: true),
     new OA\Property(property: 'not_found', ref: '#/components/schemas/NotFoundPage', nullable: true),
+    new OA\Property(property: 'referral_program_enabled', type: 'boolean', description: 'Whether the referral program is open. While it is closed, its links (to /referral) are left out of `navigation` and `footer`, and GET /referral-program answers 404'),
 ])]
 #[OA\Schema(schema: 'NotFoundPage', description: 'The marketing 404 page (Figma "Marketing 404"): a comment asking, the auto-reply answering, then the page itself.', properties: [
     new OA\Property(property: 'question', type: 'string', example: 'Is this page still here?'),
@@ -385,9 +387,10 @@ class HomeController extends Controller
             new OA\Response(response: 404, description: 'Homepage content has not been seeded'),
         ],
     )]
-    public function __invoke(): JsonResponse
+    public function __invoke(ReferralProgram $referrals): JsonResponse
     {
         $blocks = HomeBlock::all()->keyBy('key');
+        $referralsOpen = $referrals->isEnabled();
 
         abort_if($blocks->isEmpty(), 404);
 
@@ -404,10 +407,11 @@ class HomeController extends Controller
                 'result' => $this->translate($rule, 'result'),
             ])->all()],
             // Null until their blocks are seeded, so an older database still serves the page.
-            'navigation' => $blocks->has('navigation') ? $this->block($blocks['navigation']) : null,
-            'footer' => $blocks->has('footer') ? $this->block($blocks['footer']) : null,
+            'navigation' => $blocks->has('navigation') ? $this->withReferralLinks($this->block($blocks['navigation']), $referralsOpen) : null,
+            'footer' => $blocks->has('footer') ? $this->withReferralLinks($this->block($blocks['footer']), $referralsOpen) : null,
             'not_found' => $blocks->has('not_found') ? $this->block($blocks['not_found']) : null,
             'preview_note_enabled' => (bool) Setting::get(Setting::PREVIEW_NOTE_ENABLED),
+            'referral_program_enabled' => $referralsOpen,
         ];
 
         return response()
@@ -451,6 +455,31 @@ class HomeController extends Controller
             if (is_array($value)) {
                 $node[$key] = $this->frontendLinks($value);
             }
+        }
+
+        return $node;
+    }
+
+    /**
+     * Links to the referral program's page stay in the content while the program is closed, and are left out of the answer.
+     *
+     * @param  array<array-key, mixed>  $node
+     * @return array<array-key, mixed>
+     */
+    private function withReferralLinks(array $node, bool $open): array
+    {
+        if ($open) {
+            return $node;
+        }
+
+        foreach ($node as $key => $value) {
+            if (is_array($value)) {
+                $node[$key] = $this->withReferralLinks($value, $open);
+            }
+        }
+
+        if (array_is_list($node)) {
+            return array_values(array_filter($node, fn (mixed $item): bool => ! is_array($item) || ($item['url'] ?? null) !== ReferralProgram::PAGE_URL));
         }
 
         return $node;

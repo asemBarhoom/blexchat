@@ -18,6 +18,8 @@ class VerifyLoginLinkRequest extends FormRequest
     {
         return [
             'token' => ['required', 'string', 'max:255'],
+            // A referral code the visitor arrived with; an unknown one is ignored rather than refused.
+            'ref' => ['sometimes', 'nullable', 'string', 'max:32'],
         ];
     }
 }
