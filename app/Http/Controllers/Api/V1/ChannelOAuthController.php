@@ -142,6 +142,11 @@ class ChannelOAuthController extends Controller
             }
 
             $accessToken = (string) ($page['access_token'] ?? $accessToken);
+
+            // The Page's name is what the app shows for a Messenger channel.
+            if (filled($page['name'] ?? null)) {
+                $channelDetails['username'] ??= (string) $page['name'];
+            }
         }
 
         if ($accountId === '' && self::driver() === 'fake') {

@@ -6,6 +6,7 @@ return [
         'account_taken' => 'This account is already connected to another Blexchat workspace. Ask its owner for access, or connect a different account.',
         'access_denied' => ':channel wasn’t connected. You closed the window or didn’t allow access.',
         'account_ineligible' => 'This is a personal account. Blexchat works with professional accounts — Business or Creator.',
+        'no_linked_page' => 'This Instagram account isn’t linked to a Facebook Page, so Instagram won’t send its comments and messages to Blexchat. Link it to a Page in the Instagram app (Edit profile → Page), then connect again and choose that Page when Meta asks.',
         'provider_error' => ':channel refused the connection. Try again.',
         'state_invalid' => 'The :channel sign-in expired or was started by another account. Try again.',
     ],

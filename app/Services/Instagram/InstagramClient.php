@@ -166,13 +166,39 @@ class InstagramClient
         ])->throw()->json();
     }
 
-    public function subscribeToWebhooks(string $token, string $accountId): void
+    /**
+     * Asks Meta to send the account's comments and messages. False, with nothing subscribed, when Facebook
+     * Login shared Pages but none is linked to this account: Meta delivers its webhooks through that Page,
+     * so they would never arrive. With no Page listed at all (a Page reached through a business portfolio
+     * is not), the account still connects and the reason is logged.
+     */
+    public function subscribeToWebhooks(string $token, string $accountId): bool
     {
+        if (self::usesUnifiedLogin() && $this->sharedPages($token) !== [] && $this->linkedPage($token, $accountId) === null) {
+            Log::warning('Instagram account is linked to none of the Facebook Pages shared with the app; refused, as its webhooks would not arrive.', ['account_id' => $accountId]);
+
+            return false;
+        }
+
         $this->graph($token)->post((self::usesUnifiedLogin() ? "/{$accountId}" : '/me').'/subscribed_apps?subscribed_fields=comments,messages')->throw();
 
         if (self::usesUnifiedLogin()) {
             $this->subscribeLinkedPage($token, $accountId);
         }
+
+        return true;
+    }
+
+    /**
+     * The shared Facebook Page the Instagram account is linked to, with its token.
+     *
+     * @return array{id: string, access_token: string}|null
+     */
+    private function linkedPage(string $token, string $accountId): ?array
+    {
+        $page = collect($this->sharedPages($token))->first(fn (array $page): bool => (string) data_get($page, 'instagram_business_account.id') === $accountId);
+
+        return $page === null || blank($page['access_token'] ?? null) ? null : $page;
     }
 
     /**
@@ -182,9 +208,9 @@ class InstagramClient
      */
     private function subscribeLinkedPage(string $token, string $accountId): void
     {
-        $page = collect($this->sharedPages($token))->first(fn (array $page): bool => (string) data_get($page, 'instagram_business_account.id') === $accountId);
+        $page = $this->linkedPage($token, $accountId);
 
-        if ($page === null || blank($page['access_token'] ?? null)) {
+        if ($page === null) {
             Log::warning('Instagram account has no linked Facebook Page the app can subscribe to; its webhooks will not arrive.', ['account_id' => $accountId]);
 
             return;

@@ -103,7 +103,10 @@ class FakeInstagramClient extends InstagramClient
         return ['username' => Str::after($instagramScopedId, 'fake-customer-')];
     }
 
-    public function subscribeToWebhooks(string $token, string $accountId): void {}
+    public function subscribeToWebhooks(string $token, string $accountId): bool
+    {
+        return true;
+    }
 
     public function replyToComment(Channel $channel, string $commentId, string $text): ?string
     {

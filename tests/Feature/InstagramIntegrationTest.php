@@ -288,7 +288,7 @@ it('installs the app on the Facebook Page linked to the account, so Meta sends i
     Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), '/5550009/'));
 });
 
-it('still connects an account with no linked Facebook Page, and logs why its webhooks will not arrive', function () {
+it('refuses an account linked to none of the shared Facebook Pages, since its webhooks would never arrive', function () {
     config(['services.instagram.config_id' => 'config-777']);
     Sanctum::actingAs($user = User::factory()->create());
     $state = Crypt::encryptString(json_encode(['user' => $user->id, 'expires' => now()->addMinutes(10)->timestamp]));
@@ -298,15 +298,20 @@ it('still connects an account with no linked Facebook Page, and logs why its web
         'graph.facebook.com/v21.0/oauth/access_token*' => Http::response(['access_token' => 'BISU-token']),
         'graph.facebook.com/v21.0/me/assigned_instagram_accounts*' => Http::response(['data' => [['id' => '17840001', 'username' => 'nourboutique']]]),
         'graph.facebook.com/v21.0/17840001/subscribed_apps*' => Http::response(['success' => true]),
-        'graph.facebook.com/v21.0/me/accounts*' => Http::response(['data' => [['id' => '5550001', 'access_token' => 'page-token']]]),
+        'graph.facebook.com/v21.0/me/accounts*' => Http::response(['data' => [['id' => '5550001', 'access_token' => 'page-token', 'instagram_business_account' => ['id' => '17849999']]]]),
         'graph.facebook.com/v21.0/17840001?*' => Http::response([]),
         'graph.facebook.com/v21.0/me?*' => Http::response(['id' => 'fb-person-1']),
     ]);
 
-    $this->postJson('/api/v1/channels/instagram', ['code' => 'c', 'state' => $state])->assertCreated();
+    $this->postJson('/api/v1/channels/instagram?lang=ar', ['code' => 'c', 'state' => $state])
+        ->assertUnprocessable()
+        ->assertJsonPath('code', 'account_ineligible')
+        ->assertJsonPath('reason', 'no_linked_page')
+        ->assertJsonPath('account.handle', 'nourboutique')
+        ->assertJsonPath('message', __('channels.connect.no_linked_page', locale: 'ar'));
 
-    expect(Channel::where('account_id', '17840001')->exists())->toBeTrue();
-    Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), '/5550001/subscribed_apps'));
+    expect(Channel::where('account_id', '17840001')->exists())->toBeFalse();
+    Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), 'subscribed_apps'));
     Log::shouldHaveReceived('warning')->once()->withArgs(fn (string $message, array $context): bool => $context === ['account_id' => '17840001']);
 });
 

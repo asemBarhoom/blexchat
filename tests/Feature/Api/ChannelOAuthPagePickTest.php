@@ -63,7 +63,8 @@ it('returns the Pages and connects the chosen one to the started workspace', fun
 
     expect($channel->user_id)->toBe($owner->id)
         ->and($channel->workspace_id)->toBe($owner->workspace()->id)
-        ->and($channel->access_token)->toBe('page-token-2');
+        ->and($channel->access_token)->toBe('page-token-2')
+        ->and($channel->username)->toBe('Two');
 
     Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/page-2/subscribed_apps')
         && $request->hasHeader('Authorization', 'Bearer page-token-2')

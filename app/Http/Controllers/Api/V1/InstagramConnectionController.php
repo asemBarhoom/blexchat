@@ -130,9 +130,19 @@ class InstagramConnectionController extends Controller
         }
 
         try {
-            $this->instagram->subscribeToWebhooks($token['access_token'], (string) $profile['user_id']);
+            $subscribed = $this->instagram->subscribeToWebhooks($token['access_token'], (string) $profile['user_id']);
         } catch (RequestException $exception) {
             return $this->providerError($exception);
+        }
+
+        // Connected without a linked Facebook Page, its automations would never hear a comment or a message.
+        if (! $subscribed) {
+            return response()->json([
+                'message' => __('channels.connect.no_linked_page'),
+                'code' => 'account_ineligible',
+                'reason' => 'no_linked_page',
+                'account' => $account,
+            ], 422);
         }
 
         $channel = $request->user()->channels()->updateOrCreate(
