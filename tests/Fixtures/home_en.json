@@ -317,7 +317,12 @@
                     "name": "Creators",
                     "line": "Turn engagement into income.",
                     "shape": "rounded",
-                    "tone": "brand"
+                    "tone": "brand",
+                    "photo": null,
+                    "bubble": {
+                        "question": "Link please 🔗",
+                        "answer": "Sent to your DMs ✨"
+                    }
                 },
                 {
                     "id": "ecommerce",
@@ -325,7 +330,12 @@
                     "name": "E-commerce",
                     "line": "Every comment is a checkout.",
                     "shape": "blob",
-                    "tone": "tint"
+                    "tone": "tint",
+                    "photo": null,
+                    "bubble": {
+                        "question": "How much is the abaya?",
+                        "answer": "SAR 349, and here’s the order link 🛍️"
+                    }
                 },
                 {
                     "id": "restaurants",
@@ -333,7 +343,12 @@
                     "name": "Restaurants",
                     "line": "Bookings and orders from DMs.",
                     "shape": "arch",
-                    "tone": "ink"
+                    "tone": "ink",
+                    "photo": null,
+                    "bubble": {
+                        "question": "A table for 4 at 9?",
+                        "answer": "Booked ✓ See you at 9"
+                    }
                 },
                 {
                     "id": "clinics",
@@ -341,7 +356,12 @@
                     "name": "Clinics",
                     "line": "Appointments booked while you work.",
                     "shape": "circle",
-                    "tone": "tint"
+                    "tone": "tint",
+                    "photo": null,
+                    "bubble": {
+                        "question": "Any appointment tomorrow?",
+                        "answer": "10:30 AM is free. Shall I book it?"
+                    }
                 },
                 {
                     "id": "agencies",
@@ -349,7 +369,12 @@
                     "name": "Agencies",
                     "line": "Run automations for every client.",
                     "shape": "pill",
-                    "tone": "brand"
+                    "tone": "brand",
+                    "photo": null,
+                    "bubble": {
+                        "question": "How many accounts can I run?",
+                        "answer": "All your clients, from one place ✓"
+                    }
                 },
                 {
                     "id": "realestate",
@@ -357,7 +382,12 @@
                     "name": "Real estate",
                     "line": "Qualify leads before you call.",
                     "shape": "house",
-                    "tone": "ink"
+                    "tone": "ink",
+                    "photo": null,
+                    "bubble": {
+                        "question": "Is the apartment still available?",
+                        "answer": "Yes! When suits you for a viewing?"
+                    }
                 }
             ]
         },

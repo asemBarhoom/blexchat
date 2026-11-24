@@ -50,6 +50,10 @@ class UseCaseResource extends Resource
             Translations::input('line', __('admin/common.description')),
             Select::make('shape')->label(__('admin/common.card_shape'))->options(array_combine(UseCase::SHAPES, UseCase::SHAPES))->required(),
             Select::make('tone')->label(__('admin/common.card_tone'))->options(array_combine(UseCase::TONES, UseCase::TONES))->required(),
+            HomeContentFields::image('photo', __('admin/home.use_case_photo'))->directory('marketing/use-cases')->required(false)
+                ->helperText(__('admin/home.use_case_photo_help'))->columnSpanFull(),
+            Translations::input('bubble_question', __('admin/home.bubble_question'), required: false),
+            Translations::input('bubble_answer', __('admin/home.bubble_answer'), required: false),
             HomeContentFields::active(),
         ])->columns(2);
     }

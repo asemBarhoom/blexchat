@@ -170,6 +170,11 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'line', type: 'string'),
         new OA\Property(property: 'shape', type: 'string', enum: ['rounded', 'blob', 'arch', 'circle', 'pill', 'house']),
         new OA\Property(property: 'tone', type: 'string', enum: ['brand', 'tint', 'ink']),
+        new OA\Property(property: 'photo', type: 'string', format: 'uri', nullable: true, description: 'Cut into the card’s shape; null shows the shape alone'),
+        new OA\Property(property: 'bubble', type: 'object', nullable: true, description: 'A customer’s question and the automatic answer, shown inside the shape; null when either text is empty', properties: [
+            new OA\Property(property: 'question', type: 'string', example: 'How much is the abaya?'),
+            new OA\Property(property: 'answer', type: 'string', example: 'SAR 349, and here’s the order link 🛍️'),
+        ]),
     ])),
 ])]
 #[OA\Schema(schema: 'ComparisonSection', description: 'type = comparison', properties: [
@@ -474,6 +479,8 @@ class HomeController extends Controller
                 'line' => $this->translate($useCase, 'line'),
                 'shape' => $useCase->shape,
                 'tone' => $useCase->tone,
+                'photo' => $useCase->photo,
+                'bubble' => $this->bubble($useCase),
             ])->all()],
             'before-after' => $this->withComparisonPoints($section),
             'numbers' => [...$section, 'stats' => HomeStat::visible()->get()->map(fn (HomeStat $stat): array => [
@@ -521,6 +528,17 @@ class HomeController extends Controller
         }
 
         return $this->asLists(array_replace_recursive($block->settings ?? [], $fallback, $translated));
+    }
+
+    /**
+     * @return array{question: string, answer: string}|null
+     */
+    private function bubble(UseCase $useCase): ?array
+    {
+        $question = $this->translate($useCase, 'bubble_question');
+        $answer = $this->translate($useCase, 'bubble_answer');
+
+        return $question !== null && $answer !== null ? ['question' => $question, 'answer' => $answer] : null;
     }
 
     private function translate(Model $model, string $attribute): ?string

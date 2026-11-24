@@ -19,9 +19,9 @@ class UseCase extends Model
     public const TONES = ['brand', 'tint', 'ink'];
 
     /** @var list<string> */
-    public array $translatable = ['name', 'line'];
+    public array $translatable = ['name', 'line', 'bubble_question', 'bubble_answer'];
 
-    protected $fillable = ['key', 'slug', 'name', 'line', 'shape', 'tone', 'sort', 'active'];
+    protected $fillable = ['key', 'slug', 'name', 'line', 'shape', 'tone', 'photo', 'bubble_question', 'bubble_answer', 'sort', 'active'];
 
     protected static function booted(): void
     {

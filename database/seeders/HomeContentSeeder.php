@@ -336,8 +336,21 @@ class HomeContentSeeder extends Seeder
             ['realestate', 'real-estate', ['Real estate', 'العقارات'], ['Qualify leads before you call.', 'أهّل العملاء المحتملين قبل أن تتصل.'], 'house', 'ink'],
         ];
 
+        // A customer's question and the automatic answer, inside each card's shape. Photos are the client's to upload.
+        $bubbles = [
+            'creators' => [['Link please 🔗', 'الرابط 🔗'], ['Sent to your DMs ✨', 'وصلك بالخاص ✨']],
+            'ecommerce' => [['How much is the abaya?', 'كم سعر العباية؟'], ['SAR 349, and here’s the order link 🛍️', '349 ريال، وهذا رابط الطلب 🛍️']],
+            'restaurants' => [['A table for 4 at 9?', 'فيه طاولة لـ 4 الساعة 9؟'], ['Booked ✓ See you at 9', 'تم الحجز ✓ نشوفكم 9']],
+            'clinics' => [['Any appointment tomorrow?', 'فيه موعد بكرة؟'], ['10:30 AM is free. Shall I book it?', '10:30 الصبح متاح، أأكده لك؟']],
+            'agencies' => [['How many accounts can I run?', 'كم حساب أقدر أدير؟'], ['All your clients, from one place ✓', 'كل عملائك من مكان واحد ✓']],
+            'realestate' => [['Is the apartment still available?', 'الشقة لسا متاحة؟'], ['Yes! When suits you for a viewing?', 'إيه، متى يناسبك المعاينة؟']],
+        ];
+
         foreach ($useCases as $sort => [$key, $slug, $name, $line, $shape, $tone]) {
-            UseCase::updateOrCreate(['key' => $key], ['slug' => $slug, 'name' => $t($name), 'line' => $t($line), 'shape' => $shape, 'tone' => $tone, 'sort' => $sort + 1, 'active' => true]);
+            UseCase::updateOrCreate(['key' => $key], [
+                'slug' => $slug, 'name' => $t($name), 'line' => $t($line), 'shape' => $shape, 'tone' => $tone, 'sort' => $sort + 1, 'active' => true,
+                'bubble_question' => $t($bubbles[$key][0]), 'bubble_answer' => $t($bubbles[$key][1]),
+            ]);
         }
 
         $comparison = [

@@ -2,8 +2,10 @@
 
 use App\Filament\Pages\ManageMarketingHome;
 use App\Filament\Resources\FaqItemResource\Pages\ManageFaqItems;
+use App\Filament\Resources\UseCaseResource\Pages\ManageUseCases;
 use App\Models\FaqItem;
 use App\Models\HomeBlock;
+use App\Models\UseCase;
 use App\Models\User;
 use Database\Seeders\HomeContentSeeder;
 use Filament\Actions\CreateAction;
@@ -158,4 +160,41 @@ it('turns the coming soon page off and on from the admin, and the home API follo
         ->call('save');
 
     $this->getJson('/api/v1/home')->assertJsonPath('data.preview_note_enabled', true);
+});
+
+it('gives a use-case card a photo and edits its bubble, and the home API serves both', function () {
+    Storage::fake('public');
+    $useCase = UseCase::where('key', 'ecommerce')->firstOrFail();
+
+    $this->getJson('/api/v1/home?lang=ar')
+        ->assertJsonPath('data.sections.5.items.1.photo', null)
+        ->assertJsonPath('data.sections.5.items.1.bubble', ['question' => 'كم سعر العباية؟', 'answer' => '349 ريال، وهذا رابط الطلب 🛍️']);
+
+    Livewire::test(ManageUseCases::class)
+        ->callAction(TestAction::make('edit')->table($useCase), [
+            'photo' => [UploadedFile::fake()->create('abaya.webp', 100, 'image/webp')],
+            'bubble_question' => ['en' => 'Is it in black?', 'ar' => 'متوفرة بالأسود؟'],
+            'bubble_answer' => ['en' => 'Yes, here’s the link 🖤', 'ar' => ''],
+        ])
+        ->assertHasNoFormErrors();
+
+    $path = $useCase->refresh()->photo;
+
+    expect($path)->toStartWith('marketing/use-cases/');
+    Storage::disk('public')->assertExists($path);
+
+    $this->getJson('/api/v1/home')
+        ->assertJsonPath('data.sections.5.items.1.photo', url('storage/'.$path))
+        ->assertJsonPath('data.sections.5.items.1.bubble', ['question' => 'Is it in black?', 'answer' => 'Yes, here’s the link 🖤']);
+
+    // A cleared Arabic answer falls back to English, like every other text.
+    $this->getJson('/api/v1/home?lang=ar')
+        ->assertJsonPath('data.sections.5.items.1.bubble', ['question' => 'متوفرة بالأسود؟', 'answer' => 'Yes, here’s the link 🖤'])
+        ->assertJsonPath('meta.fallback', true);
+});
+
+it('serves no bubble on a card missing its question or answer', function () {
+    UseCase::where('key', 'clinics')->firstOrFail()->update(['bubble_answer' => null]);
+
+    $this->getJson('/api/v1/home')->assertJsonPath('data.sections.5.items.3.bubble', null);
 });
