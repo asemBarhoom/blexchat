@@ -74,8 +74,50 @@ it('sends an inbox reply through the platform’s API', function (string $platfo
         && array_intersect_key($request->data(), $body) == $body);
 })->with([
     'whatsapp' => ['whatsapp', 'https://graph.facebook.com/v21.0/1234567890/messages', ['to' => '966501234567', 'text' => ['body' => "Yes, 2–4 days\n\nOrder: https://shop.test"]]],
-    'messenger' => ['messenger', 'https://graph.facebook.com/v21.0/me/messages', ['recipient' => ['id' => '966501234567'], 'message' => ['text' => "Yes, 2–4 days\n\nOrder: https://shop.test"]]],
+    'messenger' => ['messenger', 'https://graph.facebook.com/v21.0/me/messages', ['recipient' => ['id' => '966501234567'], 'message' => ['attachment' => ['type' => 'template', 'payload' => [
+        'template_type' => 'button',
+        'text' => 'Yes, 2–4 days',
+        'buttons' => [['type' => 'web_url', 'url' => 'https://shop.test', 'title' => 'Order']],
+    ]]]]],
 ]);
+
+it('sends a Messenger keyword automation reply with a real button to its tracked link', function () {
+    Http::fake(['graph.facebook.com/*' => Http::response(['message_id' => 'm.auto'])]);
+    $channel = Channel::factory()->for($this->owner)->create(['platform' => 'messenger', 'account_id' => 'page-1', 'access_token' => 'page-token', 'status' => 'active']);
+    Automation::factory()->for($this->owner)->for($channel)->create([
+        'trigger_type' => 'dm_keyword',
+        'keywords' => ['سعر'],
+        'actions' => [['type' => 'send_dm_with_button', 'message' => 'كل التفاصيل هنا:', 'button_label' => 'التفاصيل والأسعار والعروض', 'button_url' => 'https://shop.test']],
+    ]);
+
+    ($this->webhook)('messenger', ['object' => 'page', 'entry' => [['id' => 'page-1', 'messaging' => [
+        ['sender' => ['id' => 'psid-1'], 'recipient' => ['id' => 'page-1'], 'timestamp' => 1767225600000, 'message' => ['mid' => 'm.in', 'text' => 'سعر']],
+    ]]]])->assertOk();
+
+    Http::assertSent(function (Request $request): bool {
+        $payload = $request->data()['message']['attachment']['payload'] ?? [];
+
+        return $request->url() === 'https://graph.facebook.com/v21.0/me/messages'
+            && ($payload['template_type'] ?? null) === 'button'
+            && $payload['text'] === 'كل التفاصيل هنا:'
+            // Messenger cuts a button title at 20 characters, so it is cut before sending.
+            && $payload['buttons'][0]['title'] === mb_substr('التفاصيل والأسعار والعروض', 0, 20)
+            && str_contains($payload['buttons'][0]['url'], '/l/');
+    });
+});
+
+it('puts the link after the text when a Messenger reply is too long for a button', function () {
+    Http::fake(['graph.facebook.com/*' => Http::response(['message_id' => 'm.out'])]);
+    $channel = Channel::factory()->for($this->owner)->create(['platform' => 'messenger', 'account_id' => 'page-1', 'access_token' => 'page-token', 'status' => 'active']);
+    $conversation = Conversation::factory()->for($channel)->create(['contact_platform_id' => 'psid-1']);
+    $long = str_repeat('أ', 641);
+
+    $this->actingAs($this->owner)
+        ->postJson("/api/v1/conversations/{$conversation->id}/messages", ['type' => 'text_with_button', 'content' => $long, 'button_label' => 'Order', 'button_url' => 'https://shop.test'])
+        ->assertCreated();
+
+    Http::assertSent(fn (Request $request): bool => ($request->data()['message']['text'] ?? null) === "{$long}\n\nOrder: https://shop.test");
+});
 
 it('says a TikTok reply cannot be sent yet, and keeps nothing', function () {
     $conversation = Conversation::factory()->for(Channel::factory()->for($this->owner)->create(['platform' => 'tiktok']))->create();

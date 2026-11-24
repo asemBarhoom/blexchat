@@ -248,10 +248,12 @@ class ConversationController extends Controller
             }
         } else {
             try {
-                $platformMessageId = $messaging->send(
+                $platformMessageId = $messaging->sendWithButton(
                     $conversation->channel,
                     $conversation->contact_platform_id,
-                    MessagingClient::text($request->content, $request->button_label, $request->button_url),
+                    $request->content,
+                    $request->button_label,
+                    $request->button_url,
                 );
             } catch (RequestException|ConnectionException|ChannelNotLive $exception) {
                 $attempt = MessageDeliveryAttempt::create(['conversation_id' => $conversation->id, 'idempotency_key' => 'manual-'.Str::uuid(), 'content' => $request->content, 'type' => $request->type, 'error_code' => DeliveryFailure::code($exception), 'error_message' => $exception->getMessage(), 'last_attempt_at' => now()]);

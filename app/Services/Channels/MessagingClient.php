@@ -17,6 +17,11 @@ class MessagingClient
 {
     public const PLATFORMS = ['whatsapp', 'messenger', 'tiktok'];
 
+    /** Messenger's button template: its text and button title can be no longer than this. */
+    private const MESSENGER_TEMPLATE_TEXT_MAX = 640;
+
+    private const MESSENGER_BUTTON_TITLE_MAX = 20;
+
     public static function fakeActive(): bool
     {
         return config('services.channels.driver') === 'fake' && ! app()->isProduction();
@@ -46,6 +51,32 @@ class MessagingClient
             // TikTok's business messaging is not open to apps yet: it works on the fake driver only.
             default => throw new ChannelNotLive($channel->platform),
         };
+    }
+
+    /**
+     * A reply with a link button. Messenger shows a real button (its button template); WhatsApp,
+     * TikTok and a Messenger text too long for the template get the link after the text instead.
+     *
+     * @throws RequestException|ConnectionException|ChannelNotLive
+     */
+    public function sendWithButton(Channel $channel, string $recipientId, string $text, ?string $buttonLabel, ?string $buttonUrl): ?string
+    {
+        $fitsTemplate = filled($buttonLabel) && filled($buttonUrl) && mb_strlen($text) <= self::MESSENGER_TEMPLATE_TEXT_MAX;
+
+        if ($channel->platform !== 'messenger' || ! $fitsTemplate) {
+            return $this->send($channel, $recipientId, self::text($text, $buttonLabel, $buttonUrl));
+        }
+
+        return $this->graph($channel)
+            ->post('me/messages', [
+                'recipient' => ['id' => $recipientId],
+                'messaging_type' => 'RESPONSE',
+                'message' => ['attachment' => ['type' => 'template', 'payload' => [
+                    'template_type' => 'button',
+                    'text' => $text,
+                    'buttons' => [['type' => 'web_url', 'url' => $buttonUrl, 'title' => mb_substr($buttonLabel, 0, self::MESSENGER_BUTTON_TITLE_MAX)]],
+                ]]],
+            ])->throw()->json('message_id');
     }
 
     /**

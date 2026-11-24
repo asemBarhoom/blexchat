@@ -409,7 +409,9 @@ class AutomationRunner
             return $this->instagram->sendMessage($channel, $recipientId, $this->payload($action));
         }
 
-        return $this->messaging->send($channel, $recipientId, $this->plainText($action));
+        $url = isset($action['link_token']) ? Message::trackedUrl($action['link_token']) : ($action['button_url'] ?? null);
+
+        return $this->messaging->sendWithButton($channel, $recipientId, $action['message'], $action['button_label'] ?? null, $url);
     }
 
     /**
