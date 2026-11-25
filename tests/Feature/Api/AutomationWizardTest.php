@@ -152,6 +152,8 @@ describe('GET /api/v1/channels/{channel}/posts', function () {
             'permalink_url' => 'https://www.facebook.com/page-1/posts/post-1',
             'status_type' => 'added_photos',
             'created_time' => '2026-11-24T10:00:00+0000',
+            'reactions' => ['data' => [], 'summary' => ['total_count' => 12]],
+            'comments' => ['data' => [], 'summary' => ['total_count' => 6]],
         ]]])]);
 
         $this->actingAs($this->owner, 'sanctum')->getJson("/api/v1/channels/{$page->id}/posts")
@@ -162,7 +164,9 @@ describe('GET /api/v1/channels/{channel}/posts', function () {
             ->assertJsonPath('data.0.caption', 'منشور اختبار')
             ->assertJsonPath('data.0.media_type', 'image')
             ->assertJsonPath('data.0.thumbnail_url', 'https://scontent.example.com/p1.jpg')
-            ->assertJsonPath('data.0.permalink', 'https://www.facebook.com/page-1/posts/post-1');
+            ->assertJsonPath('data.0.permalink', 'https://www.facebook.com/page-1/posts/post-1')
+            ->assertJsonPath('data.0.likes', 12)
+            ->assertJsonPath('data.0.comments', 6);
 
         Http::assertSent(fn (Request $request): bool => $request->hasHeader('Authorization', 'Bearer PAGE'));
     });

@@ -77,7 +77,9 @@ class Post extends Model
     /**
      * Columns for a post as a Facebook Page's posts endpoint describes it.
      *
-     * @param  array{message?: string, full_picture?: string, permalink_url?: string, status_type?: string, created_time?: string}  $post
+     * Likes are the post's reactions of any kind; comments are its top-level ones.
+     *
+     * @param  array{message?: string, full_picture?: string, permalink_url?: string, status_type?: string, created_time?: string, reactions?: array<string, mixed>, comments?: array<string, mixed>}  $post
      * @return array<string, mixed>
      */
     public static function attributesFromFacebook(array $post): array
@@ -87,6 +89,8 @@ class Post extends Model
             'media_type' => self::FACEBOOK_MEDIA_TYPES[$post['status_type'] ?? ''] ?? null,
             'thumbnail_url' => $post['full_picture'] ?? null,
             'permalink' => $post['permalink_url'] ?? null,
+            'like_count' => data_get($post, 'reactions.summary.total_count'),
+            'comment_count' => data_get($post, 'comments.summary.total_count'),
             'posted_at' => isset($post['created_time']) ? Carbon::parse($post['created_time']) : null,
         ];
     }

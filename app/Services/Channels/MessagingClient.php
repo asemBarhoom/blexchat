@@ -125,7 +125,7 @@ class MessagingClient
     /**
      * The Facebook Page's latest posts, newest first, for "Pick a post".
      *
-     * @return list<array{id: string, message?: string, full_picture?: string, permalink_url?: string, status_type?: string, created_time?: string}>
+     * @return list<array{id: string, message?: string, full_picture?: string, permalink_url?: string, status_type?: string, created_time?: string, reactions?: array<string, mixed>, comments?: array<string, mixed>}>
      *
      * @throws RequestException|ConnectionException
      */
@@ -136,7 +136,7 @@ class MessagingClient
         }
 
         return $this->graph($channel)->get("{$channel->account_id}/posts", [
-            'fields' => 'id,message,full_picture,permalink_url,status_type,created_time',
+            'fields' => 'id,message,full_picture,permalink_url,status_type,created_time,reactions.summary(true).limit(0),comments.summary(true).limit(0)',
             'limit' => 50,
         ])->throw()->json('data') ?? [];
     }
