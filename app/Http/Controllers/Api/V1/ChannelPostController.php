@@ -7,6 +7,7 @@ use App\Http\Resources\Api\V1\PostCollection;
 use App\Models\Channel;
 use App\Models\Post;
 use App\Services\Channels\DeliveryFailure;
+use App\Services\Channels\MessagingClient;
 use App\Services\Instagram\InstagramClient;
 use App\Services\TikTok\TikTokClient;
 use Illuminate\Http\Client\ConnectionException;
@@ -17,12 +18,12 @@ use OpenApi\Attributes as OA;
 
 class ChannelPostController extends Controller
 {
-    public function __construct(private InstagramClient $instagram, private TikTokClient $tiktok) {}
+    public function __construct(private InstagramClient $instagram, private TikTokClient $tiktok, private MessagingClient $messaging) {}
 
     #[OA\Get(
         path: '/api/v1/channels/{channel}/posts',
         summary: 'The account’s posts and reels, for “Pick a post” (W11)',
-        description: 'Newest first. An active Instagram channel is refreshed from Instagram first; when that fails the posts already known are returned and `meta.synced` is false. When Instagram refused the token itself the channel turns `expired` and `meta.needs_reconnect` is true: show “Reconnect” instead of “Try again”. An empty list is the “No posts yet” state.',
+        description: 'Newest first. An active Instagram, Facebook (`messenger`) or TikTok channel is refreshed from its platform first; when that fails the posts already known are returned and `meta.synced` is false. When Instagram refused the token itself the channel turns `expired` and `meta.needs_reconnect` is true: show “Reconnect” instead of “Try again”. An empty list is the “No posts yet” state.',
         security: [['sanctum' => []]],
         tags: ['Automation wizard'],
         parameters: [
@@ -37,7 +38,7 @@ class ChannelPostController extends Controller
                     new OA\Property(property: 'platform_post_id', type: 'string'),
                     new OA\Property(property: 'caption', type: 'string', nullable: true),
                     new OA\Property(property: 'thumbnail_url', type: 'string', nullable: true),
-                    new OA\Property(property: 'permalink', type: 'string', format: 'uri', nullable: true, description: 'The post on Instagram'),
+                    new OA\Property(property: 'permalink', type: 'string', format: 'uri', nullable: true, description: 'The post on its platform'),
                     new OA\Property(property: 'media_type', type: 'string', nullable: true, enum: ['image', 'video', 'carousel', 'reel']),
                     new OA\Property(property: 'likes', type: 'integer', nullable: true, example: 1204, description: 'Like count, for the phone preview'),
                     new OA\Property(property: 'posted_at', type: 'string', format: 'date-time', nullable: true),
@@ -46,7 +47,7 @@ class ChannelPostController extends Controller
                     new OA\Property(property: 'total', type: 'integer'),
                     new OA\Property(property: 'page', type: 'integer'),
                     new OA\Property(property: 'per_page', type: 'integer'),
-                    new OA\Property(property: 'synced', type: 'boolean', description: 'Whether Instagram was reached just now'),
+                    new OA\Property(property: 'synced', type: 'boolean', description: 'Whether the platform was reached just now'),
                     new OA\Property(property: 'needs_reconnect', type: 'boolean', description: 'The channel must be connected again before it can sync'),
                 ]),
             ])),
@@ -69,23 +70,29 @@ class ChannelPostController extends Controller
     }
 
     /**
-     * Brings in the latest posts from Instagram; false when the channel cannot be asked or refused.
+     * Brings in the latest posts from the platform; false when the channel cannot be asked or refused.
      */
     private function sync(Channel $channel): bool
     {
-        if (! in_array($channel->platform, ['instagram', 'tiktok'], true) || $channel->status !== 'active') {
+        if (! in_array($channel->platform, ['instagram', 'messenger', 'tiktok'], true) || $channel->status !== 'active') {
             return false;
         }
 
         try {
-            $mediaItems = $channel->platform === 'tiktok'
-                ? $this->tiktok->recentVideos($channel)
-                : $this->instagram->recentMedia($channel);
+            $mediaItems = match ($channel->platform) {
+                'tiktok' => $this->tiktok->recentVideos($channel),
+                'messenger' => $this->messaging->recentPosts($channel),
+                default => $this->instagram->recentMedia($channel),
+            };
 
             foreach ($mediaItems as $media) {
                 Post::updateOrCreate(
                     ['channel_id' => $channel->id, 'platform_post_id' => $media['id']],
-                    $channel->platform === 'tiktok' ? Post::attributesFromTikTok($media) : Post::attributesFromInstagram($media),
+                    match ($channel->platform) {
+                        'tiktok' => Post::attributesFromTikTok($media),
+                        'messenger' => Post::attributesFromFacebook($media),
+                        default => Post::attributesFromInstagram($media),
+                    },
                 );
             }
 

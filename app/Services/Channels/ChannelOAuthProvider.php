@@ -31,7 +31,7 @@ class ChannelOAuthProvider
 
     public static function contentReadingAvailable(string $platform): bool
     {
-        return $platform === 'instagram' || ($platform === 'tiktok' && self::credentialsConfigured($platform));
+        return in_array($platform, ['instagram', 'messenger'], true) || ($platform === 'tiktok' && self::credentialsConfigured($platform));
     }
 
     public static function commentAutomationAvailable(string $platform): bool

@@ -61,9 +61,7 @@ class MessagingClient
      */
     public function sendWithButton(Channel $channel, string $recipientId, string $text, ?string $buttonLabel, ?string $buttonUrl): ?string
     {
-        $fitsTemplate = filled($buttonLabel) && filled($buttonUrl) && mb_strlen($text) <= self::MESSENGER_TEMPLATE_TEXT_MAX;
-
-        if ($channel->platform !== 'messenger' || ! $fitsTemplate) {
+        if ($channel->platform !== 'messenger') {
             return $this->send($channel, $recipientId, self::text($text, $buttonLabel, $buttonUrl));
         }
 
@@ -71,11 +69,7 @@ class MessagingClient
             ->post('me/messages', [
                 'recipient' => ['id' => $recipientId],
                 'messaging_type' => 'RESPONSE',
-                'message' => ['attachment' => ['type' => 'template', 'payload' => [
-                    'template_type' => 'button',
-                    'text' => $text,
-                    'buttons' => [['type' => 'web_url', 'url' => $buttonUrl, 'title' => mb_substr($buttonLabel, 0, self::MESSENGER_BUTTON_TITLE_MAX)]],
-                ]]],
+                'message' => $this->messengerMessage($text, $buttonLabel, $buttonUrl),
             ])->throw()->json('message_id');
     }
 
@@ -94,11 +88,12 @@ class MessagingClient
     }
 
     /**
-     * A private message to whoever wrote a comment on the Page, sent through Messenger.
+     * A private message to whoever wrote a comment on the Page, sent through Messenger, with its
+     * link as a real button when it has one.
      *
      * @throws RequestException|ConnectionException|ChannelNotLive
      */
-    public function sendPrivateReply(Channel $channel, string $commentId, string $text): ?string
+    public function sendPrivateReply(Channel $channel, string $commentId, string $text, ?string $buttonLabel = null, ?string $buttonUrl = null): ?string
     {
         if ($channel->platform !== 'messenger') {
             throw new ChannelNotLive($channel->platform);
@@ -107,8 +102,43 @@ class MessagingClient
         return $this->graph($channel)
             ->post('me/messages', [
                 'recipient' => ['comment_id' => $commentId],
-                'message' => ['text' => $text],
+                'message' => $this->messengerMessage($text, $buttonLabel, $buttonUrl),
             ])->throw()->json('message_id');
+    }
+
+    /**
+     * A Messenger sender's name and picture, as Meta shares them with the Page they wrote to.
+     *
+     * @return array{name?: string, profile_pic?: string}
+     *
+     * @throws RequestException|ConnectionException
+     */
+    public function contact(Channel $channel, string $senderId): array
+    {
+        if ($channel->platform !== 'messenger') {
+            return [];
+        }
+
+        return $this->graph($channel)->get($senderId, ['fields' => 'name,profile_pic'])->throw()->json() ?? [];
+    }
+
+    /**
+     * The Facebook Page's latest posts, newest first, for "Pick a post".
+     *
+     * @return list<array{id: string, message?: string, full_picture?: string, permalink_url?: string, status_type?: string, created_time?: string}>
+     *
+     * @throws RequestException|ConnectionException
+     */
+    public function recentPosts(Channel $channel): array
+    {
+        if ($channel->platform !== 'messenger') {
+            return [];
+        }
+
+        return $this->graph($channel)->get("{$channel->account_id}/posts", [
+            'fields' => 'id,message,full_picture,permalink_url,status_type,created_time',
+            'limit' => 50,
+        ])->throw()->json('data') ?? [];
     }
 
     /**
@@ -117,6 +147,25 @@ class MessagingClient
     public static function text(string $content, ?string $buttonLabel = null, ?string $buttonUrl = null): string
     {
         return filled($buttonLabel) && filled($buttonUrl) ? "{$content}\n\n{$buttonLabel}: {$buttonUrl}" : $content;
+    }
+
+    /**
+     * Messenger's message: its button template when there is a button and the text fits it, else
+     * the text with the link after it.
+     *
+     * @return array<string, mixed>
+     */
+    private function messengerMessage(string $text, ?string $buttonLabel, ?string $buttonUrl): array
+    {
+        if (blank($buttonLabel) || blank($buttonUrl) || mb_strlen($text) > self::MESSENGER_TEMPLATE_TEXT_MAX) {
+            return ['text' => self::text($text, $buttonLabel, $buttonUrl)];
+        }
+
+        return ['attachment' => ['type' => 'template', 'payload' => [
+            'template_type' => 'button',
+            'text' => $text,
+            'buttons' => [['type' => 'web_url', 'url' => $buttonUrl, 'title' => mb_substr($buttonLabel, 0, self::MESSENGER_BUTTON_TITLE_MAX)]],
+        ]]];
     }
 
     private function graph(Channel $channel): PendingRequest

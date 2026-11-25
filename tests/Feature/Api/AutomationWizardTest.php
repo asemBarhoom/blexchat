@@ -142,6 +142,31 @@ describe('GET /api/v1/channels/{channel}/posts', function () {
         Http::assertSent(fn (Request $request): bool => $request->hasHeader('Authorization', 'Bearer TTAA'));
     });
 
+    it('brings in the Facebook Page’s posts, filling in a post a comment already brought', function () {
+        $page = Channel::factory()->create(['user_id' => $this->owner->id, 'platform' => 'messenger', 'account_id' => 'page-1', 'status' => 'active', 'access_token' => 'PAGE']);
+        $fromComment = Post::factory()->create(['channel_id' => $page->id, 'platform_post_id' => 'page-1_post-1', 'caption' => null, 'posted_at' => null]);
+        Http::fake(['graph.facebook.com/v21.0/page-1/posts*' => Http::response(['data' => [[
+            'id' => 'page-1_post-1',
+            'message' => 'منشور اختبار',
+            'full_picture' => 'https://scontent.example.com/p1.jpg',
+            'permalink_url' => 'https://www.facebook.com/page-1/posts/post-1',
+            'status_type' => 'added_photos',
+            'created_time' => '2026-11-24T10:00:00+0000',
+        ]]])]);
+
+        $this->actingAs($this->owner, 'sanctum')->getJson("/api/v1/channels/{$page->id}/posts")
+            ->assertOk()
+            ->assertJsonPath('meta.synced', true)
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.id', $fromComment->id)
+            ->assertJsonPath('data.0.caption', 'منشور اختبار')
+            ->assertJsonPath('data.0.media_type', 'image')
+            ->assertJsonPath('data.0.thumbnail_url', 'https://scontent.example.com/p1.jpg')
+            ->assertJsonPath('data.0.permalink', 'https://www.facebook.com/page-1/posts/post-1');
+
+        Http::assertSent(fn (Request $request): bool => $request->hasHeader('Authorization', 'Bearer PAGE'));
+    });
+
     it('refreshes an expired TikTok Login Kit token before listing videos', function () {
         $tiktok = Channel::factory()->create([
             'user_id' => $this->owner->id,

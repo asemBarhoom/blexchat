@@ -395,9 +395,9 @@ class AutomationRunner
     }
 
     /**
-     * Instagram takes the message as a payload (button template, quick reply). WhatsApp, Messenger
-     * and TikTok take plain text, with the button's link after the text; a quick reply chip has no
-     * text equivalent, and any reply carries on anyway.
+     * Instagram takes the message as a payload (button template, quick reply). Messenger shows the
+     * button as a real one; WhatsApp and TikTok take plain text, with the button's link after the
+     * text. A quick reply chip has no equivalent there, and any reply carries on anyway.
      *
      * @param  array<string, mixed>  $action
      */
@@ -409,9 +409,7 @@ class AutomationRunner
             return $this->instagram->sendMessage($channel, $recipientId, $this->payload($action));
         }
 
-        $url = isset($action['link_token']) ? Message::trackedUrl($action['link_token']) : ($action['button_url'] ?? null);
-
-        return $this->messaging->sendWithButton($channel, $recipientId, $action['message'], $action['button_label'] ?? null, $url);
+        return $this->messaging->sendWithButton($channel, $recipientId, $action['message'], $action['button_label'] ?? null, $this->buttonUrl($action));
     }
 
     /**
@@ -427,7 +425,7 @@ class AutomationRunner
             return $this->instagram->sendPrivateReply($channel, $commentId, $this->payload($action));
         }
 
-        return $this->messaging->sendPrivateReply($channel, $commentId, $this->plainText($action));
+        return $this->messaging->sendPrivateReply($channel, $commentId, $action['message'], $action['button_label'] ?? null, $this->buttonUrl($action));
     }
 
     /**
@@ -450,15 +448,13 @@ class AutomationRunner
     }
 
     /**
-     * An action as plain text, its button's link after the text.
+     * Where an action's button leads: its tracked link, so the click is counted, else the URL itself.
      *
      * @param  array<string, mixed>  $action
      */
-    private function plainText(array $action): string
+    private function buttonUrl(array $action): ?string
     {
-        $url = isset($action['link_token']) ? Message::trackedUrl($action['link_token']) : ($action['button_url'] ?? null);
-
-        return MessagingClient::text($action['message'], $action['button_label'] ?? null, $url);
+        return isset($action['link_token']) ? Message::trackedUrl($action['link_token']) : ($action['button_url'] ?? null);
     }
 
     /**

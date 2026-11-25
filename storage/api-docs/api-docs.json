@@ -2236,7 +2236,7 @@
                     "Automation wizard"
                 ],
                 "summary": "The account’s posts and reels, for “Pick a post” (W11)",
-                "description": "Newest first. An active Instagram channel is refreshed from Instagram first; when that fails the posts already known are returned and `meta.synced` is false. When Instagram refused the token itself the channel turns `expired` and `meta.needs_reconnect` is true: show “Reconnect” instead of “Try again”. An empty list is the “No posts yet” state.",
+                "description": "Newest first. An active Instagram, Facebook (`messenger`) or TikTok channel is refreshed from its platform first; when that fails the posts already known are returned and `meta.synced` is false. When Instagram refused the token itself the channel turns `expired` and `meta.needs_reconnect` is true: show “Reconnect” instead of “Try again”. An empty list is the “No posts yet” state.",
                 "operationId": "4d9fa309b8f832e497c52e48c219674d",
                 "parameters": [
                     {
@@ -2294,7 +2294,7 @@
                                                         "nullable": true
                                                     },
                                                     "permalink": {
-                                                        "description": "The post on Instagram",
+                                                        "description": "The post on its platform",
                                                         "type": "string",
                                                         "format": "uri",
                                                         "nullable": true
@@ -2336,7 +2336,7 @@
                                                     "type": "integer"
                                                 },
                                                 "synced": {
-                                                    "description": "Whether Instagram was reached just now",
+                                                    "description": "Whether the platform was reached just now",
                                                     "type": "boolean"
                                                 },
                                                 "needs_reconnect": {

@@ -42,7 +42,8 @@ it('puts a WhatsApp message in the inbox once, with the sender’s name and numb
         ->and($conversation->messages()->count())->toBe(1);
 });
 
-it('puts a Messenger message in the inbox and skips the Page’s own echoes', function () {
+it('puts a Messenger message in the inbox with the sender’s name from Meta, and skips the Page’s own echoes', function () {
+    Http::fake(['graph.facebook.com/v21.0/psid-9?*' => Http::response(['id' => 'psid-9', 'name' => 'Sara Ali', 'profile_pic' => 'https://cdn.example.com/sara.jpg'])]);
     $channel = Channel::factory()->for($this->owner)->create(['platform' => 'messenger', 'account_id' => 'page-1', 'status' => 'active']);
 
     ($this->webhook)('messenger', ['object' => 'page', 'entry' => [['id' => 'page-1', 'messaging' => [
@@ -50,7 +51,23 @@ it('puts a Messenger message in the inbox and skips the Page’s own echoes', fu
         ['sender' => ['id' => 'page-1'], 'timestamp' => 1767225600000, 'message' => ['mid' => 'm.2', 'text' => 'Yes!', 'is_echo' => true]],
     ]]]])->assertOk();
 
-    expect(Conversation::where('channel_id', $channel->id)->sole()->messages()->pluck('content')->all())->toBe(['Open today?']);
+    $conversation = Conversation::where('channel_id', $channel->id)->sole();
+    expect($conversation->messages()->pluck('content')->all())->toBe(['Open today?'])
+        ->and($conversation->only('contact_name', 'contact_avatar'))->toBe(['contact_name' => 'Sara Ali', 'contact_avatar' => 'https://cdn.example.com/sara.jpg'])
+        ->and($conversation->contact->name)->toBe('Sara Ali');
+});
+
+it('keeps a Messenger message when Meta does not share the sender’s profile', function () {
+    Http::fake(['graph.facebook.com/*' => Http::response(['error' => ['message' => 'Unsupported get request', 'code' => 100]], 400)]);
+    $channel = Channel::factory()->for($this->owner)->create(['platform' => 'messenger', 'account_id' => 'page-1', 'status' => 'active']);
+
+    ($this->webhook)('messenger', ['object' => 'page', 'entry' => [['id' => 'page-1', 'messaging' => [
+        ['sender' => ['id' => 'psid-9'], 'timestamp' => 1767225600000, 'message' => ['mid' => 'm.1', 'text' => 'Open today?']],
+    ]]]])->assertOk();
+
+    expect(Conversation::where('channel_id', $channel->id)->sole())
+        ->contact_name->toBeNull()
+        ->last_message->toBe('Open today?');
 });
 
 it('refuses an unsigned webhook and answers Meta’s verification', function () {

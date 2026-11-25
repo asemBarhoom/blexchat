@@ -16,6 +16,9 @@ class Post extends Model
 
     private const MEDIA_TYPES = ['IMAGE' => 'image', 'VIDEO' => 'video', 'CAROUSEL_ALBUM' => 'carousel'];
 
+    /** A Facebook Page post's `status_type`, as the media types the app knows; a text post has none. */
+    private const FACEBOOK_MEDIA_TYPES = ['added_photos' => 'image', 'added_video' => 'video'];
+
     protected $fillable = [
         'channel_id',
         'platform_post_id',
@@ -68,6 +71,23 @@ class Post extends Model
             'like_count' => $video['like_count'] ?? null,
             'comment_count' => $video['comment_count'] ?? null,
             'posted_at' => isset($video['create_time']) ? Carbon::createFromTimestamp((int) $video['create_time']) : null,
+        ];
+    }
+
+    /**
+     * Columns for a post as a Facebook Page's posts endpoint describes it.
+     *
+     * @param  array{message?: string, full_picture?: string, permalink_url?: string, status_type?: string, created_time?: string}  $post
+     * @return array<string, mixed>
+     */
+    public static function attributesFromFacebook(array $post): array
+    {
+        return [
+            'caption' => $post['message'] ?? null,
+            'media_type' => self::FACEBOOK_MEDIA_TYPES[$post['status_type'] ?? ''] ?? null,
+            'thumbnail_url' => $post['full_picture'] ?? null,
+            'permalink' => $post['permalink_url'] ?? null,
+            'posted_at' => isset($post['created_time']) ? Carbon::parse($post['created_time']) : null,
         ];
     }
 
