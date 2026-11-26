@@ -52,7 +52,7 @@ class AutomationController extends Controller
     #[OA\Get(
         path: '/api/v1/automations',
         summary: 'List automations',
-        description: 'Each row carries `runs` (DMs and public replies it sent) and `ctr` (clicks ÷ DMs sent with a button; 0 while none had one), for the list’s Runs and CTR columns. `meta.total` counts every automation the filters match; `meta.live` counts how many of those are live, whatever `status` asks for ("3 live of 5").',
+        description: 'Each row carries `runs` (how many times it ran: once per comment or message it answered, however many messages that sent) and `ctr` (clicks ÷ DMs sent with a button; 0 while none had one), for the list’s Runs and CTR columns. `meta.total` counts every automation the filters match; `meta.live` counts how many of those are live, whatever `status` asks for ("3 live of 5").',
         security: [['sanctum' => []]],
         tags: ['Automations'],
         parameters: [

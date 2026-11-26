@@ -2,7 +2,6 @@
 
 use App\Models\Automation;
 use App\Models\Channel;
-use App\Models\Comment;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Post;
@@ -31,12 +30,13 @@ it('gives each row of the list its runs and click rate', function () {
     sendFrom($this->automation, button: true, clicked: true);
     sendFrom($this->automation, button: true);
     sendFrom($this->automation);
-    Comment::create(['post_id' => $this->post->id, 'channel_id' => $this->channel->id, 'platform_comment_id' => 'c1', 'author_platform_id' => 'u1', 'text' => 'price?', 'automated_reply' => true, 'automation_id' => $this->automation->id, 'posted_at' => now()]);
+    $this->automation->recordRun();
+    $this->automation->recordRun();
     $quiet = Automation::factory()->for($this->owner)->for($this->channel)->create();
 
     $rows = collect($this->actingAs($this->owner)->getJson('/api/v1/automations')->assertOk()->json('data'))->keyBy('id');
 
-    expect($rows[$this->automation->id])->toMatchArray(['runs' => 4, 'ctr' => 0.5])->not->toHaveKey('post')
+    expect($rows[$this->automation->id])->toMatchArray(['runs' => 2, 'ctr' => 0.5])->not->toHaveKey('post')
         ->and($rows[$quiet->id]['runs'])->toBe(0)
         ->and($rows[$quiet->id]['ctr'])->toBe(0);
 });
@@ -57,6 +57,7 @@ it('counts every row in one query, however long the list', function () {
 
 it('shows the post the automation watches in its detail, with its figures', function () {
     sendFrom($this->automation, button: true);
+    $this->automation->recordRun();
 
     $this->actingAs($this->owner)->getJson("/api/v1/automations/{$this->automation->id}")
         ->assertOk()

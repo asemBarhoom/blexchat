@@ -94,6 +94,7 @@ class AutomationRunner
 
         if ($sent) {
             $comment->update(['automated_reply' => true, 'automation_id' => $automation->id]);
+            $automation->recordRun();
         }
     }
 
@@ -125,7 +126,9 @@ class AutomationRunner
             return;
         }
 
-        $this->sendDms($channel, $conversation, $automation, mayAskToFollow: true);
+        if ($this->sendDms($channel, $conversation, $automation, mayAskToFollow: true)) {
+            $automation->recordRun();
+        }
     }
 
     /**
@@ -250,14 +253,19 @@ class AutomationRunner
     /**
      * The DM actions in a conversation they wrote in, after "Follow us first" when that is on.
      */
-    private function sendDms(Channel $channel, Conversation $conversation, Automation $automation, bool $mayAskToFollow): void
+    /**
+     * Returns whether anything went out.
+     */
+    private function sendDms(Channel $channel, Conversation $conversation, Automation $automation, bool $mayAskToFollow): bool
     {
         if ($mayAskToFollow && $automation->hasExtra('ask_follow')) {
-            if ($this->sendText($conversation, $automation, $this->followAsk($automation))) {
-                $conversation->awaitReply('follow', $automation);
+            if (! $this->sendText($conversation, $automation, $this->followAsk($automation))) {
+                return false;
             }
 
-            return;
+            $conversation->awaitReply('follow', $automation);
+
+            return true;
         }
 
         $dm = null;
@@ -275,9 +283,13 @@ class AutomationRunner
             });
         }
 
-        if ($dm !== null) {
-            $this->afterDm($conversation, $automation, $dm, canMessageNow: true);
+        if ($dm === null) {
+            return false;
         }
+
+        $this->afterDm($conversation, $automation, $dm, canMessageNow: true);
+
+        return true;
     }
 
     /**

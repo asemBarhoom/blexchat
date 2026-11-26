@@ -28,7 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('model:prune')->daily()->onOneServer();
         $schedule->command('conversations:send-reminders')->everyMinute()->onOneServer()->withoutOverlapping();
         $schedule->command('webhooks:purge --days=30')->daily()->onOneServer();
-        // No queue worker runs on Cloud: each minute the scheduler works the queue until it is empty.
+        // Cloud's queue worker answers webhooks within seconds; this empties anything it left, each minute.
         $schedule->command('queue:work --stop-when-empty --max-time=50 --tries=3')->everyMinute()->onOneServer()->withoutOverlapping()->runInBackground();
     })
     ->withExceptions(function (Exceptions $exceptions): void {

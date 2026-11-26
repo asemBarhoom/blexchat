@@ -23,10 +23,10 @@ it('gives every automation real Runs and the frontend list’s CTR', function ()
     $rows = collect($this->getJson('/api/v1/automations?per_page=50')->assertOk()->json('data'))->keyBy('name');
 
     expect($rows->map(fn (array $row): array => [$row['runs'], $row['ctr'], $row['automation_folder_id'] !== null])->all())->toEqual([
-        'Comment "PRICE" → send the catalogue' => [6, 0.3333, true],
+        'Comment "PRICE" → send the catalogue' => [3, 0.3333, true],
         'Story reply → thank you + link' => [13, 0.3846, true],
         'First DM → welcome and catalogue' => [9, 0.2222, true],
-        'Ramadan collection — comment to DM' => [34, 0.4118, true],
+        'Ramadan collection — comment to DM' => [17, 0.4118, true],
         'Eid restock waitlist' => [0, 0, true],
     ]);
 });

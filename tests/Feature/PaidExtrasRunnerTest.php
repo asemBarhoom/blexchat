@@ -33,8 +33,8 @@ beforeEach(function () {
     $this->sent = fn (int $conversation): array => Message::where('conversation_id', $conversation)->where('direction', 'outbound')->orderBy('id')->pluck('content')->all();
 });
 
-it('asks a commenter to follow first and sends the DM once they reply', function () {
-    ($this->automation)('comment_keyword', ['ask_follow' => true, 'follow_text' => 'Follow us to get the price', 'follow_button' => 'I followed']);
+it('asks a commenter to follow first and sends the DM once they reply, as one run', function () {
+    $automation = ($this->automation)('comment_keyword', ['ask_follow' => true, 'follow_text' => 'Follow us to get the price', 'follow_button' => 'I followed']);
 
     $conversation = ($this->event)('comment', 'price?');
 
@@ -44,11 +44,12 @@ it('asks a commenter to follow first and sends the DM once they reply', function
     ($this->event)('message', 'I followed');
 
     expect(($this->sent)($conversation))->toBe(['Follow us to get the price', 'The jacket is 249 SAR'])
-        ->and(Conversation::find($conversation)->awaiting)->toBeNull();
+        ->and(Conversation::find($conversation)->awaiting)->toBeNull()
+        ->and($automation->fresh()->runs_count)->toBe(1);
 });
 
-it('asks for an email after the DM and saves the address they reply with', function () {
-    ($this->automation)('dm_keyword', ['ask_email' => true, 'email_ask' => 'What is your email?']);
+it('asks for an email after the DM and saves the address they reply with, as one run', function () {
+    $automation = ($this->automation)('dm_keyword', ['ask_email' => true, 'email_ask' => 'What is your email?']);
 
     $conversation = ($this->event)('message', 'price please');
 
@@ -57,7 +58,8 @@ it('asks for an email after the DM and saves the address they reply with', funct
     ($this->event)('message', 'sure, it is Reem.K@Example.com.');
 
     expect(Contact::sole()->email)->toBe('reem.k@example.com')
-        ->and(Conversation::find($conversation))->awaiting->toBeNull()->state->toBe('automation');
+        ->and(Conversation::find($conversation))->awaiting->toBeNull()->state->toBe('automation')
+        ->and($automation->fresh()->runs_count)->toBe(1);
 });
 
 it('waits for a commenter to write back before asking for their email', function () {

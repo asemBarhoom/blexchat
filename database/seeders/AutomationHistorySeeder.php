@@ -18,8 +18,9 @@ use Illuminate\Support\Carbon;
  * automation has real Runs and a CTR close to the list's (src/pages/app/automationsContent.ts).
  * First DM → welcome answered nine of them (22%), Story reply → thank you answered eight of the
  * same people thirteen times (38%), and the Ramadan comment-to-DM answered nine others in March,
- * seventeen comments in all (41%). Everything is resolved and older than ten days, so the inbox
- * and Home's last 7 days still lead with the six. Run after ContactSeeder; safe to run again.
+ * seventeen comments in all (41%), each one run. Everything is resolved and older than ten days,
+ * so the inbox and Home's last 7 days still lead with the six. Run after ContactSeeder; safe to
+ * run again.
  */
 class AutomationHistorySeeder extends Seeder
 {
@@ -154,6 +155,22 @@ class AutomationHistorySeeder extends Seeder
                 'first_seen_at' => $startedAt,
                 'last_active_at' => $last->sent_at,
             ]);
+        }
+
+        $this->countRuns($user);
+    }
+
+    /**
+     * Each automation's Runs from what it answered: a comment automation ran once per comment, a DM
+     * or story automation once per message it sent.
+     */
+    private function countRuns(User $user): void
+    {
+        foreach (Automation::where('user_id', $user->id)->get() as $automation) {
+            $automation->forceFill(['runs_count' => $automation->trigger_type === 'comment_keyword'
+                ? $automation->publicReplies()->count()
+                : $automation->sentMessages()->count(),
+            ])->saveQuietly();
         }
     }
 

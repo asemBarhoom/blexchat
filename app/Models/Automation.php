@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * A rule that answers comments, DMs or story replies. The wizard (W11+) speaks in its own terms
@@ -21,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $post_mode
  * @property int|null $post_id
  * @property array<string, mixed>|null $extras
+ * @property int $runs_count
  * @property Carbon|null $deleted_at
  */
 class Automation extends Model
@@ -80,6 +82,7 @@ class Automation extends Model
             'actions' => 'array',
             'extras' => 'array',
             'active' => 'boolean',
+            'runs_count' => 'integer',
         ];
     }
 
@@ -293,31 +296,39 @@ class Automation extends Model
     }
 
     /**
-     * The list's Runs and CTR, counted in the same query as the automations.
+     * The list's CTR, counted in the same query as the automations.
      *
      * @param  Builder<Automation>  $query
      */
     public function scopeWithListFigures(Builder $query): void
     {
         $query->withCount([
-            'sentMessages as dm_sends',
             'sentMessages as button_sends' => fn (Builder $messages) => $messages->whereNotNull('link_token'),
             'sentMessages as button_clicks' => fn (Builder $messages) => $messages->whereNotNull('first_clicked_at'),
-            'publicReplies as public_replies',
         ]);
     }
 
     public function hasListFigures(): bool
     {
-        return array_key_exists('dm_sends', $this->getAttributes());
+        return array_key_exists('button_sends', $this->getAttributes());
     }
 
     /**
-     * Everything it sent: DMs and public comment replies.
+     * How many times it ran: once per comment or message it answered, however many messages it sent.
      */
     public function runs(): int
     {
-        return (int) $this->dm_sends + (int) $this->public_replies;
+        return $this->runs_count;
+    }
+
+    /**
+     * Counts one run, without touching the automation's "last edited" time.
+     */
+    public function recordRun(): void
+    {
+        DB::table($this->getTable())->where($this->getKeyName(), $this->getKey())->increment('runs_count');
+        $this->runs_count++;
+        $this->syncOriginalAttribute('runs_count');
     }
 
     /**

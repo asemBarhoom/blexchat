@@ -40,13 +40,14 @@ it('answers a Facebook Page comment from the webhook, publicly and privately thr
     ]);
     $owner = User::factory()->create();
     $channel = Channel::factory()->for($owner)->create(['platform' => 'messenger', 'account_id' => 'page-1', 'status' => 'active']);
-    Automation::factory()->for($owner)->for($channel)->create([
+    $automation = Automation::factory()->for($owner)->for($channel)->create([
         'trigger_type' => 'comment_keyword',
         'keywords' => ['price'],
         'actions' => [
             ['type' => 'reply_comment', 'message' => 'Check your inbox.'],
             ['type' => 'send_dm', 'message' => 'Here is the price list.'],
         ],
+        'updated_at' => now()->subDay(),
     ]);
     $change = fn (string $commentId, string $from, string $verb = 'add'): array => ['field' => 'feed', 'value' => [
         'item' => 'comment', 'verb' => $verb, 'comment_id' => $commentId, 'post_id' => 'page-1_post-1',
@@ -59,8 +60,11 @@ it('answers a Facebook Page comment from the webhook, publicly and privately thr
         $change('c-3', 'user-2', 'edited'),
     ]]]))->handle(app(ChannelEventHandler::class));
 
+    // One comment answered publicly and privately is one run, and a run is not an edit.
     expect(Comment::pluck('platform_comment_id')->all())->toBe(['c-1'])
-        ->and(Comment::first()->automated_reply)->toBeTrue();
+        ->and(Comment::first()->automated_reply)->toBeTrue()
+        ->and($automation->fresh()->runs_count)->toBe(1)
+        ->and($automation->fresh()->updated_at->isSameMinute(now()->subDay()))->toBeTrue();
     Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), 'c-1/comments') && $request['message'] === 'Check your inbox.');
     Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), 'me/messages') && $request['recipient'] === ['comment_id' => 'c-1']);
 });
