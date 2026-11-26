@@ -55,7 +55,7 @@ class HomeContentSeeder extends Seeder
                 'cta' => ['label' => 'Get started free', 'url' => '/signup'],
                 'microcopy' => 'Free plan · No credit card required',
                 'cutout' => $image('hero-person-upper.webp'),
-                'social_proof' => ['text' => 'Built for Instagram, WhatsApp, TikTok & Messenger'],
+                'social_proof' => ['text' => 'Built for Instagram, WhatsApp, TikTok & Facebook Messenger'],
                 'channels_label' => 'Works with',
                 'channels' => [['id' => 'instagram', 'label' => 'Instagram'], ['id' => 'whatsapp', 'label' => 'WhatsApp'], ['id' => 'tiktok', 'label' => 'TikTok'], ['id' => 'messenger', 'label' => 'Messenger']],
                 'conversations' => [
@@ -70,7 +70,7 @@ class HomeContentSeeder extends Seeder
                 ['id' => 'comments', 'index' => '01', 'headline' => 'Turn comments into customers', 'body' => '"How much is this?" → instant reply, and the sale happens while you sleep.', 'cta' => ['label' => 'See how', 'url' => '#see-it-in-action?tab=comment'], 'phone_label' => 'blexchat.store', 'channel' => 'instagram', 'scene' => ['post' => 'New drop · 2h', 'post_photo' => $image('scenes/nora.webp'), 'comments' => [['handle' => 'sara.styles', 'text' => 'How much is this? 😍'], ['handle' => 'noura.k', 'text' => 'Is it still available?'], ['handle' => 'omar.fit', 'text' => 'Link please 🙏']], 'reply' => 'Sent you the price and the link in DMs 💌', 'action' => 'View product', 'order' => 'New order · $49']],
                 ['id' => 'dms', 'index' => '02', 'headline' => 'Never leave a DM unanswered', 'body' => 'Smart replies handle FAQs, capture phone and email, and hand over to you only when it matters.', 'cta' => ['label' => 'See how', 'url' => '#see-it-in-action?tab=faq'], 'phone_label' => 'Direct', 'channel' => 'whatsapp', 'scene' => ['handle' => 'sara.styles', 'avatar' => $image('avatars/sara.webp'), 'question' => 'Do you ship to Riyadh?', 'reply' => 'Yes! Free delivery across KSA 🚚', 'action' => 'Track order', 'seen' => 'Seen', 'lead' => ['name' => 'Sara A.', 'detail' => '+966 5• ••• 4412 · sara@mail.com', 'tag' => 'Lead captured']]],
                 ['id' => 'stories', 'index' => '03', 'headline' => 'Reply to every story mention', 'body' => 'Turn reactions into conversations automatically, 24/7.', 'cta' => ['label' => 'See how', 'url' => '#try-it'], 'phone_label' => 'Your story', 'channel' => 'instagram', 'scene' => ['story' => 'Reacted to your story', 'photo' => $image('scenes/lina.webp'), 'handle' => 'lina.m', 'reaction' => '❤️', 'reply' => 'Thank you Lina! Here is the link ✨', 'action' => 'Open link']],
-                ['id' => 'channels', 'index' => '04', 'headline' => 'Grow across every channel', 'body' => 'Instagram, WhatsApp, TikTok, Messenger — one inbox, one set of automations.', 'cta' => ['label' => 'See how', 'url' => '/signup'], 'phone_label' => 'All inboxes', 'channel' => 'messenger', 'scene' => ['inbox' => 'One inbox', 'total' => '128', 'total_label' => 'conversations today', 'tiles' => [['id' => 'instagram', 'count' => '64'], ['id' => 'whatsapp', 'count' => '38'], ['id' => 'tiktok', 'count' => '19'], ['id' => 'messenger', 'count' => '7']], 'footer' => 'All answered automatically']],
+                ['id' => 'channels', 'index' => '04', 'headline' => 'Grow across every channel', 'body' => 'Instagram, WhatsApp, TikTok, Facebook Messenger — one inbox, one set of automations.', 'cta' => ['label' => 'See how', 'url' => '/signup'], 'phone_label' => 'All inboxes', 'channel' => 'messenger', 'scene' => ['inbox' => 'One inbox', 'total' => '128', 'total_label' => 'conversations today', 'tiles' => [['id' => 'instagram', 'count' => '64'], ['id' => 'whatsapp', 'count' => '38'], ['id' => 'tiktok', 'count' => '19'], ['id' => 'messenger', 'count' => '7']], 'footer' => 'All answered automatically']],
             ]],
             'autopilot' => ['id' => 'autopilot', 'type' => 'giant_word', 'kicker' => 'This is what we call', 'word' => ['Auto', 'pilot'], 'mark' => '24/7', 'photo' => $image('hero-photo-celebrate.webp')],
             'use-cases' => ['id' => 'use-cases', 'type' => 'use_cases', 'heading' => 'Built for the way YOU sell', 'cta_label' => 'See how', 'prev_label' => 'Previous use cases', 'next_label' => 'Next use cases'],
@@ -83,7 +83,7 @@ class HomeContentSeeder extends Seeder
                 ['id' => 'giveaway', 'title' => 'Run giveaways', 'description' => 'Collect entries and pick winners automatically.', 'surface' => 'TikTok · Giveaway', 'sr' => 'On TikTok, every giveaway comment is confirmed as an entry and counted.', 'scene' => ['handle' => 'hala.m', 'question' => 'Count me in! 🎉', 'reply' => "You're in, Hala! Winners are picked Friday at 8pm.", 'action' => 'Share for 2× entries', 'counter' => ['channel' => 'tiktok', 'value' => '1,284', 'label' => 'Entries collected']]],
             ]],
             'try-it' => ['id' => 'try-it', 'type' => 'live_demo', 'kicker' => 'No signup needed', 'heading_lead' => "Don't take our word for it.", 'heading_mark' => 'Try it.', 'lead' => 'Write a comment like your customers do — watch BLEXCHAT answer it.', 'placeholder' => 'Write a comment…', 'bridge' => 'That flow took 0 minutes to build. Yours takes 2.', 'cta' => ['label' => 'Build your first flow', 'url' => '/signup'], 'handle' => 'you', 'initial' => 'Y', 'suggestions' => ['How much is this? 😍', 'Do you ship to Riyadh?', 'Link please 🙏']],
-            'get-started' => ['id' => 'get-started', 'type' => 'steps', 'heading' => 'Live in minutes, not weeks.', 'steps' => [['number' => '01', 'name' => 'Sign up free', 'line' => 'No credit card, no calls.', 'loop' => 'tick'], ['number' => '02', 'name' => 'Connect your channels', 'line' => 'Instagram, WhatsApp, TikTok, Messenger — one tap each.', 'loop' => 'channels'], ['number' => '03', 'name' => 'Go live', 'line' => 'Pick a flow, switch it on, watch replies happen.', 'loop' => 'switch']], 'cta' => ['label' => 'Get started free', 'url' => '/signup'], 'secondary_cta' => ['label' => 'See plans', 'url' => '/pricing']],
+            'get-started' => ['id' => 'get-started', 'type' => 'steps', 'heading' => 'Live in minutes, not weeks.', 'steps' => [['number' => '01', 'name' => 'Sign up free', 'line' => 'No credit card, no calls.', 'loop' => 'tick'], ['number' => '02', 'name' => 'Connect your channels', 'line' => 'Instagram, WhatsApp, TikTok, Facebook Messenger — one tap each.', 'loop' => 'channels'], ['number' => '03', 'name' => 'Go live', 'line' => 'Pick a flow, switch it on, watch replies happen.', 'loop' => 'switch']], 'cta' => ['label' => 'Get started free', 'url' => '/signup'], 'secondary_cta' => ['label' => 'See plans', 'url' => '/pricing']],
             'numbers' => ['id' => 'numbers', 'type' => 'numbers', 'heading' => 'BLEXCHAT in numbers'],
             'faq' => ['id' => 'faq', 'type' => 'faq', 'heading' => 'Questions, answered.'],
             'navigation' => [
@@ -222,7 +222,7 @@ class HomeContentSeeder extends Seeder
                 'description' => 'أتمتة ذكية تبيع وترد عنك على مدار الساعة.',
                 'cta' => ['label' => 'ابدأ مجاناً'],
                 'microcopy' => 'خطة مجانية · بدون بطاقة ائتمان',
-                'social_proof' => ['text' => 'مصمَّم لـ Instagram وWhatsApp وTikTok وMessenger'],
+                'social_proof' => ['text' => 'مصمَّم لـ Instagram وWhatsApp وTikTok وFacebook Messenger'],
                 'channels_label' => 'يعمل مع',
                 'channels' => [['label' => 'إنستغرام'], ['label' => 'واتساب'], ['label' => 'تيك توك'], ['label' => 'ماسنجر']],
                 'conversations' => [
@@ -246,7 +246,7 @@ class HomeContentSeeder extends Seeder
                 ['index' => '03', 'headline' => 'رد على كل إشارة في القصة', 'body' => 'حوّل التفاعلات إلى محادثات تلقائياً، على مدار الساعة.', 'cta' => ['label' => 'شاهد كيف'], 'phone_label' => 'القصة', 'scene' => [
                     'story' => 'تفاعل مع القصة', 'handle' => 'lina.m', 'reaction' => '❤️', 'reply' => 'شكراً لينا! هذا الرابط ✨', 'action' => 'افتحي الرابط',
                 ]],
-                ['index' => '04', 'headline' => 'انمُ عبر كل القنوات', 'body' => 'إنستغرام وواتساب وتيك توك وماسنجر — صندوق واحد، ومجموعة أتمتة واحدة.', 'cta' => ['label' => 'شاهد كيف'], 'phone_label' => 'كل الصناديق', 'scene' => [
+                ['index' => '04', 'headline' => 'انمُ عبر كل القنوات', 'body' => 'إنستغرام وواتساب وتيك توك وفيسبوك ماسنجر — صندوق واحد، ومجموعة أتمتة واحدة.', 'cta' => ['label' => 'شاهد كيف'], 'phone_label' => 'كل الصناديق', 'scene' => [
                     'inbox' => 'صندوق واحد', 'total' => '128', 'total_label' => 'محادثة اليوم',
                     'tiles' => [['count' => '64'], ['count' => '38'], ['count' => '19'], ['count' => '7']],
                     'footer' => 'تم الرد على الجميع تلقائياً',
@@ -283,7 +283,7 @@ class HomeContentSeeder extends Seeder
                 'heading' => 'جاهز خلال دقائق، لا أسابيع.',
                 'steps' => [
                     ['number' => '01', 'name' => 'سجّل مجاناً', 'line' => 'بدون بطاقة ائتمان، وبدون مكالمات.'],
-                    ['number' => '02', 'name' => 'اربط قنواتك', 'line' => 'إنستغرام وواتساب وتيك توك وماسنجر — بضغطة لكل قناة.'],
+                    ['number' => '02', 'name' => 'اربط قنواتك', 'line' => 'إنستغرام وواتساب وتيك توك وفيسبوك ماسنجر — بضغطة لكل قناة.'],
                     ['number' => '03', 'name' => 'انطلق', 'line' => 'اختر مساراً، فعّله، وشاهد الردود تنطلق.'],
                 ],
                 'cta' => ['label' => 'ابدأ مجاناً'], 'secondary_cta' => ['label' => 'شاهد الخطط'],
@@ -441,7 +441,7 @@ class HomeContentSeeder extends Seeder
 
         $faq = [
             [['How much does it cost?', 'كم التكلفة؟'], ['There’s a free plan to start. Paid plans scale with your audience — see {link}.', 'فيه خطة مجانية للبداية، والخطط المدفوعة تكبر مع جمهورك — اطّلع على {link}.'], ['Pricing', 'صفحة الأسعار'], '/pricing'],
-            [['Which channels are supported?', 'ما القنوات المدعومة؟'], ['Instagram, WhatsApp, TikTok and Messenger — one inbox, one set of automations.', 'إنستغرام وواتساب وتيك توك وماسنجر — صندوق واحد، ومجموعة أتمتة واحدة.'], null, null],
+            [['Which channels are supported?', 'ما القنوات المدعومة؟'], ['Instagram, WhatsApp, TikTok and Facebook Messenger — one inbox, one set of automations.', 'إنستغرام وواتساب وتيك توك وفيسبوك ماسنجر — صندوق واحد، ومجموعة أتمتة واحدة.'], null, null],
             [['Does it work in Arabic?', 'هل يدعم العربية؟'], ['Fully. Flows, replies and the dashboard all support Arabic and English.', 'بالكامل. المسارات والردود ولوحة التحكم كلها تدعم العربية والإنجليزية.'], null, null],
             [['Is it approved by Meta?', 'هل هو معتمد من Meta؟'], ['BLEXCHAT uses the official APIs.', 'بلكس تشات يستخدم الواجهات البرمجية الرسمية.'], null, null],
             [['How long does setup take?', 'كم يستغرق الإعداد؟'], ['Most businesses go live in under 10 minutes.', 'أغلب الأنشطة تنطلق في أقل من 10 دقائق.'], null, null],

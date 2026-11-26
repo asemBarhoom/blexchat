@@ -150,7 +150,7 @@
             "description": "Smart automations that sell and reply for you, 24/7.",
             "microcopy": "Free plan · No credit card required",
             "social_proof": {
-                "text": "Built for Instagram, WhatsApp, TikTok & Messenger"
+                "text": "Built for Instagram, WhatsApp, TikTok & Facebook Messenger"
             },
             "channels_label": "Works with"
         },
@@ -286,7 +286,7 @@
                     },
                     "index": "04",
                     "headline": "Grow across every channel",
-                    "body": "Instagram, WhatsApp, TikTok, Messenger — one inbox, one set of automations.",
+                    "body": "Instagram, WhatsApp, TikTok, Facebook Messenger — one inbox, one set of automations.",
                     "phone_label": "All inboxes"
                 }
             ],
@@ -546,7 +546,7 @@
                     "loop": "channels",
                     "number": "02",
                     "name": "Connect your channels",
-                    "line": "Instagram, WhatsApp, TikTok, Messenger — one tap each."
+                    "line": "Instagram, WhatsApp, TikTok, Facebook Messenger — one tap each."
                 },
                 {
                     "loop": "switch",
@@ -603,7 +603,7 @@
                 },
                 {
                     "question": "Which channels are supported?",
-                    "answer": "Instagram, WhatsApp, TikTok and Messenger — one inbox, one set of automations."
+                    "answer": "Instagram, WhatsApp, TikTok and Facebook Messenger — one inbox, one set of automations."
                 },
                 {
                     "question": "Does it work in Arabic?",

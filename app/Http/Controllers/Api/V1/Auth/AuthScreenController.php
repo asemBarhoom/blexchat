@@ -22,7 +22,7 @@ use OpenApi\Attributes as OA;
             'notice_google_failed' => 'Google sign-in didn’t finish. Try again, or continue with email.', 'notice_signed_out' => 'You were signed out. Sign in again to pick up where you left off.',
         ]),
         new OA\Property(property: 'signup', description: 'W01 — sign up', type: 'object', additionalProperties: new OA\AdditionalProperties(type: 'string'), example: [
-            'title' => 'Create your free account', 'lead' => 'Automate replies on Instagram, WhatsApp, TikTok and Messenger. No credit card.',
+            'title' => 'Create your free account', 'lead' => 'Automate replies on Instagram, WhatsApp, TikTok and Facebook Messenger. No credit card.',
             'google' => 'Sign up with Google', 'submit' => 'Continue with email', 'aside_text' => 'Have an account?', 'aside_link' => 'Sign in',
             'legal' => 'By continuing you agree to our {terms} and {privacy}.', 'legal_terms' => 'Terms', 'legal_privacy' => 'Privacy Policy',
         ]),

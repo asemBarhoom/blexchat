@@ -65,7 +65,7 @@ class AuthScreenSeeder extends Seeder
             'signup' => [
                 'en' => [
                     'title' => 'Create your free account',
-                    'lead' => 'Automate replies on Instagram, WhatsApp, TikTok and Messenger. No credit card.',
+                    'lead' => 'Automate replies on Instagram, WhatsApp, TikTok and Facebook Messenger. No credit card.',
                     'google' => 'Sign up with Google',
                     'submit' => 'Continue with email',
                     'aside_text' => 'Have an account?',
@@ -76,7 +76,7 @@ class AuthScreenSeeder extends Seeder
                 ],
                 'ar' => [
                     'title' => 'أنشئ حسابك المجاني',
-                    'lead' => 'ردود تلقائية على Instagram وWhatsApp وTikTok وMessenger. بدون بطاقة ائتمان.',
+                    'lead' => 'ردود تلقائية على Instagram وWhatsApp وTikTok وFacebook Messenger. بدون بطاقة ائتمان.',
                     'google' => 'أنشئ حسابك عبر Google',
                     'submit' => 'تابع بالبريد الإلكتروني',
                     'aside_text' => 'لديك حساب؟',

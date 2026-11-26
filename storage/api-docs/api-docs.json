@@ -6744,7 +6744,7 @@
                         "type": "object",
                         "example": {
                             "title": "Create your free account",
-                            "lead": "Automate replies on Instagram, WhatsApp, TikTok and Messenger. No credit card.",
+                            "lead": "Automate replies on Instagram, WhatsApp, TikTok and Facebook Messenger. No credit card.",
                             "google": "Sign up with Google",
                             "submit": "Continue with email",
                             "aside_text": "Have an account?",

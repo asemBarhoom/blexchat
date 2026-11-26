@@ -29,7 +29,7 @@ class LegalPageSeeder extends Seeder
                 ['en' => 'Privacy Policy', 'ar' => 'سياسة الخصوصية'],
                 [
                     'en' => <<<'MD'
-                        Blexchat helps businesses answer comments and messages on Instagram, WhatsApp, TikTok and Messenger automatically. This policy explains what we collect, why, and the choices you have.
+                        Blexchat helps businesses answer comments and messages on Instagram, WhatsApp, TikTok and Facebook Messenger automatically. This policy explains what we collect, why, and the choices you have.
 
                         ## What we collect
 
@@ -64,7 +64,7 @@ class LegalPageSeeder extends Seeder
                         When this policy changes in a way that matters, we update the date above and tell you by email.
                         MD,
                     'ar' => <<<'MD'
-                        يساعد Blexchat الأنشطة التجارية على الرد تلقائيًا على التعليقات والرسائل في Instagram وWhatsApp وTikTok وMessenger. توضّح هذه السياسة ما نجمعه، ولماذا، والخيارات المتاحة لك.
+                        يساعد Blexchat الأنشطة التجارية على الرد تلقائيًا على التعليقات والرسائل في Instagram وWhatsApp وTikTok وFacebook Messenger. توضّح هذه السياسة ما نجمعه، ولماذا، والخيارات المتاحة لك.
 
                         ## ما الذي نجمعه
 

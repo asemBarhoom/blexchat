@@ -38,8 +38,8 @@ class HonestMarketingCopySeeder extends Seeder
         }
 
         $texts = $block->getTranslations('texts');
-        $texts['en']['social_proof'] = ['text' => 'Built for Instagram, WhatsApp, TikTok & Messenger'];
-        $texts['ar']['social_proof'] = ['text' => 'مصمَّم لـ Instagram وWhatsApp وTikTok وMessenger'];
+        $texts['en']['social_proof'] = ['text' => 'Built for Instagram, WhatsApp, TikTok & Facebook Messenger'];
+        $texts['ar']['social_proof'] = ['text' => 'مصمَّم لـ Instagram وWhatsApp وTikTok وFacebook Messenger'];
         unset($texts['en']['partners'], $texts['ar']['partners']);
 
         $settings = $block->settings ?? [];
