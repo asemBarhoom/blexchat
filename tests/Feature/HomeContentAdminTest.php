@@ -166,8 +166,9 @@ it('gives a use-case card a photo and edits its bubble, and the home API serves 
     Storage::fake('public');
     $useCase = UseCase::where('key', 'ecommerce')->firstOrFail();
 
+    // A stand-in photo is seeded; the admin's upload replaces it.
     $this->getJson('/api/v1/home?lang=ar')
-        ->assertJsonPath('data.sections.5.items.1.photo', null)
+        ->assertJsonPath('data.sections.5.items.1.photo', url('storage/marketing/home/use-cases/ecommerce.webp'))
         ->assertJsonPath('data.sections.5.items.1.bubble', ['question' => 'كم سعر العباية؟', 'answer' => '349 ريال، وهذا رابط الطلب 🛍️']);
 
     Livewire::test(ManageUseCases::class)

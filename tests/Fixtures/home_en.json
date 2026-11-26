@@ -318,7 +318,7 @@
                     "line": "Turn engagement into income.",
                     "shape": "rounded",
                     "tone": "brand",
-                    "photo": null,
+                    "photo": "storage/marketing/home/use-cases/creators.webp",
                     "bubble": {
                         "question": "Link please 🔗",
                         "answer": "Sent to your DMs ✨"
@@ -331,7 +331,7 @@
                     "line": "Every comment is a checkout.",
                     "shape": "blob",
                     "tone": "tint",
-                    "photo": null,
+                    "photo": "storage/marketing/home/use-cases/ecommerce.webp",
                     "bubble": {
                         "question": "How much is the abaya?",
                         "answer": "SAR 349, and here’s the order link 🛍️"
@@ -344,7 +344,7 @@
                     "line": "Bookings and orders from DMs.",
                     "shape": "arch",
                     "tone": "ink",
-                    "photo": null,
+                    "photo": "storage/marketing/home/use-cases/restaurants.webp",
                     "bubble": {
                         "question": "A table for 4 at 9?",
                         "answer": "Booked ✓ See you at 9"
@@ -357,7 +357,7 @@
                     "line": "Appointments booked while you work.",
                     "shape": "circle",
                     "tone": "tint",
-                    "photo": null,
+                    "photo": "storage/marketing/home/use-cases/clinics.webp",
                     "bubble": {
                         "question": "Any appointment tomorrow?",
                         "answer": "10:30 AM is free. Shall I book it?"
@@ -370,7 +370,7 @@
                     "line": "Run automations for every client.",
                     "shape": "pill",
                     "tone": "brand",
-                    "photo": null,
+                    "photo": "storage/marketing/home/use-cases/agencies.webp",
                     "bubble": {
                         "question": "How many accounts can I run?",
                         "answer": "All your clients, from one place ✓"
@@ -383,7 +383,7 @@
                     "line": "Qualify leads before you call.",
                     "shape": "house",
                     "tone": "ink",
-                    "photo": null,
+                    "photo": "storage/marketing/home/use-cases/realestate.webp",
                     "bubble": {
                         "question": "Is the apartment still available?",
                         "answer": "Yes! When suits you for a viewing?"

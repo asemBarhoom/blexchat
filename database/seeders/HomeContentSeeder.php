@@ -388,7 +388,7 @@ class HomeContentSeeder extends Seeder
             ['realestate', 'real-estate', ['Real estate', 'العقارات'], ['Qualify leads before you call.', 'أهّل العملاء المحتملين قبل أن تتصل.'], 'house', 'ink'],
         ];
 
-        // A customer's question and the automatic answer, inside each card's shape. Photos are the client's to upload.
+        // A customer's question and the automatic answer, inside each card's shape.
         $bubbles = [
             'creators' => [['Link please 🔗', 'الرابط 🔗'], ['Sent to your DMs ✨', 'وصلك بالخاص ✨']],
             'ecommerce' => [['How much is the abaya?', 'كم سعر العباية؟'], ['SAR 349, and here’s the order link 🛍️', '349 ريال، وهذا رابط الطلب 🛍️']],
@@ -398,9 +398,11 @@ class HomeContentSeeder extends Seeder
             'realestate' => [['Is the apartment still available?', 'الشقة لسا متاحة؟'], ['Yes! When suits you for a viewing?', 'إيه، متى يناسبك المعاينة؟']],
         ];
 
+        // Stand-in photos under the Unsplash License until the client uploads their own from the admin.
         foreach ($useCases as $sort => [$key, $slug, $name, $line, $shape, $tone]) {
             UseCase::updateOrCreate(['key' => $key], [
                 'slug' => $slug, 'name' => $t($name), 'line' => $t($line), 'shape' => $shape, 'tone' => $tone, 'sort' => $sort + 1, 'active' => true,
+                'photo' => "marketing/home/use-cases/{$key}.webp",
                 'bubble_question' => $t($bubbles[$key][0]), 'bubble_answer' => $t($bubbles[$key][1]),
             ]);
         }
