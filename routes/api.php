@@ -45,6 +45,7 @@ use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\SurveyController;
 use App\Http\Controllers\Api\V1\SystemHealthController;
 use App\Http\Controllers\Api\V1\TeamController;
+use App\Http\Controllers\Api\V1\TikTokWebhookController;
 use App\Http\Controllers\Api\V1\WorkspaceController;
 use App\Http\Middleware\EnsureAccountOwner;
 use App\Http\Middleware\ResolveWorkspace;
@@ -80,6 +81,7 @@ Route::post('v1/webhooks/instagram', [InstagramWebhookController::class, 'receiv
 // Meta calls these for WhatsApp and Messenger; authenticated by the X-Hub-Signature-256 header
 Route::get('v1/webhooks/{platform}', [MetaChannelWebhookController::class, 'verify'])->whereIn('platform', ['whatsapp', 'messenger'])->name('webhooks.meta.verify');
 Route::post('v1/webhooks/{platform}', [MetaChannelWebhookController::class, 'receive'])->whereIn('platform', ['whatsapp', 'messenger'])->name('webhooks.meta');
+Route::post('v1/webhooks/tiktok', [TikTokWebhookController::class, 'receive'])->name('webhooks.tiktok');
 Route::post('v1/webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
 Route::post('v1/webhooks/meta/deauthorize', [MetaDataDeletionController::class, 'deauthorize'])->name('webhooks.meta.deauthorize');
 Route::post('v1/webhooks/meta/data-deletion', [MetaDataDeletionController::class, 'dataDeletion'])->name('webhooks.meta.data-deletion');

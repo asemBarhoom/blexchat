@@ -2169,6 +2169,9 @@
                     "409": {
                         "description": "`code: channel_taken` — the account is connected to another workspace"
                     },
+                    "422": {
+                        "description": "`code: account_ineligible`; for TikTok `reason: no_advanced_access`: only an account with Advanced Access or a Verified Business Account can use direct messages"
+                    },
                     "503": {
                         "description": "Provider credentials or messaging approval are pending"
                     }
@@ -6275,6 +6278,24 @@
                         "sanctum": []
                     }
                 ]
+            }
+        },
+        "/api/v1/webhooks/tiktok": {
+            "post": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Receive TikTok direct messages and comments",
+                "description": "Requires a valid TikTok-Signature header (t=<timestamp>,s=<HMAC-SHA256 of \"<timestamp>.<body>\">) no older than five minutes. TikTok delivers at least once: an event that comes again is acknowledged and not handled twice.",
+                "operationId": "c511f46f92302795d04cd36de1291437",
+                "responses": {
+                    "200": {
+                        "description": "Received"
+                    },
+                    "403": {
+                        "description": "Missing, wrong or expired signature"
+                    }
+                }
             }
         },
         "/api/v1/workspaces": {

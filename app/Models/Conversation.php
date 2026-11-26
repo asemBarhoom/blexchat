@@ -66,6 +66,14 @@ class Conversation extends Model
     ];
 
     /**
+     * Who a reply goes to: TikTok answers a conversation (its conversation_id), the other platforms a person.
+     */
+    public function recipientId(): string
+    {
+        return $this->channel?->platform === 'tiktok' ? (string) $this->platform_conversation_id : (string) $this->contact_platform_id;
+    }
+
+    /**
      * Every conversation has its contact: one is found or made from the platform id the moment the
      * conversation is created, so the inbox can always open the contact's page.
      */

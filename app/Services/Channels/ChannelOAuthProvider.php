@@ -3,6 +3,7 @@
 namespace App\Services\Channels;
 
 use App\Services\Instagram\InstagramClient;
+use App\Services\TikTok\TikTokClient;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
@@ -16,17 +17,16 @@ class ChannelOAuthProvider
     public static function credentialsConfigured(string $platform): bool
     {
         return filled(config("services.{$platform}.client_id"))
-            && ($platform !== 'tiktok' || filled(config('services.tiktok.client_secret')))
+            && ($platform !== 'tiktok' || (filled(config('services.tiktok.client_secret')) && filled(config('services.tiktok.auth_url'))))
             && ($platform !== 'whatsapp' || filled(config('services.whatsapp.config_id')));
     }
 
     /**
-     * TikTok Login Kit can connect an account, but it does not grant the Messaging or Comment APIs.
-     * Change this only with the real send, comment and webhook implementation after TikTok approval.
+     * TikTok messages go through TikTok for Business (Business Messaging API), open once its app is set up.
      */
     public static function messagingAvailable(string $platform): bool
     {
-        return $platform !== 'tiktok';
+        return $platform !== 'tiktok' || self::credentialsConfigured($platform);
     }
 
     public static function contentReadingAvailable(string $platform): bool
@@ -34,7 +34,19 @@ class ChannelOAuthProvider
         return in_array($platform, ['instagram', 'messenger'], true) || ($platform === 'tiktok' && self::credentialsConfigured($platform));
     }
 
+    /**
+     * TikTok comments get a public reply through the Accounts API, once its app is set up.
+     */
     public static function commentAutomationAvailable(string $platform): bool
+    {
+        return $platform !== 'tiktok' || self::credentialsConfigured($platform);
+    }
+
+    /**
+     * Whether a comment's author can be sent a private message. TikTok's Comment-to-Message is open
+     * only to accounts registered in the US, Vietnam, Indonesia and Thailand, so it is off here.
+     */
+    public static function commentDmAvailable(string $platform): bool
     {
         return $platform !== 'tiktok';
     }
@@ -52,7 +64,12 @@ class ChannelOAuthProvider
     {
         $redirect = self::redirectUri($platform);
         if ($platform === 'tiktok') {
-            return 'https://www.tiktok.com/v2/auth/authorize/?'.http_build_query(['client_key' => config('services.tiktok.client_id'), 'scope' => 'user.info.basic,video.list', 'response_type' => 'code', 'redirect_uri' => $redirect, 'state' => $state]);
+            // The app's "TikTok account holder authorization URL" from the TikTok for Business portal, which
+            // carries the app and its redirect. Without disable_auto_auth, an account that authorized before
+            // comes back with no code.
+            $url = (string) config('services.tiktok.auth_url');
+
+            return $url.(str_contains($url, '?') ? '&' : '?').http_build_query(['state' => $state, 'disable_auto_auth' => 1]);
         }
         if ($platform === 'whatsapp') {
             return 'https://www.facebook.com/dialog/oauth?'.http_build_query([
@@ -68,24 +85,24 @@ class ChannelOAuthProvider
         return 'https://www.facebook.com/dialog/oauth?'.http_build_query(['client_id' => config("services.{$platform}.client_id"), 'redirect_uri' => $redirect, 'state' => $state, 'scope' => 'pages_show_list,pages_manage_metadata,pages_messaging,pages_read_engagement,pages_manage_engagement']);
     }
 
-    /** @return array{access_token:string, refresh_token?:string, account_id?:string, username?:string, profile_picture?:string, expires_in?:int, pages?:list<array<string,mixed>>, waba_id?:string, phone_number_id?:string} */
+    /** @return array{access_token:string, refresh_token?:string|null, account_id?:string, username?:string|null, profile_picture?:string|null, expires_in?:int|null, eligible?:bool, pages?:list<array<string,mixed>>, waba_id?:string, phone_number_id?:string} */
     public function exchange(string $platform, string $code): array
     {
         if ($platform === 'tiktok') {
-            $token = Http::asForm()->post('https://open.tiktokapis.com/v2/oauth/token/', ['client_key' => config('services.tiktok.client_id'), 'client_secret' => config('services.tiktok.client_secret'), 'code' => $code, 'grant_type' => 'authorization_code', 'redirect_uri' => self::redirectUri($platform)])->throw()->json();
-            $profile = rescue(
-                fn (): array => Http::withToken($token['access_token'])->get('https://open.tiktokapis.com/v2/user/info/', [
-                    'fields' => 'open_id,display_name,avatar_url',
-                ])->throw()->json('data.user', []),
-                [],
-                report: false,
-            );
+            $tiktok = app(TikTokClient::class);
+            $token = $tiktok->exchangeCode($code, self::redirectUri($platform));
+            $businessId = (string) ($token['open_id'] ?? '');
+            $profile = $tiktok->profile((string) $token['access_token'], $businessId);
 
             return [
-                ...$token,
-                'account_id' => (string) ($profile['open_id'] ?? $token['open_id'] ?? ''),
-                'username' => $profile['display_name'] ?? null,
-                'profile_picture' => $profile['avatar_url'] ?? null,
+                'access_token' => (string) $token['access_token'],
+                'refresh_token' => $token['refresh_token'] ?? null,
+                'expires_in' => $token['expires_in'] ?? null,
+                'account_id' => $businessId,
+                'username' => $profile['username'] ?? $profile['display_name'] ?? null,
+                'profile_picture' => $profile['profile_image'] ?? null,
+                // Only an account with Advanced Access or a Verified Business Account may use Business Messaging.
+                'eligible' => ($profile['has_advanced_access'] ?? false) === true,
             ];
         }
         $token = $this->graph()->get('oauth/access_token', ['client_id' => config("services.{$platform}.client_id"), 'client_secret' => config("services.{$platform}.client_secret"), 'redirect_uri' => self::redirectUri($platform), 'code' => $code])->throw()->json('access_token');

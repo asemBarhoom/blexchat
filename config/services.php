@@ -107,9 +107,14 @@ return [
         'config_id' => env('WHATSAPP_CONFIG_ID'),
     ],
 
+    /*
+    | TikTok for Business: the developer app's App ID and Secret, and its "TikTok account holder
+    | authorization URL" (My Apps > App Detail > Basic Information on the TikTok for Business portal).
+    */
     'tiktok' => [
         'client_id' => env('TIKTOK_CLIENT_ID'),
         'client_secret' => env('TIKTOK_CLIENT_SECRET'),
+        'auth_url' => env('TIKTOK_AUTH_URL'),
     ],
 
     'channels' => [

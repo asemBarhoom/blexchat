@@ -250,7 +250,7 @@ class ConversationController extends Controller
             try {
                 $platformMessageId = $messaging->sendWithButton(
                     $conversation->channel,
-                    $conversation->contact_platform_id,
+                    $conversation->recipientId(),
                     $request->content,
                     $request->button_label,
                     $request->button_url,

@@ -3,15 +3,16 @@
 namespace App\Services\Channels;
 
 use App\Models\Channel;
+use App\Services\TikTok\TikTokClient;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 
 /**
- * Sends a text reply on WhatsApp (Cloud API), Messenger (Send API) or TikTok, over the channel's
- * own token. Instagram has InstagramClient. Sends are never retried, so nobody gets a reply twice.
- * MESSAGING_DRIVER=fake (the default on local) logs instead of sending.
+ * Sends a reply on WhatsApp (Cloud API), Messenger (Send API) or TikTok (TikTok for Business), over
+ * the channel's own token. Instagram has InstagramClient. Sends are never retried, so nobody gets a
+ * reply twice. MESSAGING_DRIVER=fake (the default on local) logs instead of sending.
  */
 class MessagingClient
 {
@@ -48,7 +49,8 @@ class MessagingClient
                     'messaging_type' => 'RESPONSE',
                     'message' => ['text' => $text],
                 ])->throw()->json('message_id'),
-            // TikTok's business messaging is not open to apps yet: it works on the fake driver only.
+            // TikTok answers a conversation: the recipient is its conversation_id.
+            'tiktok' => app(TikTokClient::class)->sendText($channel, $recipientId, $text),
             default => throw new ChannelNotLive($channel->platform),
         };
     }
@@ -74,17 +76,17 @@ class MessagingClient
     }
 
     /**
-     * A public reply under a comment. Facebook Pages only: TikTok's comment API is not open to apps yet.
+     * A public reply under a comment on a Facebook Page or a TikTok post (which needs the post's id).
      *
      * @throws RequestException|ConnectionException|ChannelNotLive
      */
-    public function replyToComment(Channel $channel, string $commentId, string $text): ?string
+    public function replyToComment(Channel $channel, string $commentId, string $text, ?string $postId = null): ?string
     {
-        if ($channel->platform !== 'messenger') {
-            throw new ChannelNotLive($channel->platform);
-        }
-
-        return $this->graph($channel)->post("{$commentId}/comments", ['message' => $text])->throw()->json('id');
+        return match ($channel->platform) {
+            'messenger' => $this->graph($channel)->post("{$commentId}/comments", ['message' => $text])->throw()->json('id'),
+            'tiktok' => app(TikTokClient::class)->replyToComment($channel, (string) $postId, $commentId, $text),
+            default => throw new ChannelNotLive($channel->platform),
+        };
     }
 
     /**

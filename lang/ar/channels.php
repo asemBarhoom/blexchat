@@ -7,6 +7,7 @@ return [
         'access_denied' => 'لم يُربط :channel. أغلقت النافذة أو لم تسمح بالوصول.',
         'account_ineligible' => 'هذا حساب شخصي. يعمل Blexchat مع الحسابات الاحترافية — حساب أعمال أو صانع محتوى.',
         'no_linked_page' => 'حساب Instagram هذا غير مربوط بصفحة Facebook، لذلك لن يرسل Instagram تعليقاته ورسائله إلى Blexchat. اربطه بصفحة من تطبيق Instagram (تعديل الملف الشخصي ← الصفحة)، ثم اربطه هنا من جديد واختر تلك الصفحة عندما يسألك Meta.',
+        'tiktok_not_eligible' => 'لا يستطيع حساب TikTok هذا استخدام الرسائل عبر Blexchat بعد. يسمح TikTok بذلك فقط للحسابات التي لديها Advanced Access أو الحسابات التجارية الموثّقة (Verified Business Account): رقِّ الحساب من TikTok، ثم اربطه هنا من جديد.',
         'provider_error' => 'رفض :channel الربط. حاول مرة أخرى.',
         'state_invalid' => 'انتهت صلاحية تسجيل الدخول إلى :channel أو بدأه حساب آخر. حاول مرة أخرى.',
     ],

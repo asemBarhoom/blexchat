@@ -7,6 +7,7 @@ use App\Models\Conversation;
 use App\Models\Plan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
 
@@ -30,14 +31,15 @@ it('answers a deleted automation, contact and channel in the language asked for'
     'English' => ['en', 'Automation moved to the trash.', 'Contact deleted.', 'Channel disconnected.'],
 ]);
 
-it('says in Arabic that replies on TikTok are not available yet, and keeps the code', function () {
+it('says in Arabic when TikTok refuses a reply, and keeps the code', function () {
+    Http::fake(['business-api.tiktok.com/*' => Http::response(['code' => 40002, 'message' => 'Invalid parameter', 'data' => []])]);
     $conversation = Conversation::factory()->for(Channel::factory()->for($this->owner)->create(['platform' => 'tiktok']))->create();
 
     $this->actingAs($this->owner)
         ->postJson("/api/v1/conversations/{$conversation->id}/messages?lang=ar", ['type' => 'text', 'content' => 'Hi'])
         ->assertStatus(502)
-        ->assertJsonPath('code', 'channel_not_live')
-        ->assertJsonPath('message', 'الرد على TikTok غير متاح بعد.');
+        ->assertJsonPath('code', 'provider_rejected')
+        ->assertJsonPath('message', 'لم يوصل TikTok الرسالة. جرّب مرة أخرى بعد قليل.');
 });
 
 it('names the help centre in the language asked for', function () {

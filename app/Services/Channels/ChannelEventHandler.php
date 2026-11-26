@@ -22,8 +22,9 @@ class ChannelEventHandler
 
     /**
      * @param  string|null  $phone  WhatsApp's sender number, saved on the contact
+     * @param  string|null  $conversationId  the platform's own conversation id where it has one (TikTok replies to it); else the sender's
      */
-    public function message(Channel $channel, string $senderId, string $messageId, string $text, ?string $senderName = null, ?string $phone = null, ?Carbon $sentAt = null): void
+    public function message(Channel $channel, string $senderId, string $messageId, string $text, ?string $senderName = null, ?string $phone = null, ?Carbon $sentAt = null, ?string $conversationId = null): void
     {
         if ($senderId === '' || $messageId === '') {
             return;
@@ -31,7 +32,7 @@ class ChannelEventHandler
 
         $sentAt ??= now();
         $conversation = Conversation::firstOrCreate(
-            ['channel_id' => $channel->id, 'platform_conversation_id' => $senderId],
+            ['channel_id' => $channel->id, 'platform_conversation_id' => $conversationId ?: $senderId],
             ['contact_platform_id' => $senderId, 'contact_name' => $senderName, 'status' => 'open'],
         );
 

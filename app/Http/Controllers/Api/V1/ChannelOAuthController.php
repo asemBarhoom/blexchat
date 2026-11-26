@@ -41,6 +41,7 @@ class ChannelOAuthController extends Controller
             'content_reading_available' => $driver !== 'provider' || ChannelOAuthProvider::contentReadingAvailable($platform),
             'messaging_available' => ChannelOAuthProvider::messagingAvailable($platform),
             'comment_automation_available' => ChannelOAuthProvider::commentAutomationAvailable($platform),
+            'comment_dm_available' => ChannelOAuthProvider::commentDmAvailable($platform),
         ]])->all()]]);
     }
 
@@ -78,6 +79,7 @@ class ChannelOAuthController extends Controller
             new OA\Response(response: 400, description: '`code: invalid_oauth_state` — unknown, expired or already used'),
             new OA\Response(response: 403, description: '`code: channel_limit` with `limit`: the plan’s channels are all in use'),
             new OA\Response(response: 409, description: '`code: channel_taken` — the account is connected to another workspace'),
+            new OA\Response(response: 422, description: '`code: account_ineligible`; for TikTok `reason: no_advanced_access`: only an account with Advanced Access or a Verified Business Account can use direct messages'),
             new OA\Response(response: 503, description: 'Provider credentials or messaging approval are pending'),
         ]
     )]
@@ -108,6 +110,11 @@ class ChannelOAuthController extends Controller
 
         if ($pages === null && self::driver() === 'provider') {
             $result = $provider->exchange($platform, (string) $request->query('code'));
+
+            if (($result['eligible'] ?? true) === false) {
+                return response()->json(['message' => __('channels.connect.tiktok_not_eligible'), 'code' => 'account_ineligible', 'reason' => 'no_advanced_access'], 422);
+            }
+
             $accessToken = $result['access_token'];
             $metaUserId = $result['meta_user_id'] ?? null;
             $channelDetails = array_filter([

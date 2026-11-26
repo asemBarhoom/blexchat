@@ -136,29 +136,47 @@ it('puts the link after the text when a Messenger reply is too long for a button
     Http::assertSent(fn (Request $request): bool => ($request->data()['message']['text'] ?? null) === "{$long}\n\nOrder: https://shop.test");
 });
 
-it('says a TikTok reply cannot be sent yet, and keeps nothing', function () {
+it('sends a TikTok inbox reply to the conversation, with the link in the text', function () {
+    Http::fake(['business-api.tiktok.com/open_api/v1.3/business/message/send/' => Http::response(['code' => 0, 'message' => 'OK', 'data' => ['message' => ['message_id' => 'tt-msg-1']]])]);
+    $channel = Channel::factory()->for($this->owner)->create(['platform' => 'tiktok', 'account_id' => 'tt-open-id', 'access_token' => 'tt-access', 'token_expires_at' => now()->addDay(), 'status' => 'active']);
+    $conversation = Conversation::factory()->for($channel)->create(['platform_conversation_id' => 'tt-conversation-1', 'contact_platform_id' => 'tt-person-1']);
+
+    $this->actingAs($this->owner)
+        ->postJson("/api/v1/conversations/{$conversation->id}/messages", ['type' => 'text_with_button', 'content' => 'Here it is', 'button_label' => 'Order', 'button_url' => 'https://shop.test'])
+        ->assertCreated();
+
+    // TikTok has no button that opens a link: the link goes in the text, to the conversation (not the person).
+    Http::assertSent(fn (Request $request): bool => $request->hasHeader('Access-Token', 'tt-access')
+        && $request->data() === ['business_id' => 'tt-open-id', 'recipient_type' => 'CONVERSATION', 'recipient' => 'tt-conversation-1', 'message_type' => 'TEXT', 'text' => ['body' => "Here it is\n\nOrder: https://shop.test"]]);
+    expect($conversation->messages()->sole()->platform_message_id)->toBe('tt-msg-1');
+});
+
+it('keeps nothing when TikTok refuses a reply, though it answers HTTP 200', function () {
+    Http::fake(['business-api.tiktok.com/*' => Http::response(['code' => 40002, 'message' => 'Invalid parameter', 'data' => []])]);
     $conversation = Conversation::factory()->for(Channel::factory()->for($this->owner)->create(['platform' => 'tiktok']))->create();
 
     $this->actingAs($this->owner)
         ->postJson("/api/v1/conversations/{$conversation->id}/messages", ['type' => 'text', 'content' => 'Hi'])
-        ->assertStatus(502);
+        ->assertStatus(502)
+        ->assertJsonPath('code', 'provider_rejected');
 
     expect($conversation->messages()->count())->toBe(0);
 });
 
 it('retries a failed delivery for the conversation’s owner', function () {
+    Http::fake(['business-api.tiktok.com/*' => Http::response(['code' => 40002, 'message' => 'Invalid parameter', 'data' => []])]);
     $conversation = Conversation::factory()->for(Channel::factory()->for($this->owner)->create(['platform' => 'tiktok']))->create();
 
     $failed = $this->actingAs($this->owner)
         ->postJson("/api/v1/conversations/{$conversation->id}/messages", ['type' => 'text', 'content' => 'Hi'])
         ->assertStatus(502)
-        ->assertJsonPath('code', 'channel_not_live')
+        ->assertJsonPath('code', 'provider_rejected')
         ->assertJsonStructure(['attempt_id', 'code', 'platform', 'retryable'])
         ->json();
 
     $this->postJson("/api/v1/message-delivery-attempts/{$failed['attempt_id']}/retry")
         ->assertStatus(502)
-        ->assertJsonPath('code', 'channel_not_live')
+        ->assertJsonPath('code', 'provider_error')
         ->assertJsonPath('attempt_id', $failed['attempt_id'])
         ->assertJsonPath('attempts', 2);
 
@@ -222,6 +240,7 @@ it('retries a failed Instagram reply through Instagram and adds it to the conver
 });
 
 it('keeps two failed sends of the same text as two attempts', function () {
+    Http::fake(['business-api.tiktok.com/*' => Http::response(['code' => 40002, 'message' => 'Invalid parameter', 'data' => []])]);
     $conversation = Conversation::factory()->for(Channel::factory()->for($this->owner)->create(['platform' => 'tiktok']))->create();
 
     $this->actingAs($this->owner);

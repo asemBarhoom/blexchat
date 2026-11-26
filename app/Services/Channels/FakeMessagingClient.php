@@ -24,7 +24,7 @@ class FakeMessagingClient extends MessagingClient
         return $this->send($channel, $recipientId, self::text($text, $buttonLabel, $buttonUrl));
     }
 
-    public function replyToComment(Channel $channel, string $commentId, string $text): ?string
+    public function replyToComment(Channel $channel, string $commentId, string $text, ?string $postId = null): ?string
     {
         Log::info("Fake {$channel->platform} public comment reply", ['channel_id' => $channel->id, 'comment_id' => $commentId, 'text' => $text]);
 

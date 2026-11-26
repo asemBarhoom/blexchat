@@ -42,6 +42,7 @@ it('reports provider readiness from the configured credentials', function () {
     config()->set('services.whatsapp.config_id', null);
     config()->set('services.tiktok.client_id', 'tiktok-app-id');
     config()->set('services.tiktok.client_secret', 'tiktok-secret');
+    config()->set('services.tiktok.auth_url', 'https://www.tiktok.com/v2/auth/authorize?client_key=tiktok-app-id&scope=biz.messages&redirect_uri=https%3A%2F%2Fapi.test%2Foauth%2Ftiktok');
 
     $this->actingAs(User::factory()->create(), 'sanctum')
         ->getJson('/api/v1/channels/oauth/status')
@@ -53,8 +54,16 @@ it('reports provider readiness from the configured credentials', function () {
         ->assertJsonPath('data.providers.tiktok.login_configured', true)
         ->assertJsonPath('data.providers.tiktok.account_connection_available', true)
         ->assertJsonPath('data.providers.tiktok.content_reading_available', true)
-        ->assertJsonPath('data.providers.tiktok.messaging_available', false)
-        ->assertJsonPath('data.providers.tiktok.comment_automation_available', false);
+        ->assertJsonPath('data.providers.tiktok.messaging_available', true)
+        ->assertJsonPath('data.providers.tiktok.comment_automation_available', true)
+        // TikTok's Comment-to-Message is not open in this region: comments get a public reply only.
+        ->assertJsonPath('data.providers.tiktok.comment_dm_available', false);
+
+    // TikTok for Business needs its authorization URL as well as the app's id and secret.
+    config()->set('services.tiktok.auth_url', null);
+    $this->getJson('/api/v1/channels/oauth/status')
+        ->assertJsonPath('data.providers.tiktok.configured', false)
+        ->assertJsonPath('data.providers.tiktok.messaging_available', false);
 });
 
 it('reports every provider ready on the fake driver', function () {
@@ -90,45 +99,70 @@ it('refuses to start provider OAuth until credentials are configured', function 
         ->assertStatus(503)->assertJsonPath('code', 'provider_pending');
 });
 
-it('starts TikTok Login Kit while messaging and comment automation stay unavailable', function () {
+it('starts TikTok for Business authorization with a state, asking again even after an earlier one', function () {
     config([
         'services.channels.oauth_driver' => 'provider',
         'services.channels.oauth_redirect_url' => 'https://api.test/oauth/{platform}',
         'services.tiktok.client_id' => 'tiktok-app-id',
         'services.tiktok.client_secret' => 'tiktok-secret',
+        'services.tiktok.auth_url' => 'https://www.tiktok.com/v2/auth/authorize?client_key=tiktok-app-id&scope=biz.messages&redirect_uri=https%3A%2F%2Fapi.test%2Foauth%2Ftiktok',
     ]);
 
-    $this->actingAs(User::factory()->create(), 'sanctum')
+    $data = $this->actingAs(User::factory()->create(), 'sanctum')
         ->getJson('/api/v1/channels/oauth/tiktok/start')
         ->assertOk()
         ->assertJsonPath('data.platform', 'tiktok')
-        ->assertJsonPath('data.authorization_url', fn (string $url): bool => str_starts_with($url, 'https://www.tiktok.com/v2/auth/authorize/'));
+        ->json('data');
+
+    expect($data['authorization_url'])->toBe('https://www.tiktok.com/v2/auth/authorize?client_key=tiktok-app-id&scope=biz.messages&redirect_uri=https%3A%2F%2Fapi.test%2Foauth%2Ftiktok&'.http_build_query(['state' => $data['state'], 'disable_auto_auth' => 1]));
 });
 
-it('connects a real TikTok account using the token open id and profile', function () {
-    config([
-        'services.channels.oauth_driver' => 'provider',
-        'services.channels.oauth_redirect_url' => 'https://api.test/oauth/{platform}',
-        'services.tiktok.client_id' => 'tiktok-app-id',
-        'services.tiktok.client_secret' => 'tiktok-secret',
-    ]);
-    Http::fake([
-        'open.tiktokapis.com/v2/oauth/token/' => Http::response(['access_token' => 'tt-access', 'refresh_token' => 'tt-refresh', 'open_id' => 'tt-open-id', 'expires_in' => 86400]),
-        'open.tiktokapis.com/v2/user/info/*' => Http::response(['data' => ['user' => ['open_id' => 'tt-open-id', 'display_name' => 'Nour', 'avatar_url' => 'https://cdn.example/avatar.jpg']]]),
-    ]);
-    $owner = User::factory()->create();
-    $state = $this->actingAs($owner, 'sanctum')->getJson('/api/v1/channels/oauth/tiktok/start')->json('data.state');
+describe('connecting a TikTok account through TikTok for Business', function () {
+    beforeEach(function () {
+        config([
+            'services.channels.oauth_driver' => 'provider',
+            'services.channels.oauth_redirect_url' => 'https://api.test/oauth/{platform}',
+            'services.tiktok.client_id' => 'tiktok-app-id',
+            'services.tiktok.client_secret' => 'tiktok-secret',
+            'services.tiktok.auth_url' => 'https://www.tiktok.com/v2/auth/authorize?client_key=tiktok-app-id&scope=biz.messages&redirect_uri=https%3A%2F%2Fapi.test%2Foauth%2Ftiktok',
+        ]);
+        $this->profile = fn (bool $advanced): array => [
+            'business-api.tiktok.com/open_api/v1.3/tt_user/oauth2/token/' => Http::response(['code' => 0, 'message' => 'OK', 'data' => ['access_token' => 'tt-access', 'refresh_token' => 'tt-refresh', 'open_id' => 'tt-open-id', 'expires_in' => 86400]]),
+            'business-api.tiktok.com/open_api/v1.3/business/get/*' => Http::response(['code' => 0, 'message' => 'OK', 'data' => ['username' => 'nourboutique', 'display_name' => 'Nour', 'profile_image' => 'https://cdn.example/avatar.jpg', 'has_advanced_access' => $advanced]]),
+        ];
+    });
 
-    $this->getJson("/api/v1/channels/oauth/tiktok/callback?state={$state}&code=oauth-code")
-        ->assertCreated()
-        ->assertJsonPath('data.account_id', 'tt-open-id');
+    it('connects an account with Advanced Access, keeping its business id, profile and tokens', function () {
+        Http::fake(($this->profile)(true));
+        $owner = User::factory()->create();
+        $state = $this->actingAs($owner, 'sanctum')->getJson('/api/v1/channels/oauth/tiktok/start')->json('data.state');
 
-    $channel = Channel::where('platform', 'tiktok')->sole();
-    expect($channel->account_id)->toBe('tt-open-id')
-        ->and($channel->username)->toBe('Nour')
-        ->and($channel->profile_picture)->toBe('https://cdn.example/avatar.jpg')
-        ->and($channel->refresh_token)->toBe('tt-refresh')
-        ->and($channel->token_expires_at)->not->toBeNull();
+        $this->getJson("/api/v1/channels/oauth/tiktok/callback?state={$state}&code=oauth-code")
+            ->assertCreated()
+            ->assertJsonPath('data.account_id', 'tt-open-id');
+
+        expect(Channel::where('platform', 'tiktok')->sole())
+            ->account_id->toBe('tt-open-id')
+            ->username->toBe('nourboutique')
+            ->profile_picture->toBe('https://cdn.example/avatar.jpg')
+            ->refresh_token->toBe('tt-refresh')
+            ->token_expires_at->not->toBeNull();
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), 'tt_user/oauth2/token/')
+            && $request->data() === ['client_id' => 'tiktok-app-id', 'client_secret' => 'tiktok-secret', 'grant_type' => 'authorization_code', 'auth_code' => 'oauth-code', 'redirect_uri' => 'https://api.test/oauth/tiktok']);
+        Http::assertSent(fn (Request $request): bool => str_contains($request->url(), 'business/get/') && $request->hasHeader('Access-Token', 'tt-access'));
+    });
+
+    it('refuses an account without Advanced Access, which TikTok keeps out of direct messages', function () {
+        Http::fake(($this->profile)(false));
+        $state = $this->actingAs(User::factory()->create(), 'sanctum')->getJson('/api/v1/channels/oauth/tiktok/start')->json('data.state');
+
+        $this->getJson("/api/v1/channels/oauth/tiktok/callback?state={$state}&code=oauth-code")
+            ->assertUnprocessable()
+            ->assertJsonPath('code', 'account_ineligible')
+            ->assertJsonPath('reason', 'no_advanced_access');
+
+        expect(Channel::where('platform', 'tiktok')->exists())->toBeFalse();
+    });
 });
 
 it('never uses the fake channel sign-in in production', function () {

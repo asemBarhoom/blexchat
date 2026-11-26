@@ -58,18 +58,20 @@ class Post extends Model
     }
 
     /**
-     * @param  array{title?: string, video_description?: string, cover_image_url?: string, share_url?: string, like_count?: int, comment_count?: int, create_time?: int}  $video
+     * Columns for a post as TikTok for Business's video list describes it.
+     *
+     * @param  array{caption?: string, thumbnail_url?: string, share_url?: string, likes?: int, comments?: int, create_time?: int|string}  $video
      * @return array<string, mixed>
      */
     public static function attributesFromTikTok(array $video): array
     {
         return [
-            'caption' => $video['video_description'] ?? $video['title'] ?? null,
+            'caption' => $video['caption'] ?? null,
             'media_type' => 'video',
-            'thumbnail_url' => $video['cover_image_url'] ?? null,
+            'thumbnail_url' => $video['thumbnail_url'] ?? null,
             'permalink' => $video['share_url'] ?? null,
-            'like_count' => $video['like_count'] ?? null,
-            'comment_count' => $video['comment_count'] ?? null,
+            'like_count' => $video['likes'] ?? null,
+            'comment_count' => $video['comments'] ?? null,
             'posted_at' => isset($video['create_time']) ? Carbon::createFromTimestamp((int) $video['create_time']) : null,
         ];
     }

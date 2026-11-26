@@ -24,7 +24,7 @@ it('returns a translated provider pending response for unconfigured oauth platfo
 ]);
 
 it('returns availability and pending reasons in the channel picker', function () {
-    config(['services.channels.oauth_driver' => 'provider', 'services.messenger.client_id' => null, 'services.whatsapp.client_id' => 'configured', 'services.whatsapp.config_id' => 'wa-config', 'services.tiktok.client_id' => 'tiktok-login-ready', 'services.tiktok.client_secret' => 'tiktok-secret', 'services.channels.oauth_redirect_url' => 'https://api.test/callback']);
+    config(['services.channels.oauth_driver' => 'provider', 'services.messenger.client_id' => null, 'services.whatsapp.client_id' => 'configured', 'services.whatsapp.config_id' => 'wa-config', 'services.tiktok.client_id' => 'tiktok-login-ready', 'services.tiktok.client_secret' => 'tiktok-secret', 'services.tiktok.auth_url' => 'https://www.tiktok.com/v2/auth/authorize?client_key=tiktok-login-ready', 'services.channels.oauth_redirect_url' => 'https://api.test/callback']);
     $owner = User::factory()->create();
     $data = $this->actingAs($owner, 'sanctum')->getJson('/api/v1/onboarding/channels?lang=en')->assertOk()->json('data');
     $options = collect($data)->keyBy('id');

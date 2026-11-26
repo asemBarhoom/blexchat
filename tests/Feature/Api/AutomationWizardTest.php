@@ -118,28 +118,29 @@ describe('GET /api/v1/channels/{channel}/posts', function () {
         expect($instagram->fresh()->status)->toBe('active');
     });
 
-    it('brings in TikTok videos through the read-only Display API capability', function () {
-        $tiktok = Channel::factory()->create(['user_id' => $this->owner->id, 'platform' => 'tiktok', 'status' => 'active', 'access_token' => 'TTAA']);
-        Http::fake(['open.tiktokapis.com/v2/video/list/*' => Http::response(['data' => ['videos' => [[
-            'id' => 'tt-video-1',
-            'video_description' => 'New collection',
-            'cover_image_url' => 'https://cdn.example.com/cover.jpg',
-            'share_url' => 'https://www.tiktok.com/@nour/video/1',
-            'create_time' => 1793527200,
-            'like_count' => 501,
-            'comment_count' => 23,
-        ]]]])]);
+    it('brings in TikTok videos from TikTok for Business', function () {
+        $tiktok = Channel::factory()->create(['user_id' => $this->owner->id, 'platform' => 'tiktok', 'account_id' => 'tt-open-id', 'status' => 'active', 'access_token' => 'TTAA', 'token_expires_at' => now()->addDay()]);
+        Http::fake(['business-api.tiktok.com/open_api/v1.3/business/video/list/*' => Http::response(['code' => 0, 'message' => 'OK', 'data' => ['videos' => [[
+            'item_id' => '6990565363377392901',
+            'caption' => 'New collection',
+            'thumbnail_url' => 'https://cdn.example.com/cover.jpg',
+            'share_url' => 'https://www.tiktok.com/@nour/video/6990565363377392901',
+            'create_time' => '1793527200',
+            'likes' => 501,
+            'comments' => 23,
+        ]], 'has_more' => false]])]);
 
         $this->actingAs($this->owner, 'sanctum')->getJson("/api/v1/channels/{$tiktok->id}/posts")
             ->assertOk()
             ->assertJsonPath('meta.synced', true)
-            ->assertJsonPath('data.0.platform_post_id', 'tt-video-1')
+            ->assertJsonPath('data.0.platform_post_id', '6990565363377392901')
             ->assertJsonPath('data.0.media_type', 'video')
             ->assertJsonPath('data.0.caption', 'New collection')
+            ->assertJsonPath('data.0.permalink', 'https://www.tiktok.com/@nour/video/6990565363377392901')
             ->assertJsonPath('data.0.likes', 501)
             ->assertJsonPath('data.0.comments', 23);
 
-        Http::assertSent(fn (Request $request): bool => $request->hasHeader('Authorization', 'Bearer TTAA'));
+        Http::assertSent(fn (Request $request): bool => $request->hasHeader('Access-Token', 'TTAA') && $request['business_id'] === 'tt-open-id');
     });
 
     it('brings in the Facebook Page’s posts, filling in a post a comment already brought', function () {
@@ -171,18 +172,19 @@ describe('GET /api/v1/channels/{channel}/posts', function () {
         Http::assertSent(fn (Request $request): bool => $request->hasHeader('Authorization', 'Bearer PAGE'));
     });
 
-    it('refreshes an expired TikTok Login Kit token before listing videos', function () {
+    it('renews a TikTok token about to end before listing videos', function () {
         $tiktok = Channel::factory()->create([
             'user_id' => $this->owner->id,
             'platform' => 'tiktok',
+            'account_id' => 'tt-open-id',
             'status' => 'active',
-            'access_token' => 'expired-token',
+            'access_token' => 'old-token',
             'refresh_token' => 'refresh-token',
-            'token_expires_at' => now()->subMinute(),
+            'token_expires_at' => now()->addMinutes(5),
         ]);
         Http::fake([
-            'open.tiktokapis.com/v2/oauth/token/' => Http::response(['access_token' => 'new-token', 'refresh_token' => 'new-refresh', 'expires_in' => 86400]),
-            'open.tiktokapis.com/v2/video/list/*' => Http::response(['data' => ['videos' => []]]),
+            'business-api.tiktok.com/open_api/v1.3/tt_user/oauth2/refresh_token/' => Http::response(['code' => 0, 'message' => 'OK', 'data' => ['access_token' => 'new-token', 'refresh_token' => 'new-refresh', 'expires_in' => 86400]]),
+            'business-api.tiktok.com/open_api/v1.3/business/video/list/*' => Http::response(['code' => 0, 'message' => 'OK', 'data' => ['videos' => []]]),
         ]);
 
         $this->actingAs($this->owner, 'sanctum')->getJson("/api/v1/channels/{$tiktok->id}/posts")
@@ -190,10 +192,12 @@ describe('GET /api/v1/channels/{channel}/posts', function () {
             ->assertJsonPath('meta.synced', true)
             ->assertJsonPath('meta.needs_reconnect', false);
 
-        expect($tiktok->fresh()->access_token)->toBe('new-token')
-            ->and($tiktok->fresh()->refresh_token)->toBe('new-refresh');
-        Http::assertSent(fn (Request $request): bool => $request->url() === 'https://open.tiktokapis.com/v2/oauth/token/' && $request['grant_type'] === 'refresh_token');
-        Http::assertSent(fn (Request $request): bool => str_contains($request->url(), '/v2/video/list/') && $request->hasHeader('Authorization', 'Bearer new-token'));
+        expect($tiktok->fresh())
+            ->access_token->toBe('new-token')
+            ->refresh_token->toBe('new-refresh')
+            ->token_expires_at->isAfter(now()->addHours(23))->toBeTrue();
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), 'tt_user/oauth2/refresh_token/') && $request['grant_type'] === 'refresh_token' && $request['refresh_token'] === 'refresh-token');
+        Http::assertSent(fn (Request $request): bool => str_contains($request->url(), 'business/video/list/') && $request->hasHeader('Access-Token', 'new-token'));
     });
 
     it('asks for a reconnect when Instagram refuses the token, and stops asking Instagram', function () {

@@ -28,7 +28,7 @@ class DeliveryRetrier
         try {
             $platformMessageId = $conversation->channel->platform === 'instagram'
                 ? $this->instagram->sendMessage($conversation->channel, $conversation->contact_platform_id, InstagramClient::message($attempt->content))
-                : $this->messaging->send($conversation->channel, $conversation->contact_platform_id, $attempt->content);
+                : $this->messaging->send($conversation->channel, $conversation->recipientId(), $attempt->content);
         } catch (RequestException|ConnectionException|ChannelNotLive $exception) {
             $code = DeliveryFailure::code($exception);
             $attempt->update(['error_code' => $code, 'error_message' => $exception->getMessage()]);

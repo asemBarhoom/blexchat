@@ -12,6 +12,7 @@ use App\Models\Message;
 use App\Models\Post;
 use App\Services\Ai\ClaudeClient;
 use App\Services\Channels\ChannelNotLive;
+use App\Services\Channels\ChannelOAuthProvider;
 use App\Services\Channels\MessagingClient;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
@@ -48,8 +49,10 @@ class AutomationRunner
         $sent = false;
         $asksToFollow = $automation->hasExtra('ask_follow');
         $askedToFollow = false;
-        $mayOpenConversation = $this->acceptsNewConversations($channel)
-            || Conversation::where('channel_id', $channel->id)->where('platform_conversation_id', $comment->author_platform_id)->exists();
+        // A private message to the commenter, where the platform allows one (not on TikTok here).
+        $mayOpenConversation = ChannelOAuthProvider::commentDmAvailable($channel->platform)
+            && ($this->acceptsNewConversations($channel)
+                || Conversation::where('channel_id', $channel->id)->where('platform_conversation_id', $comment->author_platform_id)->exists());
 
         foreach ($automation->actions as $action) {
             $isDm = in_array($action['type'], self::DM_ACTIONS, true);
@@ -64,7 +67,7 @@ class AutomationRunner
                     if ($channel->platform === 'instagram') {
                         $this->instagram->replyToComment($channel, $comment->platform_comment_id, $action['message']);
                     } else {
-                        $this->messaging->replyToComment($channel, $comment->platform_comment_id, $action['message']);
+                        $this->messaging->replyToComment($channel, $comment->platform_comment_id, $action['message'], $comment->post?->platform_post_id);
                     }
 
                     return;
@@ -184,7 +187,7 @@ class AutomationRunner
         $action = $this->withBranding($conversation->channel, $action);
 
         return $this->attempt($automation, $action, function () use ($conversation, $automation, $action): void {
-            $messageId = $this->sendMessage($conversation->channel, $conversation->contact_platform_id, $action);
+            $messageId = $this->sendMessage($conversation->channel, $conversation->recipientId(), $action);
             $this->record($conversation, $automation, $action, $messageId)->update(['by_ai' => true]);
         });
     }
@@ -278,7 +281,7 @@ class AutomationRunner
             $this->attempt($automation, $action, function () use ($channel, $conversation, $automation, $action, &$dm): void {
                 $action = $this->withLinkToken($action);
                 $action = $this->withBranding($channel, $action);
-                $messageId = $this->sendMessage($channel, $conversation->contact_platform_id, $action);
+                $messageId = $this->sendMessage($channel, $conversation->recipientId(), $action);
                 $dm = $this->record($conversation, $automation, $action, $messageId);
             });
         }
@@ -401,7 +404,7 @@ class AutomationRunner
         $action = $this->withBranding($conversation->channel, $action);
 
         return $this->attempt($automation, $action, function () use ($conversation, $automation, $action): void {
-            $messageId = $this->sendMessage($conversation->channel, $conversation->contact_platform_id, $action);
+            $messageId = $this->sendMessage($conversation->channel, $conversation->recipientId(), $action);
             $this->record($conversation, $automation, $action, $messageId);
         });
     }

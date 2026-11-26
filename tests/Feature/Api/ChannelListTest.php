@@ -42,6 +42,7 @@ describe('GET /api/v1/channels', function () {
                 'content_reading_available' => true,
                 'messaging_available' => true,
                 'comment_automation_available' => true,
+                'comment_dm_available' => true,
                 'connected_at' => $instagram->connected_at->toIso8601String(),
                 'token_expires_at' => null,
             ])

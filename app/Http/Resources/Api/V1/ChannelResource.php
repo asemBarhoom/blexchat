@@ -21,6 +21,7 @@ class ChannelResource extends JsonResource
             'content_reading_available' => ChannelOAuthProvider::contentReadingAvailable($this->platform),
             'messaging_available' => ChannelOAuthProvider::messagingAvailable($this->platform),
             'comment_automation_available' => ChannelOAuthProvider::commentAutomationAvailable($this->platform),
+            'comment_dm_available' => ChannelOAuthProvider::commentDmAvailable($this->platform),
             'connected_at' => $this->connected_at?->toIso8601String(),
         ];
     }
